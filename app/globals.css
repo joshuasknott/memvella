@@ -54,6 +54,16 @@
   --font-label: var(--font-lexend);
 }
 
+@layer base {
+  input,
+  textarea,
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+}
+
 body {
   background-color: var(--color-surface);
   color: var(--color-on-surface);

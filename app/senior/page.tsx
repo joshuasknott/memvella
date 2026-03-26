@@ -6,9 +6,9 @@ import { Mic } from 'lucide-react';
 
 export default function SeniorHomePage() {
   return (
-    <main className="flex h-screen w-full">
+    <main className="flex h-full w-full overflow-hidden">
       {/* Left Column (40%) */}
-      <section className="w-[40%] flex flex-col justify-between p-12 border-r border-outline-variant/10 bg-surface-container-low/30">
+      <section className="w-[40%] h-full flex flex-col justify-between p-12 border-r border-outline-variant/10 bg-surface-container-low/30">
         
         {/* Branding */}
         <BrandLogo className="mb-8" />
@@ -46,7 +46,7 @@ export default function SeniorHomePage() {
       </section>
 
       {/* Right Column (60%) */}
-      <section className="w-[60%] p-12 overflow-y-auto bg-surface relative">
+      <section className="w-[60%] h-full p-12 overflow-y-auto bg-surface relative">
         <header className="mb-12 flex justify-between items-end">
           <h2 className="font-headline text-5xl font-extrabold text-on-surface">Memory Gallery</h2>
         </header>
