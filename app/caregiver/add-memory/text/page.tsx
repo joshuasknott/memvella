@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Sparkles, Lightbulb, Mic, Camera } from 'lucide-react';
+import { Sparkles, Lightbulb, Mic, Camera } from 'lucide-react';
 
 export default function TextMemoryPage() {
   const handleSaveMemory = () => {
@@ -76,16 +76,12 @@ export default function TextMemoryPage() {
         Add Photo (Optional)
       </button>
 
-      {/* Fixed Bottom Action Area */}
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-6 pb-8 pt-4 bg-linear-to-t from-surface via-surface/90 to-transparent z-40 space-y-3">
-        <button 
-          onClick={handleSaveMemory}
-          className="w-full h-16 rounded-full bg-linear-to-r from-primary to-primary-container text-white font-headline font-bold text-xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
-        >
-          <Check className="w-6 h-6" />
-          Save Memory
-        </button>
-      </footer>
+      <button 
+        onClick={handleSaveMemory}
+        className="w-full bg-purple-600 text-white rounded-2xl py-4 font-semibold text-lg mt-auto hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
+      >
+        Save Memory
+      </button>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { Music, Check, Upload } from 'lucide-react';
+import { Music, Upload } from 'lucide-react';
 
 export default function AudioMemoryPage() {
   const router = useRouter();
@@ -48,15 +48,11 @@ export default function AudioMemoryPage() {
         </button>
       </section>
 
-      {/* Fixed Bottom Action Area */}
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-6 pb-8 pt-4 bg-linear-to-t from-surface via-surface/90 to-transparent z-40">
-        <button 
-          className="w-full h-16 rounded-full bg-linear-to-r from-pink-500 to-orange-400 text-white font-headline font-bold text-xl shadow-xl shadow-pink-500/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
-        >
-          <Check className="w-6 h-6" />
-          Save Song
-        </button>
-      </footer>
+      <button 
+        className="w-full bg-purple-600 text-white rounded-2xl py-4 font-semibold text-lg mt-auto hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
+      >
+        Save Audio Memory
+      </button>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { Calendar, Sparkles, Lightbulb, Clock, Check, Plus } from 'lucide-react';
+import { Calendar, Sparkles, Lightbulb, Check } from 'lucide-react';
 
 export default function AddRoutinePage() {
   const router = useRouter();
@@ -93,15 +93,12 @@ export default function AddRoutinePage() {
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>
       </div>
 
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-6 pb-8 pt-4 bg-linear-to-t from-surface via-surface/90 to-transparent z-40">
-        <button 
-          onClick={handleSaveRoutine}
-          className="w-full h-16 rounded-full bg-linear-to-r from-primary to-primary-container text-white font-headline font-bold text-xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
-        >
-          <Clock className="w-6 h-6" />
-          Save Routine
-        </button>
-      </footer>
+      <button 
+        onClick={handleSaveRoutine}
+        className="w-full bg-purple-600 text-white rounded-2xl py-4 font-semibold text-lg mt-auto hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
+      >
+        Save Routine
+      </button>
     </div>
   );
 }
