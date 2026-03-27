@@ -99,7 +99,7 @@ export default function AddPersonPage() {
 
       <button 
         onClick={handleSavePerson}
-        className="w-full bg-purple-600 text-white rounded-2xl py-4 font-semibold text-lg mt-auto hover:bg-purple-700 active:scale-95 transition-all shadow-sm"
+        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm"
       >
         Save to Family
       </button>
