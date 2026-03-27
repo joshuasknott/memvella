@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Lexend } from "next/font/google";
+import { ConvexClientProvider } from "./providers";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -27,7 +28,9 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${lexend.variable} h-full antialiased`}
     >
-      <body className="font-body min-h-full flex flex-col">{children}</body>
+      <body className="font-body min-h-full flex flex-col">
+        <ConvexClientProvider>{children}</ConvexClientProvider>
+      </body>
     </html>
   );
 }
