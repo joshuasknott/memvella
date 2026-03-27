@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Delete } from 'lucide-react';
+import { Delete, ArrowLeft } from 'lucide-react';
 
 export default function SeniorSetupPage() {
   const [pin, setPin] = useState<string>('');
@@ -21,9 +21,16 @@ export default function SeniorSetupPage() {
   const boxes = Array.from({ length: 6 });
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-white font-body p-6">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-white font-body p-6 relative">
       <div className="w-full flex flex-col items-center">
         
+        {/* Escape Hatch */}
+        <div className="w-full max-w-lg mb-8">
+           <button onClick={() => router.back()} className="flex items-center gap-2 text-[#4e0078] font-medium hover:opacity-80 transition-opacity">
+             <ArrowLeft size={24} /> Back
+           </button>
+        </div>
+
         {/* Headlines */}
         <div className="text-center space-y-4 mb-12">
           <h1 className="font-headline text-slate-900 font-bold text-6xl tracking-tight">
