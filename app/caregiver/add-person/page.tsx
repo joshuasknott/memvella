@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Camera, Check, Plus, Sparkles, Lightbulb } from 'lucide-react';
 
 export default function AddPersonPage() {
   const router = useRouter();
+  const [isLiving, setIsLiving] = useState(true);
   const handleSavePerson = () => {
     // // TODO: Convex mutation to save the new person and context
     console.log("Saving new person...");
@@ -62,6 +64,38 @@ export default function AddPersonPage() {
               <Plus className="w-5 h-5" />
             </button>
           </div>
+        </div>
+
+        {/* Life Status Selection */}
+        <div className="space-y-4">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">
+            Status
+          </label>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setIsLiving(true)}
+              className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
+                isLiving 
+                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm' 
+                  : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
+              }`}
+            >
+              Living
+            </button>
+            <button
+              onClick={() => setIsLiving(false)}
+              className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
+                !isLiving 
+                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm' 
+                  : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
+              }`}
+            >
+              Passed Away
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-outline font-label px-1">
+            This helps Memvella understand how to talk about them contextually.
+          </p>
         </div>
 
         {/* AI Context Box */}
