@@ -13,6 +13,8 @@ import type * as caregiver from "../caregiver.js";
 import type * as http from "../http.js";
 import type * as kiosk from "../kiosk.js";
 import type * as memories from "../memories.js";
+import type * as voice from "../voice.js";
+import type * as voiceHelpers from "../voiceHelpers.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   kiosk: typeof kiosk;
   memories: typeof memories;
+  voice: typeof voice;
+  voiceHelpers: typeof voiceHelpers;
 }>;
 
 /**

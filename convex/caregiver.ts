@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // =============================================================================
@@ -136,5 +136,137 @@ export const saveVoiceSessionLog = mutation({
       transcript: args.transcript,
       durationSeconds: args.durationSeconds,
     });
+  },
+});
+
+// =============================================================================
+// CAREGIVER QUERIES — Require Better Auth session
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// getFamilyDirectory
+// -----------------------------------------------------------------------------
+// Returns all family members for the authenticated caregiver.
+// Resolves photoStorageId → photoUrl via ctx.storage.getUrl().
+// Always includes the isLiving temporal safety flag so the UI can reflect it.
+// Returns [] if no members exist — never crashes a frontend .map().
+// -----------------------------------------------------------------------------
+export const getFamilyDirectory = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const caregiverId = identity.tokenIdentifier;
+
+    const members = await ctx.db
+      .query("familyMembers")
+      .withIndex("by_caregiverId", (q) => q.eq("caregiverId", caregiverId))
+      .take(100);
+
+    return Promise.all(
+      members.map(async (member) => ({
+        id: member._id,
+        name: member.name,
+        relationship: member.relationship,
+        isLiving: member.isLiving,   // ⚠️ TEMPORAL SAFETY FLAG — always returned
+        aiContext: member.aiContext,
+        photoUrl: member.photoStorageId
+          ? await ctx.storage.getUrl(member.photoStorageId)
+          : null,
+      }))
+    );
+  },
+});
+
+// -----------------------------------------------------------------------------
+// getTodayTimeline
+// -----------------------------------------------------------------------------
+// Returns all routines for the authenticated caregiver, mapped to the shape
+// the Dashboard timeline component expects.
+// Frontend is responsible for filtering to the current day based on frequency.
+// Returns [] if no routines exist.
+// -----------------------------------------------------------------------------
+export const getTodayTimeline = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const caregiverId = identity.tokenIdentifier;
+
+    const routines = await ctx.db
+      .query("routines")
+      .withIndex("by_caregiverId", (q) => q.eq("caregiverId", caregiverId))
+      .take(50);
+
+    return routines.map((routine) => ({
+      id: routine._id,
+      time: routine.time,
+      title: routine.routineName,
+      type: routine.frequency[0] ?? "Daily",  // first frequency label as icon hint
+      frequency: routine.frequency,
+    }));
+  },
+});
+
+// -----------------------------------------------------------------------------
+// getCaregiverDashboardSummary
+// -----------------------------------------------------------------------------
+// Returns a lightweight aggregation object for the Dashboard status card.
+// statusSummary is static until the LLM integration is wired in Phase 4.
+// -----------------------------------------------------------------------------
+export const getCaregiverDashboardSummary = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
+    }
+    const caregiverId = identity.tokenIdentifier;
+
+    const [members, routines] = await Promise.all([
+      ctx.db
+        .query("familyMembers")
+        .withIndex("by_caregiverId", (q) => q.eq("caregiverId", caregiverId))
+        .take(200),
+      ctx.db
+        .query("routines")
+        .withIndex("by_caregiverId", (q) => q.eq("caregiverId", caregiverId))
+        .take(200),
+    ]);
+
+    return {
+      totalFamilyMembers: members.length,
+      totalRoutines: routines.length,
+      // Static placeholder — will be replaced by LLM summary in Phase 4
+      statusSummary: "Mom is doing well today.",
+    };
+  },
+});
+
+// -----------------------------------------------------------------------------
+// getNotificationSettings
+// -----------------------------------------------------------------------------
+// Returns the caregiver's notification toggle preferences.
+// Returns sensible defaults (all false) if no document has been saved yet.
+// -----------------------------------------------------------------------------
+export const getNotificationSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { dailySummary: false, urgentAlerts: false, routineReminders: false };
+    }
+    const caregiverId = identity.tokenIdentifier;
+
+    const settings = await ctx.db
+      .query("notificationSettings")
+      .withIndex("by_caregiverId", (q) => q.eq("caregiverId", caregiverId))
+      .unique();
+
+    return settings ?? {
+      dailySummary: false,
+      urgentAlerts: false,
+      routineReminders: false,
+    };
   },
 });

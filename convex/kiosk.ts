@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // =============================================================================
@@ -142,5 +142,103 @@ export const deactivateKioskDevice = mutation({
     }
 
     return { deactivated: true };
+  },
+});
+
+// =============================================================================
+// KIOSK QUERIES — Public, accept caregiverId from tablet local state
+// =============================================================================
+// The senior tablet has no Better Auth session. After PIN pairing, it holds
+// the caregiverId string in React state. These queries accept it as an arg.
+// caregiverId is the tokenIdentifier string — NOT a Convex document ID.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// getSeniorNextEvent
+// -----------------------------------------------------------------------------
+// Returns the single most immediate upcoming routine for the senior's tablet
+// home screen. Sorts all routines by their time string and returns the first.
+// Falls back to a gentle default string if no routines have been added yet.
+// -----------------------------------------------------------------------------
+export const getSeniorNextEvent = query({
+  args: {
+    caregiverId: v.string(),  // tokenIdentifier held in tablet local state post-pairing
+  },
+  handler: async (ctx, args) => {
+    const routines = await ctx.db
+      .query("routines")
+      .withIndex("by_caregiverId", (q) => q.eq("caregiverId", args.caregiverId))
+      .take(50);
+
+    if (routines.length === 0) {
+      return { title: "Relaxing at home", time: null };
+    }
+
+    // Sort by the time string lexicographically (HH:MM AM/PM format sorts correctly
+    // within the same meridiem; for cross-meridiem accuracy a full date parse is used)
+    const sorted = [...routines].sort((a, b) => {
+      const toMinutes = (t: string) => {
+        // Parse "10:00 AM" / "2:30 PM" into comparable total minutes
+        const [timePart, meridiem] = t.split(" ");
+        const [h, m] = timePart.split(":").map(Number);
+        const hours = meridiem === "PM" && h !== 12 ? h + 12 : h === 12 && meridiem === "AM" ? 0 : h;
+        return hours * 60 + (m ?? 0);
+      };
+      return toMinutes(a.time) - toMinutes(b.time);
+    });
+
+    const next = sorted[0];
+    return {
+      title: next.routineName,
+      time: next.time,
+      frequency: next.frequency,
+    };
+  },
+});
+
+// -----------------------------------------------------------------------------
+// getMemoryGallery
+// -----------------------------------------------------------------------------
+// Returns up to 10 of the most recent memories that have a media file attached.
+// Resolves storageId → imageUrl via ctx.storage.getUrl().
+// Skips any memories where storage resolution returns null (deleted file).
+// Returns [] if no media memories exist — never crashes a frontend .map().
+// -----------------------------------------------------------------------------
+export const getMemoryGallery = query({
+  args: {
+    caregiverId: v.string(),  // tokenIdentifier held in tablet local state post-pairing
+  },
+  handler: async (ctx, args) => {
+    // Fetch the 10 most recent memories that have a storageId
+    const memories = await ctx.db
+      .query("memories")
+      .withIndex("by_caregiverId", (q) => q.eq("caregiverId", args.caregiverId))
+      .order("desc")
+      .take(50);  // over-fetch then filter, since we can't index on storageId presence
+
+    const withMedia = memories.filter((m) => m.storageId != null);
+    const capped = withMedia.slice(0, 10);
+
+    const resolved = await Promise.all(
+      capped.map(async (memory) => {
+        const imageUrl = memory.storageId
+          ? await ctx.storage.getUrl(memory.storageId)
+          : null;
+
+        // Skip items where the file no longer exists in storage
+        if (!imageUrl) return null;
+
+        return {
+          id: memory._id,
+          imageUrl,
+          caption: memory.title,
+          date: memory.date,
+          mediaType: memory.mediaType,
+        };
+      })
+    );
+
+    // Filter out any nulls from deleted/missing storage files
+    return resolved.filter((item): item is NonNullable<typeof item> => item !== null);
   },
 });
