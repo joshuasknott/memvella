@@ -1,12 +1,65 @@
 "use client";
 
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import BrandLogo from '@/components/BrandLogo';
-import { Mic } from 'lucide-react';
+import { Mic, X } from 'lucide-react';
+
+function VoiceOverlay({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 15000); // Auto-timeout after 15 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col font-body text-on-background overflow-hidden animate-in fade-in duration-500">
+      {/* Frosted Glass Overlay with high contrast */}
+      <div className="absolute inset-0 bg-white/95 backdrop-blur-xl z-0 pointer-events-none"></div>
+
+      {/* Top Navigation */}
+      <header className="absolute top-0 w-full z-10 flex justify-between items-center px-10 h-24">
+        <BrandLogo />
+      </header>
+
+      {/* Main Content Canvas with Layout Padding */}
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 pt-24 text-center">
+        
+        {/* Voice Interaction Visualizer */}
+        <div className="relative flex items-center justify-center mb-12">
+          {/* Pulsing outer ring */}
+          <div 
+            className="absolute w-80 h-80 rounded-full bg-linear-to-br from-primary to-secondary opacity-15 animate-pulse"
+            style={{ boxShadow: '0 0 80px rgba(70, 21, 153, 0.3), 0 0 120px rgba(0, 95, 175, 0.15)' }}
+          ></div>
+          
+          {/* Inner glowing circle */}
+          <div className="relative w-64 h-64 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-2xl">
+            <Mic className="text-white" size={120} strokeWidth={2} />
+          </div>
+        </div>
+
+        {/* High-Contrast Transcription */}
+        <div className="max-w-4xl space-y-6">
+          <h1 className="font-headline text-gray-800 font-bold text-5xl tracking-tight">
+            Listening...
+          </h1>
+          <p className="font-headline text-on-background font-extrabold text-6xl md:text-8xl leading-tight">
+            &quot;When is Emily coming over?&quot;
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 
 export default function SeniorHomePage() {
+  const [isListening, setIsListening] = useState(false);
+
   return (
-    <main className="flex h-full w-full overflow-hidden">
+    <>
+      <main className="flex h-full w-full overflow-hidden">
       {/* Left Column (40%) */}
       <section className="w-[40%] h-full flex flex-col justify-between p-12 border-r border-outline-variant/10 bg-surface-container-low/30">
         
@@ -36,12 +89,12 @@ export default function SeniorHomePage() {
 
         {/* Voice Action Button */}
         <div className="mt-12">
-          <Link href="/senior/voice" className="block text-center bg-linear-to-br from-primary to-secondary w-full py-10 px-8 rounded-full shadow-xl active:scale-95 transition-transform duration-200">
+          <button onClick={() => setIsListening(true)} className="block text-center bg-linear-to-br from-primary to-secondary w-full py-10 px-8 rounded-full shadow-xl active:scale-95 transition-transform duration-200">
             <div className="flex items-center justify-center gap-6">
               <Mic className="text-white shrink-0" size={48} strokeWidth={2.5} />
               <span className="text-white font-headline font-bold text-3xl">Tap to talk to Memvella</span>
             </div>
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -105,5 +158,7 @@ export default function SeniorHomePage() {
         </div>
       </section>
     </main>
+    {isListening && <VoiceOverlay onClose={() => setIsListening(false)} />}
+    </>
   );
 }
