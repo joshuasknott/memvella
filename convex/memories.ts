@@ -136,3 +136,18 @@ export const addMemoryMedia = mutation({
     });
   },
 });
+
+// =============================================================================
+// generateUploadUrl
+// =============================================================================
+// Returns a short-lived signed URL the frontend can POST a file to.
+// Called before addMemoryText (photo), addMemoryAudio, or addMemoryMedia
+// to obtain the storageId that gets passed into the insert mutation.
+// =============================================================================
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireCaregiver(ctx); // Ensure they are logged in
+    return await ctx.storage.generateUploadUrl();
+  },
+});

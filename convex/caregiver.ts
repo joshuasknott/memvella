@@ -269,8 +269,8 @@ export const getCaregiverDashboardSummary = query({
     return {
       totalFamilyMembers: members.length,
       totalRoutines: routines.length,
-      // Static placeholder — will be replaced by LLM summary in Phase 4
-      statusSummary: "Mom is doing well today.",
+      // Static placeholder — will be replaced by LLM summary in a future phase
+      statusSummary: "Your loved one is doing well today.",
     };
   },
 });
@@ -300,5 +300,23 @@ export const getNotificationSettings = query({
       urgentAlerts: false,
       routineReminders: false,
     };
+  },
+});
+
+// -----------------------------------------------------------------------------
+// getCaregiverProfile
+// -----------------------------------------------------------------------------
+// Returns the caregiver's profile record (lovedOneName, etc.), or null if it
+// hasn't been created yet (e.g. first-load before the dashboard flush runs).
+// -----------------------------------------------------------------------------
+export const getCaregiverProfile = query({
+  args: {},
+  handler: async (ctx) => {
+    const caregiverId = await requireCaregiver(ctx);
+
+    return await ctx.db
+      .query("caregiverProfiles")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", caregiverId))
+      .first();
   },
 });

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart } from 'lucide-react';
 
@@ -30,21 +30,26 @@ function TimelineSkeleton() {
 }
 
 export default function CaregiverDashboard() {
+  const { isAuthenticated } = useConvexAuth();
   const summary = useQuery(api.caregiver.getCaregiverDashboardSummary);
   const timeline = useQuery(api.caregiver.getTodayTimeline);
+  const profile = useQuery(api.caregiver.getCaregiverProfile);
   const createProfile = useMutation(api.caregiver.createCaregiverProfile);
 
-  // Flush the lovedOneName that was bridged via localStorage during sign-up.
-  // Runs once on mount. Removes the key immediately after a successful write
-  // so this never fires again on subsequent dashboard visits.
+  const lovedOneName = profile?.lovedOneName ?? 'Your loved one';
+
+  // Flush the lovedOneName bridged via localStorage during sign-up.
+  // Guarded by isAuthenticated — waits for the Convex JWT to be established
+  // before firing the mutation, preventing the "Unauthenticated" race condition.
   useEffect(() => {
+    if (!isAuthenticated) return;
     const lovedOneName = localStorage.getItem('memvella_lovedOneName');
     if (!lovedOneName) return;
     createProfile({ lovedOneName })
       .then(() => localStorage.removeItem('memvella_lovedOneName'))
       .catch((err) => console.warn('Profile creation deferred:', err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated, createProfile]);
 
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
@@ -58,7 +63,7 @@ export default function CaregiverDashboard() {
           <h2 className="font-headline font-bold text-2xl leading-tight text-on-primary-fixed mb-2">
             {summary?.statusSummary ?? 'Loading status…'}
           </h2>
-          <p className="text-[#1a1c1a] leading-relaxed">She chatted with Memvella this morning and looked at the family photos.</p>
+          <p className="text-[#1a1c1a] leading-relaxed">{lovedOneName} chatted with Memvella this morning and looked at the family photos.</p>
         </div>
         {/* Decorative Asymmetry */}
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>

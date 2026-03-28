@@ -1,23 +1,41 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2 } from 'lucide-react';
+import { Id } from '@/convex/_generated/dataModel';
+import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2, X } from 'lucide-react';
 
 const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
 
 export default function AddPersonPage() {
   const router = useRouter();
   const addFamilyMember = useMutation(api.caregiver.addFamilyMember);
+  const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('Son');
   const [isLiving, setIsLiving] = useState(true);
   const [aiContext, setAiContext] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedPhoto(file);
+    setPhotoPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const handleClearPhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  };
 
   const handleSavePerson = async () => {
     if (!name.trim()) {
@@ -31,12 +49,27 @@ export default function AddPersonPage() {
     setError(null);
     setIsSaving(true);
     try {
+      let photoStorageId: Id<'_storage'> | undefined = undefined;
+
+      // 3-step Convex upload if a photo was selected
+      if (selectedPhoto) {
+        const postUrl = await generateUploadUrl();
+        const result = await fetch(postUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': selectedPhoto.type },
+          body: selectedPhoto,
+        });
+        if (!result.ok) throw new Error('Photo upload failed.');
+        const { storageId } = await result.json() as { storageId: Id<'_storage'> };
+        photoStorageId = storageId;
+      }
+
       await addFamilyMember({
         name: name.trim(),
         relationship,
-        isLiving,          // ⚠️ Temporal Safety Flag — persisted exactly as toggled
+        isLiving,
         aiContext: aiContext.trim(),
-        photoStorageId: undefined, // Photo upload stubbed — wired in a future pass
+        photoStorageId,
       });
       router.push('/caregiver/memories');
     } catch (err) {
@@ -51,16 +84,41 @@ export default function AddPersonPage() {
     <div className="flex flex-col gap-8 px-4 w-full pb-32">
       {/* Photo Upload Hero */}
       <section className="relative group">
-        <div className="w-full aspect-square rounded-lg bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm">
-          <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-90 transition-transform">
-            <Camera className="w-10 h-10 text-primary" strokeWidth={1.5} />
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id="person-photo-input"
+          onChange={handlePhotoSelect}
+        />
+        <label htmlFor="person-photo-input" className="block">
+          <div className="w-full aspect-square rounded-lg bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
+            {photoPreview ? (
+              <>
+                <img src={photoPreview} alt="Photo preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); handleClearPhoto(); }}
+                  className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-90 transition-transform">
+                  <Camera className="w-10 h-10 text-primary" strokeWidth={1.5} />
+                </div>
+                <p className="font-headline font-bold text-lg text-primary">Add Photo</p>
+                <p className="text-sm text-outline mt-1 font-light italic">Make it a favorite memory</p>
+                {/* Decorative tonal bleed */}
+                <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
+              </>
+            )}
           </div>
-          <p className="font-headline font-bold text-lg text-primary">Add Photo</p>
-          <p className="text-sm text-outline mt-1 font-light italic">Make it a favorite memory</p>
-          {/* Decorative tonal bleed */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
-        </div>
+        </label>
       </section>
 
       {/* Form Essentials */}
