@@ -2,11 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Delete, ArrowLeft } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Delete, ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function SeniorSetupPage() {
-  const [pin, setPin] = useState<string>('');
   const router = useRouter();
+  const pairTablet = useMutation(api.kiosk.pairTabletSession);
+
+  const [pin, setPin] = useState<string>('');
+  const [isPairing, setIsPairing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 6) {
@@ -16,6 +22,33 @@ export default function SeniorSetupPage() {
 
   const handleDelete = () => {
     setPin(prev => prev.slice(0, -1));
+    setError(null);
+  };
+
+  const handleConnect = async () => {
+    if (pin.length !== 6) return;
+    setError(null);
+    setIsPairing(true);
+    try {
+      const result = await pairTablet({ pinCode: pin });
+
+      if (result.success) {
+        // Persist caregiver context to localStorage so the kiosk home page
+        // can read it without a Better Auth session
+        localStorage.setItem('memvella_caregiverId', result.caregiverId);
+        localStorage.setItem('memvella_seniorName', result.seniorName);
+        router.push('/senior');
+      } else {
+        setError(result.error);
+        setPin('');
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      setPin('');
+      console.error(err);
+    } finally {
+      setIsPairing(false);
+    }
   };
 
   const boxes = Array.from({ length: 6 });
@@ -23,12 +56,12 @@ export default function SeniorSetupPage() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-white font-body p-6 relative">
       <div className="w-full flex flex-col items-center">
-        
+
         {/* Escape Hatch */}
         <div className="w-full max-w-lg mb-8">
-           <button onClick={() => router.back()} className="flex items-center gap-2 text-[#4e0078] font-medium hover:opacity-80 transition-opacity">
-             <ArrowLeft size={24} /> Back
-           </button>
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-[#4e0078] font-medium hover:opacity-80 transition-opacity">
+            <ArrowLeft size={24} /> Back
+          </button>
         </div>
 
         {/* Headlines */}
@@ -42,15 +75,30 @@ export default function SeniorSetupPage() {
         </div>
 
         {/* PIN Input Display */}
-        <div className="flex gap-4 mb-14">
+        <div className="flex gap-4 mb-6">
           {boxes.map((_, i) => (
-            <div 
-              key={i} 
-              className="h-20 w-16 border-2 border-gray-200 rounded-2xl text-5xl font-bold flex items-center justify-center text-slate-900 bg-white"
+            <div
+              key={i}
+              className={`h-20 w-16 border-2 rounded-2xl text-5xl font-bold flex items-center justify-center text-slate-900 bg-white transition-colors ${
+                error
+                  ? 'border-red-400'
+                  : pin[i]
+                  ? 'border-[#4e0078]'
+                  : 'border-gray-200'
+              }`}
             >
-              {pin[i] || ''}
+              {pin[i] ? '●' : ''}
             </div>
           ))}
+        </div>
+
+        {/* Inline Error Message */}
+        <div className="h-10 mb-8 flex items-center justify-center">
+          {error && (
+            <p className="font-headline font-semibold text-red-500 text-xl text-center animate-in slide-in-from-top duration-200">
+              {error}
+            </p>
+          )}
         </div>
 
         {/* Massive Keypad */}
@@ -59,38 +107,49 @@ export default function SeniorSetupPage() {
             <button
               key={num}
               onClick={() => handleKeyPress(num.toString())}
-              className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95"
+              disabled={isPairing}
+              className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
             >
               {num}
             </button>
           ))}
           {/* Empty Space */}
           <div></div>
-          
+
           {/* Zero */}
           <button
             onClick={() => handleKeyPress('0')}
-            className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95"
+            disabled={isPairing}
+            className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
           >
             0
           </button>
-          
+
           {/* Delete / Backspace */}
           <button
             onClick={handleDelete}
-            className="h-24 bg-gray-50 text-slate-600 flex items-center justify-center rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95"
+            disabled={isPairing}
+            className="h-24 bg-gray-50 text-slate-600 flex items-center justify-center rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
           >
             <Delete size={40} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Action Button conditionally hidden or shown */}
+        {/* Connect Button — appears when PIN is complete */}
         {pin.length === 6 && (
           <button
-            onClick={() => router.push('/senior')}
-            className="w-full max-w-lg bg-[#4e0078] text-white rounded-3xl py-6 font-semibold text-2xl hover:bg-[#3d005e] active:scale-95 transition-all shadow-md animate-in slide-in-from-bottom flex items-center justify-center"
+            onClick={handleConnect}
+            disabled={isPairing}
+            className="w-full max-w-lg bg-[#4e0078] text-white rounded-3xl py-6 font-semibold text-2xl hover:bg-[#3d005e] active:scale-95 transition-all shadow-md animate-in slide-in-from-bottom flex items-center justify-center gap-3 disabled:opacity-70"
           >
-            Connect to Memvella
+            {isPairing ? (
+              <>
+                <Loader2 className="w-7 h-7 animate-spin" />
+                Connecting…
+              </>
+            ) : (
+              'Connect to Memvella'
+            )}
           </button>
         )}
       </div>

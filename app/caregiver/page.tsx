@@ -1,19 +1,63 @@
+"use client";
+
+import { useEffect } from 'react';
 import Link from 'next/link';
-import BrandLogo from '@/components/BrandLogo';
-import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Video, Heart, Home, Settings } from 'lucide-react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart } from 'lucide-react';
+
+// Icon map for timeline row types
+const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {
+  Daily: Coffee,
+  Weekly: Calendar,
+  Weekends: Calendar,
+};
+
+function TimelineSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg animate-pulse">
+          <div className="w-12 h-12 rounded-full bg-surface-container" />
+          <div className="flex-1 space-y-2">
+            <div className="h-2.5 bg-surface-container rounded w-16" />
+            <div className="h-3 bg-surface-container rounded w-40" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CaregiverDashboard() {
+  const summary = useQuery(api.caregiver.getCaregiverDashboardSummary);
+  const timeline = useQuery(api.caregiver.getTodayTimeline);
+  const createProfile = useMutation(api.caregiver.createCaregiverProfile);
+
+  // Flush the lovedOneName that was bridged via localStorage during sign-up.
+  // Runs once on mount. Removes the key immediately after a successful write
+  // so this never fires again on subsequent dashboard visits.
+  useEffect(() => {
+    const lovedOneName = localStorage.getItem('memvella_lovedOneName');
+    if (!lovedOneName) return;
+    createProfile({ lovedOneName })
+      .then(() => localStorage.removeItem('memvella_lovedOneName'))
+      .catch((err) => console.warn('Profile creation deferred:', err));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
       {/* Connection Hero: Engagement Summary */}
-      {/* // TODO: Convex query to fetch the loved one's connection status/summary */}
       <section className="bg-linear-to-br from-primary-fixed to-secondary-fixed rounded-lg p-8 relative overflow-hidden shadow-sm">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-4">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             <span className="font-label text-xs font-semibold tracking-widest uppercase text-primary/60">Current Status</span>
           </div>
-          <h2 className="font-headline font-bold text-2xl leading-tight text-on-primary-fixed mb-2">Mom is doing well today.</h2>
+          <h2 className="font-headline font-bold text-2xl leading-tight text-on-primary-fixed mb-2">
+            {summary?.statusSummary ?? 'Loading status…'}
+          </h2>
           <p className="text-[#1a1c1a] leading-relaxed">She chatted with Memvella this morning and looked at the family photos.</p>
         </div>
         {/* Decorative Asymmetry */}
@@ -45,7 +89,6 @@ export default function CaregiverDashboard() {
       </section>
 
       {/* The Review Card */}
-      {/* // TODO: Convex query to fetch pending approvals/insights */}
       <section className="-mt-4 relative z-20">
         <div className="bg-primary p-6 rounded-lg shadow-[0_25px_50px_rgba(78,0,120,0.2)] border border-primary/5">
           <div className="flex items-start justify-between mb-4">
@@ -64,40 +107,52 @@ export default function CaregiverDashboard() {
         </div>
       </section>
 
-      {/* Today's Updates */}
-      {/* // TODO: Convex query to fetch timeline updates */}
+      {/* Today's Updates — Live from Convex */}
       <section className="space-y-4">
         <h3 className="font-headline font-bold text-xl px-2">Today&apos;s Updates</h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg group hover:bg-surface-container transition-colors">
+        {timeline === undefined ? (
+          <TimelineSkeleton />
+        ) : timeline.length === 0 ? (
+          <div className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg">
             <div className="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <Coffee className="text-secondary w-6 h-6" />
+              <Calendar className="text-on-surface-variant w-6 h-6" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">10:00 AM</p>
-              <p className="font-medium text-on-surface">Morning Tea routine completed.</p>
+              <p className="font-medium text-on-surface-variant text-sm">No routines scheduled yet.</p>
+              <Link href="/caregiver/add-routine" className="text-primary text-xs font-bold mt-0.5 block">+ Add a routine</Link>
             </div>
           </div>
-
-          <div className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg group hover:bg-surface-container transition-colors">
-            <div className="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <Video className="text-primary w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">2:00 PM</p>
-              <p className="font-medium text-on-surface">Video call with Emily.</p>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
-            <img alt="Family connection" className="w-full h-48 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvdnjfvGCacJU6gJfUSBgn-Tzpt5V-9V-xKB_OUov6yY9JuX98oxUNELVIJa9R10E5Nsu53nLD39D-F76FDSr5m8Q06jTLe4SRsqJ6vSQZ9e7qoYnBn_XGXy0nkAEoYW_1huqcOiEQpSjdcxQ8mNAwZj3tef7tH10-qBketzKksw7w9ztShyFr1KMrz6CGuWrvVM4XVv4Qv3_3iv-rmsd8Cv2NqnWAp43cNeVi1KfzEMaBLVN6bsDmq8dtcucEmFSMI9hbGXv8t4U" />
-            <div className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
-                  <Heart className="text-on-tertiary-fixed-variant w-4 h-4 fill-on-tertiary-fixed-variant" />
+        ) : (
+          <div className="space-y-3">
+            {timeline.map((item) => {
+              const Icon = ROUTINE_ICON_MAP[item.type] ?? Calendar;
+              return (
+                <div key={item.id} className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg group hover:bg-surface-container transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                    <Icon className="text-secondary w-6 h-6" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
+                    <p className="font-medium text-on-surface">{item.title}</p>
+                  </div>
                 </div>
-                <p className="font-medium text-on-surface">Mom viewed the wedding album.</p>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Family connection summary card — kept for visual richness */}
+        <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
+          <div className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
+                <Heart className="text-on-tertiary-fixed-variant w-4 h-4 fill-on-tertiary-fixed-variant" />
               </div>
+              <p className="font-medium text-on-surface">
+                {summary
+                  ? `${summary.totalFamilyMembers} family member${summary.totalFamilyMembers !== 1 ? 's' : ''} & ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? 's' : ''} set up.`
+                  : 'Loading family summary…'}
+              </p>
             </div>
           </div>
         </div>

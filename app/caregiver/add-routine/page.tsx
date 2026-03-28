@@ -1,13 +1,61 @@
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Sparkles, Lightbulb, Check } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Calendar, Sparkles, Lightbulb, Check, Loader2 } from 'lucide-react';
+
+const FREQUENCY_OPTIONS = ['Daily', 'Weekly', 'Weekends'];
 
 export default function AddRoutinePage() {
   const router = useRouter();
-  const handleSaveRoutine = () => {
-    // // TODO: Convex mutation to save the new routine
-    console.log("Saving new routine...");
+  const addRoutine = useMutation(api.caregiver.addRoutine);
+
+  const [routineName, setRoutineName] = useState('');
+  const [time, setTime] = useState('');
+  const [frequency, setFrequency] = useState<string[]>(['Daily']);
+  const [aiInstructions, setAiInstructions] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const toggleFrequency = (option: string) => {
+    setFrequency((prev) =>
+      prev.includes(option)
+        ? prev.filter((f) => f !== option)
+        : [...prev, option]
+    );
+  };
+
+  const handleSaveRoutine = async () => {
+    if (!routineName.trim()) {
+      setError('Please enter a routine name.');
+      return;
+    }
+    if (!time.trim()) {
+      setError('Please enter a time.');
+      return;
+    }
+    if (frequency.length === 0) {
+      setError('Please select at least one frequency.');
+      return;
+    }
+    setError(null);
+    setIsSaving(true);
+    try {
+      await addRoutine({
+        routineName: routineName.trim(),
+        time: time.trim(),
+        frequency,
+        aiInstructions: aiInstructions.trim(),
+      });
+      router.push('/caregiver/routines');
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -25,11 +73,13 @@ export default function AddRoutinePage() {
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_name">Routine Name</label>
           <div className="relative">
-            <input 
-              id="routine_name" 
-              placeholder="Morning Tea" 
-              type="text" 
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50" 
+            <input
+              id="routine_name"
+              placeholder="Morning Tea"
+              type="text"
+              value={routineName}
+              onChange={(e) => setRoutineName(e.target.value)}
+              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
@@ -37,29 +87,38 @@ export default function AddRoutinePage() {
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_time">What time?</label>
           <div className="relative">
-            <input 
-              id="routine_time" 
-              placeholder="10:00 AM" 
-              type="text" 
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50" 
+            <input
+              id="routine_time"
+              placeholder="10:00 AM"
+              type="text"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
 
-        {/* Frequency Dropdown/Pill-Selector */}
+        {/* Frequency Pill-Selector — multi-select */}
         <div className="space-y-4">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Frequency</label>
           <div className="flex flex-wrap gap-3">
-            <button className="h-12 px-6 rounded-full bg-primary text-on-primary font-medium shadow-lg shadow-primary/20 flex items-center gap-2">
-              <Check className="w-4 h-4 font-bold" strokeWidth={3} />
-              Daily
-            </button>
-            <button className="h-12 px-6 rounded-full bg-secondary-fixed text-on-secondary-container font-medium hover:bg-secondary-container/30 transition-colors">
-              Weekly
-            </button>
-            <button className="h-12 px-6 rounded-full bg-secondary-fixed text-on-secondary-container font-medium hover:bg-secondary-container/30 transition-colors">
-              Weekends
-            </button>
+            {FREQUENCY_OPTIONS.map((option) => {
+              const isSelected = frequency.includes(option);
+              return (
+                <button
+                  key={option}
+                  onClick={() => toggleFrequency(option)}
+                  className={`h-12 px-6 rounded-full font-medium transition-colors flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-primary text-on-primary shadow-lg shadow-primary/20'
+                      : 'bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30'
+                  }`}
+                >
+                  {isSelected && <Check className="w-4 h-4 font-bold" strokeWidth={3} />}
+                  {option}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -69,11 +128,13 @@ export default function AddRoutinePage() {
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
           </div>
           <div className="relative">
-            <textarea 
-              id="ai_instructions" 
-              placeholder="E.g., Remind Mom to use her favorite blue mug." 
-              rows={4} 
-              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none" 
+            <textarea
+              id="ai_instructions"
+              placeholder="E.g., Remind Mom to use her favorite blue mug."
+              rows={4}
+              value={aiInstructions}
+              onChange={(e) => setAiInstructions(e.target.value)}
+              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">Give Memvella specific directions for how to handle this routine.</p>
           </div>
@@ -93,11 +154,24 @@ export default function AddRoutinePage() {
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>
       </div>
 
-      <button 
+      {/* Validation Error */}
+      {error && (
+        <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
+      )}
+
+      <button
         onClick={handleSaveRoutine}
-        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm"
+        disabled={isSaving}
+        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        Save Routine
+        {isSaving ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          'Save Routine'
+        )}
       </button>
     </div>
   );

@@ -2,14 +2,49 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Check, Plus, Sparkles, Lightbulb } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2 } from 'lucide-react';
+
+const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
 
 export default function AddPersonPage() {
   const router = useRouter();
+  const addFamilyMember = useMutation(api.caregiver.addFamilyMember);
+
+  const [name, setName] = useState('');
+  const [relationship, setRelationship] = useState('Son');
   const [isLiving, setIsLiving] = useState(true);
-  const handleSavePerson = () => {
-    // // TODO: Convex mutation to save the new person and context
-    console.log("Saving new person...");
+  const [aiContext, setAiContext] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSavePerson = async () => {
+    if (!name.trim()) {
+      setError('Please enter a name.');
+      return;
+    }
+    if (!aiContext.trim()) {
+      setError('Please add some context for Memvella.');
+      return;
+    }
+    setError(null);
+    setIsSaving(true);
+    try {
+      await addFamilyMember({
+        name: name.trim(),
+        relationship,
+        isLiving,          // ⚠️ Temporal Safety Flag — persisted exactly as toggled
+        aiContext: aiContext.trim(),
+        photoStorageId: undefined, // Photo upload stubbed — wired in a future pass
+      });
+      router.push('/caregiver/memories');
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -34,11 +69,13 @@ export default function AddPersonPage() {
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="person_name">What is their name?</label>
           <div className="relative">
-            <input 
-              id="person_name" 
-              placeholder="David" 
-              type="text" 
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50" 
+            <input
+              id="person_name"
+              placeholder="David"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
@@ -47,26 +84,27 @@ export default function AddPersonPage() {
         <div className="space-y-4">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to Mom</label>
           <div className="flex flex-wrap gap-3">
-            <button className="h-12 px-6 rounded-full bg-primary text-on-primary font-medium shadow-lg shadow-primary/20 flex items-center gap-2">
-              <Check className="w-4 h-4 font-bold" strokeWidth={3} />
-              Son
-            </button>
-            <button className="h-12 px-6 rounded-full bg-secondary-fixed text-on-secondary-container font-medium hover:bg-secondary-container/30 transition-colors">
-              Daughter
-            </button>
-            <button className="h-12 px-6 rounded-full bg-secondary-fixed text-on-secondary-container font-medium hover:bg-secondary-container/30 transition-colors">
-              Grandchild
-            </button>
-            <button className="h-12 px-6 rounded-full bg-secondary-fixed text-on-secondary-container font-medium hover:bg-secondary-container/30 transition-colors">
-              Friend
-            </button>
+            {RELATIONSHIP_OPTIONS.map((option) => (
+              <button
+                key={option}
+                onClick={() => setRelationship(option)}
+                className={`h-12 px-6 rounded-full font-medium transition-colors flex items-center gap-2 ${
+                  relationship === option
+                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20'
+                    : 'bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30'
+                }`}
+              >
+                {relationship === option && <Check className="w-4 h-4 font-bold" strokeWidth={3} />}
+                {option}
+              </button>
+            ))}
             <button className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest">
               <Plus className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Life Status Selection */}
+        {/* Life Status Selection — TEMPORAL SAFETY FLAG */}
         <div className="space-y-4">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">
             Status
@@ -75,8 +113,8 @@ export default function AddPersonPage() {
             <button
               onClick={() => setIsLiving(true)}
               className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
-                isLiving 
-                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm' 
+                isLiving
+                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm'
                   : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
               }`}
             >
@@ -85,8 +123,8 @@ export default function AddPersonPage() {
             <button
               onClick={() => setIsLiving(false)}
               className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
-                !isLiving 
-                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm' 
+                !isLiving
+                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm'
                   : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
               }`}
             >
@@ -105,18 +143,20 @@ export default function AddPersonPage() {
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
           </div>
           <div className="relative">
-            <textarea 
-              id="ai_context" 
-              placeholder="E.g., David lives in Chicago and loves baseball." 
-              rows={4} 
-              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none" 
+            <textarea
+              id="ai_context"
+              placeholder="E.g., David lives in Chicago and loves baseball."
+              rows={4}
+              value={aiContext}
+              onChange={(e) => setAiContext(e.target.value)}
+              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help Mom remember?</p>
           </div>
         </div>
       </section>
 
-      {/* Contextual Tip Card (Compassionate Curator Style) */}
+      {/* Contextual Tip Card */}
       <div className="bg-primary-fixed/30 p-6 rounded-lg relative overflow-hidden group">
         <div className="relative z-10 flex gap-4">
           <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
@@ -127,15 +167,27 @@ export default function AddPersonPage() {
             <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during Mom&apos;s morning wellness check-in.</p>
           </div>
         </div>
-        {/* Asymmetric decorative element */}
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>
       </div>
 
-      <button 
+      {/* Validation Error */}
+      {error && (
+        <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
+      )}
+
+      <button
         onClick={handleSavePerson}
-        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm"
+        disabled={isSaving}
+        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        Save to Family
+        {isSaving ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          'Save to Family'
+        )}
       </button>
     </div>
   );

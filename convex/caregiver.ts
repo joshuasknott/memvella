@@ -139,6 +139,38 @@ export const saveVoiceSessionLog = mutation({
   },
 });
 
+
+// =============================================================================
+// createCaregiverProfile
+// =============================================================================
+// Idempotent — only inserts if no profile exists yet for this caregiver.
+// Called from the dashboard on first load after sign-up, reading the
+// lovedOneName from localStorage that was set during the onboarding flow.
+// =============================================================================
+export const createCaregiverProfile = mutation({
+  args: {
+    lovedOneName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const authUserId = await requireCaregiver(ctx);
+
+    // Idempotency check — don't create a duplicate profile
+    const existing = await ctx.db
+      .query("caregiverProfiles")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", authUserId))
+      .first();
+
+    if (existing) return existing._id; // Already set up — nothing to do
+
+    return await ctx.db.insert("caregiverProfiles", {
+      authUserId,
+      caregiverName: "", // Will be populated from the auth identity name in a future pass
+      lovedOneName: args.lovedOneName.trim(),
+      role: "caregiver",
+    });
+  },
+});
+
 // =============================================================================
 // CAREGIVER QUERIES — Require Better Auth session
 // =============================================================================
