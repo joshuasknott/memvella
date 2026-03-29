@@ -5,7 +5,7 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Mic, X } from 'lucide-react';
+import { Mic, X, Volume2 } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 
 // ─── Live Clock ───────────────────────────────────────────────────────────────
@@ -53,8 +53,8 @@ function PolaroidSkeleton({ rotate }: { rotate: string }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SeniorHomePage() {
   const now = useLiveClock();
-  const { data: session } = authClient.useSession();
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [activeMemoryId, setActiveMemoryId] = useState<string | null>(null);
 
   // ── Safe localStorage read — avoids SSR/hydration mismatch ──────────────
   // Primary key: memvella_lovedOneName (written by caregiver onboarding).
@@ -170,23 +170,45 @@ export default function SeniorHomePage() {
             const isSpanning = isLast && gallery.length % 2 !== 0;
 
             return (
-              <div
+              <button
                 key={item.id}
-                className={`flex flex-col gap-4 ${rotation} ${index === 1 ? 'mt-8' : ''} ${index === 3 ? '-mt-12' : ''} ${isSpanning ? 'col-span-2 items-center' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveMemoryId(activeMemoryId === item.id ? null : item.id);
+                }}
+                className={`flex flex-col gap-4 text-left group transition-all duration-300 transform outline-none focus:ring-4 focus:ring-primary/30 rounded-lg pb-4
+                  ${activeMemoryId === item.id ? 'scale-105' : 'hover:scale-105'}
+                  ${rotation} ${index === 1 ? 'mt-8' : ''} ${index === 3 ? '-mt-12' : ''} ${isSpanning ? 'col-span-2 items-center' : ''}`}
               >
-                <div className={`bg-white p-4 pb-12 rounded-sm border border-slate-200 shadow-md ${isSpanning ? 'w-[70%] -rotate-2' : ''}`}>
+                <div className={`bg-white p-4 pb-12 rounded-sm border shadow-md relative overflow-hidden transition-all duration-300
+                  ${activeMemoryId === item.id ? 'border-primary ring-2 ring-primary/50 shadow-xl' : 'border-slate-200'}
+                  ${isSpanning ? 'w-[70%] -rotate-2' : ''}`}>
+                  
+                  {/* Playing Overlays */}
+                  {activeMemoryId === item.id && (
+                    <div className="absolute inset-0 z-10 pointer-events-none rounded-sm bg-primary/5 shimmer-overlay" />
+                  )}
+                  {activeMemoryId === item.id && (
+                    <div className="absolute top-6 right-6 z-20 bg-primary text-on-primary p-2 rounded-full shadow-lg animate-pulse">
+                      <Volume2 className="w-5 h-5" />
+                    </div>
+                  )}
+
                   <div className={`overflow-hidden rounded-sm bg-surface-container ${isSpanning ? 'aspect-video' : index % 3 === 2 ? 'aspect-square' : 'aspect-4/3'}`}>
                     <img
                       alt={item.caption}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover relative z-0"
                       src={item.imageUrl}
                     />
                   </div>
                 </div>
                 {!isSpanning && (
-                  <p className="font-headline text-2xl font-bold text-on-surface text-center tracking-tight">{item.caption}</p>
+                  <p className={`font-headline text-2xl font-bold text-center tracking-tight transition-colors duration-300
+                    ${activeMemoryId === item.id ? 'text-primary' : 'text-on-surface'}`}>
+                    {item.caption}
+                  </p>
                 )}
-              </div>
+              </button>
             );
           })}
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { BookOpen, UserPlus, Camera, Users, Mic, Heart } from 'lucide-react';
+import { BookOpen, UserPlus, Camera, Users, Mic, Heart, Edit2, Trash2 } from 'lucide-react';
 
 function MemberSkeleton() {
   return (
@@ -21,6 +21,14 @@ function MemberSkeleton() {
 export default function CaregiverMemoriesPage() {
   const members = useQuery(api.caregiver.getFamilyDirectory);
   const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+
+  const handleUpdate = (id: string, type: string) => {
+    console.log(`Update ${type}: ${id}`);
+  };
+
+  const handleDelete = (id: string, type: string) => {
+    console.log(`Delete ${type}: ${id}`);
+  };
 
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
@@ -105,7 +113,7 @@ export default function CaregiverMemoriesPage() {
         {members !== undefined && members.length > 0 && (
           <div className="space-y-3">
             {members.map((member) => (
-              <div key={member.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div key={member.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 group hover:border-purple-200 transition-colors cursor-pointer">
                 {/* Avatar */}
                 <div className="w-12 h-12 rounded-full bg-purple-50 border border-purple-100 overflow-hidden shrink-0 flex items-center justify-center">
                   {member.photoUrl ? (
@@ -123,15 +131,25 @@ export default function CaregiverMemoriesPage() {
                   <p className="text-xs text-gray-500 font-medium mt-0.5">{member.relationship}</p>
                 </div>
 
-                {/* Temporal safety indicator */}
-                <div className="shrink-0">
-                  {member.isLiving ? (
-                    <Heart className="w-5 h-5 text-purple-400 fill-purple-100" />
-                  ) : (
-                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                      In Memory
-                    </span>
-                  )}
+                {/* Temporal safety indicator & Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex group-hover:hidden items-center transition-all">
+                    {member.isLiving ? (
+                      <Heart className="w-5 h-5 text-purple-400 fill-purple-100" />
+                    ) : (
+                      <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                        In Memory
+                      </span>
+                    )}
+                  </div>
+                  <div className="hidden group-hover:flex items-center gap-1 animate-in fade-in duration-200">
+                    <button onClick={(e) => { e.preventDefault(); handleUpdate(member.id, 'connection'); }} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={(e) => { e.preventDefault(); handleDelete(member.id, 'connection'); }} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

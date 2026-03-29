@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Calendar } from 'lucide-react';
+import { Calendar, Edit2, Trash2 } from 'lucide-react';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -22,6 +22,14 @@ function RoutineSkeleton() {
 
 export default function CaregiverRoutinesPage() {
   const timeline = useQuery(api.caregiver.getTodayTimeline);
+
+  const handleUpdate = (id: string, type: string) => {
+    console.log(`Update ${type}: ${id}`);
+  };
+
+  const handleDelete = (id: string, type: string) => {
+    console.log(`Delete ${type}: ${id}`);
+  };
 
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
@@ -75,18 +83,28 @@ export default function CaregiverRoutinesPage() {
                 </p>
               </div>
 
-              {/* Frequency pills */}
-              <div className="flex gap-1 shrink-0">
-                {DAYS.filter((d) =>
-                  item.frequency.includes('Daily') ||
-                  (item.frequency.includes('Weekends') && (d === 'Sat' || d === 'Sun')) ||
-                  (item.frequency.includes('Weekly') && d === 'Mon') ||
-                  item.frequency.includes(d)
-                ).map((d) => (
-                  <span key={d} className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                    {d}
-                  </span>
-                ))}
+              {/* Frequency pills / Action buttons */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex gap-1 group-hover:hidden transition-all">
+                  {DAYS.filter((d) =>
+                    item.frequency.includes('Daily') ||
+                    (item.frequency.includes('Weekends') && (d === 'Sat' || d === 'Sun')) ||
+                    (item.frequency.includes('Weekly') && d === 'Mon') ||
+                    item.frequency.includes(d)
+                  ).map((d) => (
+                    <span key={d} className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                      {d}
+                    </span>
+                  ))}
+                </div>
+                <div className="hidden group-hover:flex items-center gap-1 animate-in fade-in duration-200">
+                  <button onClick={(e) => { e.preventDefault(); handleUpdate(item.id, 'routine'); }} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={(e) => { e.preventDefault(); handleDelete(item.id, 'routine'); }} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

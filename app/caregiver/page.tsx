@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart, ChevronRight } from 'lucide-react';
+import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 
 // Icon map for timeline row types
 const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {
@@ -57,6 +57,14 @@ export default function CaregiverDashboard() {
       .catch((err) => console.warn('Profile creation deferred:', err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthenticated, createProfile]);
+
+  const handleUpdate = (id: string, type: string) => {
+    console.log(`Update ${type}: ${id}`);
+  };
+
+  const handleDelete = (id: string, type: string) => {
+    console.log(`Delete ${type}: ${id}`);
+  };
 
   // While the Convex session is being established, render a clean loading
   // state to prevent unauthenticated queries from firing.
@@ -113,21 +121,28 @@ export default function CaregiverDashboard() {
 
       {/* The Review Card */}
       <section className="-mt-2 relative z-20">
-        <div className="bg-primary p-5 rounded-lg shadow-[0_25px_50px_rgba(78,0,120,0.2)] border border-primary/5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-8 h-8 rounded-full bg-on-primary-container/20 flex items-center justify-center">
-              <MessageSquare className="text-on-primary-container fill-on-primary-container/20 w-4 h-4" />
+        {summary === undefined ? (
+          <div className="bg-primary p-5 rounded-lg shadow-sm border border-primary/5 animate-pulse">
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-8 h-8 rounded-full bg-on-primary-container/20" />
+              <div className="w-24 h-6 rounded-full bg-on-primary-container/10" />
             </div>
-            <span className="bg-on-primary-container/10 text-on-primary-container text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">New Insights</span>
+            <div className="space-y-2 mb-4">
+              <div className="h-4 bg-on-primary-container/10 rounded w-full" />
+              <div className="h-4 bg-on-primary-container/10 rounded w-2/3" />
+            </div>
+            <div className="w-full h-12 bg-on-primary-container/10 rounded-full" />
           </div>
-          <p className="text-on-primary font-medium text-sm mb-4 leading-relaxed">
-            Memvella identified that Emily prefers Earl Grey tea with honey.
-          </p>
-          <Link href="/caregiver/insights" className="w-full h-12 bg-on-primary text-primary font-bold rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-            Review New Info
-            <ArrowRight className="w-4 h-4 outline-none" />
-          </Link>
-        </div>
+        ) : (
+          <div className="bg-surface-container-low p-5 rounded-lg border border-outline-variant/30 flex flex-col items-center justify-center text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-3">
+              <MessageSquare className="text-on-surface-variant w-5 h-5 opacity-50" />
+            </div>
+            <p className="text-on-surface-variant font-medium text-sm">
+              Memvella is gathering insights today...
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Today's Updates — Live from Convex */}
@@ -150,17 +165,26 @@ export default function CaregiverDashboard() {
             {timeline.map((item) => {
               const Icon = ROUTINE_ICON_MAP[item.type] ?? Calendar;
               return (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                      <Icon className="text-secondary w-5 h-5" />
+                <div key={item.id} className="flex flex-col p-4 bg-surface-container-low rounded-lg hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                        <Icon className="text-secondary w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
+                        <p className="font-medium text-on-surface text-sm">{item.title}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
-                      <p className="font-medium text-on-surface text-sm">{item.title}</p>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={(e) => { e.preventDefault(); handleUpdate(item.id, 'routine'); }} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={(e) => { e.preventDefault(); handleDelete(item.id, 'routine'); }} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
               );
             })}
@@ -176,8 +200,8 @@ export default function CaregiverDashboard() {
               </div>
               <p className="font-medium text-on-surface text-sm">
                 {summary
-                  ? `${summary.totalFamilyMembers} family member${summary.totalFamilyMembers !== 1 ? 's' : ''} & ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? 's' : ''} set up.`
-                  : 'Loading family summary…'}
+                  ? `${summary.totalFamilyMembers} connection${summary.totalFamilyMembers !== 1 ? 's' : ''} & ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? 's' : ''} set up.`
+                  : 'Loading connections summary…'}
               </p>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors shrink-0" />
