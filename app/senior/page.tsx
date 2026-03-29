@@ -5,7 +5,7 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Mic } from 'lucide-react';
+import { Mic, X } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 
 // ─── Live Clock ───────────────────────────────────────────────────────────────
@@ -54,6 +54,7 @@ function PolaroidSkeleton({ rotate }: { rotate: string }) {
 export default function SeniorHomePage() {
   const now = useLiveClock();
   const { data: session } = authClient.useSession();
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   // ── Safe localStorage read — avoids SSR/hydration mismatch ──────────────
   // Primary key: memvella_lovedOneName (written by caregiver onboarding).
@@ -134,12 +135,15 @@ export default function SeniorHomePage() {
 
         {/* Voice Action Button */}
         <div className="mt-8 md:mt-12">
-          <Link href="/senior/voice" className="block text-center bg-linear-to-br from-primary to-secondary w-full py-6 md:py-10 px-8 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200">
+          <button 
+            onClick={() => setIsVoiceModalOpen(true)}
+            className="block text-center bg-linear-to-br from-primary to-secondary w-full py-6 md:py-10 px-8 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200"
+          >
             <div className="flex items-center justify-center gap-4 md:gap-6">
               <Mic className="text-white shrink-0 h-10 w-10 md:h-12 md:w-12" strokeWidth={2.5} />
               <span className="text-white font-headline font-bold text-2xl md:text-3xl">Tap to talk to Memvella</span>
             </div>
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -199,6 +203,26 @@ export default function SeniorHomePage() {
         </div>
         </div>
       </section>
+
+      {/* Voice Modal Overlay */}
+      {isVoiceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+          <div className="bg-white/95 rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-lg text-center relative flex flex-col items-center space-y-8">
+            <button 
+              onClick={() => setIsVoiceModalOpen(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={32} />
+            </button>
+            <h2 className="font-headline text-3xl font-bold text-slate-900 mt-4">
+              Listening...
+            </h2>
+            <div className="h-32 w-32 rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-xl flex items-center justify-center animate-pulse">
+              <Mic size={56} strokeWidth={2.5} />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
