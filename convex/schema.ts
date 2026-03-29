@@ -17,9 +17,14 @@ export default defineSchema({
   caregiverProfiles: defineTable({
     // The tokenIdentifier from ctx.auth.getUserIdentity() — stable identity key
     authUserId: v.string(),
-    caregiverName: v.string(),
-    lovedOneName: v.string(),
-    role: v.union(v.literal("caregiver"), v.literal("senior")),
+    caregiverName: v.optional(v.string()),
+    lovedOneName: v.optional(v.string()),
+    role: v.optional(v.union(
+      v.literal("caregiver"),
+      v.literal("assisted_senior"),
+      v.literal("independent_senior"),
+    )),
+    onboarding_step: v.optional(v.number()),
   })
     .index("by_authUserId", ["authUserId"]),
 

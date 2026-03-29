@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { Doc } from "./_generated/dataModel";
 
 // =============================================================================
 // Auth helper — derives the stable caregiver identity from the JWT token.
@@ -143,31 +144,128 @@ export const saveVoiceSessionLog = mutation({
 // =============================================================================
 // createCaregiverProfile
 // =============================================================================
-// Idempotent — only inserts if no profile exists yet for this caregiver.
-// Called from the dashboard on first load after sign-up, reading the
-// lovedOneName from localStorage that was set during the onboarding flow.
+// Idempotent — returns the existing document ID if a profile already exists
+// for this authUserId. Otherwise creates a new profile, inserting only the
+// fields that were explicitly provided (no empty-string hacks).
+//
+// All profile fields are optional to support progressive conversational
+// onboarding — a record can be created with just authUserId and fleshed out
+// step-by-step via patchCaregiverProfile.
 // =============================================================================
 export const createCaregiverProfile = mutation({
   args: {
-    lovedOneName: v.string(),
+    caregiverName:   v.optional(v.string()),
+    lovedOneName:    v.optional(v.string()),
+    role: v.optional(v.union(
+      v.literal("caregiver"),
+      v.literal("assisted_senior"),
+      v.literal("independent_senior"),
+    )),
+    onboarding_step: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const authUserId = await requireCaregiver(ctx);
 
-    // Idempotency check — don't create a duplicate profile
+    // Idempotency check — never create a duplicate profile row
     const existing = await ctx.db
       .query("caregiverProfiles")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUserId))
       .first();
 
-    if (existing) return existing._id; // Already set up — nothing to do
+    if (existing) return existing._id;
 
-    return await ctx.db.insert("caregiverProfiles", {
+    // Build the insert payload — only include fields that were supplied.
+    // This avoids storing empty strings that would conflict with v.optional.
+
+    // Role-specific logic: independent_senior is the same person as the
+    // caregiver, so mirror caregiverName → lovedOneName when not supplied.
+    const effectiveLovedOneName =
+      args.lovedOneName ??
+      (args.role === "independent_senior" ? args.caregiverName : undefined);
+
+    const payload: Omit<Doc<"caregiverProfiles">, "_id" | "_creationTime"> = {
       authUserId,
-      caregiverName: "", // Will be populated from the auth identity name in a future pass
-      lovedOneName: args.lovedOneName.trim(),
-      role: "caregiver",
-    });
+      ...(args.caregiverName !== undefined   && { caregiverName:   args.caregiverName.trim() }),
+      ...(effectiveLovedOneName !== undefined && { lovedOneName:    effectiveLovedOneName.trim() }),
+      ...(args.role !== undefined             && { role:            args.role }),
+      ...(args.onboarding_step !== undefined  && { onboarding_step: args.onboarding_step }),
+    };
+
+    return await ctx.db.insert("caregiverProfiles", payload);
+  },
+});
+
+// =============================================================================
+// patchCaregiverProfile
+// =============================================================================
+// Protected step-merge mutation for conversational onboarding.
+// Only patches fields that are explicitly supplied — any undefined argument
+// is silently ignored, making every call safe to call for a single step.
+//
+// Role-specific logic:
+//   independent_senior → lovedOneName mirrors caregiverName when not supplied,
+//   because in that context the senior and their "loved one" are the same person.
+// =============================================================================
+export const patchCaregiverProfile = mutation({
+  args: {
+    caregiverName:   v.optional(v.string()),
+    lovedOneName:    v.optional(v.string()),
+    role: v.optional(v.union(
+      v.literal("caregiver"),
+      v.literal("assisted_senior"),
+      v.literal("independent_senior"),
+    )),
+    onboarding_step: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const authUserId = await requireCaregiver(ctx);
+
+    const profile = await ctx.db
+      .query("caregiverProfiles")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", authUserId))
+      .first();
+
+    if (!profile) {
+      throw new Error(
+        "No caregiverProfile found for this user. Call createCaregiverProfile first."
+      );
+    }
+
+    // Build the patch object — only include fields that were supplied.
+    const patch: Record<string, unknown> = {};
+
+    if (args.caregiverName !== undefined) {
+      patch.caregiverName = args.caregiverName.trim();
+    }
+
+    // Role-specific logic: when switching to independent_senior, auto-fill
+    // lovedOneName from caregiverName if the caller didn't supply one.
+    const incomingRole = args.role ?? profile.role;
+    const effectiveLovedOneName =
+      args.lovedOneName ??
+      (incomingRole === "independent_senior"
+        ? (args.caregiverName ?? profile.caregiverName)
+        : undefined);
+
+    if (effectiveLovedOneName !== undefined) {
+      patch.lovedOneName = effectiveLovedOneName.trim();
+    }
+
+    if (args.role !== undefined) {
+      patch.role = args.role;
+    }
+
+    if (args.onboarding_step !== undefined) {
+      patch.onboarding_step = args.onboarding_step;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      // Nothing to do — return the existing ID so the caller isn't confused
+      return profile._id;
+    }
+
+    await ctx.db.patch(profile._id, patch);
+    return profile._id;
   },
 });
 
