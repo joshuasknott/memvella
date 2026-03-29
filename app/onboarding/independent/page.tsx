@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useAction } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Mic, MicOff, ArrowRight, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useCallback, useRef } from 'react';
+import { Mic, MicOff, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 
 export default function IndependentSetupVoicePage() {
   const router = useRouter();
@@ -21,28 +18,18 @@ export default function IndependentSetupVoicePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   // -- Voice / Text Input State --
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiReply, setAiReply] = useState("All set! To help me get to know you, who is someone important in your life?");
 
   // -- Refs --
   const recognitionRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const handleOnboardingInput = useAction((api as any).agent?.handleOnboardingInput || api.voice?.handleVoiceChat);
-
   // -- Voice Helpers --
-  const speak = useCallback((text: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       try {
@@ -92,15 +79,11 @@ export default function IndependentSetupVoicePage() {
 
       recognition.onend = () => {
         stopRecording();
-        if (finalCaptured) {
+        if (finalCaptured && step === 1) {
           // Fire auto-submit logic if we are using voice
-          if (step === 1) {
-            setName(finalCaptured);
-            setStep(2);
-            setInputValue('');
-          } else if (step === 3) {
-            handleStep3Submit(finalCaptured);
-          }
+          setName(finalCaptured);
+          setStep(2);
+          setInputValue('');
         }
       };
 
@@ -110,39 +93,11 @@ export default function IndependentSetupVoicePage() {
       alert("Microphone access denied. Please type instead.");
       setIsListening(false);
     }
-  }, [step, stopRecording]); // handleStep3Submit and others aren't strictly needed as deps or we can rely on standard closure if we defined it earlier, but let's define them in scope.
-
-  const handleStep3Submit = async (finalText: string) => {
-    if (!finalText.trim()) return;
-    setIsProcessing(true);
-    setAiReply('Thinking...');
-    
-    try {
-      const response = await handleOnboardingInput({ userInput: finalText });
-      const replyText = typeof response === 'string' ? response : (response as any)?.response || (response as any)?.reply || "Got it.";
-      
-      setAiReply(replyText);
-      speak(replyText);
-      
-      // Delay to let the AI speak briefly before routing
-      setTimeout(() => {
-        router.push('/senior');
-      }, 3500);
-
-    } catch (error) {
-      console.error('Error processing input:', error);
-      const errorMsg = "I'm sorry, I had trouble processing that. Could you try again?";
-      setAiReply(errorMsg);
-      speak(errorMsg);
-      setIsProcessing(false);
-    }
-  };
+  }, [step, stopRecording]);
 
   const toggleRecording = () => {
     if (isListening) {
       stopRecording();
-      // Wait for onend to trigger the auto-submit, 
-      // but if transcript is ready we could force it here.
     } else {
       if (!isProcessing) {
         startRecording();
@@ -157,9 +112,6 @@ export default function IndependentSetupVoicePage() {
     if (step === 1) {
       setName(inputValue);
       setStep(2);
-      setInputValue('');
-    } else if (step === 3) {
-      handleStep3Submit(inputValue);
       setInputValue('');
     }
   };
@@ -182,9 +134,8 @@ export default function IndependentSetupVoicePage() {
         return;
       }
       
-      // Success, move to step 3
-      setStep(3);
-      setIsProcessing(false);
+      // Success, route directly to dashboard
+      router.push('/senior');
     } catch (err) {
       console.error(err);
       alert("An error occurred creating your account.");
@@ -202,10 +153,7 @@ export default function IndependentSetupVoicePage() {
           </SecondaryButton>
         ) : (
           <SecondaryButton 
-            onClick={() => {
-              if (step === 3) setStep(2);
-              if (step === 2) setStep(1);
-            }} 
+            onClick={() => setStep(1)} 
             className="w-auto px-8"
           >
             &larr; Back
@@ -214,7 +162,7 @@ export default function IndependentSetupVoicePage() {
         
         {/* Step Indicator */}
         <div className="flex gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2].map((s) => (
             <div 
               key={s} 
               className={`h-2 w-12 rounded-full transition-all duration-500 ${step >= s ? 'bg-primary' : 'bg-outline-variant/30'}`} 
@@ -228,7 +176,7 @@ export default function IndependentSetupVoicePage() {
         {step === 1 && (
           <div className="w-full text-center animate-in slide-in-from-right-8 fade-in duration-500 space-y-4">
              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
-               Hi there! What would you like us to call you?
+               Hi there! What should I call you?
              </h1>
           </div>
         )}
@@ -250,18 +198,31 @@ export default function IndependentSetupVoicePage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="hello@example.com"
+                  disabled={isProcessing}
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <label className="font-medium text-on-surface-variant ml-2 text-lg">Password</label>
-                <TextInput 
-                  type="password" 
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <TextInput 
+                    type={showPassword ? "text" : "password"} 
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={isProcessing}
+                    className="pr-12"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                  </button>
+                </div>
+                <p className="text-sm text-on-surface-variant ml-2">Minimum 8 characters.</p>
               </div>
 
               <PrimaryButton 
@@ -270,7 +231,10 @@ export default function IndependentSetupVoicePage() {
                 className="mt-4"
               >
                 {isProcessing ? (
-                  <Loader2 className="animate-spin w-6 h-6" />
+                  <>
+                    <Loader2 className="animate-spin w-6 h-6 mr-2" />
+                    Thinking...
+                  </>
                 ) : (
                   <>
                     Continue <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
@@ -280,22 +244,10 @@ export default function IndependentSetupVoicePage() {
             </FormCard>
           </div>
         )}
-
-        {/* STEP 3 */}
-        {step === 3 && (
-          <div className="w-full text-center animate-in slide-in-from-right-8 fade-in duration-500 space-y-4">
-             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
-               {aiReply}
-             </h1>
-             {isProcessing && (
-               <p className="font-medium text-2xl text-on-surface-variant animate-pulse pt-4">Processing...</p>
-             )}
-          </div>
-        )}
       </div>
 
-      {/* Reusable Input Pill strictly for Step 1 and 3 */}
-      {(step === 1 || step === 3) && (
+      {/* Reusable Input Pill strictly for Step 1 */}
+      {step === 1 && (
         <form 
           onSubmit={handleTextInputSubmit}
           className="absolute bottom-12 w-full px-6 flex justify-center animate-in slide-in-from-bottom-8 duration-700"
