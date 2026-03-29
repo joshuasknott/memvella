@@ -89,41 +89,47 @@ export default function SeniorHomePage() {
   const ROTATIONS = ['-rotate-2', 'rotate-2', '-rotate-2', 'rotate-2', ''];
 
   return (
-    <main className="flex flex-col md:flex-row min-h-screen w-full overflow-y-auto md:overflow-hidden">
+    <main className="flex flex-col md:flex-row min-h-screen w-full overflow-y-auto md:overflow-hidden bg-[#f0ebf5]">
       {/* Left Column (40%) */}
-      <section className="w-full md:w-[40%] flex-none flex flex-col justify-between p-6 md:p-12 border-b md:border-b-0 md:border-r border-outline-variant/10 bg-surface-container-low/30">
+      <section className="w-full md:w-[40%] flex-none flex flex-col justify-between p-4 md:p-12 border-b md:border-b-0 md:border-r border-outline-variant/10 bg-[#f8f5fa]">
 
         {/* Branding */}
         <BrandLogo className="mb-8" />
 
         {/* Time and Date */}
-        <div className="grow flex flex-col justify-center py-8 md:py-0">
+        <div className="grow flex flex-col justify-center py-6 md:py-0">
           {/* Greeting */}
-          <p className="font-headline text-slate-500 font-semibold text-3xl md:text-5xl mb-2 md:mb-4">
+          <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
             {now ? `${getGreeting(now)}, ${seniorName || 'there'}` : `Good Day`}
           </p>
           {/* Live Clock */}
-          <h1 className="font-headline font-extrabold text-5xl md:text-7xl text-slate-900 tracking-tighter mb-2">
+          <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
             {now ? formatTime(now) : '-- : --'}
           </h1>
-          <p className="font-headline text-3xl md:text-5xl font-bold mb-8 md:mb-12 text-slate-900">
+          <p className="font-headline text-2xl md:text-4xl font-bold mb-6 md:mb-12 text-slate-900">
             {now ? `Today is ${formatDate(now)}` : 'Loading…'}
           </p>
 
-          {/* Next Event Card */}
-          <div className="bg-surface-container-lowest p-10 rounded-4xl shadow-md border border-slate-200 border-l-12 border-l-secondary relative overflow-hidden">
-            <div className="flex items-start gap-6">
-              <div>
-                <p className="font-headline text-2xl md:text-3xl font-bold text-on-surface leading-tight">
-                  {nextEvent === undefined
-                    ? 'Loading schedule…'
-                    : nextEvent.time
-                    ? `${nextEvent.title} at ${nextEvent.time}.`
-                    : nextEvent.title}
-                </p>
+          {/* Next Event Card or Empty State */}
+          {!nextEvent ? (
+            <div className="bg-white/60 backdrop-blur-md px-6 py-4 md:px-8 md:py-6 rounded-3xl shadow-sm border border-white/40 inline-block w-fit">
+              <p className="font-headline text-lg md:text-2xl font-bold text-[#4e0078] leading-tight">
+                No routines scheduled right now. Enjoy your day!
+              </p>
+            </div>
+          ) : (
+            <div className="bg-surface-container-lowest p-6 md:p-10 rounded-4xl shadow-md border border-slate-200 border-l-12 border-l-secondary relative overflow-hidden">
+              <div className="flex items-start gap-6">
+                <div>
+                  <p className="font-headline text-xl md:text-3xl font-bold text-on-surface leading-tight">
+                    {nextEvent.time
+                      ? `${nextEvent.title} at ${nextEvent.time}.`
+                      : nextEvent.title}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Voice Action Button */}
@@ -138,7 +144,8 @@ export default function SeniorHomePage() {
       </section>
 
       {/* Right Column (60%) — Memory Gallery */}
-      <section className="w-full md:w-[60%] flex-1 p-6 md:p-12 overflow-y-auto bg-gray-50 relative">
+      <section className="w-full md:w-[60%] flex-1 p-4 md:p-12 overflow-y-auto relative flex flex-col justify-center">
+        <div className="bg-white/60 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-4xl mx-auto h-full overflow-y-auto">
         <header className="mb-8 md:mb-12 flex justify-between items-end">
           <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-on-surface">Memory Gallery</h2>
         </header>
@@ -189,6 +196,7 @@ export default function SeniorHomePage() {
               <p className="text-outline text-sm">Add memories with photos in the caregiver app.</p>
             </div>
           )}
+        </div>
         </div>
       </section>
     </main>

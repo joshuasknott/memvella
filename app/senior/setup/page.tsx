@@ -107,25 +107,25 @@ export default function SeniorSetupPage() {
         </div>
 
         {/* Massive Keypad */}
-        <div className="grid grid-cols-3 gap-6 w-full max-w-lg mx-auto mb-10">
+        <div className="grid grid-cols-3 gap-4 md:gap-6 w-fit mx-auto mb-10 place-items-center">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button
               key={num}
               onClick={() => handleKeyPress(num.toString())}
               disabled={isPairing}
-              className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+              className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-slate-900 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
             >
               {num}
             </button>
           ))}
           {/* Empty Space */}
-          <div></div>
+          <div className="h-20 w-20 md:h-24 md:w-24"></div>
 
           {/* Zero */}
           <button
             onClick={() => handleKeyPress('0')}
             disabled={isPairing}
-            className="h-24 bg-gray-50 text-slate-900 text-4xl font-bold rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+            className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-slate-900 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
           >
             0
           </button>
@@ -134,9 +134,9 @@ export default function SeniorSetupPage() {
           <button
             onClick={handleDelete}
             disabled={isPairing}
-            className="h-24 bg-gray-50 text-slate-600 flex items-center justify-center rounded-3xl active:bg-gray-200 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+            className="h-20 w-20 md:h-24 md:w-24 text-slate-600 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
           >
-            <Delete size={40} strokeWidth={2.5} />
+            <Delete size={32} strokeWidth={2.5} />
           </button>
         </div>
 
