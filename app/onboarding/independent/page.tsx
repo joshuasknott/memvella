@@ -8,7 +8,7 @@ import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
 
 export default function IndependentSetupVoicePage() {
   const router = useRouter();
@@ -16,9 +16,7 @@ export default function IndependentSetupVoicePage() {
   // -- State Machine --
   const [step, setStep] = useState<Step>(1);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [contactMethod, setContactMethod] = useState('');
   
   // -- Voice / Text Input State --
   const [inputValue, setInputValue] = useState('');
@@ -118,29 +116,26 @@ export default function IndependentSetupVoicePage() {
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!contactMethod) return;
     setIsProcessing(true);
 
     try {
-      const { error } = await authClient.signUp.email({
-        email,
-        password,
-        name,
-      });
-
-      if (error) {
-        alert(error.message);
-        setIsProcessing(false);
-        return;
-      }
-      
-      // Success, route directly to dashboard
-      router.push('/senior');
+      // Mock magic link / passwordless auth sending
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setIsProcessing(false);
+      setStep(3); // Move to biometric prompt
     } catch (err) {
       console.error(err);
       alert("An error occurred creating your account.");
       setIsProcessing(false);
     }
+  };
+
+  const skipBiometrics = () => router.push('/senior');
+  const enableBiometrics = async () => {
+    // Mock enabling FaceID/TouchID via WebAuthn
+    await new Promise(resolve => setTimeout(resolve, 500));
+    router.push('/senior');
   };
 
   return (
@@ -162,7 +157,7 @@ export default function IndependentSetupVoicePage() {
         
         {/* Step Indicator */}
         <div className="flex gap-2">
-          {[1, 2].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div 
               key={s} 
               className={`h-2 w-12 rounded-full transition-all duration-500 ${step >= s ? 'bg-primary' : 'bg-outline-variant/30'}`} 
@@ -185,44 +180,21 @@ export default function IndependentSetupVoicePage() {
         {step === 2 && (
           <div className="w-full max-w-md animate-in slide-in-from-right-8 fade-in duration-500">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
-              Nice to meet you, {name}. Let's secure your account.
+              Nice to meet you, {name}. Where should we send your login link?
             </h1>
             
             <FormCard as="form" onSubmit={handleStep2Submit} className="flex flex-col gap-6">
               <div className="space-y-2">
-                <label className="font-medium text-on-surface-variant ml-2 text-lg">Email Address</label>
+                <label className="font-medium text-on-surface-variant ml-2 text-lg">Email Address or Phone Number</label>
                 <TextInput 
-                  type="email" 
+                  type="text" 
                   autoFocus
                   required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="hello@example.com"
+                  value={contactMethod}
+                  onChange={e => setContactMethod(e.target.value)}
+                  placeholder="hello@example.com or 555-123-4567"
                   disabled={isProcessing}
                 />
-              </div>
-
-              <div className="space-y-2 relative">
-                <label className="font-medium text-on-surface-variant ml-2 text-lg">Password</label>
-                <div className="relative">
-                  <TextInput 
-                    type={showPassword ? "text" : "password"} 
-                    required
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    disabled={isProcessing}
-                    className="pr-12"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-                  </button>
-                </div>
-                <p className="text-sm text-on-surface-variant ml-2">Minimum 8 characters.</p>
               </div>
 
               <PrimaryButton 
@@ -233,14 +205,43 @@ export default function IndependentSetupVoicePage() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="animate-spin w-6 h-6 mr-2" />
-                    Thinking...
+                    Sending link...
                   </>
                 ) : (
                   <>
-                    Continue <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                    Send Login Link <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </PrimaryButton>
+            </FormCard>
+          </div>
+        )}
+
+        {/* STEP 3 - BIOMETRICS PROMPT */}
+        {step === 3 && (
+          <div className="w-full max-w-md animate-in slide-in-from-right-8 fade-in duration-500">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-6">
+              Enable Faster Access
+            </h1>
+            <p className="text-on-surface-variant text-lg text-center mb-8">
+              Use FaceID or TouchID to log in seamlessly next time without waiting for a link.
+            </p>
+            
+            <FormCard className="flex flex-col gap-4">
+              <PrimaryButton 
+                onClick={enableBiometrics}
+                type="button"
+                className="w-full justify-center"
+              >
+                Enable FaceID / TouchID
+              </PrimaryButton>
+              <SecondaryButton 
+                onClick={skipBiometrics}
+                type="button"
+                className="w-full justify-center opacity-80"
+              >
+                Skip for now
+              </SecondaryButton>
             </FormCard>
           </div>
         )}

@@ -57,30 +57,33 @@ export default function SeniorHomePage() {
   const [activeMemoryId, setActiveMemoryId] = useState<string | null>(null);
 
   // ── Safe localStorage read — avoids SSR/hydration mismatch ──────────────
-  // Primary key: memvella_lovedOneName (written by caregiver onboarding).
+  // Primary key: memvella_lovedOneName (written by organizer onboarding).
   // Secondary key: memvella_seniorName (legacy / senior-side override).
-  // Falls back to generic 'there' if neither is set.
-  const [caregiverId, setCaregiverId] = useState<string>('');
+  // Falls back to generic 'Friend' if neither is set.
+  const [organizerId, setOrganizerId] = useState<string>('');
   const [localName, setLocalName] = useState<string>('');
 
   useEffect(() => {
-    const id = localStorage.getItem('memvella_caregiverId') ?? '';
+    const id = localStorage.getItem('memvella_organizerId') ?? '';
     const name = localStorage.getItem('memvella_seniorName') || 'Friend';
-    setCaregiverId(id);
+    setOrganizerId(id);
     setLocalName(name);
   }, []);
 
-  const seniorName = localName;
+  // Set mock user for dynamic greeting
+  const user = { firstName: localName };
 
-  // ── Convex queries — only run when caregiverId is available ───────────────
-  // Skip queries (return undefined) until caregiverId is hydrated from localStorage
+  // ── Convex queries — only run when organizerId is available ───────────────
+  // Skip queries (return undefined) until organizerId is hydrated from localStorage
   const nextEvent = useQuery(
     api.kiosk.getSeniorNextEvent,
-    caregiverId ? { caregiverId } : 'skip'
+    // @ts-ignore - Backend migration pending for organizerId
+    organizerId ? { organizerId } : 'skip'
   );
   const gallery = useQuery(
     api.kiosk.getMemoryGallery,
-    caregiverId ? { caregiverId } : 'skip'
+    // @ts-ignore - Backend migration pending for organizerId
+    organizerId ? { organizerId } : 'skip'
   );
 
   // Polaroid rotation classes — applied in sequence
@@ -98,7 +101,7 @@ export default function SeniorHomePage() {
         <div className="grow flex flex-col justify-center py-6 md:py-0">
           {/* Greeting */}
           <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
-            {now ? `${getGreeting(now)}, ${seniorName || 'there'}` : `Good Day`}
+            {now ? `${getGreeting(now)}, ${user.firstName}` : `Good Day`}
           </p>
           {/* Live Clock */}
           <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
@@ -225,20 +228,27 @@ export default function SeniorHomePage() {
 
       {/* Voice Modal Overlay */}
       {isVoiceModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
-          <div className="bg-white/95 rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-lg text-center relative flex flex-col items-center space-y-8">
-            <button 
-              onClick={() => setIsVoiceModalOpen(false)}
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={32} />
-            </button>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity animate-in fade-in duration-300">
+          <div className="bg-white/95 rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-lg text-center relative flex flex-col items-center space-y-12">
             <h2 className="font-headline text-3xl font-bold text-slate-900 mt-4">
               Listening...
             </h2>
-            <div className="h-32 w-32 rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-xl flex items-center justify-center animate-pulse">
-              <Mic size={56} strokeWidth={2.5} />
+            
+            {/* Pulsing Waveform/Ring Animation */}
+            <div className="relative flex items-center justify-center h-40 w-40">
+              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }}></div>
+              <div className="absolute inset-4 rounded-full bg-primary/40 animate-pulse"></div>
+              <div className="relative h-24 w-24 rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-xl flex items-center justify-center z-10">
+                <Mic size={40} strokeWidth={2.5} />
+              </div>
             </div>
+
+            <button 
+              onClick={() => setIsVoiceModalOpen(false)}
+              className="mt-8 bg-error text-white font-bold text-xl py-4 px-12 rounded-full shadow-lg hover:bg-error/90 active:scale-95 transition-all w-full md:w-auto"
+            >
+              Stop Recording
+            </button>
           </div>
         </div>
       )}
