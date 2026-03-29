@@ -12,6 +12,8 @@ export default function TextMemoryPage() {
   const router = useRouter();
   const addMemoryText = useMutation(api.memories.addMemoryText);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
+  
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
 
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
@@ -140,7 +142,7 @@ export default function TextMemoryPage() {
           </div>
           <div>
             <h4 className="font-headline font-bold text-on-primary-fixed">Memory Curation</h4>
-            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding stories triggers Memvella to organically bring them up during conversations with Mom.</p>
+            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding stories triggers Memvella to organically bring them up during conversations with {lovedOneName}.</p>
           </div>
         </div>
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>

@@ -13,6 +13,8 @@ export default function AudioMemoryPage() {
   const router = useRouter();
   const addMemoryAudio = useMutation(api.memories.addMemoryAudio);
 
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [songLink, setSongLink] = useState('');
@@ -100,8 +102,8 @@ export default function AudioMemoryPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_context">Why does Mom love this?</label>
+        <div className="space-y-4">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_context">Why does {lovedOneName} love this?</label>
           <div className="relative">
             <textarea
               id="song_context"

@@ -6,6 +6,8 @@ import Toggle from '@/components/Toggle';
 import { Loader2 } from 'lucide-react';
 
 export default function NotificationsSettingsPage() {
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+  
   const settings = useQuery(api.caregiver.getNotificationSettings);
   const updateSettings = useMutation(api.caregiver.updateNotificationSettings);
 
@@ -42,7 +44,7 @@ export default function NotificationsSettingsPage() {
         <div className="flex items-center justify-between p-5">
           <div className="flex flex-col pr-4">
             <label htmlFor="daily_summary" className="font-headline font-bold text-gray-900 text-base cursor-pointer">Daily Summary</label>
-            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Get an evening wrap-up of Mom&apos;s day and any new insights.</span>
+            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Get an evening wrap-up of {lovedOneName}&apos;s day and any new insights.</span>
           </div>
           <Toggle checked={dailySummary} onChange={() => handleToggle('dailySummary')} />
         </div>
@@ -58,7 +60,7 @@ export default function NotificationsSettingsPage() {
         <div className="flex items-center justify-between p-5">
           <div className="flex flex-col pr-4">
             <label htmlFor="routine_reminders" className="font-headline font-bold text-gray-900 text-base cursor-pointer">Routine Reminders</label>
-            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Ping you when Mom completes or misses a scheduled routine.</span>
+            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Ping you when {lovedOneName} completes or misses a scheduled routine.</span>
           </div>
           <Toggle checked={routineReminders} onChange={() => handleToggle('routineReminders')} />
         </div>

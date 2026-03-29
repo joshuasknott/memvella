@@ -13,6 +13,8 @@ export default function AddRoutinePage() {
   const router = useRouter();
   const addRoutine = useMutation(api.caregiver.addRoutine);
 
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+
   const [routineName, setRoutineName] = useState('');
   const [time, setTime] = useState('');
   const [frequency, setFrequency] = useState<string[]>(['Daily']);
@@ -126,7 +128,7 @@ export default function AddRoutinePage() {
           <div className="relative">
             <textarea
               id="ai_instructions"
-              placeholder="E.g., Remind Mom to use her favorite blue mug."
+              placeholder={`E.g., Remind ${lovedOneName} to use her favorite blue mug.`}
               rows={4}
               value={aiInstructions}
               onChange={(e) => setAiInstructions(e.target.value)}

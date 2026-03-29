@@ -33,6 +33,11 @@ export default function SeniorSetupPage() {
       const result = await pairTablet({ pinCode: pin });
 
       if (result.success) {
+        // CRITICAL: Explicitly wipe old state to prevent state bleed
+        localStorage.removeItem('memvella_seniorName');
+        localStorage.removeItem('memvella_caregiverId');
+        localStorage.removeItem('memvella_lovedOneName');
+
         // Persist caregiver context to localStorage so the kiosk home page
         // can read it without a Better Auth session
         localStorage.setItem('memvella_caregiverId', result.caregiverId);

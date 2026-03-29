@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Bell, ChevronRight, MonitorSmartphone, User } from 'lucide-react';
 
 export default function CaregiverSettingsPage() {
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
       <div>
@@ -44,7 +46,7 @@ export default function CaregiverSettingsPage() {
              </div>
              <div className="flex flex-col text-left">
                  <span className="text-gray-900 font-semibold text-[17px]">Pair Senior Tablet</span>
-                 <span className="text-[12px] font-medium text-purple-600/70 mt-0.5">Link a new device for Mom</span>
+                 <span className="text-[12px] font-medium text-purple-600/70 mt-0.5">Link a new device for {lovedOneName}</span>
              </div>
           </div>
           <ChevronRight className="w-5 h-5 text-purple-400" />

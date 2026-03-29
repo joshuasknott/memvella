@@ -9,6 +9,8 @@ export default function PairingSettingsPage() {
   const generatePin = useMutation(api.kiosk.generateKioskPin);
   const deactivate = useMutation(api.kiosk.deactivateKioskDevice);
 
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
+
   const [pin, setPin] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeactivating, setIsDeactivating] = useState(false);
@@ -16,8 +18,7 @@ export default function PairingSettingsPage() {
   const handleGeneratePin = async () => {
     setIsGenerating(true);
     try {
-      // seniorName is hardcoded for now — will be read from caregiverProfile in a future pass
-      const result = await generatePin({ seniorName: 'Mom' });
+      const result = await generatePin({ seniorName: lovedOneName });
       setPin(result.pinCode);
     } catch (err) {
       console.error('Failed to generate PIN:', err);
@@ -51,8 +52,8 @@ export default function PairingSettingsPage() {
       <p className="font-headline text-2xl font-bold text-gray-900 mb-4">Pair Senior Tablet</p>
       <p className="text-gray-500 text-sm max-w-[240px] leading-relaxed mb-8">
         {pin
-          ? "Show this code to Mom and enter it on the tablet to connect securely."
-          : "Generate a code to connect Mom's device to Memvella."}
+          ? `Show this code to ${lovedOneName} and enter it on the tablet to connect securely.`
+          : `Generate a code to connect ${lovedOneName}'s device to Memvella.`}
       </p>
 
       {/* PIN Display */}

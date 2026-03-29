@@ -20,12 +20,13 @@ function MemberSkeleton() {
 
 export default function CaregiverMemoriesPage() {
   const members = useQuery(api.caregiver.getFamilyDirectory);
+  const lovedOneName = "your loved one"; // TODO: wire to Convex profile
 
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
       <div>
         <h1 className="font-headline font-extrabold text-3xl text-gray-900 tracking-tight">Family Directory</h1>
-        <p className="text-gray-500 text-sm mt-2">Manage the people and stories in Mom&apos;s life.</p>
+        <p className="text-gray-500 text-sm mt-2">Manage the people and stories in {lovedOneName}&apos;s life.</p>
       </div>
 
       {/* Action Cards */}
