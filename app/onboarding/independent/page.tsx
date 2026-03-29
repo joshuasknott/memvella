@@ -300,21 +300,21 @@ export default function IndependentSetupVoicePage() {
           onSubmit={handleTextInputSubmit}
           className="absolute bottom-12 w-full px-6 flex justify-center animate-in slide-in-from-bottom-8 duration-700"
         >
-          <div className="w-full max-w-2xl bg-white rounded-full shadow-lg h-20 flex items-center p-2 pl-6 border border-gray-100 relative focus-within:ring-4 focus-within:ring-[#4e0078]/10 transition-all">
+          <div className="flex items-center w-full max-w-2xl bg-white rounded-full p-2 pr-3 shadow-lg border border-gray-100 mx-auto transition-all focus-within:ring-4 focus-within:ring-[#4e0078]/10">
             <input 
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               disabled={isListening || isProcessing}
               placeholder={isListening ? "Listening..." : "Type or speak..."}
-              className="flex-1 bg-transparent text-xl outline-none text-on-surface placeholder:text-outline/60 disabled:opacity-70"
+              className="flex-1 bg-transparent text-xl outline-none min-w-0 px-6 text-gray-800 placeholder:text-gray-400 disabled:opacity-70"
             />
             
             {/* Enter to submit hint if typing */}
             {inputValue.trim() && !isListening && (
               <button 
                 type="submit"
-                className="absolute right-20 bg-surface-container text-on-surface-variant rounded-xl px-4 py-2 font-semibold text-sm hover:bg-surface-container-highest transition-colors"
+                className="shrink-0 bg-surface-container text-on-surface-variant rounded-xl px-4 py-2 font-semibold text-sm hover:bg-surface-container-highest transition-colors mr-2"
               >
                 Press Enter ↵
               </button>
@@ -324,9 +324,9 @@ export default function IndependentSetupVoicePage() {
               type="button"
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={`shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ml-2 ${
+              className={`h-14 w-14 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-300 ${
                 isListening 
-                  ? 'bg-red-500 text-white scale-105 shadow-lg shadow-red-500/30' 
+                  ? 'bg-red-500 text-white scale-105 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
                   : 'bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-md active:scale-95'
               }`}
             >
