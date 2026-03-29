@@ -89,24 +89,24 @@ export default function SeniorHomePage() {
   const ROTATIONS = ['-rotate-2', 'rotate-2', '-rotate-2', 'rotate-2', ''];
 
   return (
-    <main className="flex h-full w-full overflow-hidden">
+    <main className="flex flex-col md:flex-row min-h-screen w-full overflow-y-auto md:overflow-hidden">
       {/* Left Column (40%) */}
-      <section className="w-[40%] h-full flex flex-col justify-between p-12 border-r border-outline-variant/10 bg-surface-container-low/30">
+      <section className="w-full md:w-[40%] flex-none flex flex-col justify-between p-6 md:p-12 border-b md:border-b-0 md:border-r border-outline-variant/10 bg-surface-container-low/30">
 
         {/* Branding */}
         <BrandLogo className="mb-8" />
 
         {/* Time and Date */}
-        <div className="grow flex flex-col justify-center">
+        <div className="grow flex flex-col justify-center py-8 md:py-0">
           {/* Greeting */}
-          <p className="font-headline text-slate-500 font-semibold text-4xl mb-4">
+          <p className="font-headline text-slate-500 font-semibold text-3xl md:text-5xl mb-2 md:mb-4">
             {now ? `${getGreeting(now)}, ${seniorName || 'there'}` : `Good Day`}
           </p>
           {/* Live Clock */}
-          <h1 className="font-headline font-extrabold text-7xl text-slate-900 tracking-tighter mb-2">
+          <h1 className="font-headline font-extrabold text-5xl md:text-7xl text-slate-900 tracking-tighter mb-2">
             {now ? formatTime(now) : '-- : --'}
           </h1>
-          <p className="font-headline text-5xl font-bold mb-12 text-slate-900">
+          <p className="font-headline text-3xl md:text-5xl font-bold mb-8 md:mb-12 text-slate-900">
             {now ? `Today is ${formatDate(now)}` : 'Loading…'}
           </p>
 
@@ -114,7 +114,7 @@ export default function SeniorHomePage() {
           <div className="bg-surface-container-lowest p-10 rounded-4xl shadow-md border border-slate-200 border-l-12 border-l-secondary relative overflow-hidden">
             <div className="flex items-start gap-6">
               <div>
-                <p className="font-headline text-3xl font-bold text-on-surface leading-tight">
+                <p className="font-headline text-2xl md:text-3xl font-bold text-on-surface leading-tight">
                   {nextEvent === undefined
                     ? 'Loading schedule…'
                     : nextEvent.time
@@ -127,20 +127,20 @@ export default function SeniorHomePage() {
         </div>
 
         {/* Voice Action Button */}
-        <div className="mt-12">
-          <Link href="/senior/voice" className="block text-center bg-linear-to-br from-primary to-secondary w-full py-10 px-8 rounded-full shadow-xl active:scale-95 transition-transform duration-200">
-            <div className="flex items-center justify-center gap-6">
-              <Mic className="text-white shrink-0" size={48} strokeWidth={2.5} />
-              <span className="text-white font-headline font-bold text-3xl">Tap to talk to Memvella</span>
+        <div className="mt-8 md:mt-12">
+          <Link href="/senior/voice" className="block text-center bg-linear-to-br from-primary to-secondary w-full py-6 md:py-10 px-8 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200">
+            <div className="flex items-center justify-center gap-4 md:gap-6">
+              <Mic className="text-white shrink-0 h-10 w-10 md:h-12 md:w-12" strokeWidth={2.5} />
+              <span className="text-white font-headline font-bold text-2xl md:text-3xl">Tap to talk to Memvella</span>
             </div>
           </Link>
         </div>
       </section>
 
       {/* Right Column (60%) — Memory Gallery */}
-      <section className="w-[60%] h-full p-12 overflow-y-auto bg-surface relative">
-        <header className="mb-12 flex justify-between items-end">
-          <h2 className="font-headline text-5xl font-extrabold text-on-surface">Memory Gallery</h2>
+      <section className="w-full md:w-[60%] flex-1 p-6 md:p-12 overflow-y-auto bg-gray-50 relative">
+        <header className="mb-8 md:mb-12 flex justify-between items-end">
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-on-surface">Memory Gallery</h2>
         </header>
 
         {/* Bento-style Gallery Grid */}
