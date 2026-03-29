@@ -30,26 +30,44 @@ function TimelineSkeleton() {
 }
 
 export default function CaregiverDashboard() {
-  const { isAuthenticated } = useConvexAuth();
-  const summary = useQuery(api.caregiver.getCaregiverDashboardSummary);
-  const timeline = useQuery(api.caregiver.getTodayTimeline);
-  const profile = useQuery(api.caregiver.getCaregiverProfile);
+  // ── Auth state must be declared FIRST — before any useQuery calls.
+  // This prevents Convex from executing queries before the JWT is established,
+  // which is what was causing the "Unauthenticated" error in requireCaregiver().
+  const { isAuthenticated, isLoading } = useConvexAuth();
+
+  // All three queries are gated on isAuthenticated. Passing "skip" tells
+  // Convex to hold the subscription entirely until the session is ready.
+  const summary = useQuery(api.caregiver.getCaregiverDashboardSummary, isAuthenticated ? undefined : "skip");
+  const timeline = useQuery(api.caregiver.getTodayTimeline, isAuthenticated ? undefined : "skip");
+  const profile = useQuery(api.caregiver.getCaregiverProfile, isAuthenticated ? undefined : "skip");
   const createProfile = useMutation(api.caregiver.createCaregiverProfile);
 
   const lovedOneName = profile?.lovedOneName ?? 'Your loved one';
 
   // Flush the lovedOneName bridged via localStorage during sign-up.
-  // Guarded by isAuthenticated — waits for the Convex JWT to be established
-  // before firing the mutation, preventing the "Unauthenticated" race condition.
+  // Guarded by both isAuthenticated AND !isLoading — ensures the Convex JWT
+  // is fully established before firing the mutation, preventing the
+  // "Unauthenticated" race condition on post-signup redirect.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (isLoading || !isAuthenticated) return;
     const lovedOneName = localStorage.getItem('memvella_lovedOneName');
     if (!lovedOneName) return;
     createProfile({ lovedOneName })
       .then(() => localStorage.removeItem('memvella_lovedOneName'))
       .catch((err) => console.warn('Profile creation deferred:', err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, createProfile]);
+  }, [isLoading, isAuthenticated, createProfile]);
+
+  // While the Convex session is being established, render a clean loading
+  // state to prevent unauthenticated queries from firing.
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-on-surface-variant text-sm font-medium">Loading your dashboard…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 px-4 w-full">

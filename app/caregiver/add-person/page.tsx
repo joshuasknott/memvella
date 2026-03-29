@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
+import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2, X } from 'lucide-react';
@@ -11,8 +11,12 @@ const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
 
 export default function AddPersonPage() {
   const router = useRouter();
+  const { isAuthenticated } = useConvexAuth();
+  const profile = useQuery(api.caregiver.getCaregiverProfile, isAuthenticated ? undefined : "skip");
   const addFamilyMember = useMutation(api.caregiver.addFamilyMember);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
+
+  const lovedOneName = profile?.lovedOneName || 'your loved one';
 
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('Son');
@@ -22,6 +26,10 @@ export default function AddPersonPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Custom relationship state
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [customRelText, setCustomRelText] = useState('');
 
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +101,7 @@ export default function AddPersonPage() {
           onChange={handlePhotoSelect}
         />
         <label htmlFor="person-photo-input" className="block">
-          <div className="w-full aspect-square rounded-lg bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
+          <div className="w-full h-40 rounded-lg bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
             {photoPreview ? (
               <>
                 <img src={photoPreview} alt="Photo preview" className="w-full h-full object-cover" />
@@ -140,9 +148,9 @@ export default function AddPersonPage() {
 
         {/* Relationship Dropdown/Pill-Selector */}
         <div className="space-y-4">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to Mom</label>
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to {lovedOneName}</label>
           <div className="flex flex-wrap gap-3">
-            {RELATIONSHIP_OPTIONS.map((option) => (
+            {Array.from(new Set([...RELATIONSHIP_OPTIONS, relationship])).map((option) => (
               <button
                 key={option}
                 onClick={() => setRelationship(option)}
@@ -156,9 +164,43 @@ export default function AddPersonPage() {
                 {option}
               </button>
             ))}
-            <button className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest">
-              <Plus className="w-5 h-5" />
-            </button>
+            {isAddingCustom ? (
+              <div className="flex items-center gap-2 bg-surface-container-high rounded-full pl-4 pr-1 h-12">
+                <input
+                  type="text"
+                  placeholder="Custom..."
+                  value={customRelText}
+                  onChange={(e) => setCustomRelText(e.target.value)}
+                  className="bg-transparent border-none outline-none font-medium text-on-surface w-24 placeholder:text-outline-variant text-sm"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (customRelText.trim()) {
+                      setRelationship(customRelText.trim());
+                    }
+                    setIsAddingCustom(false);
+                    setCustomRelText('');
+                  }}
+                  className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90"
+                >
+                  <Check className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsAddingCustom(true);
+                }}
+                className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -197,7 +239,7 @@ export default function AddPersonPage() {
         {/* AI Context Box */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">Memvella Context</label>
+            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">Key Facts & Context</label>
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
           </div>
           <div className="relative">
@@ -209,7 +251,7 @@ export default function AddPersonPage() {
               onChange={(e) => setAiContext(e.target.value)}
               className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
-            <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help Mom remember?</p>
+            <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {lovedOneName} remember?</p>
           </div>
         </div>
       </section>
@@ -222,7 +264,7 @@ export default function AddPersonPage() {
           </div>
           <div>
             <h4 className="font-headline font-bold text-on-primary-fixed">Family Connections</h4>
-            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during Mom&apos;s morning wellness check-in.</p>
+            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during {lovedOneName}&apos;s morning wellness check-in.</p>
           </div>
         </div>
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>

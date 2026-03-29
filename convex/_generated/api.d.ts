@@ -8,11 +8,14 @@
  * @module
  */
 
+import type * as agent from "../agent.js";
+import type * as aiActions from "../aiActions.js";
 import type * as auth from "../auth.js";
 import type * as caregiver from "../caregiver.js";
 import type * as http from "../http.js";
 import type * as kiosk from "../kiosk.js";
 import type * as memories from "../memories.js";
+import type * as migrations from "../migrations.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
 
@@ -23,11 +26,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  agent: typeof agent;
+  aiActions: typeof aiActions;
   auth: typeof auth;
   caregiver: typeof caregiver;
   http: typeof http;
   kiosk: typeof kiosk;
   memories: typeof memories;
+  migrations: typeof migrations;
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;
 }>;

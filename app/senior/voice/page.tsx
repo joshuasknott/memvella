@@ -5,40 +5,20 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Mic, X } from 'lucide-react';
+import { Mic, MicOff, X } from 'lucide-react';
 
-// ─── SpeechRecognition type shim ─────────────────────────────────────────────
-// The Web Speech API is not in tsconfig's lib target — define minimal types locally.
-interface ISpeechRecognition {
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  continuous: boolean;
-  onstart: (() => void) | null;
-  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
-  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  abort: () => void;
-}
-interface ISpeechRecognitionResult {
-  readonly isFinal: boolean;
-  readonly 0: { transcript: string };
-}
-interface ISpeechRecognitionEvent {
-  readonly results: ISpeechRecognitionResult[];
-}
-interface ISpeechRecognitionErrorEvent {
-  readonly error: string;
-}
-type SpeechRecognitionCtor = new () => ISpeechRecognition;
-
-type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
+// ─── State Machine ────────────────────────────────────────────────────────────
+// idle       → tap mic  → recording
+// recording  → tap mic  → processing   (user manually stops)
+// recording  → silence  → processing   (VAD: auto-stop after quiet period)
+// processing → response → speaking
+// speaking   → done     → idle
+type VoiceState = 'idle' | 'recording' | 'processing' | 'speaking';
 
 export default function ListeningStatePage() {
   const handleVoiceChat = useAction(api.voice.handleVoiceChat);
 
-  // ── SSR-safe localStorage reads ──────────────────────────────────────────
+  // ── SSR-safe localStorage reads ────────────────────────────────────────────
   const [caregiverId, setCaregiverId] = useState('');
   const [seniorName, setSeniorName] = useState('');
 
@@ -47,44 +27,57 @@ export default function ListeningStatePage() {
     setSeniorName(localStorage.getItem('memvella_seniorName') ?? 'there');
   }, []);
 
-  // ── Conversational state ─────────────────────────────────────────────────
-  const [voiceState, setVoiceState] = useState<VoiceState>('listening');
+  // ── Component state ────────────────────────────────────────────────────────
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  // ── Refs ───────────────────────────────────────────────────────────────────
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const isMountedRef = useRef(true);
 
-  // ── Speech Synthesis helper ──────────────────────────────────────────────
+  // ── Cleanup on unmount ─────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      stopRecording();
+      window.speechSynthesis?.cancel();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Speech Synthesis ───────────────────────────────────────────────────────
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); // Stop anything already playing
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;    // Slightly slower — better for seniors
+    utterance.rate = 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
     utterance.onstart = () => isMountedRef.current && setVoiceState('speaking');
     utterance.onend = () => {
       if (!isMountedRef.current) return;
-      setVoiceState('listening');
-      // Auto-restart listening after Memvella finishes speaking
-      startListening();
+      setVoiceState('idle');
     };
     window.speechSynthesis.speak(utterance);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Send transcript to Gemini via Convex action ──────────────────────────
-  const sendToMemvella = useCallback(async (userTranscript: string) => {
-    if (!caregiverId || !userTranscript.trim()) return;
-    setVoiceState('thinking');
+  // ── Send audio blob to Convex via handleVoiceChat ──────────────────────────
+  // NOTE: The current backend uses a text transcript. We use the Web Speech API
+  // for transcription client-side, then send the text. The MediaRecorder gives
+  // us the tap-to-stop control we need; we run SpeechRecognition in parallel.
+  const sendTranscript = useCallback(async (userTranscript: string) => {
+    if (!caregiverId || !userTranscript.trim()) {
+      setVoiceState('idle');
+      return;
+    }
+    setVoiceState('processing');
     setError(null);
     try {
-      const result = await handleVoiceChat({
-        caregiverId,
-        seniorName,
-        transcript: userTranscript,
-      });
+      const result = await handleVoiceChat({ caregiverId, seniorName, transcript: userTranscript });
       if (!isMountedRef.current) return;
       setResponse(result.response);
       speak(result.response);
@@ -92,109 +85,159 @@ export default function ListeningStatePage() {
       console.error('Memvella voice error:', err);
       if (!isMountedRef.current) return;
       setError("I'm having a little trouble right now. Please try again.");
-      setVoiceState('listening');
-      startListening();
+      setVoiceState('idle');
     }
-  }, [caregiverId, seniorName, handleVoiceChat, speak]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [caregiverId, seniorName, handleVoiceChat, speak]);
 
-  // ── SpeechRecognition setup ──────────────────────────────────────────────
-  const startListening = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const win = window as any;
-    const SpeechRecognitionAPI: SpeechRecognitionCtor | undefined =
-      win.SpeechRecognition ?? win.webkitSpeechRecognition;
+  // ── Stop recording and transition to processing ────────────────────────────
+  const stopRecording = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+  }, []);
 
-    if (!SpeechRecognitionAPI) {
-      setError('Voice recognition is not supported in this browser.');
+  // ── Start recording ────────────────────────────────────────────────────────
+  const startRecording = useCallback(async () => {
+    setError(null);
+    setTranscript('');
+    setResponse('');
+
+    // 1. Get mic access
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      if (!isMountedRef.current) return;
+      setError('Microphone access was denied. Please allow microphone access and try again.');
+      setVoiceState('idle');
       return;
     }
 
-    // Abort any existing session before creating a new one
-    if (recognitionRef.current) {
-      recognitionRef.current.abort();
+    if (!isMountedRef.current) {
+      stream.getTracks().forEach(t => t.stop());
+      return;
     }
 
-    const recognition = new SpeechRecognitionAPI();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    recognition.continuous = false;
+    streamRef.current = stream;
+    audioChunksRef.current = [];
 
-    recognition.onstart = () => {
-      if (!isMountedRef.current) return;
-      setVoiceState('listening');
-      setTranscript('');
-    };
+    // 2. Run Web Speech API in parallel for transcription
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+    const SpeechRecognitionAPI = win.SpeechRecognition ?? win.webkitSpeechRecognition;
+    let finalTranscript = '';
 
-    recognition.onresult = (event: ISpeechRecognitionEvent) => {
-      if (!isMountedRef.current) return;
-      const current = Array.from(event.results)
-        .map((r) => r[0].transcript)
-        .join('');
-      setTranscript(current);
+    if (SpeechRecognitionAPI) {
+      const recognition = new SpeechRecognitionAPI();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = true; // We control stopping via MediaRecorder
+      recognition.maxAlternatives = 1;
 
-      // When the user stops speaking (result is final), send to Gemini
-      if (event.results[event.results.length - 1].isFinal) {
-        sendToMemvella(current);
-      }
-    };
+      recognition.onresult = (event: { results: { isFinal: boolean; 0: { transcript: string } }[] }) => {
+        if (!isMountedRef.current) return;
+        const all = Array.from(event.results).map(r => r[0].transcript).join('');
+        setTranscript(all);
+        const lastResult = event.results[event.results.length - 1];
+        if (lastResult.isFinal) {
+          finalTranscript = all;
+        } else {
+          finalTranscript = all; // Keep updating so stop captures latest
+        }
+      };
 
-    recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
-      if (!isMountedRef.current) return;
-      // 'no-speech' is not a real error — just restart
-      if (event.error === 'no-speech') {
-        startListening();
-        return;
-      }
-      setError(`Voice error: ${event.error}`);
+      recognition.onerror = () => { /* Silently ignore — MediaRecorder controls the flow */ };
+      recognition.onend = () => { /* Do nothing — we don't auto-restart */ };
+
+      recognition.start();
+      // Store abort handle so stopRecording can clean it up
+      (mediaRecorderRef.current as unknown as { _recognition?: { abort: () => void } }); // type hint
+      // Attach to recorder ref for access in stop handler
+      const recorder = new MediaRecorder(stream);
+      (recorder as unknown as { _recognition: typeof recognition })._recognition = recognition;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        // Stop speech recognition
+        try { recognition.abort(); } catch { /* ignore */ }
+
+        if (!isMountedRef.current) return;
+        const captured = finalTranscript.trim();
+        if (captured) {
+          sendTranscript(captured);
+        } else {
+          setError('No speech detected. Tap the mic and try again.');
+          setVoiceState('idle');
+        }
+      };
+
+      recorder.start();
+      setVoiceState('recording');
+
+      // Auto-stop after 30 seconds (safety valve)
+      silenceTimerRef.current = setTimeout(() => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+      }, 30_000);
+
+    } else {
+      // Fallback: No SpeechRecognition — just record and show unsupported message
+      stream.getTracks().forEach(t => t.stop());
+      setError('Voice recognition is not supported in this browser.');
       setVoiceState('idle');
-    };
+    }
+  }, [sendTranscript]);
 
-    recognition.onend = () => {
-      // If we ended in listening state without a result, auto-restart
-      if (isMountedRef.current && voiceState === 'listening') {
-        startListening();
-      }
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setVoiceState('listening');
-  }, [sendToMemvella, voiceState]);
-
-  // ── Start recognition on mount (once caregiverId is ready) ───────────────
-  useEffect(() => {
-    if (!caregiverId) return;
-    startListening();
-    return () => {
-      isMountedRef.current = false;
-      recognitionRef.current?.abort();
+  // ── Mic button tap handler (toggle) ───────────────────────────────────────
+  const handleMicTap = useCallback(() => {
+    if (voiceState === 'idle') {
+      startRecording();
+    } else if (voiceState === 'recording') {
+      // THE FIX: tap again to stop and send
+      stopRecording();
+    } else if (voiceState === 'speaking') {
+      // Interrupt Memvella and go back to idle
       window.speechSynthesis?.cancel();
-    };
-  }, [caregiverId]); // eslint-disable-line react-hooks/exhaustive-deps
+      setVoiceState('idle');
+    }
+    // 'processing' state: ignore taps — wait for response
+  }, [voiceState, startRecording, stopRecording]);
 
-  // ── Cleanup on unmount ────────────────────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // ── UI helpers ────────────────────────────────────────────────────────────
+  // ── UI helpers ─────────────────────────────────────────────────────────────
   const stateLabel: Record<VoiceState, string> = {
-    idle: 'Tap to start',
-    listening: 'Listening…',
-    thinking: 'Memvella is thinking…',
-    speaking: 'Memvella is speaking',
+    idle:       'Tap to speak',
+    recording:  'Listening… tap to send',
+    processing: 'Memvella is thinking…',
+    speaking:   'Memvella is speaking',
   };
 
-  const displayText = response && voiceState === 'speaking'
-    ? `"${response}"`
-    : transcript
-    ? `"${transcript}"`
-    : voiceState === 'thinking'
-    ? 'Processing your message…'
-    : 'Tap the button and speak';
+  const displayText =
+    voiceState === 'speaking' && response
+      ? `"${response}"`
+      : voiceState === 'recording' && transcript
+      ? `"${transcript}"`
+      : voiceState === 'processing'
+      ? 'Processing your message…'
+      : transcript && voiceState === 'idle'
+      ? `"${transcript}"`
+      : 'Tap the button and speak';
+
+  const isRecording = voiceState === 'recording';
+  const isProcessing = voiceState === 'processing';
+  const isSpeaking = voiceState === 'speaking';
 
   return (
     <div className="bg-background font-body text-on-background overflow-hidden min-h-screen">
@@ -208,7 +251,7 @@ export default function ListeningStatePage() {
         <img className="w-full h-full object-cover rounded-3xl" alt="Gallery memory 6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClO5R-6p4r0mKwaRwqg6twsBnPOLzfjrZUEREjLf2m8fyd9O-bljs_fbLOCptD16bymePeZPMeRWHLOy7dkW2K1NR82UeUy1JjEat31MnBPfgmguJke3jT7-kGZY8gPe8ZfcB9AKwJAuUpvRnpjgeoEKnWP2NLSeyh1VuxTgguL9OOEE8Pwb0BTbR66ywqlQeWFiwE6hQHmyDd7IWEYjH5xX-Pp3pkZHk-H9fAMTlY3xSRSO-85bfCFLdVlEN8fdkuLFz_Baco_j64"/>
       </div>
 
-      {/* Frosted Glass Overlay with AAA Contrast fix */}
+      {/* Frosted Glass Overlay */}
       <div className="absolute inset-0 bg-[#faf9f6]/95 backdrop-blur-xl z-50 pointer-events-none"></div>
 
       {/* Top Navigation */}
@@ -221,26 +264,35 @@ export default function ListeningStatePage() {
 
         {/* Voice Interaction Visualizer */}
         <div className="relative flex items-center justify-center mb-12">
-          {/* Pulsing outer ring — faster when listening, slow when thinking */}
+          {/* Pulsing outer ring — matches recording state */}
           <div
-            className={`absolute w-80 h-80 rounded-full bg-linear-to-br from-primary to-secondary opacity-15 ${
-              voiceState === 'listening' ? 'animate-pulse' :
-              voiceState === 'speaking' ? 'animate-ping' :
-              'opacity-5'
+            className={`absolute w-80 h-80 rounded-full bg-linear-to-br from-primary to-secondary transition-all duration-500 ${
+              isRecording   ? 'opacity-20 animate-ping' :
+              isSpeaking    ? 'opacity-15 animate-pulse' :
+              isProcessing  ? 'opacity-10 animate-pulse' :
+              'opacity-0'
             }`}
             style={{ boxShadow: '0 0 80px rgba(70, 21, 153, 0.3), 0 0 120px rgba(0, 95, 175, 0.15)' }}
           ></div>
 
-          {/* Inner glowing circle — button to manually trigger if auto doesn't start */}
+          {/* Mic Button — tap to start, tap again to stop */}
           <button
-            onClick={() => {
-              if (voiceState === 'idle' || voiceState === 'listening') {
-                startListening();
-              }
-            }}
-            className="relative w-64 h-64 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
+            id="mic-toggle-btn"
+            onClick={handleMicTap}
+            disabled={isProcessing}
+            aria-label={isRecording ? 'Stop recording and send' : 'Start recording'}
+            className={`relative w-64 h-64 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed ${
+              isRecording
+                ? 'bg-linear-to-br from-red-500 to-rose-600 scale-105 ring-4 ring-red-300'
+                : isProcessing
+                ? 'bg-linear-to-br from-amber-400 to-orange-500'
+                : 'bg-linear-to-br from-primary to-secondary hover:scale-105'
+            }`}
           >
-            <Mic className="text-white" size={120} strokeWidth={2} />
+            {isRecording
+              ? <MicOff className="text-white" size={120} strokeWidth={2} />
+              : <Mic className="text-white" size={120} strokeWidth={2} />
+            }
           </button>
         </div>
 
@@ -248,6 +300,13 @@ export default function ListeningStatePage() {
         <p className="font-headline font-semibold text-slate-500 text-2xl mb-4 tracking-wide">
           {stateLabel[voiceState]}
         </p>
+
+        {/* Instruction hint when recording */}
+        {isRecording && (
+          <p className="font-body text-slate-400 text-lg mb-4 animate-pulse">
+            When done speaking, tap the mic to send
+          </p>
+        )}
 
         {/* High-Contrast Transcription / Response */}
         <div className="max-w-4xl space-y-6">
@@ -264,12 +323,12 @@ export default function ListeningStatePage() {
         )}
       </main>
 
-      {/* Contextual Footer Actions */}
+      {/* Footer: End Chat */}
       <div className="fixed bottom-12 right-12 z-60">
         <Link
           href="/senior"
           onClick={() => {
-            recognitionRef.current?.abort();
+            stopRecording();
             window.speechSynthesis?.cancel();
           }}
           className="flex items-center gap-5 px-10 py-4 bg-slate-100 text-slate-600 border border-slate-200 rounded-2xl shadow-xl hover:bg-slate-200 transition-all active:scale-95 group"

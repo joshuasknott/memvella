@@ -49,14 +49,20 @@ export default function SeniorHomePage() {
   const now = useLiveClock();
 
   // ── Safe localStorage read — avoids SSR/hydration mismatch ──────────────
+  // Primary key: memvella_lovedOneName (written by caregiver onboarding).
+  // Secondary key: memvella_seniorName (legacy / senior-side override).
+  // Falls back to generic 'there' if neither is set.
   const [caregiverId, setCaregiverId] = useState<string>('');
-  const [seniorName, setSeniorName] = useState<string>('');
+  const [lovedOneName, setLovedOneName] = useState<string>('');
 
   useEffect(() => {
-    const id = typeof window !== 'undefined' ? localStorage.getItem('memvella_caregiverId') ?? '' : '';
-    const name = typeof window !== 'undefined' ? localStorage.getItem('memvella_seniorName') ?? 'there' : 'there';
+    const id = localStorage.getItem('memvella_caregiverId') ?? '';
+    const name =
+      localStorage.getItem('memvella_lovedOneName') ??
+      localStorage.getItem('memvella_seniorName') ??
+      '';
     setCaregiverId(id);
-    setSeniorName(name);
+    setLovedOneName(name);
   }, []);
 
   // ── Convex queries — only run when caregiverId is available ───────────────
@@ -85,7 +91,7 @@ export default function SeniorHomePage() {
         <div className="grow flex flex-col justify-center">
           {/* Greeting */}
           <p className="font-headline text-slate-500 font-semibold text-4xl mb-4">
-            {now ? `${getGreeting(now)}, ${seniorName || 'there'}` : `Good Day`}
+            {now ? `${getGreeting(now)}, ${lovedOneName || 'there'}` : `Good Day`}
           </p>
           {/* Live Clock */}
           <h1 className="font-headline font-extrabold text-7xl text-slate-900 tracking-tighter mb-2">

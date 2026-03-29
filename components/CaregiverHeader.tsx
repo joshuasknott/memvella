@@ -18,7 +18,7 @@ const SUB_ROUTE_TITLES: Record<string, string> = {
   "add-memory/voice": "Record Voice Note",
   "add-memory/audio": "Favorite Song",
   "add-memory/media": "Photo or Video",
-  "add-person": "Add to Family",
+  "add-person": "Add Person",
   "add-routine": "Add a Routine",
   insights: "Insights",
   "settings/account": "Account",
