@@ -85,7 +85,7 @@ export const handleOnboardingInput = action({
     const ai = new GoogleGenAI({ apiKey });
 
     const geminiResponse = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: args.userInput,
       config: {
         systemInstruction: SYSTEM_PROMPT,

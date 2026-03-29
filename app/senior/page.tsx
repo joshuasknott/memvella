@@ -6,16 +6,22 @@ import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Mic } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 // ─── Live Clock ───────────────────────────────────────────────────────────────
 function useLiveClock() {
-  const [now, setNow] = useState<Date | null>(null);
+  const [time, setTime] = useState<Date | null>(null);
+  
   useEffect(() => {
-    setNow(new Date());
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
+    setTime(new Date());
+    const intervalId = setInterval(() => {
+      setTime(new Date());
+    }, 60_000);
+    
+    return () => clearInterval(intervalId);
   }, []);
-  return now;
+  
+  return time;
 }
 
 function formatTime(date: Date) {
@@ -47,13 +53,14 @@ function PolaroidSkeleton({ rotate }: { rotate: string }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SeniorHomePage() {
   const now = useLiveClock();
+  const { data: session } = authClient.useSession();
 
   // ── Safe localStorage read — avoids SSR/hydration mismatch ──────────────
   // Primary key: memvella_lovedOneName (written by caregiver onboarding).
   // Secondary key: memvella_seniorName (legacy / senior-side override).
   // Falls back to generic 'there' if neither is set.
   const [caregiverId, setCaregiverId] = useState<string>('');
-  const [lovedOneName, setLovedOneName] = useState<string>('');
+  const [localName, setLocalName] = useState<string>('');
 
   useEffect(() => {
     const id = localStorage.getItem('memvella_caregiverId') ?? '';
@@ -62,8 +69,10 @@ export default function SeniorHomePage() {
       localStorage.getItem('memvella_seniorName') ??
       '';
     setCaregiverId(id);
-    setLovedOneName(name);
+    setLocalName(name);
   }, []);
+
+  const seniorName = session?.user?.name || localName;
 
   // ── Convex queries — only run when caregiverId is available ───────────────
   // Skip queries (return undefined) until caregiverId is hydrated from localStorage
@@ -91,7 +100,7 @@ export default function SeniorHomePage() {
         <div className="grow flex flex-col justify-center">
           {/* Greeting */}
           <p className="font-headline text-slate-500 font-semibold text-4xl mb-4">
-            {now ? `${getGreeting(now)}, ${lovedOneName || 'there'}` : `Good Day`}
+            {now ? `${getGreeting(now)}, ${seniorName || 'there'}` : `Good Day`}
           </p>
           {/* Live Clock */}
           <h1 className="font-headline font-extrabold text-7xl text-slate-900 tracking-tighter mb-2">

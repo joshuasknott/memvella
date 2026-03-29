@@ -1,45 +1,65 @@
-import Link from 'next/link';
+"use client";
+
+import { useState } from 'react';
 import BrandLogo from '@/components/BrandLogo';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
 
 export default function UniversalSplash() {
+  const [view, setView] = useState<'initial' | 'selfSetup'>('initial');
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-purple-50 to-[#faf9f6] px-6 text-center font-body">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-linear-to-b from-primary-fixed border-t border-transparent to-surface px-6 text-center font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
       <div className="mb-12">
-        {/* Assume BrandLogo returns an SVG that inherits height */}
-        <BrandLogo className="w-auto h-20" />
+        <BrandLogo className="w-auto h-20 md:h-24 drop-shadow-sm transition-all" />
       </div>
       
-      <div className="space-y-4 mb-16 max-w-lg">
-        <h1 className="font-headline text-5xl font-bold text-gray-900 tracking-tight">
-          Welcome to Memvella.
-        </h1>
-        <p className="text-xl text-gray-600 font-medium">
-          A friendly companion for memories, routines, and peace of mind.
-        </p>
-      </div>
+      {view === 'initial' ? (
+        <div className="w-full max-w-lg flex flex-col items-center animate-in slide-in-from-bottom-4 fade-in duration-500 zoom-in-95">
+          <div className="space-y-4 mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
+              Welcome to Memvella.
+            </h1>
+            <p className="text-xl md:text-2xl text-on-surface-variant font-medium tracking-wide text-center">
+              Who is setting this up today?
+            </p>
+          </div>
 
-      <div className="flex flex-col gap-4 w-full max-w-md mx-auto mt-8">
-        <Link 
-          href="/onboarding/caregiver" 
-          className="w-full bg-[#4e0078] text-white rounded-2xl py-5 font-semibold text-lg hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm flex items-center justify-center"
-        >
-          I&apos;m setting this up for someone I care for
-        </Link>
+          <div className="flex flex-col gap-6 w-full max-w-sm md:max-w-md mx-auto">
+            <PrimaryButton href="/onboarding/caregiver">
+              I am a Caregiver
+            </PrimaryButton>
 
-        <Link 
-          href="/onboarding/independent" 
-          className="w-full bg-white text-[#4e0078] border-2 border-[#4e0078] rounded-2xl py-5 font-semibold text-lg hover:bg-purple-50 active:scale-95 transition-all flex items-center justify-center"
-        >
-          I&apos;m setting this up for myself
-        </Link>
+            <SecondaryButton onClick={() => setView('selfSetup')}>
+              I am setting this up for myself
+            </SecondaryButton>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-lg flex flex-col items-center animate-in slide-in-from-right-8 fade-in duration-500 zoom-in-95">
+          <div className="space-y-4 mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
+              Connection Check
+            </h2>
+            <p className="text-xl md:text-2xl text-on-surface-variant font-medium tracking-wide text-center">
+              Do you have a 6-digit connection code?
+            </p>
+          </div>
 
-        <Link 
-          href="/senior/setup" 
-          className="w-full bg-purple-100 text-[#4e0078] rounded-2xl py-5 font-semibold text-lg hover:bg-purple-200 active:scale-95 transition-all flex items-center justify-center"
-        >
-          I have a 6-digit connection code
-        </Link>
-      </div>
+          <div className="flex flex-col gap-6 w-full max-w-sm md:max-w-md mx-auto">
+            <PrimaryButton href="/senior/setup">
+              Yes, I have a code
+            </PrimaryButton>
+
+            <SecondaryButton href="/onboarding/independent">
+              No, I want to create an account
+            </SecondaryButton>
+
+            <SecondaryButton onClick={() => setView('initial')} className="mt-4">
+              Back
+            </SecondaryButton>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

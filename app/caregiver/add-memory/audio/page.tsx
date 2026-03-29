@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Music, Upload, Loader2 } from 'lucide-react';
+import { Sparkles, Music, Upload, Loader2 } from 'lucide-react';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/Input';
+import { FormCard } from '@/components/ui/FormCard';
 
 export default function AudioMemoryPage() {
   const router = useRouter();
@@ -17,11 +20,11 @@ export default function AudioMemoryPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isFormValid = title.trim().length > 0 && story.trim().length > 0;
+
   const handleSave = async () => {
-    if (!title.trim() || !story.trim()) {
-      setError('Please add a title and context before saving.');
-      return;
-    }
+    if (!isFormValid) return;
+    
     setError(null);
     setIsSaving(true);
     try {
@@ -42,88 +45,96 @@ export default function AudioMemoryPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 w-full">
+    <div className="flex flex-col gap-8 px-4 w-full pb-32">
       {/* Soft Icon Hero */}
-      <section className="flex justify-center mt-2 mb-2">
-        <div className="w-24 h-24 bg-pink-50 rounded-4xl flex items-center justify-center shadow-sm border border-pink-100">
-          <Music className="w-10 h-10 text-pink-500" />
+      <section className="flex justify-center mt-8 mb-4">
+        <div className="w-28 h-28 bg-surface-container-low rounded-full flex items-center justify-center shadow-xl shadow-primary/5 border border-outline-variant/20 relative">
+          <Music className="w-12 h-12 text-primary" strokeWidth={1.5} />
+          {/* Decorative tonal bleed */}
+          <div className="absolute top-1/2 left-1/2 -transform-x-1/2 -transform-y-1/2 w-32 h-32 bg-primary/5 rounded-full blur-2xl -z-10"></div>
         </div>
       </section>
 
-      {/* Form Essentials */}
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <label className="font-headline font-bold text-lg text-gray-900 tracking-tight" htmlFor="audio_title">Memory Title</label>
-          <input
-            id="audio_title"
-            type="text"
-            placeholder="Our Wedding Song"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="appearance-none w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="font-headline font-bold text-lg text-gray-900 tracking-tight" htmlFor="audio_date">When was this?</label>
-          <input
-            id="audio_date"
-            type="text"
-            placeholder="Summer 1987"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="appearance-none w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="font-headline font-bold text-lg text-gray-900 tracking-tight" htmlFor="song_link">Spotify or Apple Music Link</label>
+      {/* Form Essentials inside Premium White Card */}
+      <FormCard as="section" className="space-y-8">
+        <div className="space-y-3">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="audio_title">Memory Title</label>
           <div className="relative">
-            <input
-              id="song_link"
+            <TextInput
+              id="audio_title"
               type="text"
-              placeholder="https://open.spotify.com/track/..."
-              value={songLink}
-              onChange={(e) => setSongLink(e.target.value)}
-              className="appearance-none w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+              placeholder="Our Wedding Song"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="font-headline font-bold text-lg text-gray-900 tracking-tight" htmlFor="song_context">Why does Mom love this?</label>
+        <div className="space-y-3">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="audio_date">
+            When was this? <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          </label>
+          <div className="relative">
+            <TextInput
+              id="audio_date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_link">
+            Link <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          </label>
+          <div className="relative">
+            <TextInput
+              id="song_link"
+              type="url"
+              placeholder="Spotify or Apple Music..."
+              value={songLink}
+              onChange={(e) => setSongLink(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_context">Why does Mom love this?</label>
           <div className="relative">
             <textarea
               id="song_context"
               placeholder="They played this at her wedding..."
               rows={4}
+              required
               value={story}
               onChange={(e) => setStory(e.target.value)}
-              className="appearance-none w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-2"
+              className="appearance-none w-full p-6 bg-surface-container-highest border-none rounded-2xl text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
           </div>
         </div>
-      </section>
+      </FormCard>
 
       <section className="space-y-4 pt-2">
-        <h3 className="font-headline font-bold text-lg text-gray-900 tracking-tight">Or upload a file directly</h3>
-        <button className="w-full bg-purple-50 text-purple-700 rounded-2xl p-4 flex items-center justify-center gap-2 border border-purple-100 hover:bg-purple-100 active:scale-95 transition-colors">
-          <Upload className="w-5 h-5" />
+        <h3 className="font-headline font-bold text-xl text-on-surface tracking-tight text-center">Or upload a file directly</h3>
+        <SecondaryButton>
+          <Upload className="w-6 h-6" />
           <span className="font-bold">Upload Audio or Video (MP4)</span>
-        </button>
+        </SecondaryButton>
       </section>
 
       {error && (
-        <p className="text-red-500 font-medium text-sm text-center">{error}</p>
+        <p className="text-red-500 font-medium text-sm text-center px-1">{error}</p>
       )}
 
-      <button
+      <PrimaryButton
         onClick={handleSave}
-        disabled={isSaving}
-        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+        disabled={isSaving || !isFormValid}
+        className="mb-8"
       >
-        {isSaving ? <><Loader2 className="w-5 h-5 animate-spin" />Saving…</> : 'Save Audio Memory'}
-      </button>
+        {isSaving ? <><Loader2 className="w-6 h-6 animate-spin" />Saving…</> : 'Save Audio Memory'}
+      </PrimaryButton>
     </div>
   );
 }

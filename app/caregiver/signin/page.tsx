@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
+import { PrimaryButton } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/Input';
+import { FormCard } from '@/components/ui/FormCard';
 
 export default function CaregiverSignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get('next') ?? '/caregiver';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +40,7 @@ export default function CaregiverSignInPage() {
         return;
       }
 
-      router.push('/caregiver');
+      router.push(nextPath);
     } catch (err) {
       console.error('Sign-in error:', err);
       setError('Something went wrong. Please try again.');
@@ -45,42 +50,49 @@ export default function CaregiverSignInPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 px-6 py-12 font-body text-gray-900">
-      <div className="max-w-md w-full mx-auto">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-[#4e0078] font-medium mb-6 hover:opacity-80 transition-opacity">
-          <ArrowLeft size={24} /> Back
-        </button>
+    <div className="flex flex-col min-h-screen bg-surface px-6 py-8 md:py-12 font-body text-gray-900 overflow-hidden relative selection:bg-[#4e0078]/20">
+      
+      {/* Soft gradient blur background for premium feel */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[#4e0078]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-[#7a2e9e]/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="space-y-8">
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col flex-1">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 text-[#4e0078] font-semibold hover:opacity-80 transition-opacity mb-8 self-start w-fit"
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={2.5} /> Back
+        </Link>
+
+        <div className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 pb-12">
+          <div className="space-y-8">
           <div>
-            <h1 className="font-headline text-4xl font-extrabold tracking-tight mb-2 text-[#4e0078]">Welcome Back</h1>
-            <p className="text-gray-500 text-lg">Sign in to your caregiver account to continue.</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a1a] text-center mb-2 font-headline">Welcome Back</h1>
+            <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Sign in to your caregiver account to continue.</p>
           </div>
 
-          <form className="space-y-6 flex flex-col" onSubmit={handleSubmit}>
+          <FormCard as="form" className="space-y-6 flex flex-col" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label className="font-headline font-bold text-lg" htmlFor="email">Email Address</label>
-              <input
+              <TextInput
                 id="email"
                 type="email"
                 placeholder="hello@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="appearance-none w-full h-14 px-5 bg-white border border-gray-200 rounded-2xl text-lg font-medium focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all outline-none"
               />
             </div>
 
             <div className="space-y-2">
               <label className="font-headline font-bold text-lg" htmlFor="password">Password</label>
-              <input
+              <TextInput
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="appearance-none w-full h-14 px-5 bg-white border border-gray-200 rounded-2xl text-lg font-medium focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all outline-none"
               />
             </div>
 
@@ -90,10 +102,10 @@ export default function CaregiverSignInPage() {
               </div>
             )}
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-10"
             >
               {isSubmitting ? (
                 <>
@@ -103,7 +115,7 @@ export default function CaregiverSignInPage() {
               ) : (
                 'Sign In'
               )}
-            </button>
+            </PrimaryButton>
 
             <p className="text-center text-sm text-gray-500">
               Don&apos;t have an account?{' '}
@@ -111,8 +123,9 @@ export default function CaregiverSignInPage() {
                 Sign up
               </Link>
             </p>
-          </form>
+          </FormCard>
         </div>
+      </div>
       </div>
     </div>
   );

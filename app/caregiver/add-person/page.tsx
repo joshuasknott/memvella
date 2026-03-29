@@ -6,6 +6,9 @@ import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2, X } from 'lucide-react';
+import { PrimaryButton } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/Input';
+import { FormCard } from '@/components/ui/FormCard';
 
 const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
 
@@ -45,15 +48,11 @@ export default function AddPersonPage() {
     if (photoInputRef.current) photoInputRef.current.value = '';
   };
 
+  const isFormValid = name.trim().length > 0 && relationship.trim().length > 0;
+
   const handleSavePerson = async () => {
-    if (!name.trim()) {
-      setError('Please enter a name.');
-      return;
-    }
-    if (!aiContext.trim()) {
-      setError('Please add some context for Memvella.');
-      return;
-    }
+    if (!isFormValid) return;
+    
     setError(null);
     setIsSaving(true);
     try {
@@ -91,7 +90,7 @@ export default function AddPersonPage() {
   return (
     <div className="flex flex-col gap-8 px-4 w-full pb-32">
       {/* Photo Upload Hero */}
-      <section className="relative group">
+      <section className="relative group mt-4">
         <input
           ref={photoInputRef}
           type="file"
@@ -101,47 +100,49 @@ export default function AddPersonPage() {
           onChange={handlePhotoSelect}
         />
         <label htmlFor="person-photo-input" className="block">
-          <div className="w-full h-40 rounded-lg bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
+          <div className="w-full h-48 rounded-3xl bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
             {photoPreview ? (
               <>
                 <img src={photoPreview} alt="Photo preview" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); handleClearPhoto(); }}
-                  className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70"
+                  className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 backdrop-blur-sm transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </>
             ) : (
               <>
-                <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-90 transition-transform">
+                <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-90 transition-transform relative z-10">
                   <Camera className="w-10 h-10 text-primary" strokeWidth={1.5} />
                 </div>
-                <p className="font-headline font-bold text-lg text-primary">Add Photo</p>
-                <p className="text-sm text-outline mt-1 font-light italic">Make it a favorite memory</p>
+                <p className="font-headline font-bold text-xl text-primary relative z-10">
+                  Add Photo <span className="text-sm font-normal text-outline italic ml-1">(Optional)</span>
+                </p>
+                <p className="text-sm text-outline mt-1 font-light italic relative z-10">Make it a favorite memory</p>
                 {/* Decorative tonal bleed */}
-                <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-secondary/5 rounded-full blur-3xl"></div>
               </>
             )}
           </div>
         </label>
       </section>
 
-      {/* Form Essentials */}
-      <section className="space-y-8">
+      {/* Form Essentials inside Premium White Card */}
+      <FormCard as="section" className="space-y-8">
         {/* Name Input */}
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="person_name">What is their name?</label>
           <div className="relative">
-            <input
+            <TextInput
               id="person_name"
               placeholder="David"
               type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
@@ -184,7 +185,7 @@ export default function AddPersonPage() {
                     setIsAddingCustom(false);
                     setCustomRelText('');
                   }}
-                  className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90"
+                  className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
                 >
                   <Check className="w-4 h-4 text-white" />
                 </button>
@@ -196,7 +197,7 @@ export default function AddPersonPage() {
                   e.preventDefault();
                   setIsAddingCustom(true);
                 }}
-                className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest"
+                className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest transition-colors"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -212,9 +213,9 @@ export default function AddPersonPage() {
           <div className="flex gap-4">
             <button
               onClick={() => setIsLiving(true)}
-              className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
+              className={`h-14 flex-1 rounded-2xl border-2 font-medium text-lg transition-all ${
                 isLiving
-                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm'
+                  ? 'bg-primary/10 border-primary text-primary shadow-sm'
                   : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
               }`}
             >
@@ -222,9 +223,9 @@ export default function AddPersonPage() {
             </button>
             <button
               onClick={() => setIsLiving(false)}
-              className={`h-14 flex-1 rounded-xl border-2 font-medium text-lg transition-all ${
+              className={`h-14 flex-1 rounded-2xl border-2 font-medium text-lg transition-all ${
                 !isLiving
-                  ? 'bg-[#4e0078]/10 border-[#4e0078] text-[#4e0078] shadow-sm'
+                  ? 'bg-primary/10 border-primary text-primary shadow-sm'
                   : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
               }`}
             >
@@ -239,7 +240,9 @@ export default function AddPersonPage() {
         {/* AI Context Box */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">Key Facts & Context</label>
+            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">
+              Key Facts & Context <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+            </label>
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
           </div>
           <div className="relative">
@@ -249,15 +252,15 @@ export default function AddPersonPage() {
               rows={4}
               value={aiContext}
               onChange={(e) => setAiContext(e.target.value)}
-              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
+              className="w-full p-6 bg-surface-container-highest border-none rounded-2xl text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {lovedOneName} remember?</p>
           </div>
         </div>
-      </section>
+      </FormCard>
 
       {/* Contextual Tip Card */}
-      <div className="bg-primary-fixed/30 p-6 rounded-lg relative overflow-hidden group">
+      <div className="bg-primary-fixed/30 p-6 rounded-3xl relative overflow-hidden group">
         <div className="relative z-10 flex gap-4">
           <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
             <Lightbulb className="text-primary w-6 h-6" />
@@ -275,20 +278,20 @@ export default function AddPersonPage() {
         <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
       )}
 
-      <button
+      <PrimaryButton
         onClick={handleSavePerson}
-        disabled={isSaving}
-        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        disabled={isSaving || !isFormValid}
+        className="mb-8"
       >
         {isSaving ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin" />
             Saving...
           </>
         ) : (
           'Save to Family'
         )}
-      </button>
+      </PrimaryButton>
     </div>
   );
 }

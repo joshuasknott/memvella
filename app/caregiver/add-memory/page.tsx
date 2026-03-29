@@ -8,8 +8,8 @@ export default function AddMemorySelectorPage() {
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
       <div>
-        <h2 className="font-headline font-extrabold text-2xl text-gray-900 tracking-tight">What kind of memory are you saving?</h2>
-        <p className="text-gray-500 text-sm mt-2">Choose a format to start capturing a moment for Mom.</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-4">What kind of memory are you saving?</h1>
+        <p className="text-gray-500 text-sm mt-2 text-center mb-4">Choose a format to start capturing a moment for Mom.</p>
       </div>
 
       <section className="space-y-4">

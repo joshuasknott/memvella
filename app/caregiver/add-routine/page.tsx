@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Calendar, Sparkles, Lightbulb, Check, Loader2 } from 'lucide-react';
+import { PrimaryButton } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/Input';
+import { FormCard } from '@/components/ui/FormCard';
 
 const FREQUENCY_OPTIONS = ['Daily', 'Weekly', 'Weekends'];
 
@@ -27,19 +30,11 @@ export default function AddRoutinePage() {
     );
   };
 
+  const isFormValid = routineName.trim().length > 0 && time.trim().length > 0 && frequency.length > 0;
+
   const handleSaveRoutine = async () => {
-    if (!routineName.trim()) {
-      setError('Please enter a routine name.');
-      return;
-    }
-    if (!time.trim()) {
-      setError('Please enter a time.');
-      return;
-    }
-    if (frequency.length === 0) {
-      setError('Please select at least one frequency.');
-      return;
-    }
+    if (!isFormValid) return;
+    
     setError(null);
     setIsSaving(true);
     try {
@@ -68,18 +63,18 @@ export default function AddRoutinePage() {
         </div>
       </section>
 
-      {/* Form Essentials */}
-      <section className="space-y-8">
+      {/* Form Essentials inside Premium White Card */}
+      <FormCard as="section" className="space-y-8">
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_name">Routine Name</label>
           <div className="relative">
-            <input
+            <TextInput
               id="routine_name"
               placeholder="Morning Tea"
               type="text"
+              required
               value={routineName}
               onChange={(e) => setRoutineName(e.target.value)}
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
@@ -87,13 +82,12 @@ export default function AddRoutinePage() {
         <div className="space-y-3">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_time">What time?</label>
           <div className="relative">
-            <input
+            <TextInput
               id="routine_time"
-              placeholder="10:00 AM"
-              type="text"
+              type="time"
+              required
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full h-16 px-6 bg-surface-container-highest border-none rounded-md text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50"
             />
           </div>
         </div>
@@ -124,7 +118,9 @@ export default function AddRoutinePage() {
 
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_instructions">AI Instructions</label>
+            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_instructions">
+              AI Instructions <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+            </label>
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
           </div>
           <div className="relative">
@@ -134,14 +130,14 @@ export default function AddRoutinePage() {
               rows={4}
               value={aiInstructions}
               onChange={(e) => setAiInstructions(e.target.value)}
-              className="w-full p-6 bg-surface-container-highest border-none rounded-md text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
+              className="w-full p-6 bg-surface-container-highest border-none rounded-2xl text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">Give Memvella specific directions for how to handle this routine.</p>
           </div>
         </div>
-      </section>
+      </FormCard>
 
-      <div className="bg-primary-fixed/30 p-6 rounded-lg relative overflow-hidden group">
+      <div className="bg-primary-fixed/30 p-6 rounded-3xl relative overflow-hidden group">
         <div className="relative z-10 flex gap-4">
           <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
             <Lightbulb className="text-primary w-6 h-6" />
@@ -159,20 +155,20 @@ export default function AddRoutinePage() {
         <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
       )}
 
-      <button
+      <PrimaryButton
         onClick={handleSaveRoutine}
-        disabled={isSaving}
-        className="w-full bg-[#4e0078] text-white rounded-2xl py-4 font-semibold text-lg mt-10 hover:bg-[#3d005e] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        disabled={isSaving || !isFormValid}
+        className="mb-8"
       >
         {isSaving ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin" />
             Saving...
           </>
         ) : (
           'Save Routine'
         )}
-      </button>
+      </PrimaryButton>
     </div>
   );
 }
