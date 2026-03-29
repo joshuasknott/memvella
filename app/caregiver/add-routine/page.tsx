@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Calendar, Sparkles, Lightbulb, Check, Loader2 } from 'lucide-react';
-import { PrimaryButton } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
 const FREQUENCY_OPTIONS = ['Daily', 'Weekly', 'Weekends'];
@@ -65,35 +63,37 @@ export default function AddRoutinePage() {
 
       {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8">
-        <div className="space-y-3">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_name">Routine Name</label>
           <div className="relative">
-            <TextInput
+            <input
               id="routine_name"
               placeholder="Morning Tea"
               type="text"
               required
               value={routineName}
               onChange={(e) => setRoutineName(e.target.value)}
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
             />
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="routine_time">What time?</label>
           <div className="relative">
-            <TextInput
+            <input
               id="routine_time"
               type="time"
               required
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
             />
           </div>
         </div>
 
         {/* Frequency Pill-Selector — multi-select */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Frequency</label>
           <div className="flex flex-wrap gap-3">
             {FREQUENCY_OPTIONS.map((option) => {
@@ -116,7 +116,7 @@ export default function AddRoutinePage() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex items-center gap-2">
             <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_instructions">
               AI Instructions <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
@@ -130,7 +130,7 @@ export default function AddRoutinePage() {
               rows={4}
               value={aiInstructions}
               onChange={(e) => setAiInstructions(e.target.value)}
-              className="w-full p-6 bg-surface-container-highest border-none rounded-2xl text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] w-full text-lg resize-none placeholder:text-outline/50"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">Give Memvella specific directions for how to handle this routine.</p>
           </div>
@@ -155,10 +155,10 @@ export default function AddRoutinePage() {
         <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
       )}
 
-      <PrimaryButton
+      <button
         onClick={handleSaveRoutine}
         disabled={isSaving || !isFormValid}
-        className="mb-8"
+        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl mb-8 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isSaving ? (
           <>
@@ -168,7 +168,7 @@ export default function AddRoutinePage() {
         ) : (
           'Save Routine'
         )}
-      </PrimaryButton>
+      </button>
     </div>
   );
 }

@@ -6,8 +6,6 @@ import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { Sparkles, Lightbulb, Mic, Camera, X, Loader2 } from 'lucide-react';
-import { PrimaryButton } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
 export default function TextMemoryPage() {
@@ -79,35 +77,37 @@ export default function TextMemoryPage() {
     <div className="flex flex-col gap-8 px-4 w-full pb-32">
       {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8 mt-4">
-        <div className="space-y-3">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="memory_title">Memory Title</label>
           <div className="relative">
-            <TextInput
+            <input
               id="memory_title"
               placeholder="David's Graduation"
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
             />
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="memory_date">
             When was this? <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
           </label>
           <div className="relative">
-            <TextInput
+            <input
               id="memory_date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
             />
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex items-center gap-2">
             <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">The Story</label>
             <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
@@ -121,7 +121,7 @@ export default function TextMemoryPage() {
                 required
                 value={story}
                 onChange={(e) => setStory(e.target.value)}
-                className="appearance-none w-full rounded-2xl border-none bg-surface-container-highest px-6 pt-6 pb-14 text-lg font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline/50 resize-none"
+                className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] pb-14 w-full text-lg resize-none placeholder:text-outline/50"
               ></textarea>
               <button type="button" className="absolute bottom-4 right-4 p-3 bg-primary/10 text-primary rounded-full shadow-sm active:scale-95 transition-transform hover:bg-primary/20">
                 <Mic size={24} />
@@ -178,13 +178,13 @@ export default function TextMemoryPage() {
         <p className="text-red-500 font-medium text-sm text-center px-1">{error}</p>
       )}
 
-      <PrimaryButton
+      <button
         onClick={handleSaveMemory}
         disabled={isSaving || !isFormValid}
-        className="mb-8"
+        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl mb-8 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isSaving ? <><Loader2 className="w-6 h-6 animate-spin" />{selectedPhoto ? 'Uploading & Saving…' : 'Saving…'}</> : 'Save Memory'}
-      </PrimaryButton>
+      </button>
     </div>
   );
 }

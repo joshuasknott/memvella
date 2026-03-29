@@ -6,8 +6,6 @@ import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2, X } from 'lucide-react';
-import { PrimaryButton } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
 const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
@@ -133,22 +131,23 @@ export default function AddPersonPage() {
       {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8">
         {/* Name Input */}
-        <div className="space-y-3">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="person_name">What is their name?</label>
           <div className="relative">
-            <TextInput
+            <input
               id="person_name"
               placeholder="David"
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
             />
           </div>
         </div>
 
         {/* Relationship Dropdown/Pill-Selector */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to {lovedOneName}</label>
           <div className="flex flex-wrap gap-3">
             {Array.from(new Set([...RELATIONSHIP_OPTIONS, relationship])).map((option) => (
@@ -206,7 +205,7 @@ export default function AddPersonPage() {
         </div>
 
         {/* Life Status Selection — TEMPORAL SAFETY FLAG */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">
             Status
           </label>
@@ -238,7 +237,7 @@ export default function AddPersonPage() {
         </div>
 
         {/* AI Context Box */}
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex items-center gap-2">
             <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">
               Key Facts & Context <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
@@ -252,7 +251,7 @@ export default function AddPersonPage() {
               rows={4}
               value={aiContext}
               onChange={(e) => setAiContext(e.target.value)}
-              className="w-full p-6 bg-surface-container-highest border-none rounded-2xl text-lg leading-relaxed focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
+              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] w-full text-lg resize-none placeholder:text-outline/50"
             ></textarea>
             <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {lovedOneName} remember?</p>
           </div>
@@ -278,10 +277,10 @@ export default function AddPersonPage() {
         <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
       )}
 
-      <PrimaryButton
+      <button
         onClick={handleSavePerson}
         disabled={isSaving || !isFormValid}
-        className="mb-8"
+        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl mb-8 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isSaving ? (
           <>
@@ -291,7 +290,7 @@ export default function AddPersonPage() {
         ) : (
           'Save to Family'
         )}
-      </PrimaryButton>
+      </button>
     </div>
   );
 }

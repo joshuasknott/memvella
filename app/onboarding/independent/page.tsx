@@ -324,7 +324,7 @@ export default function IndependentSetupVoicePage() {
               type="button"
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={`h-14 w-14 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-300 ${
+              className={`h-14 w-14 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 ${
                 isListening 
                   ? 'bg-red-500 text-white scale-105 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
                   : 'bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-md active:scale-95'
