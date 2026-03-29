@@ -65,15 +65,12 @@ export default function SeniorHomePage() {
 
   useEffect(() => {
     const id = localStorage.getItem('memvella_caregiverId') ?? '';
-    const name =
-      localStorage.getItem('memvella_lovedOneName') ??
-      localStorage.getItem('memvella_seniorName') ??
-      '';
+    const name = localStorage.getItem('memvella_seniorName') || 'Friend';
     setCaregiverId(id);
     setLocalName(name);
   }, []);
 
-  const seniorName = session?.user?.name || localName;
+  const seniorName = localName;
 
   // ── Convex queries — only run when caregiverId is available ───────────────
   // Skip queries (return undefined) until caregiverId is hydrated from localStorage

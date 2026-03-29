@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart } from 'lucide-react';
+import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart, ChevronRight } from 'lucide-react';
 
 // Icon map for timeline row types
 const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {
@@ -72,16 +72,16 @@ export default function CaregiverDashboard() {
   return (
     <div className="flex flex-col gap-6 px-4 w-full">
       {/* Connection Hero: Engagement Summary */}
-      <section className="bg-linear-to-br from-primary-fixed to-secondary-fixed rounded-lg p-8 relative overflow-hidden shadow-sm">
+      <section className="bg-linear-to-br from-primary-fixed to-secondary-fixed rounded-lg p-6 relative overflow-hidden shadow-sm">
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             <span className="font-label text-xs font-semibold tracking-widest uppercase text-primary/60">Current Status</span>
           </div>
-          <h2 className="font-headline font-bold text-2xl leading-tight text-on-primary-fixed mb-2">
+          <h2 className="font-headline font-bold text-xl leading-tight text-on-primary-fixed mb-1">
             {summary?.statusSummary ?? 'Loading status…'}
           </h2>
-          <p className="text-[#1a1c1a] leading-relaxed">{lovedOneName} chatted with Memvella this morning and looked at the family photos.</p>
+          <p className="text-[#1a1c1a] text-sm leading-relaxed">{lovedOneName} chatted with Memvella this morning and looked at the family photos.</p>
         </div>
         {/* Decorative Asymmetry */}
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
@@ -112,18 +112,18 @@ export default function CaregiverDashboard() {
       </section>
 
       {/* The Review Card */}
-      <section className="-mt-4 relative z-20">
-        <div className="bg-primary p-6 rounded-lg shadow-[0_25px_50px_rgba(78,0,120,0.2)] border border-primary/5">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 rounded-full bg-on-primary-container/20 flex items-center justify-center">
-              <MessageSquare className="text-on-primary-container fill-on-primary-container/20 w-6 h-6" />
+      <section className="-mt-2 relative z-20">
+        <div className="bg-primary p-5 rounded-lg shadow-[0_25px_50px_rgba(78,0,120,0.2)] border border-primary/5">
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-8 h-8 rounded-full bg-on-primary-container/20 flex items-center justify-center">
+              <MessageSquare className="text-on-primary-container fill-on-primary-container/20 w-4 h-4" />
             </div>
             <span className="bg-on-primary-container/10 text-on-primary-container text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">New Insights</span>
           </div>
-          <p className="text-on-primary font-medium text-sm mb-6 leading-relaxed">
+          <p className="text-on-primary font-medium text-sm mb-4 leading-relaxed">
             Memvella identified that Emily prefers Earl Grey tea with honey.
           </p>
-          <Link href="/caregiver/insights" className="w-full h-14 bg-on-primary text-primary font-bold rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+          <Link href="/caregiver/insights" className="w-full h-12 bg-on-primary text-primary font-bold rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
             Review New Info
             <ArrowRight className="w-4 h-4 outline-none" />
           </Link>
@@ -150,14 +150,17 @@ export default function CaregiverDashboard() {
             {timeline.map((item) => {
               const Icon = ROUTINE_ICON_MAP[item.type] ?? Calendar;
               return (
-                <div key={item.id} className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg group hover:bg-surface-container transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                    <Icon className="text-secondary w-6 h-6" />
+                <div key={item.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                      <Icon className="text-secondary w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
+                      <p className="font-medium text-on-surface text-sm">{item.title}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
-                    <p className="font-medium text-on-surface">{item.title}</p>
-                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
               );
             })}
@@ -165,18 +168,19 @@ export default function CaregiverDashboard() {
         )}
 
         {/* Family connection summary card — kept for visual richness */}
-        <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
-          <div className="p-5">
+        <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm hover:bg-gray-50 cursor-pointer transition-colors group">
+          <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
                 <Heart className="text-on-tertiary-fixed-variant w-4 h-4 fill-on-tertiary-fixed-variant" />
               </div>
-              <p className="font-medium text-on-surface">
+              <p className="font-medium text-on-surface text-sm">
                 {summary
                   ? `${summary.totalFamilyMembers} family member${summary.totalFamilyMembers !== 1 ? 's' : ''} & ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? 's' : ''} set up.`
                   : 'Loading family summary…'}
               </p>
             </div>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors shrink-0" />
           </div>
         </div>
       </section>

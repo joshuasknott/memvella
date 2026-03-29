@@ -23,11 +23,7 @@ export default function AddRoutinePage() {
   const [error, setError] = useState<string | null>(null);
 
   const toggleFrequency = (option: string) => {
-    setFrequency((prev) =>
-      prev.includes(option)
-        ? prev.filter((f) => f !== option)
-        : [...prev, option]
-    );
+    setFrequency([option]);
   };
 
   const isFormValid = routineName.trim().length > 0 && time.trim().length > 0 && frequency.length > 0;
@@ -55,13 +51,7 @@ export default function AddRoutinePage() {
 
   return (
     <div className="flex flex-col gap-8 px-4 w-full pb-32">
-      {/* Soft Icon Hero */}
-      <section className="relative group flex justify-center mt-2 mb-2">
-        <div className="w-40 h-40 rounded-[2.5rem] bg-linear-to-br from-primary to-secondary flex flex-col items-center justify-center shadow-2xl shadow-primary/20 group-active:scale-95 transition-transform">
-           <Calendar className="w-16 h-16 text-white mb-2" strokeWidth={1.5} />
-           <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-        </div>
-      </section>
+
 
       {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8">
