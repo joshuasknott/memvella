@@ -68,7 +68,7 @@ export default function CaregiverMemoriesPage() {
       {/* Family Members — Live from Convex */}
       <section>
         <div className="flex items-center justify-between mb-4 px-1">
-          <h2 className="font-headline font-bold text-xl text-gray-900">Family Members</h2>
+          <h2 className="font-headline font-bold text-xl text-gray-900">Connections</h2>
           <span className="text-[10px] font-bold text-primary tracking-widest uppercase bg-purple-50 px-3 py-1 rounded-full">
             {members === undefined ? '…' : `${members.length} Added`}
           </span>
@@ -88,7 +88,7 @@ export default function CaregiverMemoriesPage() {
             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm">
               <Users className="w-7 h-7 text-purple-400" />
             </div>
-            <p className="font-headline font-bold text-gray-900 text-lg mb-2">No family members yet</p>
+            <p className="font-headline font-bold text-gray-900 text-lg mb-2">No connections yet</p>
             <p className="text-gray-500 text-sm max-w-[220px] leading-relaxed mb-6">
               Add family and friends to help Memvella recognize them in stories and photos.
             </p>

@@ -20,7 +20,7 @@ export default function AccountSettingsPage() {
           <label className="font-headline font-semibold text-sm text-gray-700">Your Name</label>
           <input 
             type="text" 
-            defaultValue={`${lovedOneName}'s Caregiver`}
+            defaultValue={`${lovedOneName}'s Organizer`}
             className="w-full h-14 px-4 bg-white border border-gray-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" 
           />
         </div>

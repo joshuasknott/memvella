@@ -131,10 +131,10 @@ export default function SeniorHomePage() {
         </div>
 
         {/* Voice Action Button */}
-        <div className="mt-8 md:mt-12">
+        <div className="mt-8 md:fixed md:bottom-8 md:right-8 md:mt-0 md:z-40">
           <button 
             onClick={() => setIsVoiceModalOpen(true)}
-            className="block text-center bg-linear-to-br from-primary to-secondary w-full py-6 md:py-10 px-8 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200"
+            className="block text-center bg-linear-to-br from-primary to-secondary w-full md:w-auto py-6 md:py-8 px-8 md:px-10 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200"
           >
             <div className="flex items-center justify-center gap-4 md:gap-6">
               <Mic className="text-white shrink-0 h-10 w-10 md:h-12 md:w-12" strokeWidth={2.5} />
@@ -152,7 +152,7 @@ export default function SeniorHomePage() {
         </header>
 
         {/* Bento-style Gallery Grid */}
-        <div className="grid grid-cols-2 gap-12 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12 pb-12">
           {/* Loading skeletons — shown before caregiverId hydrates or gallery loads */}
           {(gallery === undefined) && (
             <>
@@ -194,7 +194,7 @@ export default function SeniorHomePage() {
           {gallery !== undefined && gallery.length === 0 && (
             <div className="col-span-2 flex flex-col items-center justify-center py-24 text-center">
               <p className="font-headline text-2xl font-bold text-on-surface-variant mb-2">No photos yet</p>
-              <p className="text-outline text-sm">Add memories with photos in the caregiver app.</p>
+              <p className="text-outline text-sm">Add memories with photos in the Organizer app.</p>
             </div>
           )}
         </div>

@@ -81,8 +81,8 @@ export default function CaregiverSetupPage() {
         <div className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 pb-12">
           <div className="space-y-8">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a1a] text-center mb-4 font-headline">Caregiver Setup</h1>
-              <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Let&apos;s create your account to support your loved one.</p>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a1a] text-center mb-4 font-headline">Organizer Setup</h1>
+              <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Let&apos;s create your account to support them.</p>
             </div>
 
           <FormCard as="form" className="space-y-6 flex flex-col" onSubmit={handleSubmit}>
@@ -154,7 +154,7 @@ export default function CaregiverSetupPage() {
                   Creating Account…
                 </>
               ) : (
-                'Create Caregiver Account'
+                'Create Organizer Account'
               )}
             </PrimaryButton>
 

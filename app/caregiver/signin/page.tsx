@@ -68,7 +68,7 @@ export default function CaregiverSignInPage() {
           <div className="space-y-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a1a] text-center mb-2 font-headline">Welcome Back</h1>
-            <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Sign in to your caregiver account to continue.</p>
+            <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Sign in to your organizer account to continue.</p>
           </div>
 
           <FormCard as="form" className="space-y-6 flex flex-col" onSubmit={handleSubmit}>

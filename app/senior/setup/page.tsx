@@ -75,7 +75,7 @@ export default function SeniorSetupPage() {
             Let&apos;s connect your tablet.
           </h1>
           <p className="font-headline text-slate-600 font-medium text-3xl">
-            Ask your caregiver for the 6-digit code on their phone.
+            Ask your Organizer for the 6-digit code on their phone.
           </p>
         </div>
 
