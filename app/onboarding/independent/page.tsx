@@ -45,11 +45,11 @@ export default function IndependentSetupVoicePage() {
     }
   };
 
-  const skipBiometrics = () => router.push('/senior');
+  const skipBiometrics = () => router.push('/independent');
   const enableBiometrics = async () => {
     // Mock enabling FaceID/TouchID via WebAuthn
     await new Promise(resolve => setTimeout(resolve, 500));
-    router.push('/senior');
+    router.push('/independent');
   };
 
   return (

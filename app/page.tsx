@@ -19,11 +19,11 @@ export default function UniversalSplash() {
         </div>
 
         <div className="flex flex-col space-y-4 md:space-y-6 w-full max-w-sm md:max-w-md mx-auto">
-          <PrimaryButton href="/senior/setup">
+          <PrimaryButton href="/assisted/login">
             I have a Connection Code
           </PrimaryButton>
 
-          <SecondaryButton href="/onboarding/caregiver">
+          <SecondaryButton href="/onboarding/supporter">
             Start a new Family Space
           </SecondaryButton>
 
