@@ -30,6 +30,40 @@ export async function getMembershipByAuthIdentityToken(
     .unique();
 }
 
+export async function getOptionalFamilySpaceMembership(
+  ctx: DbCtx,
+  expectedRole?: MembershipRole,
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    return null;
+  }
+
+  const membership = await getMembershipByAuthIdentityToken(
+    ctx,
+    identity.tokenIdentifier,
+  );
+
+  if (!membership) {
+    return null;
+  }
+
+  if (expectedRole && membership.role !== expectedRole) {
+    return null;
+  }
+
+  const familySpace = await ctx.db.get(membership.familySpaceId);
+  if (!familySpace) {
+    return null;
+  }
+
+  return {
+    authIdentityToken: identity.tokenIdentifier,
+    membership,
+    familySpace,
+  };
+}
+
 export async function requireFamilySpaceMembership(
   ctx: DbCtx,
   expectedRole?: MembershipRole,

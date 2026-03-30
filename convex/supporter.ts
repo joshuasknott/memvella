@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import {
+  getOptionalFamilySpaceMembership,
   getMembershipByAuthIdentityToken,
   getSeniorProfileByMode,
   requireFamilySpaceMembership,
@@ -368,17 +369,18 @@ export const patchSupporterProfile = mutation({
 export const getFamilyDirectory = query({
   args: {},
   handler: async (ctx) => {
-    const membership = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
-    if (!membership) {
+    if (!supporterContext) {
       return [];
     }
 
     const members = await ctx.db
       .query("familyMembers")
       .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", membership.membership.familySpaceId),
+        query.eq("familySpaceId", supporterContext.membership.familySpaceId),
       )
       .take(100);
 
@@ -400,16 +402,17 @@ export const getFamilyDirectory = query({
 export const getTodayTimeline = query({
   args: {},
   handler: async (ctx) => {
-    const membership = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
-    if (!membership) {
+    if (!supporterContext) {
       return [];
     }
 
     return await listTodayTimelineForFamilySpace(
       ctx,
-      membership.membership.familySpaceId,
+      supporterContext.membership.familySpaceId,
     );
   },
 });
@@ -417,8 +420,9 @@ export const getTodayTimeline = query({
 export const getSupporterDashboardSummary = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
     if (!supporterContext) {
       return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
@@ -456,8 +460,9 @@ export const getSupporterDashboardSummary = query({
 export const getNotificationSettings = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
     if (!supporterContext) {
       return {
@@ -488,7 +493,21 @@ export const getNotificationSettings = query({
 export const listAssistedDeviceSessions = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
+    );
+    if (!supporterContext) {
+      return [] as Array<{
+        id: Id<"seniorAccessSessions">;
+        issuedAt: number;
+        lastValidatedAt: number;
+        expiresAt: number;
+        idleExpiresAt: number;
+      }>;
+    }
+
+    const { membership } = supporterContext;
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,
@@ -599,8 +618,9 @@ export const revokeAllAssistedDeviceSessions = mutation({
 export const getSupporterProfile = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
     if (!supporterContext) {
       return null;
@@ -631,8 +651,9 @@ export const getSupporterProfile = query({
 export const getFamilySpaceId = query({
   args: {},
   handler: async (ctx): Promise<Id<"familySpaces"> | null> => {
-    const supporterContext = await requireFamilySpaceMembership(ctx, "supporter").catch(
-      () => null,
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
     );
 
     return supporterContext?.membership.familySpaceId ?? null;

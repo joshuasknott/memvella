@@ -228,7 +228,7 @@ export default function IndependentHomePage() {
       });
 
       setPendingDraft(null);
-      setVoiceStatus("No problem. Tell me the memory or routine you want instead.");
+      setVoiceStatus("No problem. Say hello, ask a question, or tell me what you want to remember.");
       setVoiceError(null);
     } catch (error) {
       console.error(error);

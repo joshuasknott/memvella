@@ -317,6 +317,7 @@ export async function getNextRoutineEventForFamilySpace(
 export async function listRoutineSchedulesForFamilySpace(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
+  limit = 100,
 ) {
   const schedules = await ctx.db
     .query("routineSchedules")
@@ -324,7 +325,7 @@ export async function listRoutineSchedulesForFamilySpace(
       query.eq("familySpaceId", familySpaceId),
     )
     .order("desc")
-    .take(100);
+    .take(limit);
 
   return schedules.map((schedule) => ({
     id: schedule._id,

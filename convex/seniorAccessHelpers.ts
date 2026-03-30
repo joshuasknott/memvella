@@ -12,6 +12,7 @@ import {
   getNextRoutineEventForFamilySpace,
   listTodayTimelineForFamilySpace,
 } from "./routineHelpers";
+import { formatMemoryDateLabel, summarizeMemory } from "./memoryHelpers";
 
 type SessionCtx = MutationCtx | QueryCtx;
 
@@ -188,10 +189,13 @@ export async function buildSeniorDashboard(
 ) {
   type GalleryItem = {
     id: string;
-    imageUrl: string;
+    mediaUrl: string;
+    mediaAssetType: "image" | "video";
     caption: string;
+    excerpt: string;
     date: string | null;
-    mediaType: "text" | "media" | "audio" | "voice";
+    dateLabel: string;
+    recordType: Doc<"memoryRecords">["recordType"];
   };
 
   const [nextRoutine, todaysTimeline, memoryRecords] = await Promise.all([
@@ -230,21 +234,29 @@ export async function buildSeniorDashboard(
           )
           .take(1);
 
-        if (!asset || asset.assetType !== "image" || !asset.storageId) {
+        if (
+          !asset ||
+          (asset.assetType !== "image" && asset.assetType !== "video")
+        ) {
           return null;
         }
 
-        const imageUrl = await ctx.storage.getUrl(asset.storageId);
-        if (!imageUrl) {
+        const mediaUrl = asset.storageId
+          ? await ctx.storage.getUrl(asset.storageId)
+          : asset.externalUrl;
+        if (!mediaUrl) {
           return null;
         }
 
         return {
           id: record._id,
-          imageUrl,
+          mediaUrl,
+          mediaAssetType: asset.assetType,
           caption: record.title,
+          excerpt: summarizeMemory(record),
           date: record.memoryDate,
-          mediaType: record.recordType,
+          dateLabel: formatMemoryDateLabel(record.memoryDate),
+          recordType: record.recordType,
         };
       }),
     )

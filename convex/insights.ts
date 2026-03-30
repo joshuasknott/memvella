@@ -6,7 +6,10 @@ import {
   internalMutation,
   type QueryCtx,
 } from "./_generated/server";
-import { requireFamilySpaceMembership } from "./familySpaceAuth";
+import {
+  getOptionalFamilySpaceMembership,
+  requireFamilySpaceMembership,
+} from "./familySpaceAuth";
 
 function aiInsightTypeValidator() {
   return v.union(
@@ -63,7 +66,18 @@ async function enrichInsights<
 export const listSupporterInsights = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
+    );
+    if (!supporterContext) {
+      return {
+        queued: [] as Awaited<ReturnType<typeof enrichInsights>>,
+        reviewed: [] as Awaited<ReturnType<typeof enrichInsights>>,
+      };
+    }
+
+    const { membership } = supporterContext;
     const [queued, reviewed] = await Promise.all([
       ctx.db
         .query("supporterInsights")
@@ -93,7 +107,15 @@ export const listSupporterInsights = query({
 export const getQueuedSupporterInsightCount = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const supporterContext = await getOptionalFamilySpaceMembership(
+      ctx,
+      "supporter",
+    );
+    if (!supporterContext) {
+      return 0;
+    }
+
+    const { membership } = supporterContext;
     const queued = await ctx.db
       .query("supporterInsights")
       .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>

@@ -50,7 +50,7 @@ function resolvePlaceholder(isListening: boolean, voiceState: VoiceUiState) {
     return "Speaking...";
   }
 
-  return "Speak or type a memory or routine...";
+  return "Say hello, ask a question, or log a memory...";
 }
 
 export function VoiceInputPill({

@@ -13,6 +13,18 @@ import {
 } from "./seniorAccessHelpers";
 
 type ChallengePurpose = "passkey_registration" | "passkey_authentication";
+type FinalizeMagicLinkSignInResult =
+  | {
+      status: "ready";
+      sessionToken: string;
+      seniorProfileId: Id<"seniorProfiles">;
+      seniorName: string;
+      hasPasskey: boolean;
+    }
+  | {
+      status: "role_collision";
+      message: string;
+    };
 
 async function getActiveChallenge(
   ctx: QueryCtx | MutationCtx,
@@ -75,7 +87,7 @@ export const finalizeMagicLinkSignIn = mutation({
     displayName: v.optional(v.string()),
     deviceFingerprint: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<FinalizeMagicLinkSignInResult> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Unauthenticated: a valid sign-in link is required.");
@@ -97,9 +109,11 @@ export const finalizeMagicLinkSignIn = mutation({
 
     if (existingMembership) {
       if (existingMembership.role !== "independent_senior") {
-        throw new Error(
-          "This account is already linked to a Supporter experience.",
-        );
+        return {
+          status: "role_collision",
+          message:
+            "This email is already registered as a Supporter. Please use a different email for the Independent Senior device.",
+        };
       }
 
       familySpaceId = existingMembership.familySpaceId;
@@ -181,6 +195,7 @@ export const finalizeMagicLinkSignIn = mutation({
     const activePasskeys = await getActivePasskeys(ctx, seniorProfileId);
 
     return {
+      status: "ready",
       sessionToken: session.sessionToken,
       seniorProfileId,
       seniorName: normalizedDisplayName,

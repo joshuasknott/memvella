@@ -38,6 +38,11 @@ type SeniorAiContext = {
   }>;
 };
 
+type SeniorLocaleContext = Pick<
+  SeniorAiContext,
+  "familySpaceName" | "timeZone" | "locale"
+>;
+
 type ResolvedSeniorSession = {
   familySpaceId: Id<"familySpaces">;
   seniorProfileId: Id<"seniorProfiles">;
@@ -73,6 +78,8 @@ type IndependentVoiceActionResult = {
   distressDetected: boolean;
   draft: IndependentDraft | null;
 };
+
+const FAST_VOICE_MODEL = "gemini-2.5-flash-lite";
 
 function formatRetryMessage(retryAfterMs: number) {
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
@@ -132,50 +139,54 @@ function buildAssistedSystemPrompt(
   context: SeniorAiContext,
   distressDetected: boolean,
 ) {
-  const sections: string[] = [
-    `You are Memvella, a calm digital wellness companion for ${seniorName}.`,
-    "Use short, grounding sentences.",
-    "Only use facts supplied from the active FamilySpace context.",
-    "If a fact is missing, say that you do not know.",
-    "Never give medical, dosage, diagnostic, or treatment advice.",
+  const sections = [
+    `You are Memvella speaking with ${seniorName}.`,
+    "Reply in 1 to 3 short, grounding sentences.",
+    "Use only facts from this FamilySpace context.",
+    "If a detail is missing, say you do not know.",
+    "Never give medical, dosage, diagnosis, or treatment advice.",
     distressDetected
-      ? "The transcript contains distress markers. Start with reassurance, then give the clearest helpful next step."
+      ? "If the transcript suggests distress, begin with reassurance and one clear next step."
       : "Keep the tone warm and direct.",
-    "",
-    `Active FamilySpace: ${context.familySpaceName}`,
+    `FamilySpace: ${context.familySpaceName}`,
   ];
 
   if (context.routines.length > 0) {
-    sections.push("Routine Context:");
-    for (const routine of context.routines) {
-      const scheduleWindow =
-        routine.startDate || routine.endDate
-          ? ` Active window: ${routine.startDate ?? "now"} to ${routine.endDate ?? "open"}.`
-          : "";
-      sections.push(
-        `- ${routine.title} at ${routine.time} on ${routine.frequency.join(", ")}.${routine.aiInstructions ? ` Notes: ${routine.aiInstructions}.` : ""}${scheduleWindow}`,
-      );
-    }
+    sections.push(
+      `Routines: ${context.routines
+        .map((routine) => {
+          const scheduleWindow =
+            routine.startDate || routine.endDate
+              ? `, active ${routine.startDate ?? "now"} to ${routine.endDate ?? "open"}`
+              : "";
+          const notes = routine.aiInstructions ? `, note: ${routine.aiInstructions}` : "";
+          return `${routine.title} at ${routine.time} on ${routine.frequency.join(", ")}${notes}${scheduleWindow}`;
+        })
+        .join("; ")}`,
+    );
   }
 
   if (context.familyMembers.length > 0) {
-    sections.push("", "Connections:");
-    for (const member of context.familyMembers) {
-      sections.push(
-        member.isLiving
-          ? `- ${member.name} is ${member.relationship}. ${member.aiContext}`
-          : `- ${member.name} was ${member.relationship}. Speak about past memories only. ${member.aiContext}`,
-      );
-    }
+    sections.push(
+      `Connections: ${context.familyMembers
+        .map((member) =>
+          member.isLiving
+            ? `${member.name} is ${member.relationship}${member.aiContext ? `: ${member.aiContext}` : ""}`
+            : `${member.name} was ${member.relationship}. Speak about past memories only${member.aiContext ? `: ${member.aiContext}` : ""}`,
+        )
+        .join("; ")}`,
+    );
   }
 
   if (context.recentMemories.length > 0) {
-    sections.push("", "Recent Memories:");
-    for (const memory of context.recentMemories) {
-      sections.push(
-        `- ${memory.title}${memory.memoryDate ? ` (${memory.memoryDate})` : ""}: ${memory.summary}`,
-      );
-    }
+    sections.push(
+      `Recent memories: ${context.recentMemories
+        .map(
+          (memory) =>
+            `${memory.title}${memory.memoryDate ? ` (${memory.memoryDate})` : ""}: ${memory.summary}`,
+        )
+        .join("; ")}`,
+    );
   }
 
   return sections.join("\n");
@@ -283,7 +294,7 @@ function buildIndependentDraftReply(
   return `I can create "${draft.title}" at ${draft.timeLabel ?? formatTimeLabel(draft.timeMinutes ?? 0)}${schedulePart}${datePart}. Is that right?`;
 }
 
-function buildIndependentSystemPrompt(context: SeniorAiContext) {
+function buildIndependentSystemPrompt(context: SeniorLocaleContext) {
   const now = new Date();
   const currentDateLabel = now.toLocaleDateString(context.locale, {
     timeZone: context.timeZone,
@@ -298,31 +309,25 @@ function buildIndependentSystemPrompt(context: SeniorAiContext) {
     minute: "2-digit",
   });
 
-  return `You parse one transcript from an Independent Senior for Memvella.
+  return `Convert one Independent Senior transcript into JSON.
 
-Return a single valid JSON object with exactly these keys:
-- intent: "memory" | "routine" | "unknown"
-- title: string | null
-- description: string | null
-- date: string | null
-- timeLabel: string | null
-- timeMinutes: number | null
-- daysOfWeek: number[]
+Return exactly one JSON object with these keys:
+intent, title, description, date, timeLabel, timeMinutes, daysOfWeek
 
 Rules:
-- Use "memory" only when the user is trying to log or remember something personal.
-- Use "routine" only when the user is trying to create a reminder or repeating activity.
-- Use "unknown" if the transcript is missing the details needed to confirm a save.
-- date must be YYYY-MM-DD when known, otherwise null.
-- timeMinutes must be an integer from 0 to 1439 when a routine time is known, otherwise null.
+- intent is "memory", "routine", or "unknown".
+- Use "memory" for logging a personal moment.
+- Use "routine" for reminders or repeating activities.
+- Use "unknown" when there is not enough detail to confirm a save.
+- date must be YYYY-MM-DD or null.
+- timeMinutes must be an integer from 0 to 1439 or null.
 - daysOfWeek uses 0=Sunday through 6=Saturday.
-- For one-time routines, leave daysOfWeek as [] and use date.
-- Resolve relative dates like "tomorrow" using:
-  Current date: ${currentDateLabel}
-  Current time: ${currentTimeLabel}
-  Time zone: ${context.timeZone}
-- Do not include markdown or code fences.
-`;
+- One-time routines use date with daysOfWeek as [].
+- Resolve relative dates with:
+  date: ${currentDateLabel}
+  time: ${currentTimeLabel}
+  zone: ${context.timeZone}
+- Do not add markdown or code fences.`;
 }
 
 export const handleAssistedVoiceTurn = action({
@@ -351,27 +356,34 @@ export const handleAssistedVoiceTurn = action({
       },
     );
     await enforceVoiceRateLimit(ctx, session, "handleAssistedVoiceTurn");
-    const context = (await ctx.runQuery(
-      internal.voiceHelpers.gatherSeniorContext,
-      { familySpaceId: session.familySpaceId },
-    )) as SeniorAiContext;
     const safety = scanVoiceSafety(transcript);
 
     const reply: string = safety.medicalRejected
       ? buildMedicalBoundaryReply()
       : (
-          await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: transcript,
-            config: {
-              systemInstruction: buildAssistedSystemPrompt(
-                session.seniorName,
-                context,
-                safety.distressDetected,
-              ),
-              temperature: 0.5,
-            },
-          })
+          await (async () => {
+            const context = (await ctx.runQuery(
+              internal.voiceHelpers.gatherSeniorContext,
+              { familySpaceId: session.familySpaceId },
+            )) as SeniorAiContext;
+
+            return await getAiClient().models.generateContent({
+              model: FAST_VOICE_MODEL,
+              contents: transcript,
+              config: {
+                systemInstruction: buildAssistedSystemPrompt(
+                  session.seniorName,
+                  context,
+                  safety.distressDetected,
+                ),
+                temperature: 0.3,
+                maxOutputTokens: 96,
+                thinkingConfig: {
+                  thinkingBudget: 0,
+                },
+              },
+            });
+          })()
         ).text ?? buildSpeechRetryReply();
 
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
@@ -434,10 +446,6 @@ export const parseIndependentVoiceIntent = action({
       },
     );
     await enforceVoiceRateLimit(ctx, session, "parseIndependentVoiceIntent");
-    const context = (await ctx.runQuery(
-      internal.voiceHelpers.gatherSeniorContext,
-      { familySpaceId: session.familySpaceId },
-    )) as SeniorAiContext;
     const safety = scanVoiceSafety(transcript);
 
     if (safety.medicalRejected) {
@@ -475,13 +483,21 @@ export const parseIndependentVoiceIntent = action({
       };
     }
 
+    const context = (await ctx.runQuery(
+      internal.voiceHelpers.getSeniorLocaleContext,
+      { familySpaceId: session.familySpaceId },
+    )) as SeniorLocaleContext;
     const response = await getAiClient().models.generateContent({
-      model: "gemini-2.5-flash",
+      model: FAST_VOICE_MODEL,
       contents: transcript,
       config: {
         systemInstruction: buildIndependentSystemPrompt(context),
         responseMimeType: "application/json",
-        temperature: 0.2,
+        temperature: 0.1,
+        maxOutputTokens: 220,
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 

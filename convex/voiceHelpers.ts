@@ -47,6 +47,19 @@ function truncateInsightText(value: string, maxLength = 240) {
   return `${value.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
+function truncatePromptField(value: string | null | undefined, maxLength: number) {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
 export const gatherSeniorContext = internalQuery({
   args: {
     familySpaceId: v.id("familySpaces"),
@@ -54,20 +67,20 @@ export const gatherSeniorContext = internalQuery({
   handler: async (ctx, args) => {
     const [routines, familyMembers, recentMemories, timeZone, familySpace] =
       await Promise.all([
-        listRoutineSchedulesForFamilySpace(ctx, args.familySpaceId),
+        listRoutineSchedulesForFamilySpace(ctx, args.familySpaceId, 6),
         ctx.db
           .query("familyMembers")
           .withIndex("by_familySpaceId", (query) =>
             query.eq("familySpaceId", args.familySpaceId),
           )
-          .take(50),
+          .take(8),
         ctx.db
           .query("memoryRecords")
           .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
             query.eq("familySpaceId", args.familySpaceId),
           )
           .order("desc")
-          .take(12),
+          .take(4),
         resolveFamilySpaceTimeZone(ctx, args.familySpaceId),
         ctx.db.get(args.familySpaceId),
       ]);
@@ -76,11 +89,11 @@ export const gatherSeniorContext = internalQuery({
       familySpaceName: familySpace?.displayName ?? "FamilySpace",
       timeZone,
       locale: familySpace?.locale ?? "en-US",
-      routines: routines.slice(0, 12).map((routine) => ({
+      routines: routines.map((routine) => ({
         title: routine.title,
         time: routine.time,
         frequency: routine.frequency,
-        aiInstructions: routine.aiInstructions,
+        aiInstructions: truncatePromptField(routine.aiInstructions, 72),
         startDate: routine.startDate,
         endDate: routine.endDate,
       })),
@@ -88,14 +101,33 @@ export const gatherSeniorContext = internalQuery({
         name: member.name,
         relationship: member.relationship,
         isLiving: member.isLiving,
-        aiContext:
-          typeof member.aiContext === "string" ? member.aiContext : "",
+        aiContext: truncatePromptField(member.aiContext, 96) ?? "",
       })),
       recentMemories: recentMemories.map((record) => ({
         title: record.title,
         memoryDate: record.memoryDate,
-        summary: summarizeMemory(record),
+        summary:
+          truncatePromptField(summarizeMemory(record), 96) ??
+          "No details added yet.",
       })),
+    };
+  },
+});
+
+export const getSeniorLocaleContext = internalQuery({
+  args: {
+    familySpaceId: v.id("familySpaces"),
+  },
+  handler: async (ctx, args) => {
+    const [timeZone, familySpace] = await Promise.all([
+      resolveFamilySpaceTimeZone(ctx, args.familySpaceId),
+      ctx.db.get(args.familySpaceId),
+    ]);
+
+    return {
+      familySpaceName: familySpace?.displayName ?? "FamilySpace",
+      timeZone,
+      locale: familySpace?.locale ?? "en-US",
     };
   },
 });

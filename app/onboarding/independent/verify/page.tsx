@@ -26,12 +26,39 @@ type FinalizedSession = {
   hasPasskey: boolean;
 };
 
+type PasskeyErrorLike = Error & {
+  code?: string;
+  cause?: unknown;
+};
+
 async function quietlySignOutIndependentBootstrapSession() {
   try {
     await authClient.signOut();
   } catch (error) {
     console.warn("Better Auth sign-out after bootstrap failed:", error);
   }
+}
+
+function shouldSkipPasskeyEnrollment(error: unknown) {
+  const passkeyError = error as PasskeyErrorLike;
+  const nestedCause =
+    typeof passkeyError === "object" && passkeyError !== null
+      ? passkeyError.cause
+      : null;
+  const names = new Set(
+    [passkeyError, nestedCause]
+      .filter((value): value is Error => value instanceof Error)
+      .map((value) => value.name),
+  );
+
+  return (
+    passkeyError.code === "ERROR_CEREMONY_ABORTED" ||
+    passkeyError.code === "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY" ||
+    names.has("AbortError") ||
+    names.has("NotAllowedError") ||
+    names.has("NotSupportedError") ||
+    names.has("SecurityError")
+  );
 }
 
 export default function IndependentVerifyPage() {
@@ -45,6 +72,9 @@ export default function IndependentVerifyPage() {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isEnrollingPasskey, setIsEnrollingPasskey] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [roleCollisionMessage, setRoleCollisionMessage] = useState<string | null>(
+    null,
+  );
   const [finalizedSession, setFinalizedSession] =
     useState<FinalizedSession | null>(null);
 
@@ -67,6 +97,7 @@ export default function IndependentVerifyPage() {
     hasStartedFinalizationRef.current = true;
     setIsFinalizing(true);
     setError(null);
+    setRoleCollisionMessage(null);
 
     const pendingName = localStorage.getItem(pendingNameStorageKey)?.trim() ?? "";
     const recoveryEmail =
@@ -79,6 +110,14 @@ export default function IndependentVerifyPage() {
       deviceFingerprint,
     })
       .then(async (result) => {
+        if (result.status === "role_collision") {
+          localStorage.removeItem(pendingNameStorageKey);
+          localStorage.removeItem(pendingEmailStorageKey);
+          await quietlySignOutIndependentBootstrapSession();
+          setRoleCollisionMessage(result.message);
+          return;
+        }
+
         const nextSession = {
           sessionToken: result.sessionToken,
           seniorProfileId: result.seniorProfileId,
@@ -179,6 +218,12 @@ export default function IndependentVerifyPage() {
       await quietlySignOutIndependentBootstrapSession();
       router.replace("/independent");
     } catch (passkeyError) {
+      if (shouldSkipPasskeyEnrollment(passkeyError)) {
+        await quietlySignOutIndependentBootstrapSession();
+        router.replace("/independent");
+        return;
+      }
+
       console.error(passkeyError);
       setError(
         passkeyError instanceof Error
@@ -194,6 +239,38 @@ export default function IndependentVerifyPage() {
     await quietlySignOutIndependentBootstrapSession();
     router.replace("/independent");
   };
+
+  const handleUseDifferentEmail = async () => {
+    localStorage.removeItem(pendingNameStorageKey);
+    localStorage.removeItem(pendingEmailStorageKey);
+    await quietlySignOutIndependentBootstrapSession();
+    hasStartedFinalizationRef.current = false;
+    router.replace("/onboarding/independent");
+  };
+
+  if (roleCollisionMessage) {
+    return (
+      <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 md:p-12">
+        <FormCard className="flex w-full max-w-xl flex-col gap-6 p-8 text-center md:p-10">
+          <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a] md:text-4xl">
+            Use a Different Email
+          </h1>
+          <p className="text-lg leading-relaxed text-on-surface-variant">
+            {roleCollisionMessage}
+          </p>
+          <SecondaryButton
+            type="button"
+            onClick={() => {
+              void handleUseDifferentEmail();
+            }}
+            className="justify-center"
+          >
+            Try another email
+          </SecondaryButton>
+        </FormCard>
+      </main>
+    );
+  }
 
   if (isSessionPending || isFinalizing || !deviceFingerprint || !finalizedSession) {
     return (
