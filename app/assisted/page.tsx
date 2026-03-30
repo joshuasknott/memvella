@@ -83,17 +83,19 @@ export default function AssistedHomePage() {
 
         {/* Time and Date */}
         <div className="grow flex flex-col justify-center py-6 md:py-0">
-          {/* Greeting */}
-          <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
-            {now ? `${getGreeting(now)}, ${user.firstName}` : `Good Day`}
-          </p>
-          {/* Live Clock */}
-          <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
-            {now ? formatTime(now) : '-- : --'}
-          </h1>
-          <p className="font-headline text-2xl md:text-4xl font-bold mb-6 md:mb-12 text-slate-900">
-            {now ? `Today is ${formatDate(now)}` : 'Loading…'}
-          </p>
+          <div className="sticky top-0 z-40 bg-[#f8f5fa] pt-4 md:pt-0 pb-4 md:pb-0 mb-4 md:mb-0">
+            {/* Greeting */}
+            <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
+              {now ? `${getGreeting(now)}, ${user.firstName}` : `Good Day`}
+            </p>
+            {/* Live Clock */}
+            <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
+              {now ? formatTime(now) : '-- : --'}
+            </h1>
+            <p className="font-headline text-2xl md:text-4xl font-bold mb-6 md:mb-12 text-slate-900">
+              {now ? `Today is ${formatDate(now)}` : 'Loading…'}
+            </p>
+          </div>
 
           {/* Next Event Card or Empty State */}
           {!nextEvent ? (
@@ -121,7 +123,7 @@ export default function AssistedHomePage() {
         <div className="mt-8 md:fixed md:bottom-8 md:right-8 md:mt-0 md:z-40">
           <button 
             onClick={() => setIsVoiceModalOpen(true)}
-            className="block text-center bg-linear-to-br from-primary to-secondary w-full md:w-auto py-6 md:py-8 px-8 md:px-10 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200"
+            className="block text-center bg-[#6B21A8] w-full md:w-auto py-6 md:py-8 px-8 md:px-10 rounded-full shadow-xl hover:scale-[1.02] active:scale-95 transition-transform duration-200"
           >
             <div className="flex items-center justify-center gap-4 md:gap-6">
               <Mic className="text-white shrink-0 h-10 w-10 md:h-12 md:w-12" strokeWidth={2.5} />

@@ -53,7 +53,7 @@ export default function IndependentSetupVoicePage() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-surface text-on-surface font-body relative selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-surface text-on-surface font-body relative selection:bg-primary-fixed selection:text-on-primary-fixed">
       {/* Top Bar */}
       <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10">
         {step === 1 ? (

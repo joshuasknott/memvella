@@ -92,15 +92,17 @@ export default function IndependentHomePage() {
         <BrandLogo className="mb-8" />
 
         <div className="grow flex flex-col justify-center py-6 md:py-0">
-          <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
-            {now ? `${getGreeting(now)}, ${userName}` : `Good Day`}
-          </p>
-          <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
-            {now ? formatTime(now) : '-- : --'}
-          </h1>
-          <p className="font-headline text-2xl md:text-4xl font-bold mb-6 md:mb-12 text-slate-900">
-            {now ? `Today is ${formatDate(now)}` : 'Loading…'}
-          </p>
+          <div className="sticky top-0 z-40 bg-[#f8f5fa] pt-4 md:pt-0 pb-4 md:pb-0 mb-4 md:mb-0">
+            <p className="font-headline text-slate-500 font-semibold text-2xl md:text-5xl mb-2 md:mb-4">
+              {now ? `${getGreeting(now)}, ${userName}` : `Good Day`}
+            </p>
+            <h1 className="font-headline font-extrabold text-4xl md:text-7xl text-slate-900 tracking-tighter mb-2">
+              {now ? formatTime(now) : '-- : --'}
+            </h1>
+            <p className="font-headline text-2xl md:text-4xl font-bold mb-6 md:mb-12 text-slate-900">
+              {now ? `Today is ${formatDate(now)}` : 'Loading…'}
+            </p>
+          </div>
 
           {!nextEvent ? (
             <div className="bg-white/60 backdrop-blur-md px-6 py-4 md:px-8 md:py-6 rounded-3xl shadow-sm border border-white/40 inline-block w-fit">

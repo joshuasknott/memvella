@@ -60,7 +60,7 @@ export default function SeniorSetupPage() {
   const boxes = Array.from({ length: 6 });
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-white font-body p-6 relative">
+    <main className="flex min-h-[100dvh] w-full flex-col items-center justify-center bg-white font-body p-6 relative">
       <div className="w-full flex flex-col items-center">
 
         {/* Escape Hatch */}

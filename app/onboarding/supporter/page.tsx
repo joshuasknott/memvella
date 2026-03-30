@@ -64,7 +64,7 @@ export default function SupporterSetupPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface px-6 py-8 md:py-12 font-body text-gray-900 overflow-hidden relative selection:bg-[#4e0078]/20">
+    <div className="flex flex-col min-h-[100dvh] bg-surface px-6 py-8 md:py-12 font-body text-gray-900 overflow-hidden relative selection:bg-[#4e0078]/20">
       
       {/* Soft gradient blur background for premium feel */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[#4e0078]/5 rounded-full blur-3xl pointer-events-none" />

@@ -19,14 +19,14 @@ export function VoiceModal({ isOpen, onClose }: VoiceModalProps) {
         <div className="relative flex items-center justify-center h-40 w-40">
           <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '2s' }}></div>
           <div className="absolute inset-4 rounded-full bg-primary/40 animate-pulse"></div>
-          <div className="relative h-24 w-24 rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white shadow-xl flex items-center justify-center z-10">
+          <div className="relative h-24 w-24 rounded-full bg-[#6B21A8] text-white shadow-xl flex items-center justify-center z-10">
             <Mic size={40} strokeWidth={2.5} />
           </div>
         </div>
 
         <button 
           onClick={onClose}
-          className="mt-8 bg-error text-white font-bold text-xl py-4 px-12 rounded-full shadow-lg hover:bg-error/90 active:scale-95 transition-all w-full md:w-auto"
+          className="mt-8 bg-error text-white font-bold text-xl py-4 px-12 min-h-[72px] flex items-center justify-center rounded-full shadow-lg hover:bg-error/90 active:scale-95 transition-all w-full md:w-auto"
         >
           Stop Recording
         </button>
