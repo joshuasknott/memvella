@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Delete, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Numpad } from '@/components/shared-senior/Numpad';
 
 export default function SeniorSetupPage() {
   const router = useRouter();
@@ -107,38 +108,7 @@ export default function SeniorSetupPage() {
         </div>
 
         {/* Massive Keypad */}
-        <div className="grid grid-cols-3 gap-4 md:gap-6 w-fit mx-auto mb-10 place-items-center">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <button
-              key={num}
-              onClick={() => handleKeyPress(num.toString())}
-              disabled={isPairing}
-              className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-slate-900 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
-            >
-              {num}
-            </button>
-          ))}
-          {/* Empty Space */}
-          <div className="h-20 w-20 md:h-24 md:w-24"></div>
-
-          {/* Zero */}
-          <button
-            onClick={() => handleKeyPress('0')}
-            disabled={isPairing}
-            className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-slate-900 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
-          >
-            0
-          </button>
-
-          {/* Delete / Backspace */}
-          <button
-            onClick={handleDelete}
-            disabled={isPairing}
-            className="h-20 w-20 md:h-24 md:w-24 text-slate-600 rounded-2xl bg-white shadow-md hover:shadow-lg active:scale-95 transition-all border border-gray-100 flex items-center justify-center disabled:opacity-50"
-          >
-            <Delete size={32} strokeWidth={2.5} />
-          </button>
-        </div>
+        <Numpad onInput={handleKeyPress} onDelete={handleDelete} disabled={isPairing} />
 
         {/* Connect Button — appears when PIN is complete */}
         {pin.length === 6 && (
