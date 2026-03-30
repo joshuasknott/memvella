@@ -1,28 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
-import { Loader2, Music, Upload } from "lucide-react";
+import { Loader2, Music, Upload, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput } from "@/components/ui/Input";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { PrimaryButton } from "@/components/ui/Button";
+import { uploadFileToConvex } from "@/lib/convex-upload";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function AudioMemoryPage() {
   const router = useRouter();
   const { seniorDisplayName } = useFamilySpaceProfile();
   const addMemoryAudio = useMutation(api.memories.addMemoryAudio);
+  const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [songLink, setSongLink] = useState("");
   const [story, setStory] = useState("");
+  const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isFormValid = title.trim().length > 0 && story.trim().length > 0;
+
+  const handleAudioSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedAudio(file);
+  };
+
+  const clearAudioSelection = () => {
+    setSelectedAudio(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async () => {
     if (!isFormValid) {
@@ -33,12 +49,18 @@ export default function AudioMemoryPage() {
     setIsSaving(true);
 
     try {
+      const audioStorageId = selectedAudio
+        ? await uploadFileToConvex(generateUploadUrl, selectedAudio)
+        : undefined;
+
       await addMemoryAudio({
         title: title.trim(),
-        date: date.trim() || "Unknown date",
+        date: date.trim() || undefined,
         story: story.trim(),
         songLink: songLink.trim() || undefined,
-        mediaStorageId: undefined,
+        audioStorageId,
+        audioMimeType: selectedAudio?.type || undefined,
+        audioFileName: selectedAudio?.name || undefined,
       });
 
       router.push("/supporter/memories");
@@ -115,14 +137,44 @@ export default function AudioMemoryPage() {
         </div>
       </FormCard>
 
+      <input
+        ref={fileInputRef}
+        id="audio-file-input"
+        type="file"
+        accept="audio/*"
+        className="hidden"
+        onChange={handleAudioSelect}
+      />
+
       <section className="space-y-3 pt-2">
         <h3 className="text-center font-headline text-xl font-bold tracking-tight text-on-surface">
-          Direct uploads arrive next
+          Optional audio file
         </h3>
-        <SecondaryButton type="button" disabled>
-          <Upload className="h-6 w-6" />
-          <span className="font-bold">Audio Upload Coming Soon</span>
-        </SecondaryButton>
+        {selectedAudio ? (
+          <div className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-bold text-gray-900">{selectedAudio.name}</p>
+                <p className="mt-1 text-sm font-medium text-gray-500">
+                  {selectedAudio.type || "Audio file"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={clearAudioSelection}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        ) : null}
+        <label htmlFor="audio-file-input" className="block">
+          <div className="flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[#1D4ED8]/15 bg-white px-6 text-lg font-semibold text-[#1D4ED8] shadow-sm transition-transform active:scale-95">
+            <Upload className="h-6 w-6" />
+            {selectedAudio ? "Replace audio file" : "Choose audio file"}
+          </div>
+        </label>
       </section>
 
       {error ? (
@@ -133,7 +185,7 @@ export default function AudioMemoryPage() {
         {isSaving ? (
           <>
             <Loader2 className="h-6 w-6 animate-spin" />
-            Saving...
+            {selectedAudio ? "Uploading and saving..." : "Saving..."}
           </>
         ) : (
           "Save Audio Memory"

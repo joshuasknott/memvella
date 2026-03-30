@@ -134,9 +134,96 @@ export default defineSchema({
 
   routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
+  routineSchedules: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    title: v.string(),
+    aiInstructions: v.union(v.string(), v.null()),
+    daysOfWeek: v.array(v.number()),
+    startTimeMinutes: v.number(),
+    timeLabel: v.string(),
+    durationMinutes: v.union(v.number(), v.null()),
+    timezone: v.string(),
+    status: v.union(v.literal("active"), v.literal("paused")),
+    createdByMembershipId: v.id("familySpaceMemberships"),
+    updatedByMembershipId: v.id("familySpaceMemberships"),
+    lastEditedAt: v.number(),
+  })
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_familySpaceId_and_status", ["familySpaceId", "status"])
+    .index("by_familySpaceId_and_lastEditedAt", [
+      "familySpaceId",
+      "lastEditedAt",
+    ]),
+
+  routineOccurrences: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    routineScheduleId: v.id("routineSchedules"),
+    occurrenceDateKey: v.string(),
+    startTimeMinutes: v.number(),
+    timeLabel: v.string(),
+    timezone: v.string(),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("completed"),
+      v.literal("skipped"),
+      v.literal("canceled"),
+    ),
+  })
+    .index("by_routineScheduleId", ["routineScheduleId"])
+    .index("by_familySpaceId_status_occurrenceDateKey_startTimeMinutes", [
+        "familySpaceId",
+        "status",
+        "occurrenceDateKey",
+        "startTimeMinutes",
+      ]),
+
   memories: defineTable(v.any())
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_familySpaceId_and_mediaType", ["familySpaceId", "mediaType"]),
+
+  memoryRecords: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    recordType: v.union(
+      v.literal("text"),
+      v.literal("media"),
+      v.literal("audio"),
+      v.literal("voice"),
+    ),
+    title: v.string(),
+    story: v.union(v.string(), v.null()),
+    transcript: v.union(v.string(), v.null()),
+    memoryDate: v.union(v.string(), v.null()),
+    externalUrl: v.union(v.string(), v.null()),
+    createdByMembershipId: v.id("familySpaceMemberships"),
+    updatedByMembershipId: v.id("familySpaceMemberships"),
+    lastEditedAt: v.number(),
+  })
+    .index("by_familySpaceId_and_lastEditedAt", [
+      "familySpaceId",
+      "lastEditedAt",
+    ])
+    .index("by_familySpaceId_and_recordType_and_lastEditedAt", [
+      "familySpaceId",
+      "recordType",
+      "lastEditedAt",
+    ]),
+
+  memoryAssets: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    memoryRecordId: v.id("memoryRecords"),
+    assetType: v.union(
+      v.literal("image"),
+      v.literal("video"),
+      v.literal("audio"),
+    ),
+    storageId: v.union(v.id("_storage"), v.null()),
+    externalUrl: v.union(v.string(), v.null()),
+    mimeType: v.union(v.string(), v.null()),
+    fileName: v.union(v.string(), v.null()),
+    sortOrder: v.number(),
+  })
+    .index("by_memoryRecordId_and_sortOrder", ["memoryRecordId", "sortOrder"])
+    .index("by_familySpaceId", ["familySpaceId"]),
 
   notificationSettings: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 

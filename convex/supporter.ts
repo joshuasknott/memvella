@@ -12,6 +12,14 @@ import {
   normalizeOptionalEmail,
   normalizeOptionalText,
 } from "./security";
+import {
+  formatTimeLabel,
+  getNextRoutineEventForFamilySpace,
+  listTodayTimelineForFamilySpace,
+  normalizeDaysOfWeek,
+  parseTimeInputToMinutes,
+  replaceRoutineOccurrences,
+} from "./routineHelpers";
 
 const legacyRoleValidator = v.optional(
   v.union(
@@ -31,6 +39,36 @@ async function getPreferredSeniorProfile(
   }
 
   return await getSeniorProfileByMode(ctx, familySpaceId, "independent");
+}
+
+function legacyFrequencyToDaysOfWeek(frequency: string[]) {
+  if (frequency.includes("Daily")) {
+    return [0, 1, 2, 3, 4, 5, 6];
+  }
+
+  if (frequency.includes("Weekends")) {
+    return [0, 6];
+  }
+
+  if (frequency.includes("Weekly")) {
+    return [1];
+  }
+
+  const dayNameToIndex = new Map([
+    ["Sun", 0],
+    ["Mon", 1],
+    ["Tue", 2],
+    ["Wed", 3],
+    ["Thu", 4],
+    ["Fri", 5],
+    ["Sat", 6],
+  ]);
+
+  return normalizeDaysOfWeek(
+    frequency
+      .map((value) => dayNameToIndex.get(value))
+      .filter((value): value is number => value !== undefined),
+  );
 }
 
 export const addFamilyMember = mutation({
@@ -63,15 +101,43 @@ export const addRoutine = mutation({
     aiInstructions: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership, familySpace } = await requireFamilySpaceMembership(
+      ctx,
+      "supporter",
+    );
 
-    return await ctx.db.insert("routines", {
+    const title = normalizeOptionalText(args.routineName);
+    if (!title) {
+      throw new Error("A routine title is required.");
+    }
+
+    const daysOfWeek =
+      legacyFrequencyToDaysOfWeek(args.frequency).length > 0
+        ? legacyFrequencyToDaysOfWeek(args.frequency)
+        : [0, 1, 2, 3, 4, 5, 6];
+    const startTimeMinutes = parseTimeInputToMinutes(args.time);
+    const routineScheduleId = await ctx.db.insert("routineSchedules", {
       familySpaceId: membership.familySpaceId,
-      routineName: args.routineName,
-      time: args.time,
-      frequency: args.frequency,
-      aiInstructions: args.aiInstructions,
+      title,
+      aiInstructions: normalizeOptionalText(args.aiInstructions) ?? null,
+      daysOfWeek,
+      startTimeMinutes,
+      timeLabel: formatTimeLabel(startTimeMinutes),
+      durationMinutes: null,
+      timezone: familySpace.timezone ?? "UTC",
+      status: "active",
+      createdByMembershipId: membership._id,
+      updatedByMembershipId: membership._id,
+      lastEditedAt: Date.now(),
     });
+
+    const schedule = await ctx.db.get(routineScheduleId);
+    if (!schedule) {
+      throw new Error("Unable to save this routine.");
+    }
+
+    await replaceRoutineOccurrences(ctx, schedule);
+    return routineScheduleId;
   },
 });
 
@@ -327,20 +393,10 @@ export const getTodayTimeline = query({
       return [];
     }
 
-    const routines = await ctx.db
-      .query("routines")
-      .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", membership.membership.familySpaceId),
-      )
-      .take(50);
-
-    return routines.map((routine) => ({
-      id: routine._id,
-      time: routine.time,
-      title: routine.routineName,
-      type: routine.frequency[0] ?? "Daily",
-      frequency: routine.frequency,
-    }));
+    return await listTodayTimelineForFamilySpace(
+      ctx,
+      membership.membership.familySpaceId,
+    );
   },
 });
 
@@ -354,7 +410,7 @@ export const getSupporterDashboardSummary = query({
       return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
     }
 
-    const [members, routines] = await Promise.all([
+    const [members, routines, nextRoutine] = await Promise.all([
       ctx.db
         .query("familyMembers")
         .withIndex("by_familySpaceId", (query) =>
@@ -362,17 +418,23 @@ export const getSupporterDashboardSummary = query({
         )
         .take(200),
       ctx.db
-        .query("routines")
+        .query("routineSchedules")
         .withIndex("by_familySpaceId", (query) =>
           query.eq("familySpaceId", supporterContext.membership.familySpaceId),
         )
         .take(200),
+      getNextRoutineEventForFamilySpace(
+        ctx,
+        supporterContext.membership.familySpaceId,
+      ),
     ]);
 
     return {
       totalFamilyMembers: members.length,
       totalRoutines: routines.length,
-      statusSummary: "Your FamilySpace is ready for today.",
+      statusSummary: nextRoutine
+        ? `${nextRoutine.title} is next at ${nextRoutine.time}.`
+        : "Your FamilySpace is ready for today.",
     };
   },
 });

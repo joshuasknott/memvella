@@ -1,33 +1,90 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { mutation, type MutationCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 import { requireFamilySpaceMembership } from "./familySpaceAuth";
+import {
+  createMemoryRecord,
+  deleteMemoryRecordCascade,
+  getMemoryDetailForFamilySpace,
+  listMemoryCardsForFamilySpace,
+  replaceMemoryAssets,
+} from "./memoryHelpers";
+import { normalizeOptionalText } from "./security";
 
-async function requireSupporterFamilySpaceId(
-  ctx: MutationCtx,
-): Promise<Id<"familySpaces">> {
-  const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
-  return membership.familySpaceId;
+function normalizeOptionalDate(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 }
+
+function buildStorageAsset(
+  assetType: "image" | "video" | "audio",
+  storageId: Id<"_storage"> | undefined,
+  mimeType: string | undefined,
+  fileName: string | undefined,
+) {
+  if (!storageId) {
+    return [];
+  }
+
+  return [
+    {
+      assetType,
+      storageId,
+      mimeType: normalizeOptionalText(mimeType) ?? null,
+      fileName: normalizeOptionalText(fileName) ?? null,
+      externalUrl: null,
+    },
+  ] as const;
+}
+
+export const listMemoryRecords = query({
+  args: {},
+  handler: async (ctx) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    return await listMemoryCardsForFamilySpace(ctx, membership.familySpaceId);
+  },
+});
+
+export const getMemoryRecordDetail = query({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    return await getMemoryDetailForFamilySpace(ctx, {
+      familySpaceId: membership.familySpaceId,
+      memoryRecordId: args.memoryRecordId,
+    });
+  },
+});
 
 export const addMemoryText = mutation({
   args: {
     title: v.string(),
-    date: v.string(),
+    date: v.optional(v.string()),
     story: v.string(),
     photoStorageId: v.optional(v.id("_storage")),
+    photoMimeType: v.optional(v.string()),
+    photoFileName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const familySpaceId = await requireSupporterFamilySpaceId(ctx);
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
 
-    return await ctx.db.insert("memories", {
-      familySpaceId,
-      title: args.title,
-      date: args.date,
-      story: args.story,
-      mediaType: "text",
-      storageId: args.photoStorageId,
-      songLink: undefined,
+    return await createMemoryRecord(ctx, {
+      familySpaceId: membership.familySpaceId,
+      membershipId: membership._id,
+      recordType: "text",
+      title: args.title.trim(),
+      story: args.story.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      assets: [
+        ...buildStorageAsset(
+          "image",
+          args.photoStorageId,
+          args.photoMimeType,
+          args.photoFileName,
+        ),
+      ],
     });
   },
 });
@@ -35,22 +92,32 @@ export const addMemoryText = mutation({
 export const addMemoryAudio = mutation({
   args: {
     title: v.string(),
-    date: v.string(),
+    date: v.optional(v.string()),
     story: v.string(),
     songLink: v.optional(v.string()),
-    mediaStorageId: v.optional(v.id("_storage")),
+    audioStorageId: v.optional(v.id("_storage")),
+    audioMimeType: v.optional(v.string()),
+    audioFileName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const familySpaceId = await requireSupporterFamilySpaceId(ctx);
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
 
-    return await ctx.db.insert("memories", {
-      familySpaceId,
-      title: args.title,
-      date: args.date,
-      story: args.story,
-      mediaType: "audio",
-      storageId: args.mediaStorageId,
-      songLink: args.songLink,
+    return await createMemoryRecord(ctx, {
+      familySpaceId: membership.familySpaceId,
+      membershipId: membership._id,
+      recordType: "audio",
+      title: args.title.trim(),
+      story: args.story.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      externalUrl: normalizeOptionalText(args.songLink) ?? null,
+      assets: [
+        ...buildStorageAsset(
+          "audio",
+          args.audioStorageId,
+          args.audioMimeType,
+          args.audioFileName,
+        ),
+      ],
     });
   },
 });
@@ -58,20 +125,19 @@ export const addMemoryAudio = mutation({
 export const addMemoryVoice = mutation({
   args: {
     title: v.string(),
-    date: v.string(),
+    date: v.optional(v.string()),
     transcript: v.string(),
   },
   handler: async (ctx, args) => {
-    const familySpaceId = await requireSupporterFamilySpaceId(ctx);
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
 
-    return await ctx.db.insert("memories", {
-      familySpaceId,
-      title: args.title,
-      date: args.date,
-      story: args.transcript,
-      mediaType: "voice",
-      storageId: undefined,
-      songLink: undefined,
+    return await createMemoryRecord(ctx, {
+      familySpaceId: membership.familySpaceId,
+      membershipId: membership._id,
+      recordType: "voice",
+      title: args.title.trim(),
+      transcript: args.transcript.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
     });
   },
 });
@@ -79,29 +145,228 @@ export const addMemoryVoice = mutation({
 export const addMemoryMedia = mutation({
   args: {
     title: v.string(),
-    date: v.string(),
+    date: v.optional(v.string()),
     story: v.string(),
     mediaStorageId: v.id("_storage"),
+    mediaMimeType: v.optional(v.string()),
+    mediaFileName: v.optional(v.string()),
+    mediaAssetType: v.optional(v.union(v.literal("image"), v.literal("video"))),
   },
   handler: async (ctx, args) => {
-    const familySpaceId = await requireSupporterFamilySpaceId(ctx);
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
 
-    return await ctx.db.insert("memories", {
-      familySpaceId,
-      title: args.title,
-      date: args.date,
-      story: args.story,
-      mediaType: "media",
-      storageId: args.mediaStorageId,
-      songLink: undefined,
+    return await createMemoryRecord(ctx, {
+      familySpaceId: membership.familySpaceId,
+      membershipId: membership._id,
+      recordType: "media",
+      title: args.title.trim(),
+      story: normalizeOptionalText(args.story) ?? null,
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      assets: [
+        ...buildStorageAsset(
+          args.mediaAssetType ?? "image",
+          args.mediaStorageId,
+          args.mediaMimeType,
+          args.mediaFileName,
+        ),
+      ],
     });
+  },
+});
+
+export const updateTextMemory = mutation({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+    title: v.string(),
+    date: v.optional(v.string()),
+    story: v.string(),
+    replacePhotoStorageId: v.optional(v.id("_storage")),
+    replacePhotoMimeType: v.optional(v.string()),
+    replacePhotoFileName: v.optional(v.string()),
+    removePhoto: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const record = await ctx.db.get(args.memoryRecordId);
+    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "text") {
+      throw new Error("This memory record does not belong to your FamilySpace.");
+    }
+
+    await ctx.db.patch(record._id, {
+      title: args.title.trim(),
+      story: args.story.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      updatedByMembershipId: membership._id,
+      lastEditedAt: Date.now(),
+    });
+
+    if (args.removePhoto || args.replacePhotoStorageId) {
+      await replaceMemoryAssets(ctx, {
+        familySpaceId: membership.familySpaceId,
+        memoryRecordId: record._id,
+        assets: args.replacePhotoStorageId
+          ? [
+              {
+                assetType: "image",
+                storageId: args.replacePhotoStorageId,
+                mimeType: normalizeOptionalText(args.replacePhotoMimeType) ?? null,
+                fileName: normalizeOptionalText(args.replacePhotoFileName) ?? null,
+                externalUrl: null,
+              },
+            ]
+          : [],
+      });
+    }
+
+    return record._id;
+  },
+});
+
+export const updateAudioMemory = mutation({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+    title: v.string(),
+    date: v.optional(v.string()),
+    story: v.string(),
+    songLink: v.optional(v.string()),
+    replaceAudioStorageId: v.optional(v.id("_storage")),
+    replaceAudioMimeType: v.optional(v.string()),
+    replaceAudioFileName: v.optional(v.string()),
+    removeAudio: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const record = await ctx.db.get(args.memoryRecordId);
+    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "audio") {
+      throw new Error("This memory record does not belong to your FamilySpace.");
+    }
+
+    await ctx.db.patch(record._id, {
+      title: args.title.trim(),
+      story: args.story.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      externalUrl: normalizeOptionalText(args.songLink) ?? null,
+      updatedByMembershipId: membership._id,
+      lastEditedAt: Date.now(),
+    });
+
+    if (args.removeAudio || args.replaceAudioStorageId) {
+      await replaceMemoryAssets(ctx, {
+        familySpaceId: membership.familySpaceId,
+        memoryRecordId: record._id,
+        assets: args.replaceAudioStorageId
+          ? [
+              {
+                assetType: "audio",
+                storageId: args.replaceAudioStorageId,
+                mimeType: normalizeOptionalText(args.replaceAudioMimeType) ?? null,
+                fileName: normalizeOptionalText(args.replaceAudioFileName) ?? null,
+                externalUrl: null,
+              },
+            ]
+          : [],
+      });
+    }
+
+    return record._id;
+  },
+});
+
+export const updateVoiceMemory = mutation({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+    title: v.string(),
+    date: v.optional(v.string()),
+    transcript: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const record = await ctx.db.get(args.memoryRecordId);
+    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "voice") {
+      throw new Error("This memory record does not belong to your FamilySpace.");
+    }
+
+    await ctx.db.patch(record._id, {
+      title: args.title.trim(),
+      transcript: args.transcript.trim(),
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      updatedByMembershipId: membership._id,
+      lastEditedAt: Date.now(),
+    });
+
+    return record._id;
+  },
+});
+
+export const updateMediaMemory = mutation({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+    title: v.string(),
+    date: v.optional(v.string()),
+    story: v.string(),
+    replaceMediaStorageId: v.optional(v.id("_storage")),
+    replaceMediaMimeType: v.optional(v.string()),
+    replaceMediaFileName: v.optional(v.string()),
+    replaceMediaAssetType: v.optional(v.union(v.literal("image"), v.literal("video"))),
+    removeMedia: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const record = await ctx.db.get(args.memoryRecordId);
+    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "media") {
+      throw new Error("This memory record does not belong to your FamilySpace.");
+    }
+
+    await ctx.db.patch(record._id, {
+      title: args.title.trim(),
+      story: normalizeOptionalText(args.story) ?? null,
+      memoryDate: normalizeOptionalDate(args.date ?? undefined),
+      updatedByMembershipId: membership._id,
+      lastEditedAt: Date.now(),
+    });
+
+    if (args.removeMedia || args.replaceMediaStorageId) {
+      await replaceMemoryAssets(ctx, {
+        familySpaceId: membership.familySpaceId,
+        memoryRecordId: record._id,
+        assets: args.replaceMediaStorageId
+          ? [
+              {
+                assetType: args.replaceMediaAssetType ?? "image",
+                storageId: args.replaceMediaStorageId,
+                mimeType: normalizeOptionalText(args.replaceMediaMimeType) ?? null,
+                fileName: normalizeOptionalText(args.replaceMediaFileName) ?? null,
+                externalUrl: null,
+              },
+            ]
+          : [],
+      });
+    }
+
+    return record._id;
+  },
+});
+
+export const deleteMemoryRecord = mutation({
+  args: {
+    memoryRecordId: v.id("memoryRecords"),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const record = await ctx.db.get(args.memoryRecordId);
+    if (!record || record.familySpaceId !== membership.familySpaceId) {
+      throw new Error("This memory record does not belong to your FamilySpace.");
+    }
+
+    await deleteMemoryRecordCascade(ctx, record._id);
+    return { deleted: true as const };
   },
 });
 
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireSupporterFamilySpaceId(ctx);
+    await requireFamilySpaceMembership(ctx, "supporter");
     return await ctx.storage.generateUploadUrl();
   },
 });

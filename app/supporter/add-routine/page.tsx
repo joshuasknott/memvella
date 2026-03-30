@@ -1,33 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
-import { Check, Lightbulb, Loader2, Sparkles } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { FormCard } from "@/components/ui/FormCard";
+import { TextInput } from "@/components/ui/Input";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
-const FREQUENCY_OPTIONS = ["Daily", "Weekly", "Weekends"];
+const DAY_OPTIONS = [
+  { label: "Sun", value: 0 },
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+] as const;
+
+const DAY_PRESETS = [
+  { label: "Every day", daysOfWeek: [0, 1, 2, 3, 4, 5, 6] },
+  { label: "Weekdays", daysOfWeek: [1, 2, 3, 4, 5] },
+  { label: "Weekends", daysOfWeek: [0, 6] },
+] as const;
+
+function sameDays(left: number[], right: number[]) {
+  return left.length === right.length && left.every((day, index) => day === right[index]);
+}
 
 export default function AddRoutinePage() {
   const router = useRouter();
   const { seniorDisplayName } = useFamilySpaceProfile();
-  const addRoutine = useMutation(api.supporter.addRoutine);
+  const createRoutineSchedule = useMutation(api.routines.createRoutineSchedule);
 
-  const [routineName, setRoutineName] = useState("");
-  const [time, setTime] = useState("");
-  const [frequency, setFrequency] = useState<string[]>(["Daily"]);
-  const [aiInstructions, setAiInstructions] = useState("");
+  const [title, setTitle] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
+  const [notes, setNotes] = useState("");
+  const [timezone, setTimezone] = useState("UTC");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const toggleFrequency = (option: string) => {
-    setFrequency([option]);
+  useEffect(() => {
+    const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (browserTimeZone) {
+      setTimezone(browserTimeZone);
+    }
+  }, []);
+
+  const toggleDay = (day: number) => {
+    setDaysOfWeek((currentDays) =>
+      currentDays.includes(day)
+        ? currentDays.filter((value) => value !== day)
+        : [...currentDays, day].sort((left, right) => left - right),
+    );
   };
 
-  const isFormValid =
-    routineName.trim().length > 0 && time.trim().length > 0 && frequency.length > 0;
+  const isFormValid = title.trim().length > 0 && startTime.trim().length > 0 && daysOfWeek.length > 0;
+  const selectedDayLabels = DAY_OPTIONS.filter((option) => daysOfWeek.includes(option.value)).map(
+    (option) => option.label,
+  );
 
   const handleSaveRoutine = async () => {
     if (!isFormValid) {
@@ -38,135 +72,180 @@ export default function AddRoutinePage() {
     setIsSaving(true);
 
     try {
-      await addRoutine({
-        routineName: routineName.trim(),
-        time: time.trim(),
-        frequency,
-        aiInstructions: aiInstructions.trim(),
+      await createRoutineSchedule({
+        title: title.trim(),
+        startTime,
+        daysOfWeek,
+        timezone,
+        aiInstructions: notes.trim() || undefined,
       });
       router.push("/supporter/routines");
     } catch (saveError) {
       console.error(saveError);
-      setError("Something went wrong. Please try again.");
+      setError("Unable to save this schedule. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex w-full flex-col gap-8 px-4 pb-32">
-      <FormCard as="section" className="space-y-8">
-        <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="routine_name">
-            Routine Name
-          </label>
-          <input
-            id="routine_name"
-            placeholder="Morning Tea"
-            type="text"
-            required
-            value={routineName}
-            onChange={(event) => setRoutineName(event.target.value)}
-            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
-          />
-        </div>
-
-        <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="routine_time">
-            What time?
-          </label>
-          <input
-            id="routine_time"
-            type="time"
-            required
-            value={time}
-            onChange={(event) => setTime(event.target.value)}
-            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
-          />
-        </div>
-
-        <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface">
-            Frequency
-          </label>
-          <div className="flex flex-wrap gap-3">
-            {FREQUENCY_OPTIONS.map((option) => {
-              const isSelected = frequency.includes(option);
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleFrequency(option)}
-                  className={`flex h-12 items-center gap-2 rounded-full px-6 font-medium transition-colors ${
-                    isSelected
-                      ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
-                      : "bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30"
-                  }`}
-                >
-                  {isSelected ? <Check className="h-4 w-4" strokeWidth={3} /> : null}
-                  {option}
-                </button>
-              );
-            })}
+    <div className="flex min-h-[100dvh] w-full flex-col justify-between px-4 pb-32">
+      <div className="space-y-6">
+        <section className="rounded-3xl border border-purple-100 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-800">
+                Structured Routine
+              </p>
+              <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+                Add a routine
+              </h1>
+              <p className="mt-2 text-lg leading-relaxed text-gray-600">
+                Build a dependable schedule for {seniorDisplayName} using exact days and times.
+              </p>
+            </div>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
+              <CalendarDays className="h-7 w-7" />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="ai_instructions">
-              AI Instructions <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <div className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
+            Timezone: {timezone}
+          </div>
+        </section>
+
+        <FormCard as="section" className="space-y-8">
+          <div className="space-y-3">
+            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_title">
+              Routine title
             </label>
-            <Sparkles className="h-5 w-5 fill-primary/20 text-primary" />
+            <TextInput
+              id="routine_title"
+              type="text"
+              required
+              placeholder="Morning tea"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
           </div>
-          <textarea
-            id="ai_instructions"
-            placeholder={`E.g. Remind ${seniorDisplayName} to use their favorite blue mug.`}
-            rows={4}
-            value={aiInstructions}
-            onChange={(event) => setAiInstructions(event.target.value)}
-            className="min-h-[120px] w-full resize-none rounded-2xl border border-gray-200 bg-white p-6 text-lg transition-all placeholder:text-outline/50 focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
-          />
-          <p className="px-1 text-sm text-outline">
-            Give Memvella specific directions for how to handle this routine.
-          </p>
-        </div>
-      </FormCard>
 
-      <div className="group relative overflow-hidden rounded-3xl bg-primary-fixed/30 p-6">
-        <div className="relative z-10 flex gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <Lightbulb className="h-6 w-6 text-primary" />
+          <div className="space-y-3">
+            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_time">
+              Start time
+            </label>
+            <TextInput
+              id="routine_time"
+              type="time"
+              required
+              value={startTime}
+              onChange={(event) => setStartTime(event.target.value)}
+            />
           </div>
-          <div>
-            <h4 className="font-headline font-bold text-on-primary-fixed">
-              Gentle Nudges
-            </h4>
-            <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
-              Memvella will weave this routine into conversation without sounding like an alarm.
+
+          <div className="space-y-4">
+            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900">
+              Repeat on
+            </label>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {DAY_PRESETS.map((preset) => {
+                const isSelected = sameDays(daysOfWeek, [...preset.daysOfWeek]);
+
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setDaysOfWeek([...preset.daysOfWeek])}
+                    className={`min-h-[72px] rounded-3xl border px-4 py-3 text-left text-base font-semibold transition-colors ${
+                      isSelected
+                        ? "border-purple-800 bg-purple-800 text-white"
+                        : "border-blue-100 bg-blue-50 text-blue-800"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              {DAY_OPTIONS.map((option) => {
+                const isSelected = daysOfWeek.includes(option.value);
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => toggleDay(option.value)}
+                    className={`min-h-[72px] rounded-3xl border text-lg font-bold transition-colors ${
+                      isSelected
+                        ? "border-purple-800 bg-purple-800 text-white"
+                        : "border-gray-200 bg-white text-gray-700"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="text-sm font-medium text-gray-500">
+              Selected: {selectedDayLabels.length > 0 ? selectedDayLabels.join(", ") : "Choose at least one day."}
             </p>
           </div>
-        </div>
-        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-primary/5 transition-transform duration-700 group-hover:scale-110" />
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_notes">
+                Support notes
+              </label>
+              <Sparkles className="h-5 w-5 text-purple-800" />
+            </div>
+            <textarea
+              id="routine_notes"
+              placeholder={`Example: Mention ${seniorDisplayName}'s blue mug when this routine starts.`}
+              rows={4}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              className="min-h-[120px] w-full resize-none rounded-3xl border-2 border-gray-200 bg-white p-6 text-lg text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-purple-800 focus:ring-2 focus:ring-purple-800/20"
+            />
+            <p className="text-sm font-medium text-gray-500">
+              Optional context helps Memvella present this routine naturally.
+            </p>
+          </div>
+        </FormCard>
+
+        <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
+            Preview
+          </p>
+          <p className="mt-3 text-2xl font-bold text-gray-900">
+            {title.trim() || "Untitled routine"}
+          </p>
+          <p className="mt-1 text-lg font-medium text-gray-700">
+            {startTime} on {selectedDayLabels.length > 0 ? selectedDayLabels.join(", ") : "selected days"}
+          </p>
+        </section>
       </div>
 
-      {error ? <p className="-mt-4 px-1 text-sm font-medium text-red-500">{error}</p> : null}
+      <div className="mt-8 space-y-3">
+        {error ? <p className="px-1 text-sm font-medium text-red-600">{error}</p> : null}
 
-      <button
-        type="button"
-        onClick={handleSaveRoutine}
-        disabled={isSaving || !isFormValid}
-        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="h-6 w-6 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          "Save Routine"
-        )}
-      </button>
+        <PrimaryButton onClick={handleSaveRoutine} disabled={isSaving || !isFormValid}>
+          {isSaving ? (
+            <>
+              <Loader2 className="h-6 w-6 animate-spin" />
+              Saving routine...
+            </>
+          ) : (
+            "Save routine"
+          )}
+        </PrimaryButton>
+
+        <SecondaryButton href="/supporter/routines">
+          Back to routines
+        </SecondaryButton>
+      </div>
     </div>
   );
 }

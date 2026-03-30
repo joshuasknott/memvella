@@ -99,7 +99,7 @@ export default function VoiceMemoryPage() {
     try {
       await addMemoryVoice({
         title: title.trim(),
-        date: date.trim() || "Unknown date",
+        date: date.trim() || undefined,
         transcript: transcript.trim(),
       });
       router.push("/supporter/memories");

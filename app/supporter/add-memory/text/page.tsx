@@ -7,6 +7,7 @@ import { Camera, Lightbulb, Loader2, Sparkles, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { FormCard } from "@/components/ui/FormCard";
+import { uploadFileToConvex } from "@/lib/convex-upload";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function TextMemoryPage() {
@@ -53,26 +54,16 @@ export default function TextMemoryPage() {
       let photoStorageId: Id<"_storage"> | undefined;
 
       if (selectedPhoto) {
-        const postUrl = await generateUploadUrl();
-        const result = await fetch(postUrl, {
-          method: "POST",
-          headers: { "Content-Type": selectedPhoto.type },
-          body: selectedPhoto,
-        });
-
-        if (!result.ok) {
-          throw new Error("Photo upload failed.");
-        }
-
-        const { storageId } = (await result.json()) as { storageId: Id<"_storage"> };
-        photoStorageId = storageId;
+        photoStorageId = await uploadFileToConvex(generateUploadUrl, selectedPhoto);
       }
 
       await addMemoryText({
         title: title.trim(),
-        date: date.trim() || "Unknown date",
+        date: date.trim() || undefined,
         story: story.trim(),
         photoStorageId,
+        photoMimeType: selectedPhoto?.type || undefined,
+        photoFileName: selectedPhoto?.name || undefined,
       });
 
       router.push("/supporter/memories");

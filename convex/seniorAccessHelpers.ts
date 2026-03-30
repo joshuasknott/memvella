@@ -8,6 +8,10 @@ import {
   hashDeviceFingerprint,
   hashSeniorSessionToken,
 } from "./security";
+import {
+  getNextRoutineEventForFamilySpace,
+  listTodayTimelineForFamilySpace,
+} from "./routineHelpers";
 
 type SessionCtx = MutationCtx | QueryCtx;
 
@@ -30,24 +34,6 @@ export type SeniorSessionValidationResult =
       status: "invalid";
       reason: SeniorSessionInvalidReason;
     };
-
-function parseTimeToMinutes(timeValue: string) {
-  if (timeValue.includes(" ")) {
-    const [timePart, meridiem] = timeValue.split(" ");
-    const [rawHour, rawMinute] = timePart.split(":").map(Number);
-    const normalizedHour =
-      meridiem === "PM" && rawHour !== 12
-        ? rawHour + 12
-        : meridiem === "AM" && rawHour === 12
-          ? 0
-          : rawHour;
-
-    return normalizedHour * 60 + (rawMinute ?? 0);
-  }
-
-  const [hour, minute] = timeValue.split(":").map(Number);
-  return hour * 60 + (minute ?? 0);
-}
 
 async function getActiveSessionByToken(
   ctx: SessionCtx,
@@ -200,62 +186,67 @@ export async function buildSeniorDashboard(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
 ) {
-  const [routines, memories] = await Promise.all([
+  type GalleryItem = {
+    id: string;
+    imageUrl: string;
+    caption: string;
+    date: string | null;
+    mediaType: "text" | "media" | "audio" | "voice";
+  };
+
+  const [nextRoutine, todaysTimeline, memoryRecords] = await Promise.all([
+    getNextRoutineEventForFamilySpace(ctx, familySpaceId),
+    listTodayTimelineForFamilySpace(ctx, familySpaceId),
     ctx.db
-      .query("routines")
-      .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", familySpaceId),
-      )
-      .take(50),
-    ctx.db
-      .query("memories")
-      .withIndex("by_familySpaceId", (query) =>
+      .query("memoryRecords")
+      .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
         query.eq("familySpaceId", familySpaceId),
       )
       .order("desc")
-      .take(50),
+      .take(25),
   ]);
 
-  const nextEvent =
-    routines.length === 0
-      ? { title: "Enjoy your day.", time: null as string | null }
-      : (() => {
-          const sortedRoutines = [...routines].sort(
-            (left, right) =>
-              parseTimeToMinutes(left.time) - parseTimeToMinutes(right.time),
-          );
-          const nextRoutine = sortedRoutines[0];
+  const nextEvent = nextRoutine
+    ? {
+        title: nextRoutine.title,
+        time: nextRoutine.time,
+        frequency: nextRoutine.frequency,
+      }
+    : todaysTimeline[0]
+      ? {
+          title: todaysTimeline[0].title,
+          time: todaysTimeline[0].time,
+          frequency: todaysTimeline[0].frequency,
+        }
+      : { title: "Enjoy your day.", time: null as string | null };
 
-          return {
-            title: nextRoutine.routineName,
-            time: nextRoutine.time,
-            frequency: nextRoutine.frequency,
-          };
-        })();
-
-  const gallery = (
+  let gallery: GalleryItem[] = (
     await Promise.all(
-      memories
-        .filter((memory) => memory.storageId !== undefined)
-        .slice(0, 10)
-        .map(async (memory) => {
-          if (!memory.storageId) {
-            return null;
-          }
+      memoryRecords.map(async (record) => {
+        const [asset] = await ctx.db
+          .query("memoryAssets")
+          .withIndex("by_memoryRecordId_and_sortOrder", (query) =>
+            query.eq("memoryRecordId", record._id),
+          )
+          .take(1);
 
-          const imageUrl = await ctx.storage.getUrl(memory.storageId);
-          if (!imageUrl) {
-            return null;
-          }
+        if (!asset || asset.assetType !== "image" || !asset.storageId) {
+          return null;
+        }
 
-          return {
-            id: memory._id,
-            imageUrl,
-            caption: memory.title,
-            date: memory.date,
-            mediaType: memory.mediaType,
-          };
-        }),
+        const imageUrl = await ctx.storage.getUrl(asset.storageId);
+        if (!imageUrl) {
+          return null;
+        }
+
+        return {
+          id: record._id,
+          imageUrl,
+          caption: record.title,
+          date: record.memoryDate,
+          mediaType: record.recordType,
+        };
+      }),
     )
   ).filter((item): item is NonNullable<typeof item> => item !== null);
 

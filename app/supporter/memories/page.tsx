@@ -2,17 +2,38 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Camera, Heart, Mic, UserPlus, Users } from "lucide-react";
+import {
+  Camera,
+  ChevronRight,
+  FileAudio2,
+  ImageIcon,
+  Mic,
+  Plus,
+  Type,
+} from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { PrimaryButton } from "@/components/ui/Button";
+import { formatLastEditedLabel, formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
-function MemberSkeleton() {
+const RECORD_ICON_MAP = {
+  text: Type,
+  media: Camera,
+  audio: FileAudio2,
+  voice: Mic,
+} as const;
+
+function MemorySkeleton() {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse">
-      <div className="h-12 w-12 shrink-0 rounded-full bg-gray-100" />
-      <div className="flex-1 space-y-2">
-        <div className="h-3 w-28 rounded bg-gray-100" />
-        <div className="h-3 w-20 rounded bg-gray-100" />
+    <div className="animate-pulse rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="flex gap-4">
+        <div className="h-24 w-24 rounded-3xl bg-gray-100" />
+        <div className="flex-1 space-y-3">
+          <div className="h-4 w-20 rounded bg-gray-100" />
+          <div className="h-6 w-40 rounded bg-gray-100" />
+          <div className="h-4 w-full rounded bg-gray-100" />
+          <div className="h-4 w-2/3 rounded bg-gray-100" />
+        </div>
       </div>
     </div>
   );
@@ -20,137 +41,120 @@ function MemberSkeleton() {
 
 export default function SupporterMemoriesPage() {
   const { seniorDisplayName } = useFamilySpaceProfile();
-  const members = useQuery(api.supporter.getFamilyDirectory);
+  const memoryRecords = useQuery(api.memories.listMemoryRecords);
 
   return (
-    <div className="flex w-full flex-col gap-6 px-4">
-      <div>
-        <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
-          Family Directory
-        </h1>
-        <p className="mt-2 text-lg text-gray-500">
-          Manage the people and stories that shape {seniorDisplayName}&apos;s FamilySpace.
-        </p>
-      </div>
-
-      <section className="grid grid-cols-2 gap-4">
-        <Link
-          href="/supporter/add-person"
-          className="flex flex-col items-start gap-4 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-transform active:scale-95"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <UserPlus className="h-6 w-6" />
+    <div className="flex w-full flex-col gap-6 px-4 pb-6">
+      <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
+              Memory Library
+            </p>
+            <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+              Memories
+            </h1>
+            <p className="mt-2 text-lg leading-relaxed text-gray-600">
+              Review, edit, and organize the stories, photos, voice notes, and recordings that shape {seniorDisplayName}&apos;s FamilySpace.
+            </p>
           </div>
-          <div className="flex flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
-              Add Person
-            </span>
-            <span className="mt-1 text-sm font-medium text-gray-500">
-              Family and Friends
-            </span>
-          </div>
-        </Link>
+          <Link
+            href="/supporter/add-memory"
+            className="inline-flex min-h-[56px] shrink-0 items-center justify-center rounded-full bg-[#6B21A8] px-5 text-base font-semibold text-white"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Add
+          </Link>
+        </div>
 
-        <div className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-transform active:scale-95">
-          <Link href="/supporter/add-memory" className="absolute inset-0 z-0" />
-
-          <div className="pointer-events-none flex w-full items-start justify-between">
-            <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-purple-50 text-purple-600">
-              <Camera className="h-6 w-6" />
-            </div>
-
-            <Link
-              href="/supporter/add-memory/voice"
-              className="pointer-events-auto relative z-20 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600 shadow-sm transition-colors active:scale-95 hover:bg-purple-200"
-            >
-              <Mic className="h-5 w-5" />
-            </Link>
-          </div>
-
-          <div className="pointer-events-none relative z-10 mt-auto flex w-full flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
-              Add Memory
-            </span>
-            <span className="mt-1 text-sm font-medium text-gray-500">
-              Photos and Stories
-            </span>
-          </div>
+        <div className="mt-5 inline-flex rounded-full bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800">
+          {memoryRecords === undefined ? "Loading memories..." : `${memoryRecords.length} record${memoryRecords.length === 1 ? "" : "s"} in this FamilySpace`}
         </div>
       </section>
 
-      <section>
-        <div className="mb-4 flex items-center justify-between px-1">
-          <h2 className="font-headline text-xl font-bold text-gray-900">
-            Connections
-          </h2>
-          <span className="rounded-full bg-purple-50 px-3 py-1 text-sm font-bold uppercase tracking-[0.2em] text-primary">
-            {members === undefined ? "..." : `${members.length} Added`}
-          </span>
+      {memoryRecords === undefined ? (
+        <div className="space-y-3">
+          <MemorySkeleton />
+          <MemorySkeleton />
+          <MemorySkeleton />
         </div>
+      ) : memoryRecords.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-50 text-blue-800">
+            <ImageIcon className="h-7 w-7" />
+          </div>
+          <p className="mt-4 text-xl font-bold text-gray-900">No memories yet</p>
+          <p className="mt-2 text-lg leading-relaxed text-gray-500">
+            Add the first record so the Supporter dashboard and Senior gallery have meaningful moments to surface.
+          </p>
+          <div className="mt-6">
+            <PrimaryButton href="/supporter/add-memory">
+              Add the first memory
+            </PrimaryButton>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {memoryRecords.map((record) => {
+            const Icon = RECORD_ICON_MAP[record.recordType];
 
-        {members === undefined ? (
-          <div className="space-y-3">
-            <MemberSkeleton />
-            <MemberSkeleton />
-          </div>
-        ) : members.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-purple-100 bg-purple-50/30 p-8 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
-              <Users className="h-7 w-7 text-purple-400" />
-            </div>
-            <p className="mb-2 font-headline text-lg font-bold text-gray-900">
-              No connections yet
-            </p>
-            <p className="mb-6 max-w-[240px] text-base leading-relaxed text-gray-500">
-              Add family and friends so Memvella can recognize them in stories and photos.
-            </p>
-            <Link
-              href="/supporter/add-person"
-              className="rounded-full bg-[#1D4ED8] px-8 py-4 text-base font-bold text-white shadow-md transition-transform active:scale-95"
-            >
-              Get Started
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-colors hover:border-purple-200"
+            return (
+              <Link
+                key={record.id}
+                href={`/supporter/memories/${record.id}`}
+                className="block rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-colors hover:border-purple-200"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-purple-100 bg-purple-50">
-                  {member.photoUrl ? (
-                    <img src={member.photoUrl} alt={member.name} className="h-full w-full object-cover" />
+                <div className="flex gap-4">
+                  {record.previewAssetType === "image" && record.previewUrl ? (
+                    <img
+                      src={record.previewUrl}
+                      alt={record.title}
+                      className="h-24 w-24 shrink-0 rounded-3xl object-cover"
+                    />
                   ) : (
-                    <span className="font-headline text-lg font-bold text-purple-400">
-                      {member.name.charAt(0).toUpperCase()}
-                    </span>
+                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-3xl bg-purple-50 text-purple-800">
+                      <Icon className="h-8 w-8" />
+                    </div>
                   )}
-                </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-headline text-lg font-bold leading-tight text-gray-900">
-                    {member.name}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-gray-500">
-                    {member.relationship}
-                  </p>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-blue-800">
+                          {formatMemoryRecordTypeLabel(record.recordType)}
+                        </p>
+                        <p className="mt-1 text-2xl font-bold leading-tight text-gray-900">
+                          {record.title}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+                    </div>
 
-                <div className="shrink-0">
-                  {member.isLiving ? (
-                    <Heart className="h-5 w-5 fill-purple-100 text-purple-400" />
-                  ) : (
-                    <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-400">
-                      In Memory
-                    </span>
-                  )}
+                    <p className="mt-2 text-base leading-relaxed text-gray-600">
+                      {record.summary}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
+                        {record.dateLabel}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600">
+                        Updated {formatLastEditedLabel(record.lastEditedAt)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {memoryRecords && memoryRecords.length > 0 ? (
+        <PrimaryButton href="/supporter/add-memory">
+          Add another memory
+        </PrimaryButton>
+      ) : null}
     </div>
   );
 }

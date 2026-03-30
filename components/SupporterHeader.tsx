@@ -16,7 +16,7 @@ const SUB_ROUTE_TITLES: Record<string, string> = {
   "add-memory": "Add a Memory",
   "add-memory/text": "Write a Story",
   "add-memory/voice": "Record Voice Note",
-  "add-memory/audio": "Favorite Song",
+  "add-memory/audio": "Audio Memory",
   "add-memory/media": "Photo or Video",
   "add-person": "Add Person",
   "add-routine": "Add a Routine",
@@ -29,6 +29,12 @@ const SUB_ROUTE_TITLES: Record<string, string> = {
 function getTitleFromPath(pathname: string): string {
   // Strip the /supporter/ prefix and match against known sub-routes
   const sub = pathname.replace("/supporter/", "");
+  if (sub.startsWith("memories/") && sub.endsWith("/edit")) {
+    return "Edit Memory";
+  }
+  if (sub.startsWith("memories/")) {
+    return "Memory Detail";
+  }
   return SUB_ROUTE_TITLES[sub] ?? "Back";
 }
 

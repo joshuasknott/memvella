@@ -4,7 +4,9 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
+import { inferMemoryAssetType, uploadFileToConvex } from "@/lib/convex-upload";
 
 export default function MediaMemoryPage() {
   const router = useRouter();
@@ -46,23 +48,15 @@ export default function MediaMemoryPage() {
     setIsSaving(true);
 
     try {
-      const postUrl = await generateUploadUrl();
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
-
-      if (!result.ok) {
-        throw new Error("File upload failed.");
-      }
-
-      const { storageId } = await result.json();
+      const storageId = await uploadFileToConvex(generateUploadUrl, selectedFile);
       await addMemoryMedia({
         title: title.trim(),
-        date: date.trim() || "Unknown date",
-        story: story.trim() || "--",
-        mediaStorageId: storageId,
+        date: date.trim() || undefined,
+        story: story.trim(),
+        mediaStorageId: storageId as Id<"_storage">,
+        mediaMimeType: selectedFile.type || undefined,
+        mediaFileName: selectedFile.name || undefined,
+        mediaAssetType: inferMemoryAssetType(selectedFile) === "video" ? "video" : "image",
       });
       router.push("/supporter/memories");
     } catch (saveError) {
@@ -88,7 +82,11 @@ export default function MediaMemoryPage() {
           <div className="relative flex aspect-4/3 w-full flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
             {preview ? (
               <>
-                <img src={preview} alt="Preview" className="h-full w-full rounded-3xl object-cover" />
+                {selectedFile?.type.startsWith("video/") ? (
+                  <video src={preview} className="h-full w-full rounded-3xl object-cover" />
+                ) : (
+                  <img src={preview} alt="Preview" className="h-full w-full rounded-3xl object-cover" />
+                )}
                 <button
                   type="button"
                   onClick={(event) => {
