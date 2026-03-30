@@ -1,10 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAction, useMutation } from "convex/react";
+import type { Id } from "@/convex/_generated/dataModel";
 import BrandLogo from "@/components/BrandLogo";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceInputPill } from "@/components/shared-senior/VoiceInputPill";
+import { api } from "@/convex/_generated/api";
+import { speakText, type VoiceUiState } from "@/lib/browser-speech";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
+
+type IndependentVoiceDraft = {
+  intent: "memory" | "routine";
+  title: string;
+  description: string;
+  date: string | null;
+  timeLabel: string | null;
+  timeMinutes: number | null;
+  daysOfWeek: number[];
+  recurrenceLabel: string | null;
+};
 
 function useLiveClock() {
   const [time, setTime] = useState(() => new Date());
@@ -43,6 +58,25 @@ function getGreeting(date: Date) {
   return "Good Evening";
 }
 
+function formatDraftDate(dateKey: string | null) {
+  if (!dateKey) {
+    return null;
+  }
+
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  return utcDate.toLocaleDateString("en-GB", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function formatDraftDays(daysOfWeek: number[]) {
+  const labels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return daysOfWeek.map((day) => labels[day] ?? "").filter(Boolean).join(", ");
+}
+
 function IndependentRecoveryState() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa] p-6">
@@ -68,7 +102,22 @@ export default function IndependentHomePage() {
   const now = useLiveClock();
   const { dashboard, deviceFingerprint, sessionState, clearSession } =
     useSeniorDashboardSession("independent");
+  const [voiceState, setVoiceState] = useState<VoiceUiState>("idle");
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<{
+    interactionId: Id<"voiceInteractions">;
+    draft: IndependentVoiceDraft;
+  } | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const parseIndependentVoiceIntent = useAction(api.voice.parseIndependentVoiceIntent);
+  const confirmIndependentVoiceDraft = useMutation(
+    api.voiceSession.confirmIndependentVoiceDraft,
+  );
+  const rejectIndependentVoiceDraft = useMutation(
+    api.voiceSession.rejectIndependentVoiceDraft,
+  );
 
   useEffect(() => {
     if (dashboard?.status === "invalid") {
@@ -76,10 +125,117 @@ export default function IndependentHomePage() {
     }
   }, [clearSession, dashboard]);
 
-  const handleVoiceSubmit = (text: string) => {
-    setVoiceStatus(
-      `Heard: "${text}". Voice creation will save directly to your FamilySpace in the next sprint.`,
-    );
+  const handleVoiceSubmit = async (text: string) => {
+    if (!sessionState?.sessionToken || !deviceFingerprint) {
+      setVoiceError("This session needs to be refreshed before voice actions can be saved.");
+      return;
+    }
+
+    setVoiceError(null);
+    setVoiceStatus(null);
+    setPendingDraft(null);
+    setVoiceState("processing");
+
+    try {
+      const result = await parseIndependentVoiceIntent({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        transcript: text,
+      });
+
+      setVoiceStatus(result.reply);
+      setPendingDraft(
+        result.draft && result.interactionId
+          ? {
+              interactionId: result.interactionId,
+              draft: result.draft,
+            }
+          : null,
+      );
+
+      await speakText(result.reply, {
+        lang: "en-GB",
+        onStart: () => setVoiceState("speaking"),
+        onEnd: () => setVoiceState("idle"),
+        onError: () => setVoiceState("idle"),
+      });
+    } catch (error) {
+      console.error(error);
+      setVoiceState("idle");
+      setVoiceError("Voice saving is unavailable right now. Please try again.");
+    }
+  };
+
+  const confirmDraft = async () => {
+    if (!sessionState?.sessionToken || !deviceFingerprint || !pendingDraft) {
+      return;
+    }
+
+    setIsSavingDraft(true);
+    setVoiceError(null);
+
+    try {
+      const result = await confirmIndependentVoiceDraft({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        interactionId: pendingDraft.interactionId,
+        intent: pendingDraft.draft.intent,
+        title: pendingDraft.draft.title,
+        description: pendingDraft.draft.description,
+        date: pendingDraft.draft.date ?? undefined,
+        timeLabel: pendingDraft.draft.timeLabel ?? undefined,
+        timeMinutes: pendingDraft.draft.timeMinutes ?? undefined,
+        daysOfWeek:
+          pendingDraft.draft.intent === "routine"
+            ? pendingDraft.draft.daysOfWeek
+            : undefined,
+      });
+
+      const successMessage =
+        result.savedEntityType === "memory"
+          ? `Saved "${pendingDraft.draft.title}" to your FamilySpace.`
+          : `Created "${pendingDraft.draft.title}" in your FamilySpace.`;
+
+      setPendingDraft(null);
+      setVoiceStatus(successMessage);
+      setVoiceState("processing");
+      await speakText(successMessage, {
+        lang: "en-GB",
+        onStart: () => setVoiceState("speaking"),
+        onEnd: () => setVoiceState("idle"),
+        onError: () => setVoiceState("idle"),
+      });
+    } catch (error) {
+      console.error(error);
+      setVoiceState("idle");
+      setVoiceError("That item could not be saved. Please try again.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const rejectDraft = async () => {
+    if (!sessionState?.sessionToken || !deviceFingerprint || !pendingDraft) {
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      await rejectIndependentVoiceDraft({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        interactionId: pendingDraft.interactionId,
+      });
+
+      setPendingDraft(null);
+      setVoiceStatus("No problem. Tell me the memory or routine you want instead.");
+      setVoiceError(null);
+    } catch (error) {
+      console.error(error);
+      setVoiceError("This draft could not be cleared right now. Please try again.");
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   if (!deviceFingerprint) {
@@ -138,7 +294,71 @@ export default function IndependentHomePage() {
             </div>
           )}
 
-          {voiceStatus ? (
+          {pendingDraft ? (
+            <div className="mt-6 rounded-[32px] bg-white p-6 shadow-md md:p-8">
+              <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-slate-500">
+                Confirm This Save
+              </p>
+              <h2 className="font-headline text-3xl font-bold text-slate-900">
+                {pendingDraft.draft.intent === "memory" ? "Log a Memory" : "Create a Routine"}
+              </h2>
+              <div className="mt-4 space-y-3 text-left text-xl leading-relaxed text-slate-700">
+                <p>
+                  <span className="font-bold text-slate-900">Title:</span>{" "}
+                  {pendingDraft.draft.title}
+                </p>
+                <p>
+                  <span className="font-bold text-slate-900">Details:</span>{" "}
+                  {pendingDraft.draft.description}
+                </p>
+                {pendingDraft.draft.timeLabel ? (
+                  <p>
+                    <span className="font-bold text-slate-900">Time:</span>{" "}
+                    {pendingDraft.draft.timeLabel}
+                  </p>
+                ) : null}
+                {pendingDraft.draft.date ? (
+                  <p>
+                    <span className="font-bold text-slate-900">Date:</span>{" "}
+                    {formatDraftDate(pendingDraft.draft.date)}
+                  </p>
+                ) : null}
+                {pendingDraft.draft.intent === "routine" ? (
+                  <p>
+                    <span className="font-bold text-slate-900">Schedule:</span>{" "}
+                    {pendingDraft.draft.daysOfWeek.length > 0
+                      ? formatDraftDays(pendingDraft.draft.daysOfWeek)
+                      : pendingDraft.draft.date
+                        ? "One time"
+                        : "Needs a date or days"}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-4 md:flex-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void confirmDraft();
+                  }}
+                  disabled={isSavingDraft}
+                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-[#1D4ED8] px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
+                >
+                  {isSavingDraft ? "Saving..." : "Yes, Save It"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void rejectDraft();
+                  }}
+                  disabled={isSavingDraft}
+                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-white px-8 text-2xl font-bold text-slate-900 shadow-md transition-transform active:scale-95 disabled:opacity-60"
+                >
+                  No, Try Again
+                </button>
+              </div>
+            </div>
+          ) : voiceStatus ? (
             <div className="mt-6 rounded-3xl border border-blue-100 bg-blue-50 p-5 text-lg leading-relaxed text-blue-900">
               {voiceStatus}
             </div>
@@ -150,7 +370,14 @@ export default function IndependentHomePage() {
         <MemoryGallery gallery={dashboard.gallery} />
       </section>
 
-      <VoiceInputPill onSubmit={handleVoiceSubmit} />
+      <VoiceInputPill
+        onSubmit={(text) => {
+          void handleVoiceSubmit(text);
+        }}
+        voiceState={voiceState}
+        statusMessage={pendingDraft ? "Review the confirmation card below." : null}
+        errorMessage={voiceError}
+      />
     </main>
   );
 }

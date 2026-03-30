@@ -27,6 +27,11 @@ export default defineSchema({
       "authIdentityToken",
     ])
     .index("by_familySpaceId_and_role", ["familySpaceId", "role"])
+    .index("by_familySpaceId_and_role_and_seniorProfileId", [
+      "familySpaceId",
+      "role",
+      "seniorProfileId",
+    ])
     .index("by_seniorProfileId", ["seniorProfileId"]),
 
   seniorProfiles: defineTable({
@@ -143,6 +148,8 @@ export default defineSchema({
     timeLabel: v.string(),
     durationMinutes: v.union(v.number(), v.null()),
     timezone: v.string(),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
     status: v.union(v.literal("active"), v.literal("paused")),
     createdByMembershipId: v.id("familySpaceMemberships"),
     updatedByMembershipId: v.id("familySpaceMemberships"),
@@ -226,6 +233,99 @@ export default defineSchema({
     .index("by_familySpaceId", ["familySpaceId"]),
 
   notificationSettings: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
+
+  voiceInteractions: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    sessionType: v.union(
+      v.literal("assisted_device"),
+      v.literal("independent_web"),
+    ),
+    channel: v.union(
+      v.literal("assisted_voice_loop"),
+      v.literal("independent_voice_loop"),
+    ),
+    transcript: v.string(),
+    assistantResponse: v.union(v.string(), v.null()),
+    medicalRejected: v.boolean(),
+    medicalMarkers: v.array(v.string()),
+    distressDetected: v.boolean(),
+    distressMarkers: v.array(v.string()),
+    intentType: v.union(
+      v.literal("conversation"),
+      v.literal("memory_draft"),
+      v.literal("routine_draft"),
+      v.literal("medical_rejection"),
+      v.literal("unknown"),
+    ),
+    draftTitle: v.union(v.string(), v.null()),
+    draftDescription: v.union(v.string(), v.null()),
+    draftDate: v.union(v.string(), v.null()),
+    draftTimeLabel: v.union(v.string(), v.null()),
+    draftTimeMinutes: v.union(v.number(), v.null()),
+    draftDaysOfWeek: v.array(v.number()),
+    draftConfirmationStatus: v.union(
+      v.literal("not_applicable"),
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("rejected"),
+    ),
+    savedMemoryRecordId: v.union(v.id("memoryRecords"), v.null()),
+    savedRoutineScheduleId: v.union(v.id("routineSchedules"), v.null()),
+    aiInsightStatus: v.union(v.literal("pending"), v.literal("processed")),
+    aiProcessedAt: v.union(v.number(), v.null()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
+    .index("by_familySpaceId_and_aiInsightStatus_and_createdAt", [
+      "familySpaceId",
+      "aiInsightStatus",
+      "createdAt",
+    ])
+    .index("by_aiInsightStatus_and_createdAt", [
+      "aiInsightStatus",
+      "createdAt",
+    ])
+    .index("by_seniorProfileId_and_createdAt", ["seniorProfileId", "createdAt"]),
+
+  supporterInsights: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    sourceVoiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
+    sourceType: v.union(
+      v.literal("safety_guardrail"),
+      v.literal("ai_pipeline"),
+    ),
+    insightType: v.union(
+      v.literal("distress_flag"),
+      v.literal("medical_boundary"),
+      v.literal("memory_theme"),
+      v.literal("routine_follow_up"),
+      v.literal("connection_prompt"),
+      v.literal("wellness_pattern"),
+    ),
+    priority: v.union(v.literal("high"), v.literal("normal")),
+    title: v.string(),
+    summary: v.string(),
+    suggestedAction: v.string(),
+    evidenceTranscript: v.union(v.string(), v.null()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("reviewed"),
+      v.literal("dismissed"),
+    ),
+    createdAt: v.number(),
+    reviewedAt: v.union(v.number(), v.null()),
+    reviewedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+  })
+    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
+    .index("by_familySpaceId_and_status_and_createdAt", [
+      "familySpaceId",
+      "status",
+      "createdAt",
+    ])
+    .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"]),
 
   voiceLogs: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 });

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAction } from "convex/react";
 import { Mic } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceModal } from "@/components/shared-senior/VoiceModal";
+import { api } from "@/convex/_generated/api";
+import { speakText, stopSpeaking, type VoiceUiState } from "@/lib/browser-speech";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
 
 function useLiveClock() {
@@ -68,14 +71,57 @@ function AssistedRecoveryState() {
 export default function AssistedHomePage() {
   const now = useLiveClock();
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceUiState>("idle");
+  const [lastTranscript, setLastTranscript] = useState<string | null>(null);
+  const [lastReply, setLastReply] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const { dashboard, deviceFingerprint, sessionState, clearSession } =
     useSeniorDashboardSession("assisted");
+  const handleAssistedVoiceTurn = useAction(api.voice.handleAssistedVoiceTurn);
 
   useEffect(() => {
     if (dashboard?.status === "invalid") {
       clearSession();
     }
   }, [clearSession, dashboard]);
+
+  const closeVoiceModal = () => {
+    stopSpeaking();
+    setVoiceState("idle");
+    setVoiceError(null);
+    setIsVoiceModalOpen(false);
+  };
+
+  const submitVoiceTurn = async (transcript: string) => {
+    if (!sessionState?.sessionToken || !deviceFingerprint) {
+      setVoiceError("This tablet session needs to be refreshed.");
+      return;
+    }
+
+    setLastTranscript(transcript);
+    setVoiceError(null);
+    setVoiceState("processing");
+
+    try {
+      const result = await handleAssistedVoiceTurn({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        transcript,
+      });
+
+      setLastReply(result.reply);
+      await speakText(result.reply, {
+        lang: "en-GB",
+        onStart: () => setVoiceState("speaking"),
+        onEnd: () => setVoiceState("idle"),
+        onError: () => setVoiceState("idle"),
+      });
+    } catch (error) {
+      console.error(error);
+      setVoiceState("idle");
+      setVoiceError("The voice loop is unavailable right now. Please try again.");
+    }
+  };
 
   if (!deviceFingerprint) {
     return (
@@ -136,7 +182,12 @@ export default function AssistedHomePage() {
 
         <div className="mt-8 md:fixed md:bottom-8 md:right-8 md:z-40 md:mt-0">
           <button
-            onClick={() => setIsVoiceModalOpen(true)}
+            onClick={() => {
+              setVoiceError(null);
+              setLastTranscript(null);
+              setLastReply(null);
+              setIsVoiceModalOpen(true);
+            }}
             className="block w-full rounded-full bg-[#6B21A8] px-8 py-6 text-center shadow-xl transition-transform duration-200 hover:scale-[1.02] active:scale-95 md:w-auto md:px-10 md:py-8"
           >
             <div className="flex items-center justify-center gap-4 md:gap-6">
@@ -153,7 +204,18 @@ export default function AssistedHomePage() {
         <MemoryGallery gallery={dashboard.gallery} />
       </section>
 
-      <VoiceModal isOpen={isVoiceModalOpen} onClose={() => setIsVoiceModalOpen(false)} />
+      <VoiceModal
+        isOpen={isVoiceModalOpen}
+        onClose={closeVoiceModal}
+        onSubmit={(transcript) => {
+          void submitVoiceTurn(transcript);
+        }}
+        isProcessing={voiceState === "processing"}
+        isSpeaking={voiceState === "speaking"}
+        lastTranscript={lastTranscript}
+        lastReply={lastReply}
+        errorMessage={voiceError}
+      />
     </main>
   );
 }

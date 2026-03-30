@@ -42,18 +42,28 @@ export const resolveSeniorSession = internalQuery({
   args: {
     sessionToken: v.string(),
     deviceFingerprint: v.string(),
+    expectedSessionType: v.optional(
+      v.union(v.literal("assisted_device"), v.literal("independent_web")),
+    ),
   },
   handler: async (ctx, args) => {
-    const validation = await validateSeniorSession(ctx, args);
+    const validation = await validateSeniorSession(ctx, {
+      sessionToken: args.sessionToken,
+      deviceFingerprint: args.deviceFingerprint,
+      expectedSessionType: args.expectedSessionType,
+    });
     if (validation.status === "invalid") {
       throw new Error(`Invalid senior session: ${validation.reason}`);
     }
 
     return {
       familySpaceId: validation.familySpace._id,
+      seniorProfileId: validation.seniorProfile._id,
       seniorName: validation.seniorProfile.displayName,
       seniorMode: validation.seniorProfile.seniorMode,
       sessionType: validation.session.sessionType,
+      sessionId: validation.session._id,
+      sourceMembershipId: validation.session.sourceMembershipId,
     };
   },
 });

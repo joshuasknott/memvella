@@ -216,7 +216,10 @@ function IndependentSetupVoiceContent() {
       </div>
 
       {step === 1 ? (
-        <VoiceInputPill onSubmit={handleVoiceSubmit} isProcessing={isSubmitting} />
+        <VoiceInputPill
+          onSubmit={handleVoiceSubmit}
+          voiceState={isSubmitting ? "processing" : "idle"}
+        />
       ) : null}
     </div>
   );

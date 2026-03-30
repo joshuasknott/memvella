@@ -2,10 +2,13 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Mic, MicOff } from "lucide-react";
+import type { VoiceUiState } from "@/lib/browser-speech";
 
 interface VoiceInputPillProps {
   onSubmit: (text: string) => void;
-  isProcessing?: boolean;
+  voiceState?: VoiceUiState;
+  statusMessage?: string | null;
+  errorMessage?: string | null;
 }
 
 interface SpeechRecognitionResultLike {
@@ -34,22 +37,41 @@ type SpeechWindow = Window & {
   webkitSpeechRecognition?: SpeechRecognitionCtor;
 };
 
+function resolvePlaceholder(isListening: boolean, voiceState: VoiceUiState) {
+  if (isListening) {
+    return "Listening...";
+  }
+
+  if (voiceState === "processing") {
+    return "Processing your request...";
+  }
+
+  if (voiceState === "speaking") {
+    return "Speaking...";
+  }
+
+  return "Speak or type a memory or routine...";
+}
+
 export function VoiceInputPill({
   onSubmit,
-  isProcessing = false,
+  voiceState = "idle",
+  statusMessage,
+  errorMessage,
 }: VoiceInputPillProps) {
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const isBusy = isListening || voiceState !== "idle";
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch {
-        // Ignore stop calls after the recording has already ended.
+        // Ignore duplicate stop calls after recognition has already ended.
       }
     }
 
@@ -62,7 +84,6 @@ export function VoiceInputPill({
   }, []);
 
   const startRecording = useCallback(async () => {
-    window.speechSynthesis?.cancel();
     setInputValue("");
     setIsListening(true);
 
@@ -74,14 +95,14 @@ export function VoiceInputPill({
         speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
 
       if (!RecognitionApi) {
-        alert("Voice recognition is not supported in this browser. Please type instead.");
+        alert("Voice recognition is not available in this browser. Please type instead.");
         setIsListening(false);
         return;
       }
 
       const recognition = new RecognitionApi();
       recognitionRef.current = recognition;
-      recognition.lang = "en-US";
+      recognition.lang = "en-GB";
       recognition.interimResults = true;
       recognition.continuous = false;
 
@@ -97,8 +118,8 @@ export function VoiceInputPill({
 
       recognition.onend = () => {
         stopRecording();
-        if (finalCaptured) {
-          onSubmit(finalCaptured);
+        if (finalCaptured.trim()) {
+          onSubmit(finalCaptured.trim());
           setInputValue("");
         }
       };
@@ -106,70 +127,82 @@ export function VoiceInputPill({
       recognition.start();
     } catch (error) {
       console.error(error);
-      alert("Microphone access was denied. Please type instead.");
+      alert("Microphone access is blocked. Please type instead.");
       setIsListening(false);
     }
   }, [onSubmit, stopRecording]);
 
-  const toggleRecording = () => {
-    if (isListening) {
-      stopRecording();
-    } else if (!isProcessing) {
-      void startRecording();
-    }
-  };
-
   const handleTextInputSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!inputValue.trim()) {
+    if (!inputValue.trim() || isBusy) {
       return;
     }
 
-    onSubmit(inputValue);
+    onSubmit(inputValue.trim());
     setInputValue("");
   };
 
   return (
-    <form
-      onSubmit={handleTextInputSubmit}
-      className="absolute bottom-12 z-10 flex w-full justify-center px-6 animate-in slide-in-from-bottom-8 duration-700"
-    >
-      <div className="mx-auto flex w-full max-w-2xl items-center rounded-full border border-gray-100 bg-white p-2 pr-3 shadow-lg transition-all focus-within:ring-4 focus-within:ring-[#4e0078]/10">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
-          disabled={isListening || isProcessing}
-          placeholder={isListening ? "Listening..." : "Type or speak..."}
-          className="min-w-0 flex-1 bg-transparent px-6 text-xl text-gray-800 outline-none placeholder:text-gray-400 disabled:opacity-70"
-        />
-
-        {inputValue.trim() && !isListening ? (
-          <button
-            type="submit"
-            className="mr-2 shrink-0 rounded-xl bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-highest"
-          >
-            Press Enter
-          </button>
+    <div className="absolute bottom-6 z-10 flex w-full justify-center px-4 md:bottom-10 md:px-6">
+      <div className="w-full max-w-3xl">
+        {errorMessage ? (
+          <div className="mb-4 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-lg font-medium text-red-900 shadow-sm">
+            {errorMessage}
+          </div>
+        ) : statusMessage ? (
+          <div className="mb-4 rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-lg font-medium text-blue-900 shadow-sm">
+            {statusMessage}
+          </div>
         ) : null}
 
-        <button
-          type="button"
-          onClick={toggleRecording}
-          disabled={isProcessing}
-          className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
-            isListening
-              ? "scale-105 bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-              : "bg-[#6B21A8] text-white shadow-md active:scale-95"
-          }`}
+        <form
+          onSubmit={handleTextInputSubmit}
+          className="animate-in slide-in-from-bottom-8 duration-700"
         >
-          {isListening ? (
-            <MicOff className="h-6 w-6" strokeWidth={2.5} />
-          ) : (
-            <Mic className="h-6 w-6" strokeWidth={2.5} />
-          )}
-        </button>
+          <div className="mx-auto flex w-full items-center rounded-[40px] border border-gray-200 bg-white p-3 shadow-xl">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              disabled={isBusy}
+              placeholder={resolvePlaceholder(isListening, voiceState)}
+              className="min-w-0 flex-1 bg-transparent px-5 text-xl text-gray-900 outline-none placeholder:text-gray-400 disabled:opacity-70 md:px-6 md:text-2xl"
+            />
+
+            {inputValue.trim() && !isListening && voiceState === "idle" ? (
+              <button
+                type="submit"
+                className="mr-3 min-h-[56px] shrink-0 rounded-full bg-[#1D4ED8] px-5 text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
+              >
+                Save
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (isListening) {
+                  stopRecording();
+                } else if (voiceState === "idle") {
+                  void startRecording();
+                }
+              }}
+              disabled={voiceState !== "idle"}
+              className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                isListening
+                  ? "scale-105 bg-red-500 text-white shadow-[0_0_18px_rgba(239,68,68,0.35)]"
+                  : "bg-[#6B21A8] text-white shadow-md active:scale-95"
+              } ${voiceState !== "idle" && !isListening ? "opacity-60" : ""}`}
+            >
+              {isListening ? (
+                <MicOff className="h-7 w-7" strokeWidth={2.5} />
+              ) : (
+                <Mic className="h-7 w-7" strokeWidth={2.5} />
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 }

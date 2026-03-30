@@ -73,6 +73,22 @@ export async function getSeniorProfileById(
   return await ctx.db.get(seniorProfileId);
 }
 
+export async function getIndependentMembershipForSeniorProfile(
+  ctx: DbCtx,
+  familySpaceId: Id<"familySpaces">,
+  seniorProfileId: Id<"seniorProfiles">,
+) {
+  return await ctx.db
+    .query("familySpaceMemberships")
+    .withIndex("by_familySpaceId_and_role_and_seniorProfileId", (query) =>
+      query
+        .eq("familySpaceId", familySpaceId)
+        .eq("role", "independent_senior")
+        .eq("seniorProfileId", seniorProfileId),
+    )
+    .unique();
+}
+
 export async function upsertAssistedSeniorProfile(
   ctx: MutationCtx,
   args: {

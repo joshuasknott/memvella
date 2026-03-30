@@ -45,6 +45,10 @@ export default function SupporterDashboard() {
     api.supporter.getSupporterDashboardSummary,
     isAuthenticated ? undefined : "skip",
   );
+  const queuedInsightCount = useQuery(
+    api.insights.getQueuedSupporterInsightCount,
+    isAuthenticated ? undefined : "skip",
+  );
   const timeline = useQuery(
     api.supporter.getTodayTimeline,
     isAuthenticated ? undefined : "skip",
@@ -135,14 +139,27 @@ export default function SupporterDashboard() {
             <div className="h-12 w-full rounded-full bg-on-primary-container/10" />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-outline-variant/30 bg-surface-container-low p-5 text-center shadow-sm">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-highest">
-              <MessageSquare className="h-5 w-5 text-on-surface-variant opacity-50" />
+          <Link
+            href="/supporter/insights"
+            className="flex items-center justify-between gap-4 rounded-3xl border border-outline-variant/30 bg-surface-container-low p-5 shadow-sm transition-colors active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-highest">
+                <MessageSquare className="h-5 w-5 text-[#1D4ED8]" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-on-surface">
+                  Insights Ready for Review
+                </p>
+                <p className="text-base text-on-surface-variant">
+                  {queuedInsightCount && queuedInsightCount > 0
+                    ? `${queuedInsightCount} insight${queuedInsightCount === 1 ? "" : "s"} waiting in your queue.`
+                    : "Open the queue to review the latest transcript signals."}
+                </p>
+              </div>
             </div>
-            <p className="text-lg font-medium text-on-surface-variant">
-              Insights review arrives in the next sprint.
-            </p>
-          </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+          </Link>
         )}
       </section>
 

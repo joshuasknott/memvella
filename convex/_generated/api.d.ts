@@ -11,9 +11,12 @@
 import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
 import type * as independentAuth from "../independentAuth.js";
+import type * as insights from "../insights.js";
+import type * as insightsEngine from "../insightsEngine.js";
 import type * as kiosk from "../kiosk.js";
 import type * as memories from "../memories.js";
 import type * as memoryHelpers from "../memoryHelpers.js";
@@ -25,6 +28,8 @@ import type * as seniorAccessHelpers from "../seniorAccessHelpers.js";
 import type * as supporter from "../supporter.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
+import type * as voiceSafety from "../voiceSafety.js";
+import type * as voiceSession from "../voiceSession.js";
 
 import type {
   ApiFromModules,
@@ -36,9 +41,12 @@ declare const fullApi: ApiFromModules<{
   agent: typeof agent;
   aiActions: typeof aiActions;
   auth: typeof auth;
+  crons: typeof crons;
   familySpaceAuth: typeof familySpaceAuth;
   http: typeof http;
   independentAuth: typeof independentAuth;
+  insights: typeof insights;
+  insightsEngine: typeof insightsEngine;
   kiosk: typeof kiosk;
   memories: typeof memories;
   memoryHelpers: typeof memoryHelpers;
@@ -50,6 +58,8 @@ declare const fullApi: ApiFromModules<{
   supporter: typeof supporter;
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;
+  voiceSafety: typeof voiceSafety;
+  voiceSession: typeof voiceSession;
 }>;
 
 /**

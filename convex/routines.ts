@@ -6,6 +6,7 @@ import {
   describeRoutineDays,
   formatTimeLabel,
   listRoutineSchedulesForFamilySpace,
+  normalizeDateKey,
   normalizeDaysOfWeek,
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
@@ -19,6 +20,8 @@ export const createRoutineSchedule = mutation({
     timezone: v.string(),
     aiInstructions: v.optional(v.string()),
     durationMinutes: v.optional(v.number()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
@@ -43,6 +46,8 @@ export const createRoutineSchedule = mutation({
       timeLabel: formatTimeLabel(startTimeMinutes),
       durationMinutes: args.durationMinutes ?? null,
       timezone: args.timezone,
+      startDate: normalizeDateKey(args.startDate) ?? undefined,
+      endDate: normalizeDateKey(args.endDate) ?? undefined,
       status: "active",
       createdByMembershipId: membership._id,
       updatedByMembershipId: membership._id,
@@ -93,6 +98,8 @@ export const getRoutineSchedule = query({
       aiInstructions: schedule.aiInstructions,
       durationMinutes: schedule.durationMinutes,
       timezone: schedule.timezone,
+      startDate: schedule.startDate ?? null,
+      endDate: schedule.endDate ?? null,
       status: schedule.status,
     };
   },
@@ -107,6 +114,8 @@ export const updateRoutineSchedule = mutation({
     timezone: v.string(),
     aiInstructions: v.optional(v.string()),
     durationMinutes: v.optional(v.number()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("paused"))),
   },
   handler: async (ctx, args) => {
@@ -135,6 +144,8 @@ export const updateRoutineSchedule = mutation({
       timeLabel: formatTimeLabel(startTimeMinutes),
       durationMinutes: args.durationMinutes ?? null,
       timezone: args.timezone,
+      startDate: normalizeDateKey(args.startDate) ?? undefined,
+      endDate: normalizeDateKey(args.endDate) ?? undefined,
       status: args.status ?? schedule.status,
       updatedByMembershipId: membership._id,
       lastEditedAt: Date.now(),

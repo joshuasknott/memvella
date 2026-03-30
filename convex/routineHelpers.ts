@@ -90,6 +90,15 @@ export function normalizeDaysOfWeek(daysOfWeek: number[]) {
     .sort((left, right) => left - right);
 }
 
+export function normalizeDateKey(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : undefined;
+}
+
 export function describeRoutineDays(daysOfWeek: number[]) {
   if (daysOfWeek.length === 7) {
     return ["Daily"];
@@ -111,7 +120,7 @@ export function addDaysToDateKey(dateKey: string, daysToAdd: number) {
   ).padStart(2, "0")}-${String(nextDate.getUTCDate()).padStart(2, "0")}`;
 }
 
-function getDayOfWeekForDateKey(dateKey: string) {
+export function getDayOfWeekForDateKey(dateKey: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 }
@@ -178,8 +187,18 @@ export async function replaceRoutineOccurrences(
   }
 
   const { dateKey } = getTimeZoneClock(new Date(), schedule.timezone);
+  const startDate = normalizeDateKey(schedule.startDate);
+  const endDate = normalizeDateKey(schedule.endDate);
   for (let dayOffset = 0; dayOffset <= LOOKAHEAD_DAYS; dayOffset += 1) {
     const occurrenceDateKey = addDaysToDateKey(dateKey, dayOffset);
+    if (startDate && occurrenceDateKey < startDate) {
+      continue;
+    }
+
+    if (endDate && occurrenceDateKey > endDate) {
+      continue;
+    }
+
     const dayOfWeek = getDayOfWeekForDateKey(occurrenceDateKey);
 
     if (!routineMatchesDay(schedule.daysOfWeek, dayOfWeek)) {
@@ -317,6 +336,8 @@ export async function listRoutineSchedulesForFamilySpace(
     status: schedule.status,
     durationMinutes: schedule.durationMinutes,
     timezone: schedule.timezone,
+    startDate: schedule.startDate ?? null,
+    endDate: schedule.endDate ?? null,
     lastEditedAt: schedule.lastEditedAt,
   }));
 }
