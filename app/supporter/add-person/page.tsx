@@ -17,7 +17,7 @@ export default function AddPersonPage() {
   const addFamilyMember = useMutation(api.caregiver.addFamilyMember);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
-  const lovedOneName = profile?.lovedOneName || 'your loved one';
+  const friendName = profile?.lovedOneName || 'your friend';
 
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('Son');
@@ -148,7 +148,7 @@ export default function AddPersonPage() {
 
         {/* Relationship Dropdown/Pill-Selector */}
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to {lovedOneName}</label>
+          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to {friendName}</label>
           <div className="flex flex-wrap gap-3">
             {Array.from(new Set([...RELATIONSHIP_OPTIONS, relationship])).map((option) => (
               <button
@@ -253,7 +253,7 @@ export default function AddPersonPage() {
               onChange={(e) => setAiContext(e.target.value)}
               className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] w-full text-lg resize-none placeholder:text-outline/50"
             ></textarea>
-            <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {lovedOneName} remember?</p>
+            <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {friendName} remember?</p>
           </div>
         </div>
       </FormCard>
@@ -266,7 +266,7 @@ export default function AddPersonPage() {
           </div>
           <div>
             <h4 className="font-headline font-bold text-on-primary-fixed">Family Connections</h4>
-            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during {lovedOneName}&apos;s morning wellness check-in.</p>
+            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during {friendName}&apos;s morning wellness check-in.</p>
           </div>
         </div>
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>

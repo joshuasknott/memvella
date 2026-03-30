@@ -9,11 +9,11 @@ import { PrimaryButton } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
-export default function CaregiverSetupPage() {
+export default function SupporterSetupPage() {
   const router = useRouter();
 
   const [name, setName] = useState('');
-  const [lovedOneName, setLovedOneName] = useState('');
+  const [friendName, setFriendName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,14 +46,14 @@ export default function CaregiverSetupPage() {
         return;
       }
 
-      // 2. Persist lovedOneName to localStorage so the dashboard can read it
+      // 2. Persist friendName to localStorage so the dashboard can read it
       //    on first load. A dedicated "createCaregiverProfile" mutation can
       //    persist it to Convex once the auth session JWT is fully established.
-      if (lovedOneName.trim()) {
-        localStorage.setItem('memvella_lovedOneName', lovedOneName.trim());
+      if (friendName.trim()) {
+        localStorage.setItem('memvella_friendName', friendName.trim());
       }
 
-      // 3. Redirect to the caregiver dashboard
+      // 3. Redirect to the supporter dashboard
       router.push('/supporter');
     } catch (err) {
       console.error('Sign-up error:', err);
@@ -104,8 +104,8 @@ export default function CaregiverSetupPage() {
                 id="loved_one"
                 type="text"
                 placeholder="e.g., Mom, or David"
-                value={lovedOneName}
-                onChange={(e) => setLovedOneName(e.target.value)}
+                value={friendName}
+                onChange={(e) => setFriendName(e.target.value)}
               />
               <p className="text-xs text-gray-400 px-1">Optional — you can add this later from your dashboard.</p>
             </div>

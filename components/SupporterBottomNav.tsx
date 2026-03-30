@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Home, Calendar, BookOpen, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
-export default function CaregiverBottomNav() {
+export default function SupporterBottomNav() {
   const pathname = usePathname();
 
   return (

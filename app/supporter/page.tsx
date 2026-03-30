@@ -29,7 +29,7 @@ function TimelineSkeleton() {
   );
 }
 
-export default function CaregiverDashboard() {
+export default function SupporterDashboard() {
   // ── Auth state must be declared FIRST — before any useQuery calls.
   // This prevents Convex from executing queries before the JWT is established,
   // which is what was causing the "Unauthenticated" error in requireCaregiver().
@@ -42,18 +42,18 @@ export default function CaregiverDashboard() {
   const profile = useQuery(api.caregiver.getCaregiverProfile, isAuthenticated ? undefined : "skip");
   const createProfile = useMutation(api.caregiver.createCaregiverProfile);
 
-  const lovedOneName = profile?.lovedOneName ?? 'Your loved one';
+  const friendName = profile?.lovedOneName ?? 'Your friend';
 
-  // Flush the lovedOneName bridged via localStorage during sign-up.
+  // Flush the friendName bridged via localStorage during sign-up.
   // Guarded by both isAuthenticated AND !isLoading — ensures the Convex JWT
   // is fully established before firing the mutation, preventing the
   // "Unauthenticated" race condition on post-signup redirect.
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
-    const lovedOneName = localStorage.getItem('memvella_lovedOneName');
-    if (!lovedOneName) return;
-    createProfile({ lovedOneName })
-      .then(() => localStorage.removeItem('memvella_lovedOneName'))
+    const friendNameLocal = localStorage.getItem('memvella_friendName');
+    if (!friendNameLocal) return;
+    createProfile({ lovedOneName: friendNameLocal })
+      .then(() => localStorage.removeItem('memvella_friendName'))
       .catch((err) => console.warn('Profile creation deferred:', err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthenticated, createProfile]);
@@ -89,7 +89,7 @@ export default function CaregiverDashboard() {
           <h2 className="font-headline font-bold text-xl leading-tight text-on-primary-fixed mb-1">
             {summary?.statusSummary ?? 'Loading status…'}
           </h2>
-          <p className="text-[#1a1c1a] text-sm leading-relaxed">{lovedOneName} chatted with Memvella this morning and looked at the family photos.</p>
+          <p className="text-[#1a1c1a] text-sm leading-relaxed">{friendName} chatted with Memvella this morning and looked at the family photos.</p>
         </div>
         {/* Decorative Asymmetry */}
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>

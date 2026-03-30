@@ -9,7 +9,7 @@ import { PrimaryButton } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/Input';
 import { FormCard } from '@/components/ui/FormCard';
 
-export default function CaregiverSignInPage() {
+export default function SupporterSignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next') ?? '/supporter';

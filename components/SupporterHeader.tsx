@@ -32,7 +32,7 @@ function getTitleFromPath(pathname: string): string {
   return SUB_ROUTE_TITLES[sub] ?? "Back";
 }
 
-export default function CaregiverHeader() {
+export default function SupporterHeader() {
   const pathname = usePathname();
   const router = useRouter();
 

@@ -20,7 +20,7 @@ function RoutineSkeleton() {
   );
 }
 
-export default function CaregiverRoutinesPage() {
+export default function SupporterRoutinesPage() {
   const timeline = useQuery(api.caregiver.getTodayTimeline);
 
   const handleUpdate = (id: string, type: string) => {
