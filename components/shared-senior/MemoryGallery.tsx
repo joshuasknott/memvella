@@ -100,7 +100,7 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
         {gallery !== undefined && gallery.length === 0 && (
           <div className="col-span-2 flex flex-col items-center justify-center py-24 text-center">
             <p className="font-headline text-2xl font-bold text-on-surface-variant mb-2">No photos yet</p>
-            <p className="text-outline text-sm">Add memories with photos in the Organizer app.</p>
+            <p className="text-outline text-base">Add memories with photos in the Supporter app.</p>
           </div>
         )}
       </div>

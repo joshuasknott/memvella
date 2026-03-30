@@ -1,141 +1,143 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Sparkles, Music, Upload, Loader2 } from 'lucide-react';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/Input';
-import { FormCard } from '@/components/ui/FormCard';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { Loader2, Music, Upload } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { FormCard } from "@/components/ui/FormCard";
+import { TextInput } from "@/components/ui/Input";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function AudioMemoryPage() {
   const router = useRouter();
+  const { seniorDisplayName } = useFamilySpaceProfile();
   const addMemoryAudio = useMutation(api.memories.addMemoryAudio);
 
-  const friendName = "your friend"; // TODO: wire to Convex profile
-
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [songLink, setSongLink] = useState('');
-  const [story, setStory] = useState('');
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [songLink, setSongLink] = useState("");
+  const [story, setStory] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFormValid = title.trim().length > 0 && story.trim().length > 0;
 
   const handleSave = async () => {
-    if (!isFormValid) return;
-    
+    if (!isFormValid) {
+      return;
+    }
+
     setError(null);
     setIsSaving(true);
+
     try {
       await addMemoryAudio({
         title: title.trim(),
-        date: date.trim() || 'Unknown date',
+        date: date.trim() || "Unknown date",
         story: story.trim(),
         songLink: songLink.trim() || undefined,
-        mediaStorageId: undefined, // File upload not yet implemented
+        mediaStorageId: undefined,
       });
-      router.push('/supporter/memories');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save memory. Please try again.');
+
+      router.push("/supporter/memories");
+    } catch (saveError) {
+      console.error(saveError);
+      setError("Failed to save memory. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 w-full pb-32">
-      {/* Soft Icon Hero */}
-      <section className="flex justify-center mt-8 mb-4">
-        <div className="w-28 h-28 bg-surface-container-low rounded-full flex items-center justify-center shadow-xl shadow-primary/5 border border-outline-variant/20 relative">
-          <Music className="w-12 h-12 text-primary" strokeWidth={1.5} />
-          {/* Decorative tonal bleed */}
-          <div className="absolute top-1/2 left-1/2 -transform-x-1/2 -transform-y-1/2 w-32 h-32 bg-primary/5 rounded-full blur-2xl -z-10"></div>
+    <div className="flex w-full flex-col gap-8 px-4 pb-32">
+      <section className="mb-4 mt-8 flex justify-center">
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low shadow-xl shadow-primary/5">
+          <Music className="h-12 w-12 text-primary" strokeWidth={1.5} />
+          <div className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-2xl" />
         </div>
       </section>
 
-      {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8">
         <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="audio_title">Memory Title</label>
-          <div className="relative">
-            <TextInput
-              id="audio_title"
-              type="text"
-              required
-              placeholder="Our Wedding Song"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="audio_title">
+            Memory Title
+          </label>
+          <TextInput
+            id="audio_title"
+            type="text"
+            required
+            placeholder="Our Wedding Song"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="audio_date">
-            When was this? <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="audio_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
           </label>
-          <div className="relative">
-            <TextInput
-              id="audio_date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
+          <TextInput
+            id="audio_date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+          />
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_link">
-            Link <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="song_link">
+            Link <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
           </label>
-          <div className="relative">
-            <TextInput
-              id="song_link"
-              type="url"
-              placeholder="Spotify or Apple Music..."
-              value={songLink}
-              onChange={(e) => setSongLink(e.target.value)}
-            />
-          </div>
+          <TextInput
+            id="song_link"
+            type="url"
+            placeholder="Spotify or Apple Music..."
+            value={songLink}
+            onChange={(event) => setSongLink(event.target.value)}
+          />
         </div>
 
         <div className="space-y-4">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="song_context">Why does {friendName} love this?</label>
-          <div className="relative">
-            <textarea
-              id="song_context"
-              placeholder="They played this at her wedding..."
-              rows={4}
-              required
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              className="appearance-none w-full p-6 bg-surface-container-highest border-none rounded-2xl text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
-            ></textarea>
-          </div>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="song_context">
+            Why does {seniorDisplayName} love this?
+          </label>
+          <textarea
+            id="song_context"
+            placeholder="They played this at a wedding celebration..."
+            rows={4}
+            required
+            value={story}
+            onChange={(event) => setStory(event.target.value)}
+            className="w-full resize-none rounded-2xl bg-surface-container-highest p-6 text-xl font-medium transition-all placeholder:text-outline/50 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
       </FormCard>
 
-      <section className="space-y-4 pt-2">
-        <h3 className="font-headline font-bold text-xl text-on-surface tracking-tight text-center">Or upload a file directly</h3>
-        <SecondaryButton>
-          <Upload className="w-6 h-6" />
-          <span className="font-bold">Upload Audio or Video (MP4)</span>
+      <section className="space-y-3 pt-2">
+        <h3 className="text-center font-headline text-xl font-bold tracking-tight text-on-surface">
+          Direct uploads arrive next
+        </h3>
+        <SecondaryButton type="button" disabled>
+          <Upload className="h-6 w-6" />
+          <span className="font-bold">Audio Upload Coming Soon</span>
         </SecondaryButton>
       </section>
 
-      {error && (
-        <p className="text-red-500 font-medium text-sm text-center px-1">{error}</p>
-      )}
+      {error ? (
+        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+      ) : null}
 
-      <PrimaryButton
-        onClick={handleSave}
-        disabled={isSaving || !isFormValid}
-        className="mb-8"
-      >
-        {isSaving ? <><Loader2 className="w-6 h-6 animate-spin" />Saving…</> : 'Save Audio Memory'}
+      <PrimaryButton onClick={handleSave} disabled={isSaving || !isFormValid} className="mb-8">
+        {isSaving ? (
+          <>
+            <Loader2 className="h-6 w-6 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          "Save Audio Memory"
+        )}
       </PrimaryButton>
     </div>
   );

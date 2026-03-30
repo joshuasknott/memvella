@@ -11,11 +11,15 @@
 import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
 import type * as auth from "../auth.js";
-import type * as caregiver from "../caregiver.js";
+import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
+import type * as independentAuth from "../independentAuth.js";
 import type * as kiosk from "../kiosk.js";
 import type * as memories from "../memories.js";
-import type * as migrations from "../migrations.js";
+import type * as security from "../security.js";
+import type * as seniorAccess from "../seniorAccess.js";
+import type * as seniorAccessHelpers from "../seniorAccessHelpers.js";
+import type * as supporter from "../supporter.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
 
@@ -29,11 +33,15 @@ declare const fullApi: ApiFromModules<{
   agent: typeof agent;
   aiActions: typeof aiActions;
   auth: typeof auth;
-  caregiver: typeof caregiver;
+  familySpaceAuth: typeof familySpaceAuth;
   http: typeof http;
+  independentAuth: typeof independentAuth;
   kiosk: typeof kiosk;
   memories: typeof memories;
-  migrations: typeof migrations;
+  security: typeof security;
+  seniorAccess: typeof seniorAccess;
+  seniorAccessHelpers: typeof seniorAccessHelpers;
+  supporter: typeof supporter;
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;
 }>;

@@ -1,48 +1,71 @@
-import { ButtonHTMLAttributes, forwardRef, AnchorHTMLAttributes } from 'react';
-import Link from 'next/link';
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
+import Link from "next/link";
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & AnchorHTMLAttributes<HTMLAnchorElement> & {
-  href?: string;
+type SharedButtonProps = {
+  children: ReactNode;
+  className?: string;
 };
 
-export const PrimaryButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
-  ({ className = '', children, href, ...props }, ref) => {
-    const classes = `h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${className}`;
-    
-    if (href) {
-      return (
-        <Link href={href} className={classes} {...(props as any)} ref={ref as any}>
-          {children}
-        </Link>
-      );
-    }
+type ButtonVariantProps = SharedButtonProps &
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    href?: undefined;
+  };
 
+type LinkVariantProps = SharedButtonProps &
+  AnchorHTMLAttributes<HTMLAnchorElement> & {
+    href: string;
+  };
+
+export type ButtonProps = ButtonVariantProps | LinkVariantProps;
+
+function isLinkProps(props: ButtonProps): props is LinkVariantProps {
+  return typeof props.href === "string";
+}
+
+function primaryClasses(className = "") {
+  return `flex h-[72px] w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
+}
+
+function secondaryClasses(className = "") {
+  return `flex h-[72px] w-full items-center justify-center gap-2 rounded-full border-2 border-[#1D4ED8]/15 bg-white px-6 text-lg font-semibold text-[#1D4ED8] shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
+}
+
+export function PrimaryButton(props: ButtonProps) {
+  if (isLinkProps(props)) {
+    const { className = "", children, href, ...linkProps } = props;
     return (
-      <button ref={ref as any} className={classes} {...(props as any)}>
+      <Link href={href} className={primaryClasses(className)} {...linkProps}>
         {children}
-      </button>
+      </Link>
     );
   }
-);
-PrimaryButton.displayName = 'PrimaryButton';
 
-export const SecondaryButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
-  ({ className = '', children, href, ...props }, ref) => {
-    const classes = `h-16 w-full rounded-full bg-white text-[#4e0078] border-2 border-[#4e0078]/10 font-semibold text-xl shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${className}`;
-    
-    if (href) {
-      return (
-        <Link href={href} className={classes} {...(props as any)} ref={ref as any}>
-          {children}
-        </Link>
-      );
-    }
+  const { className = "", children, ...buttonProps } = props;
+  return (
+    <button className={primaryClasses(className)} {...buttonProps}>
+      {children}
+    </button>
+  );
+}
 
+export function SecondaryButton(props: ButtonProps) {
+  if (isLinkProps(props)) {
+    const { className = "", children, href, ...linkProps } = props;
     return (
-      <button ref={ref as any} className={classes} {...(props as any)}>
+      <Link href={href} className={secondaryClasses(className)} {...linkProps}>
         {children}
-      </button>
+      </Link>
     );
   }
-);
-SecondaryButton.displayName = 'SecondaryButton';
+
+  const { className = "", children, ...buttonProps } = props;
+  return (
+    <button className={secondaryClasses(className)} {...buttonProps}>
+      {children}
+    </button>
+  );
+}

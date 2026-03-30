@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
-import { Sparkles, Lightbulb, Mic, Camera, X, Loader2 } from 'lucide-react';
-import { FormCard } from '@/components/ui/FormCard';
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { Camera, Lightbulb, Loader2, Sparkles, X } from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { FormCard } from "@/components/ui/FormCard";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function TextMemoryPage() {
   const router = useRouter();
+  const { seniorDisplayName } = useFamilySpaceProfile();
   const addMemoryText = useMutation(api.memories.addMemoryText);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
-  
-  const friendName = "your friend"; // TODO: wire to Convex profile
 
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [story, setStory] = useState('');
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [story, setStory] = useState("");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -25,8 +25,8 @@ export default function TextMemoryPage() {
 
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
+  const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
     setSelectedPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   };
@@ -34,121 +34,126 @@ export default function TextMemoryPage() {
   const handleClearPhoto = () => {
     setSelectedPhoto(null);
     setPhotoPreview(null);
-    if (photoInputRef.current) photoInputRef.current.value = '';
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
   };
 
   const isFormValid = title.trim().length > 0 && story.trim().length > 0;
 
   const handleSaveMemory = async () => {
-    if (!isFormValid) return;
-    
+    if (!isFormValid) {
+      return;
+    }
+
     setError(null);
     setIsSaving(true);
-    try {
-      let photoStorageId: Id<'_storage'> | undefined = undefined;
 
-      // Optional 3-step upload if a photo was attached
+    try {
+      let photoStorageId: Id<"_storage"> | undefined;
+
       if (selectedPhoto) {
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': selectedPhoto.type },
+          method: "POST",
+          headers: { "Content-Type": selectedPhoto.type },
           body: selectedPhoto,
         });
-        if (!result.ok) throw new Error('Photo upload failed.');
-        const { storageId } = await result.json() as { storageId: Id<'_storage'> };
+
+        if (!result.ok) {
+          throw new Error("Photo upload failed.");
+        }
+
+        const { storageId } = (await result.json()) as { storageId: Id<"_storage"> };
         photoStorageId = storageId;
       }
 
       await addMemoryText({
         title: title.trim(),
-        date: date.trim() || 'Unknown date',
+        date: date.trim() || "Unknown date",
         story: story.trim(),
         photoStorageId,
       });
-      router.push('/supporter/memories');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save memory. Please try again.');
+
+      router.push("/supporter/memories");
+    } catch (saveError) {
+      console.error(saveError);
+      setError("Failed to save memory. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 w-full pb-32">
-      {/* Form Essentials inside Premium White Card */}
-      <FormCard as="section" className="space-y-8 mt-4">
+    <div className="flex w-full flex-col gap-8 px-4 pb-32">
+      <FormCard as="section" className="mt-4 space-y-8">
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="memory_title">Memory Title</label>
-          <div className="relative">
-            <input
-              id="memory_title"
-              placeholder="David's Graduation"
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
-            />
-          </div>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_title">
+            Memory Title
+          </label>
+          <input
+            id="memory_title"
+            placeholder="David&apos;s Graduation"
+            type="text"
+            required
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+          />
         </div>
 
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="memory_date">
-            When was this? <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
           </label>
-          <div className="relative">
-            <input
-              id="memory_date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
-            />
-          </div>
+          <input
+            id="memory_date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+          />
         </div>
 
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">The Story</label>
-            <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
+            <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_story">
+              The Story
+            </label>
+            <Sparkles className="h-5 w-5 fill-primary/20 text-primary" />
           </div>
-          <div className="w-full">
-            <div className="relative w-full">
-              <textarea
-                id="ai_context"
-                placeholder="David graduated from college and we had a big family picnic..."
-                rows={5}
-                required
-                value={story}
-                onChange={(e) => setStory(e.target.value)}
-                className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] pb-14 w-full text-lg resize-none placeholder:text-outline/50"
-              ></textarea>
-              <button type="button" className="absolute bottom-4 right-4 p-3 bg-primary/10 text-primary rounded-full shadow-sm active:scale-95 transition-transform hover:bg-primary/20">
-                <Mic size={24} />
-              </button>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-outline font-label px-1">What happened? How did it make you feel?</p>
+          <textarea
+            id="memory_story"
+            placeholder="David graduated from college and we had a big family picnic..."
+            rows={5}
+            required
+            value={story}
+            onChange={(event) => setStory(event.target.value)}
+            className="min-h-[120px] w-full resize-none rounded-2xl border border-gray-200 bg-white p-6 text-lg transition-all placeholder:text-outline/50 focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+          />
+          <p className="px-1 text-sm text-outline">
+            What happened, and why is it meaningful for {seniorDisplayName}?
+          </p>
         </div>
       </FormCard>
 
-      {/* Contextual Tip Card */}
-      <div className="bg-primary-fixed/30 p-6 rounded-3xl relative overflow-hidden group">
+      <div className="group relative overflow-hidden rounded-3xl bg-primary-fixed/30 p-6">
         <div className="relative z-10 flex gap-4">
-          <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-            <Lightbulb className="text-primary w-6 h-6" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <Lightbulb className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h4 className="font-headline font-bold text-on-primary-fixed">Memory Curation</h4>
-            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding stories triggers Memvella to organically bring them up during conversations with {friendName}.</p>
+            <h4 className="font-headline font-bold text-on-primary-fixed">
+              Memory Curation
+            </h4>
+            <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
+              Detailed stories help Memvella bring up the right moments when talking with {seniorDisplayName}.
+            </p>
           </div>
         </div>
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-primary/5 transition-transform duration-700 group-hover:scale-110" />
       </div>
 
-      {/* Optional Photo Attachment */}
       <input
         ref={photoInputRef}
         type="file"
@@ -157,35 +162,45 @@ export default function TextMemoryPage() {
         id="photo-input"
         onChange={handlePhotoSelect}
       />
+
       {photoPreview ? (
-        <div className="relative rounded-3xl overflow-hidden shadow-sm">
-          <img src={photoPreview} alt="Photo preview" className="w-full h-48 object-cover" />
+        <div className="relative overflow-hidden rounded-3xl shadow-sm">
+          <img src={photoPreview} alt="Photo preview" className="h-48 w-full object-cover" />
           <button
+            type="button"
             onClick={handleClearPhoto}
-            className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 backdrop-blur-sm transition-colors"
+            className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
       ) : (
         <label htmlFor="photo-input">
-          <div className="w-full bg-white shadow-sm rounded-3xl p-6 flex items-center justify-center gap-3 text-primary font-bold text-lg active:scale-[0.98] transition-all cursor-pointer border-2 border-dashed border-outline-variant/40 hover:bg-surface-container-lowest">
+          <div className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-outline-variant/40 bg-white p-6 text-lg font-bold text-primary shadow-sm transition-all active:scale-[0.98] hover:bg-surface-container-lowest">
             <Camera size={26} />
-            Add Photo <span className="text-sm font-normal text-outline italic ml-1">(Optional)</span>
+            Add Photo <span className="ml-1 text-sm font-normal italic text-outline">(Optional)</span>
           </div>
         </label>
       )}
 
-      {error && (
-        <p className="text-red-500 font-medium text-sm text-center px-1">{error}</p>
-      )}
+      {error ? (
+        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+      ) : null}
 
       <button
+        type="button"
         onClick={handleSaveMemory}
         disabled={isSaving || !isFormValid}
-        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl mb-8 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {isSaving ? <><Loader2 className="w-6 h-6 animate-spin" />{selectedPhoto ? 'Uploading & Saving…' : 'Saving…'}</> : 'Save Memory'}
+        {isSaving ? (
+          <>
+            <Loader2 className="h-6 w-6 animate-spin" />
+            {selectedPhoto ? "Uploading and Saving..." : "Saving..."}
+          </>
+        ) : (
+          "Save Memory"
+        )}
       </button>
     </div>
   );

@@ -1,41 +1,37 @@
 "use client";
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useConvexAuth } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
-import { Camera, Check, Plus, Sparkles, Lightbulb, Loader2, X } from 'lucide-react';
-import { FormCard } from '@/components/ui/FormCard';
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { Camera, Check, Lightbulb, Loader2, Plus, Sparkles, X } from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { FormCard } from "@/components/ui/FormCard";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
-const RELATIONSHIP_OPTIONS = ['Son', 'Daughter', 'Grandchild', 'Friend'];
+const RELATIONSHIP_OPTIONS = ["Son", "Daughter", "Grandchild", "Friend"];
 
 export default function AddPersonPage() {
   const router = useRouter();
-  const { isAuthenticated } = useConvexAuth();
-  const profile = useQuery(api.caregiver.getCaregiverProfile, isAuthenticated ? undefined : "skip");
-  const addFamilyMember = useMutation(api.caregiver.addFamilyMember);
+  const { seniorDisplayName } = useFamilySpaceProfile();
+  const addFamilyMember = useMutation(api.supporter.addFamilyMember);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
-  const friendName = profile?.lovedOneName || 'your friend';
-
-  const [name, setName] = useState('');
-  const [relationship, setRelationship] = useState('Son');
+  const [name, setName] = useState("");
+  const [relationship, setRelationship] = useState("Son");
   const [isLiving, setIsLiving] = useState(true);
-  const [aiContext, setAiContext] = useState('');
+  const [aiContext, setAiContext] = useState("");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Custom relationship state
   const [isAddingCustom, setIsAddingCustom] = useState(false);
-  const [customRelText, setCustomRelText] = useState('');
+  const [customRelationship, setCustomRelationship] = useState("");
 
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
+  const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
     setSelectedPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : null);
   };
@@ -43,29 +39,37 @@ export default function AddPersonPage() {
   const handleClearPhoto = () => {
     setSelectedPhoto(null);
     setPhotoPreview(null);
-    if (photoInputRef.current) photoInputRef.current.value = '';
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
   };
 
   const isFormValid = name.trim().length > 0 && relationship.trim().length > 0;
 
   const handleSavePerson = async () => {
-    if (!isFormValid) return;
-    
+    if (!isFormValid) {
+      return;
+    }
+
     setError(null);
     setIsSaving(true);
-    try {
-      let photoStorageId: Id<'_storage'> | undefined = undefined;
 
-      // 3-step Convex upload if a photo was selected
+    try {
+      let photoStorageId: Id<"_storage"> | undefined;
+
       if (selectedPhoto) {
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': selectedPhoto.type },
+          method: "POST",
+          headers: { "Content-Type": selectedPhoto.type },
           body: selectedPhoto,
         });
-        if (!result.ok) throw new Error('Photo upload failed.');
-        const { storageId } = await result.json() as { storageId: Id<'_storage'> };
+
+        if (!result.ok) {
+          throw new Error("Photo upload failed.");
+        }
+
+        const { storageId } = (await result.json()) as { storageId: Id<"_storage"> };
         photoStorageId = storageId;
       }
 
@@ -76,18 +80,18 @@ export default function AddPersonPage() {
         aiContext: aiContext.trim(),
         photoStorageId,
       });
-      router.push('/supporter/memories');
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-      console.error(err);
+
+      router.push("/supporter/memories");
+    } catch (saveError) {
+      console.error(saveError);
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 w-full pb-32">
-      {/* Photo Upload Hero */}
+    <div className="flex w-full flex-col gap-8 px-4 pb-32">
       <section className="relative group mt-4">
         <input
           ref={photoInputRef}
@@ -97,198 +101,203 @@ export default function AddPersonPage() {
           id="person-photo-input"
           onChange={handlePhotoSelect}
         />
+
         <label htmlFor="person-photo-input" className="block">
-          <div className="w-full h-48 rounded-3xl bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 hover:bg-surface-container-high transition-colors cursor-pointer overflow-hidden shadow-sm relative">
+          <div className="relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
             {photoPreview ? (
               <>
-                <img src={photoPreview} alt="Photo preview" className="w-full h-full object-cover" />
+                <img src={photoPreview} alt="Photo preview" className="h-full w-full object-cover" />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); handleClearPhoto(); }}
-                  className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 backdrop-blur-sm transition-colors"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleClearPhoto();
+                  }}
+                  className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="h-5 w-5" />
                 </button>
               </>
             ) : (
               <>
-                <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-90 transition-transform relative z-10">
-                  <Camera className="w-10 h-10 text-primary" strokeWidth={1.5} />
+                <div className="relative z-10 mb-4 rounded-full bg-white p-6 shadow-xl shadow-primary/5 transition-transform group-active:scale-90">
+                  <Camera className="h-10 w-10 text-primary" strokeWidth={1.5} />
                 </div>
-                <p className="font-headline font-bold text-xl text-primary relative z-10">
-                  Add Photo <span className="text-sm font-normal text-outline italic ml-1">(Optional)</span>
+                <p className="relative z-10 font-headline text-xl font-bold text-primary">
+                  Add Photo <span className="ml-1 text-sm font-normal italic text-outline">(Optional)</span>
                 </p>
-                <p className="text-sm text-outline mt-1 font-light italic relative z-10">Make it a favorite memory</p>
-                {/* Decorative tonal bleed */}
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-secondary/5 rounded-full blur-3xl"></div>
+                <p className="relative z-10 mt-1 text-sm italic text-outline">
+                  Make it a favorite memory
+                </p>
+                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+                <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-secondary/5 blur-3xl" />
               </>
             )}
           </div>
         </label>
       </section>
 
-      {/* Form Essentials inside Premium White Card */}
       <FormCard as="section" className="space-y-8">
-        {/* Name Input */}
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="person_name">What is their name?</label>
-          <div className="relative">
-            <input
-              id="person_name"
-              placeholder="David"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl px-6 h-16 w-full text-lg"
-            />
-          </div>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="person_name">
+            What is their name?
+          </label>
+          <input
+            id="person_name"
+            placeholder="David"
+            type="text"
+            required
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+          />
         </div>
 
-        {/* Relationship Dropdown/Pill-Selector */}
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">Relationship to {friendName}</label>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface">
+            Relationship to {seniorDisplayName}
+          </label>
           <div className="flex flex-wrap gap-3">
             {Array.from(new Set([...RELATIONSHIP_OPTIONS, relationship])).map((option) => (
               <button
                 key={option}
+                type="button"
                 onClick={() => setRelationship(option)}
-                className={`h-12 px-6 rounded-full font-medium transition-colors flex items-center gap-2 ${
+                className={`flex h-12 items-center gap-2 rounded-full px-6 font-medium transition-colors ${
                   relationship === option
-                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20'
-                    : 'bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30'
+                    ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
+                    : "bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30"
                 }`}
               >
-                {relationship === option && <Check className="w-4 h-4 font-bold" strokeWidth={3} />}
+                {relationship === option ? (
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                ) : null}
                 {option}
               </button>
             ))}
+
             {isAddingCustom ? (
-              <div className="flex items-center gap-2 bg-surface-container-high rounded-full pl-4 pr-1 h-12">
+              <div className="flex h-12 items-center gap-2 rounded-full bg-surface-container-high pl-4 pr-1">
                 <input
                   type="text"
                   placeholder="Custom..."
-                  value={customRelText}
-                  onChange={(e) => setCustomRelText(e.target.value)}
-                  className="bg-transparent border-none outline-none font-medium text-on-surface w-24 placeholder:text-outline-variant text-sm"
+                  value={customRelationship}
+                  onChange={(event) => setCustomRelationship(event.target.value)}
+                  className="w-24 bg-transparent text-sm font-medium text-on-surface outline-none placeholder:text-outline-variant"
                   autoFocus
                 />
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (customRelText.trim()) {
-                      setRelationship(customRelText.trim());
+                  onClick={() => {
+                    if (customRelationship.trim()) {
+                      setRelationship(customRelationship.trim());
                     }
                     setIsAddingCustom(false);
-                    setCustomRelText('');
+                    setCustomRelationship("");
                   }}
-                  className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-on-primary transition-colors hover:bg-primary/90"
                 >
-                  <Check className="w-4 h-4 text-white" />
+                  <Check className="h-4 w-4 text-white" />
                 </button>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsAddingCustom(true);
-                }}
-                className="h-12 w-12 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-container-highest transition-colors"
+                onClick={() => setIsAddingCustom(true)}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface transition-colors hover:bg-surface-container-highest"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="h-5 w-5" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Life Status Selection — TEMPORAL SAFETY FLAG */}
         <div className="space-y-6">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight">
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface">
             Status
           </label>
           <div className="flex gap-4">
             <button
+              type="button"
               onClick={() => setIsLiving(true)}
-              className={`h-14 flex-1 rounded-2xl border-2 font-medium text-lg transition-all ${
+              className={`h-14 flex-1 rounded-2xl border-2 text-lg font-medium transition-all ${
                 isLiving
-                  ? 'bg-primary/10 border-primary text-primary shadow-sm'
-                  : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
+                  ? "border-primary bg-primary/10 text-primary shadow-sm"
+                  : "border-transparent bg-surface-container-highest text-outline hover:bg-surface-container-highest/80"
               }`}
             >
               Living
             </button>
             <button
+              type="button"
               onClick={() => setIsLiving(false)}
-              className={`h-14 flex-1 rounded-2xl border-2 font-medium text-lg transition-all ${
+              className={`h-14 flex-1 rounded-2xl border-2 text-lg font-medium transition-all ${
                 !isLiving
-                  ? 'bg-primary/10 border-primary text-primary shadow-sm'
-                  : 'bg-surface-container-highest border-transparent text-outline hover:bg-surface-container-highest/80'
+                  ? "border-primary bg-primary/10 text-primary shadow-sm"
+                  : "border-transparent bg-surface-container-highest text-outline hover:bg-surface-container-highest/80"
               }`}
             >
-              Passed Away
+              In Memory
             </button>
           </div>
-          <p className="mt-2 text-sm text-outline font-label px-1">
-            This helps Memvella understand how to talk about them contextually.
+          <p className="px-1 text-sm text-outline">
+            This helps Memvella speak about this connection with the right context.
           </p>
         </div>
 
-        {/* AI Context Box */}
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="ai_context">
-              Key Facts & Context <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+            <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="ai_context">
+              Key Facts and Context <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
             </label>
-            <Sparkles className="text-primary w-5 h-5 fill-primary/20" />
+            <Sparkles className="h-5 w-5 fill-primary/20 text-primary" />
           </div>
-          <div className="relative">
-            <textarea
-              id="ai_context"
-              placeholder="E.g., David lives in Chicago and loves baseball."
-              rows={4}
-              value={aiContext}
-              onChange={(e) => setAiContext(e.target.value)}
-              className="appearance-none outline-none focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30 focus:border-[#4e0078] border border-gray-200 transition-all bg-white rounded-2xl p-6 min-h-[120px] w-full text-lg resize-none placeholder:text-outline/50"
-            ></textarea>
-            <p className="mt-2 text-sm text-outline font-label px-1">What should Memvella know about them to help {friendName} remember?</p>
-          </div>
+          <textarea
+            id="ai_context"
+            placeholder="E.g. David lives in Chicago and loves baseball."
+            rows={4}
+            value={aiContext}
+            onChange={(event) => setAiContext(event.target.value)}
+            className="min-h-[120px] w-full resize-none rounded-2xl border border-gray-200 bg-white p-6 text-lg transition-all placeholder:text-outline/50 focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+          />
+          <p className="px-1 text-sm text-outline">
+            What should Memvella know about them to help {seniorDisplayName} remember?
+          </p>
         </div>
       </FormCard>
 
-      {/* Contextual Tip Card */}
-      <div className="bg-primary-fixed/30 p-6 rounded-3xl relative overflow-hidden group">
+      <div className="group relative overflow-hidden rounded-3xl bg-primary-fixed/30 p-6">
         <div className="relative z-10 flex gap-4">
-          <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-            <Lightbulb className="text-primary w-6 h-6" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <Lightbulb className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h4 className="font-headline font-bold text-on-primary-fixed">Family Connections</h4>
-            <p className="text-sm text-on-primary-fixed-variant leading-snug mt-1 font-body">Adding detailed context helps us create more meaningful reminders during {friendName}&apos;s morning wellness check-in.</p>
+            <h4 className="font-headline font-bold text-on-primary-fixed">
+              Family Connections
+            </h4>
+            <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
+              Adding context helps Memvella bring up the right memories during {seniorDisplayName}&apos;s wellness check-in.
+            </p>
           </div>
         </div>
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full transform scale-150 group-hover:scale-110 transition-transform duration-700"></div>
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-primary/5 transition-transform duration-700 group-hover:scale-110" />
       </div>
 
-      {/* Validation Error */}
-      {error && (
-        <p className="text-red-500 text-sm font-medium px-1 -mt-4">{error}</p>
-      )}
+      {error ? <p className="-mt-4 px-1 text-sm font-medium text-red-500">{error}</p> : null}
 
       <button
+        type="button"
         onClick={handleSavePerson}
         disabled={isSaving || !isFormValid}
-        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl mb-8 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSaving ? (
           <>
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
             Saving...
           </>
         ) : (
-          'Save to Family'
+          "Save Connection"
         )}
       </button>
     </div>

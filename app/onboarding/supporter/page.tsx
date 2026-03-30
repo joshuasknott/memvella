@@ -1,32 +1,34 @@
 "use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
-import { PrimaryButton } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/Input';
-import { FormCard } from '@/components/ui/FormCard';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { FormCard } from "@/components/ui/FormCard";
+import { TextInput } from "@/components/ui/Input";
+import { PrimaryButton } from "@/components/ui/Button";
 
 export default function SupporterSetupPage() {
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [friendName, setFriendName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [seniorDisplayName, setSeniorDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setError('Please fill in all required fields.');
+      setError("Please fill in all required fields.");
       return;
     }
+
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError("Password must be at least 8 characters.");
       return;
     }
 
@@ -34,139 +36,156 @@ export default function SupporterSetupPage() {
     setIsSubmitting(true);
 
     try {
-      // 1. Create the Better Auth account
-      const { data, error: signUpError } = await authClient.signUp.email({
+      const { error: signUpError } = await authClient.signUp.email({
         name: name.trim(),
         email: email.trim(),
         password,
       });
 
       if (signUpError) {
-        setError(signUpError.message ?? 'Sign-up failed. Please try again.');
+        setError(signUpError.message ?? "Sign-up failed. Please try again.");
         return;
       }
 
-      // 2. Persist friendName to localStorage so the dashboard can read it
-      //    on first load. A dedicated "createCaregiverProfile" mutation can
-      //    persist it to Convex once the auth session JWT is fully established.
-      if (friendName.trim()) {
-        localStorage.setItem('memvella_friendName', friendName.trim());
+      if (seniorDisplayName.trim()) {
+        localStorage.setItem(
+          "memvella_pendingSeniorDisplayName",
+          seniorDisplayName.trim(),
+        );
       }
 
-      // 3. Redirect to the supporter dashboard
-      router.push('/supporter');
-    } catch (err) {
-      console.error('Sign-up error:', err);
-      setError('Something went wrong. Please try again.');
+      router.push("/supporter");
+    } catch (signUpError) {
+      console.error("Sign-up error:", signUpError);
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-surface px-6 py-8 md:py-12 font-body text-gray-900 overflow-hidden relative selection:bg-[#4e0078]/20">
-      
-      {/* Soft gradient blur background for premium feel */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[#4e0078]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-[#7a2e9e]/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
+      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col flex-1">
-        <Link 
-          href="/" 
-          className="flex items-center gap-2 text-[#4e0078] font-semibold hover:opacity-80 transition-opacity mb-8 self-start w-fit"
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
+        <Link
+          href="/"
+          className="mb-8 flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
         >
-          <ArrowLeft className="w-5 h-5" strokeWidth={2.5} /> Back
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
         </Link>
 
-        <div className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 pb-12">
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-12">
           <div className="space-y-8">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a1a] text-center mb-4 font-headline">Organizer Setup</h1>
-              <p className="text-on-surface-variant text-lg text-center mx-auto max-w-sm mb-6">Let&apos;s create your account to support them.</p>
+              <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+                Supporter Setup
+              </h1>
+              <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
+                Create your Supporter account and start your FamilySpace.
+              </p>
             </div>
 
-          <FormCard as="form" className="space-y-6 flex flex-col" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <label className="font-headline font-bold text-lg" htmlFor="name">What is your name?</label>
-              <TextInput
-                id="name"
-                type="text"
-                placeholder="e.g., Sarah"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-headline font-bold text-lg" htmlFor="loved_one">Who are we supporting today?</label>
-              <TextInput
-                id="loved_one"
-                type="text"
-                placeholder="e.g., Mom, or David"
-                value={friendName}
-                onChange={(e) => setFriendName(e.target.value)}
-              />
-              <p className="text-xs text-gray-400 px-1">Optional — you can add this later from your dashboard.</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-headline font-bold text-lg" htmlFor="email">Your Email Address</label>
-              <TextInput
-                id="email"
-                type="email"
-                placeholder="hello@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-headline font-bold text-lg" htmlFor="password">Create a Password</label>
-              <TextInput
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-              <p className="text-xs text-gray-400 px-1">Minimum 8 characters.</p>
-            </div>
-
-            {/* Inline error */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
-                <p className="text-red-600 font-medium text-sm">{error}</p>
-              </div>
-            )}
-
-            <PrimaryButton
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-10"
+            <FormCard
+              as="form"
+              className="flex flex-col space-y-6"
+              onSubmit={handleSubmit}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating Account…
-                </>
-              ) : (
-                'Create Organizer Account'
-              )}
-            </PrimaryButton>
+              <div className="space-y-2">
+                <label className="font-headline text-lg font-bold" htmlFor="name">
+                  What is your name?
+                </label>
+                <TextInput
+                  id="name"
+                  type="text"
+                  placeholder="e.g. Sarah"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                />
+              </div>
 
-            <p className="text-center text-sm text-gray-500">
-              Already have an account?{' '}
-              <Link href="/supporter/signin" className="text-[#4e0078] font-semibold hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </FormCard>
+              <div className="space-y-2">
+                <label
+                  className="font-headline text-lg font-bold"
+                  htmlFor="senior_display_name"
+                >
+                  Who should this FamilySpace support?
+                </label>
+                <TextInput
+                  id="senior_display_name"
+                  type="text"
+                  placeholder="e.g. David"
+                  value={seniorDisplayName}
+                  onChange={(event) => setSeniorDisplayName(event.target.value)}
+                />
+                <p className="px-1 text-sm text-gray-500">
+                  Optional. You can update this from your Supporter dashboard.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="font-headline text-lg font-bold" htmlFor="email">
+                  Your Email Address
+                </label>
+                <TextInput
+                  id="email"
+                  type="email"
+                  placeholder="hello@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="font-headline text-lg font-bold" htmlFor="password">
+                  Create a Password
+                </label>
+                <TextInput
+                  id="password"
+                  type="password"
+                  placeholder="........"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  minLength={8}
+                />
+                <p className="px-1 text-sm text-gray-500">
+                  Minimum 8 characters.
+                </p>
+              </div>
+
+              {error ? (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+                  <p className="text-sm font-medium text-red-600">{error}</p>
+                </div>
+              ) : null}
+
+              <PrimaryButton type="submit" disabled={isSubmitting} className="mt-10">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Supporter Account"
+                )}
+              </PrimaryButton>
+
+              <p className="text-center text-sm text-gray-500">
+                Already have an account?{" "}
+                <Link
+                  href="/supporter/signin"
+                  className="font-semibold text-[#4e0078] hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </FormCard>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

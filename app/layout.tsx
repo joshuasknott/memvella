@@ -15,7 +15,7 @@ const lexend = Lexend({
 
 export const metadata: Metadata = {
   title: "Memvella",
-  description: "Family care companion",
+  description: "FamilySpace wellness companion",
 };
 
 export default function RootLayout({

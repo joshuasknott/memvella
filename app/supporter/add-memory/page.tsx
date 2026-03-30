@@ -1,58 +1,90 @@
 "use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mic, Camera, Music, Type } from 'lucide-react';
+import Link from "next/link";
+import { Camera, Mic, Music, Type } from "lucide-react";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function AddMemoryPage() {
-  const friendName = "your friend"; // TODO: wire to Convex profile
-  
+  const { seniorDisplayName } = useFamilySpaceProfile();
+
   return (
-    <div className="flex flex-col gap-6 px-4 w-full">
+    <div className="flex w-full flex-col gap-6 px-4">
       <div>
-        <h1 className="font-headline font-extrabold text-3xl text-gray-900 tracking-tight text-center">Add a Memory</h1>
-        <p className="text-gray-500 text-sm mt-2 text-center mb-4">Choose a format to start capturing a moment for {friendName}.</p>
+        <h1 className="text-center font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+          Add a Memory
+        </h1>
+        <p className="mb-4 mt-2 text-center text-lg text-gray-500">
+          Choose a format to capture a moment for {seniorDisplayName}.
+        </p>
       </div>
 
       <section className="space-y-4">
-        <Link href="/supporter/add-memory/voice" className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center gap-5 active:bg-gray-50 transition-transform active:scale-[0.98]">
-           <div className="bg-purple-50 text-purple-600 rounded-2xl w-14 h-14 flex items-center justify-center shrink-0">
-              <Mic className="w-6 h-6" />
-           </div>
-           <div className="flex flex-col">
-              <span className="font-headline font-bold text-gray-900 text-lg">Record Voice Note</span>
-              <span className="text-gray-500 text-sm font-medium">Speak naturally, we'll transcribe</span>
-           </div>
+        <Link
+          href="/supporter/add-memory/voice"
+          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+            <Mic className="h-6 w-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-headline text-lg font-bold text-gray-900">
+              Record Voice Note
+            </span>
+            <span className="text-base font-medium text-gray-500">
+              Speak naturally and review the transcript before saving
+            </span>
+          </div>
         </Link>
 
-        <Link href="/supporter/add-memory/media" className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center gap-5 active:bg-gray-50 transition-transform active:scale-[0.98]">
-           <div className="bg-blue-50 text-blue-600 rounded-2xl w-14 h-14 flex items-center justify-center shrink-0">
-              <Camera className="w-6 h-6" />
-           </div>
-           <div className="flex flex-col">
-              <span className="font-headline font-bold text-gray-900 text-lg">Photo or Video</span>
-              <span className="text-gray-500 text-sm font-medium">Upload from your camera roll</span>
-           </div>
+        <Link
+          href="/supporter/add-memory/media"
+          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <Camera className="h-6 w-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-headline text-lg font-bold text-gray-900">
+              Photo or Video
+            </span>
+            <span className="text-base font-medium text-gray-500">
+              Upload from your camera roll
+            </span>
+          </div>
         </Link>
 
-        <Link href="/supporter/add-memory/audio" className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center gap-5 active:bg-gray-50 transition-transform active:scale-[0.98]">
-           <div className="bg-pink-50 text-pink-600 rounded-2xl w-14 h-14 flex items-center justify-center shrink-0">
-              <Music className="w-6 h-6" />
-           </div>
-           <div className="flex flex-col">
-              <span className="font-headline font-bold text-gray-900 text-lg">Favorite Song</span>
-              <span className="text-gray-500 text-sm font-medium">Link a Spotify or Apple Music track</span>
-           </div>
+        <Link
+          href="/supporter/add-memory/audio"
+          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
+            <Music className="h-6 w-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-headline text-lg font-bold text-gray-900">
+              Favorite Song
+            </span>
+            <span className="text-base font-medium text-gray-500">
+              Save the story behind a track or recording
+            </span>
+          </div>
         </Link>
 
-        <Link href="/supporter/add-memory/text" className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center gap-5 active:bg-gray-50 transition-transform active:scale-[0.98]">
-           <div className="bg-gray-100 text-gray-600 rounded-2xl w-14 h-14 flex items-center justify-center shrink-0">
-              <Type className="w-6 h-6" />
-           </div>
-           <div className="flex flex-col">
-              <span className="font-headline font-bold text-gray-900 text-lg">Write a Story</span>
-              <span className="text-gray-500 text-sm font-medium">Type out a detailed context</span>
-           </div>
+        <Link
+          href="/supporter/add-memory/text"
+          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-600">
+            <Type className="h-6 w-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-headline text-lg font-bold text-gray-900">
+              Write a Story
+            </span>
+            <span className="text-base font-medium text-gray-500">
+              Add a detailed memory in text
+            </span>
+          </div>
         </Link>
       </section>
     </div>

@@ -1,70 +1,93 @@
 "use client";
 
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import Toggle from '@/components/Toggle';
-import { Loader2 } from 'lucide-react';
+import { useMutation, useQuery } from "convex/react";
+import { Loader2 } from "lucide-react";
+import Toggle from "@/components/Toggle";
+import { api } from "@/convex/_generated/api";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function NotificationsSettingsPage() {
-  const friendName = "your friend"; // TODO: wire to Convex profile
-  
-  const settings = useQuery(api.caregiver.getNotificationSettings);
-  const updateSettings = useMutation(api.caregiver.updateNotificationSettings);
+  const { seniorDisplayName } = useFamilySpaceProfile();
+  const settings = useQuery(api.supporter.getNotificationSettings);
+  const updateSettings = useMutation(api.supporter.updateNotificationSettings);
 
-  // While the query is loading, derive safe defaults
   const dailySummary = settings?.dailySummary ?? true;
   const urgentAlerts = settings?.urgentAlerts ?? true;
   const routineReminders = settings?.routineReminders ?? false;
 
-  const handleToggle = async (field: 'dailySummary' | 'urgentAlerts' | 'routineReminders') => {
+  const handleToggle = async (
+    field: "dailySummary" | "urgentAlerts" | "routineReminders",
+  ) => {
     await updateSettings({
-      dailySummary: field === 'dailySummary' ? !dailySummary : dailySummary,
-      urgentAlerts: field === 'urgentAlerts' ? !urgentAlerts : urgentAlerts,
-      routineReminders: field === 'routineReminders' ? !routineReminders : routineReminders,
+      dailySummary: field === "dailySummary" ? !dailySummary : dailySummary,
+      urgentAlerts: field === "urgentAlerts" ? !urgentAlerts : urgentAlerts,
+      routineReminders:
+        field === "routineReminders" ? !routineReminders : routineReminders,
     });
   };
 
-  // Loading skeleton
   if (settings === undefined) {
     return (
-      <div className="flex flex-col gap-6 px-4 w-full items-center justify-center pt-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+      <div className="flex w-full flex-col items-center justify-center gap-6 px-4 pt-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 w-full">
-      <p className="text-gray-500 text-sm">
+    <div className="flex w-full flex-col gap-6 px-4">
+      <p className="text-lg text-gray-500">
         Choose which Memvella activities alert your personal device.
       </p>
 
-      <section className="bg-white rounded-3xl border border-gray-100 shadow-sm divide-y divide-gray-50">
-
+      <section className="divide-y divide-gray-50 rounded-3xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center justify-between p-5">
           <div className="flex flex-col pr-4">
-            <label htmlFor="daily_summary" className="font-headline font-bold text-gray-900 text-base cursor-pointer">Daily Summary</label>
-            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Get an evening wrap-up of {friendName}&apos;s day and any new insights.</span>
+            <label
+              htmlFor="daily_summary"
+              className="cursor-pointer font-headline text-lg font-bold text-gray-900"
+            >
+              Daily Summary
+            </label>
+            <span className="mt-1 text-sm leading-snug text-gray-500">
+              Get an evening wrap-up of {seniorDisplayName}&apos;s day and any new insights.
+            </span>
           </div>
-          <Toggle checked={dailySummary} onChange={() => handleToggle('dailySummary')} />
+          <Toggle checked={dailySummary} onChange={() => handleToggle("dailySummary")} />
         </div>
 
         <div className="flex items-center justify-between p-5">
           <div className="flex flex-col pr-4">
-            <label htmlFor="urgent_alerts" className="font-headline font-bold text-gray-900 text-base cursor-pointer">Urgent Alerts</label>
-            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Immediate notifications if Memvella detects an emergency or confusion.</span>
+            <label
+              htmlFor="urgent_alerts"
+              className="cursor-pointer font-headline text-lg font-bold text-gray-900"
+            >
+              Urgent Alerts
+            </label>
+            <span className="mt-1 text-sm leading-snug text-gray-500">
+              Immediate notifications if Memvella detects a high-risk moment or distress.
+            </span>
           </div>
-          <Toggle checked={urgentAlerts} onChange={() => handleToggle('urgentAlerts')} />
+          <Toggle checked={urgentAlerts} onChange={() => handleToggle("urgentAlerts")} />
         </div>
 
         <div className="flex items-center justify-between p-5">
           <div className="flex flex-col pr-4">
-            <label htmlFor="routine_reminders" className="font-headline font-bold text-gray-900 text-base cursor-pointer">Routine Reminders</label>
-            <span className="text-sm text-gray-500 mt-0.5 leading-snug">Ping you when {friendName} completes or misses a scheduled routine.</span>
+            <label
+              htmlFor="routine_reminders"
+              className="cursor-pointer font-headline text-lg font-bold text-gray-900"
+            >
+              Routine Reminders
+            </label>
+            <span className="mt-1 text-sm leading-snug text-gray-500">
+              Alert me when {seniorDisplayName} completes or misses a scheduled routine.
+            </span>
           </div>
-          <Toggle checked={routineReminders} onChange={() => handleToggle('routineReminders')} />
+          <Toggle
+            checked={routineReminders}
+            onChange={() => handleToggle("routineReminders")}
+          />
         </div>
-
       </section>
     </div>
   );

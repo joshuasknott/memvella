@@ -1,119 +1,108 @@
 "use client";
 
-import Link from 'next/link';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Calendar, Edit2, Trash2 } from 'lucide-react';
+import Link from "next/link";
+import { useQuery } from "convex/react";
+import { Calendar } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function RoutineSkeleton() {
   return (
-    <div className="flex items-center gap-4 p-5 bg-surface-container-lowest rounded-2xl shadow-sm animate-pulse">
-      <div className="w-14 h-14 rounded-2xl bg-surface-container-high shrink-0" />
+    <div className="flex items-center gap-4 rounded-2xl bg-surface-container-lowest p-5 shadow-sm animate-pulse">
+      <div className="h-14 w-14 shrink-0 rounded-2xl bg-surface-container-high" />
       <div className="flex-1 space-y-2">
-        <div className="h-2.5 bg-surface-container-high rounded w-16" />
-        <div className="h-3.5 bg-surface-container-high rounded w-36" />
-        <div className="h-2.5 bg-surface-container-high rounded w-24" />
+        <div className="h-3 w-16 rounded bg-surface-container-high" />
+        <div className="h-4 w-36 rounded bg-surface-container-high" />
+        <div className="h-3 w-24 rounded bg-surface-container-high" />
       </div>
     </div>
   );
 }
 
 export default function SupporterRoutinesPage() {
-  const timeline = useQuery(api.caregiver.getTodayTimeline);
-
-  const handleUpdate = (id: string, type: string) => {
-    console.log(`Update ${type}: ${id}`);
-  };
-
-  const handleDelete = (id: string, type: string) => {
-    console.log(`Delete ${type}: ${id}`);
-  };
+  const timeline = useQuery(api.supporter.getTodayTimeline);
 
   return (
-    <div className="flex flex-col gap-6 px-4 w-full">
-      <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight">Care Routines</h1>
+    <div className="flex w-full flex-col gap-6 px-4">
+      <h1 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface">
+        Routines
+      </h1>
 
-      {/* Loading */}
-      {timeline === undefined && (
+      {timeline === undefined ? (
         <div className="space-y-3">
           <RoutineSkeleton />
           <RoutineSkeleton />
           <RoutineSkeleton />
         </div>
-      )}
-
-      {/* Empty State */}
-      {timeline !== undefined && timeline.length === 0 && (
-        <div className="flex flex-col items-center justify-center mt-20 text-center">
-          <div className="w-24 h-24 rounded-4xl bg-surface-container-high flex items-center justify-center mb-6 shadow-xs relative overflow-hidden">
-            <Calendar className="w-10 h-10 text-on-surface-variant translate-y-[-2px]" strokeWidth={2} />
-            <div className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-primary/5 blur-xl"></div>
+      ) : timeline.length === 0 ? (
+        <div className="mt-20 flex flex-col items-center justify-center text-center">
+          <div className="relative mb-6 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[28px] bg-surface-container-high shadow-xs">
+            <Calendar className="h-10 w-10 -translate-y-[2px] text-on-surface-variant" strokeWidth={2} />
+            <div className="absolute -right-4 -top-4 h-12 w-12 rounded-full bg-primary/5 blur-xl" />
           </div>
-          <p className="font-headline font-bold text-xl text-on-surface mb-2">No routines yet</p>
-          <p className="text-outline text-sm leading-relaxed max-w-[250px] mb-8">
-            Your daily schedules and reminders will appear here.
+          <p className="mb-2 font-headline text-xl font-bold text-on-surface">
+            No routines yet
+          </p>
+          <p className="mb-8 max-w-[250px] text-lg leading-relaxed text-outline">
+            Daily schedules and reminders will appear here.
           </p>
           <Link
             href="/supporter/add-routine"
-            className="w-full h-14 bg-surface-container-high hover:bg-surface-container-highest transition-colors text-on-surface font-headline font-bold rounded-full flex items-center justify-center shadow-sm"
+            className="flex h-14 w-full items-center justify-center rounded-full bg-surface-container-high font-headline text-lg font-bold text-on-surface shadow-sm transition-colors hover:bg-surface-container-highest"
           >
             Add Routine
           </Link>
         </div>
-      )}
-
-      {/* Routine List */}
-      {timeline !== undefined && timeline.length > 0 && (
+      ) : (
         <div className="space-y-3">
           {timeline.map((item) => (
-            <div key={item.id} className="flex items-center gap-4 p-5 bg-surface-container-lowest rounded-2xl shadow-sm group hover:bg-surface-container-low transition-colors">
-              {/* Time block */}
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex flex-col items-center justify-center shrink-0">
-                <span className="font-mono font-bold text-primary text-xs leading-none">{item.time.split(' ')[0]}</span>
-                <span className="font-mono font-bold text-primary/60 text-[10px] leading-none mt-0.5">{item.time.split(' ')[1]}</span>
+            <div
+              key={item.id}
+              className="flex items-center gap-4 rounded-2xl bg-surface-container-lowest p-5 shadow-sm transition-colors hover:bg-surface-container-low"
+            >
+              <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-primary/10">
+                <span className="font-mono text-xs font-bold leading-none text-primary">
+                  {item.time.split(" ")[0]}
+                </span>
+                <span className="mt-1 font-mono text-[11px] font-bold leading-none text-primary/60">
+                  {item.time.split(" ")[1]}
+                </span>
               </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-headline font-bold text-on-surface text-base leading-tight">{item.title}</p>
-                <p className="text-outline text-xs font-medium mt-0.5">
-                  {item.frequency.join(' · ')}
+              <div className="min-w-0 flex-1">
+                <p className="font-headline text-lg font-bold leading-tight text-on-surface">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-sm font-medium text-outline">
+                  {item.frequency.join(", ")}
                 </p>
               </div>
 
-              {/* Frequency pills / Action buttons */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex gap-1 group-hover:hidden transition-all">
-                  {DAYS.filter((d) =>
-                    item.frequency.includes('Daily') ||
-                    (item.frequency.includes('Weekends') && (d === 'Sat' || d === 'Sun')) ||
-                    (item.frequency.includes('Weekly') && d === 'Mon') ||
-                    item.frequency.includes(d)
-                  ).map((d) => (
-                    <span key={d} className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                      {d}
-                    </span>
-                  ))}
-                </div>
-                <div className="hidden group-hover:flex items-center gap-1 animate-in fade-in duration-200">
-                  <button onClick={(e) => { e.preventDefault(); handleUpdate(item.id, 'routine'); }} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={(e) => { e.preventDefault(); handleDelete(item.id, 'routine'); }} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
+              <div className="flex shrink-0 gap-1">
+                {DAYS.filter((day) =>
+                  item.frequency.includes("Daily") ||
+                  (item.frequency.includes("Weekends") &&
+                    (day === "Sat" || day === "Sun")) ||
+                  (item.frequency.includes("Weekly") && day === "Mon") ||
+                  item.frequency.includes(day),
+                ).map((day) => (
+                  <span
+                    key={day}
+                    className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary"
+                  >
+                    {day}
+                  </span>
+                ))}
               </div>
             </div>
           ))}
 
           <Link
             href="/supporter/add-routine"
-            className="w-full h-14 bg-surface-container-high hover:bg-surface-container-highest transition-colors text-on-surface font-headline font-bold rounded-full flex items-center justify-center shadow-sm mt-4"
+            className="mt-4 flex h-14 w-full items-center justify-center rounded-full bg-[#6B21A8] font-headline text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
           >
-            + Add Routine
+            Add Routine
           </Link>
         </div>
       )}

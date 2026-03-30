@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Image as ImageIcon, Loader2, X } from 'lucide-react';
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { Image as ImageIcon, Loader2, X } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 
 export default function MediaMemoryPage() {
   const router = useRouter();
   const addMemoryMedia = useMutation(api.memories.addMemoryMedia);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [story, setStory] = useState('');
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [story, setStory] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -21,62 +21,61 @@ export default function MediaMemoryPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setPreview(null);
-    }
+    setPreview(file ? URL.createObjectURL(file) : null);
   };
 
   const handleClearFile = () => {
     setSelectedFile(null);
     setPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const isFormValid = selectedFile !== null && title.trim().length > 0;
 
   const handleSave = async () => {
-    if (!isFormValid) return;
-    
+    if (!isFormValid) {
+      return;
+    }
+
     setError(null);
     setIsSaving(true);
-    try {
-      // Step 1: Get a short-lived signed upload URL from Convex
-      const postUrl = await generateUploadUrl();
 
-      // Step 2: POST the file directly to Convex storage
+    try {
+      const postUrl = await generateUploadUrl();
       const result = await fetch(postUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': selectedFile.type },
+        method: "POST",
+        headers: { "Content-Type": selectedFile.type },
         body: selectedFile,
       });
-      if (!result.ok) throw new Error('File upload failed.');
 
-      // Step 3: Extract the storageId and save the memory record
+      if (!result.ok) {
+        throw new Error("File upload failed.");
+      }
+
       const { storageId } = await result.json();
       await addMemoryMedia({
         title: title.trim(),
-        date: date.trim() || 'Unknown date',
-        story: story.trim() || '--',
+        date: date.trim() || "Unknown date",
+        story: story.trim() || "--",
         mediaStorageId: storageId,
       });
-      router.push('/supporter/memories');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save memory. Please try again.');
+      router.push("/supporter/memories");
+    } catch (saveError) {
+      console.error(saveError);
+      setError("Failed to save memory. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 px-4 w-full pb-32">
-      {/* Dropzone / Preview */}
-      <section className="relative group mt-4">
+    <div className="flex w-full flex-col gap-8 px-4 pb-32">
+      <section className="group relative mt-4">
         <input
           ref={fileInputRef}
           type="file"
@@ -86,93 +85,102 @@ export default function MediaMemoryPage() {
           onChange={handleFileSelect}
         />
         <label htmlFor="media-file-input" className="block cursor-pointer">
-          <div className="w-full aspect-4/3 rounded-3xl bg-surface-container-low flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 hover:bg-surface-container-high transition-colors overflow-hidden shadow-sm relative">
+          <div className="relative flex aspect-4/3 w-full flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
             {preview ? (
               <>
-                <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-3xl" />
+                <img src={preview} alt="Preview" className="h-full w-full rounded-3xl object-cover" />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); handleClearFile(); }}
-                  className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 backdrop-blur-sm transition-colors"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleClearFile();
+                  }}
+                  className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="h-5 w-5" />
                 </button>
               </>
             ) : (
               <>
-                <div className="bg-white p-6 rounded-full shadow-xl shadow-primary/5 mb-4 group-active:scale-95 transition-transform relative z-10">
-                  <ImageIcon className="w-10 h-10 text-primary" strokeWidth={1.5} />
+                <div className="relative z-10 mb-4 rounded-full bg-white p-6 shadow-xl shadow-primary/5 transition-transform group-active:scale-95">
+                  <ImageIcon className="h-10 w-10 text-primary" strokeWidth={1.5} />
                 </div>
-                <p className="font-headline font-bold text-xl text-primary relative z-10">Upload File</p>
-                <p className="text-sm text-outline mt-1 font-light italic relative z-10">Tap to select from camera roll</p>
-                {/* Decorative tonal bleed */}
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-secondary/5 rounded-full blur-3xl"></div>
+                <p className="relative z-10 font-headline text-xl font-bold text-primary">
+                  Upload File
+                </p>
+                <p className="relative z-10 mt-1 text-sm italic text-outline">
+                  Tap to select from camera roll
+                </p>
+                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+                <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-secondary/5 blur-3xl" />
               </>
             )}
           </div>
         </label>
       </section>
 
-      {/* Form Essentials inside Premium White Card */}
-      <section className="bg-white/80 backdrop-blur-xl rounded-4xl p-6 md:p-8 shadow-xl shadow-[#4e0078]/5 border border-white space-y-8">
+      <section className="space-y-8 rounded-4xl border border-white bg-white/80 p-6 shadow-xl shadow-[#4e0078]/5 backdrop-blur-xl md:p-8">
         <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="media_title">Title</label>
-          <div className="relative">
-            <input
-              id="media_title"
-              type="text"
-              required
-              placeholder="Family reunion 2012"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="h-16 w-full rounded-2xl px-6 bg-white border-2 border-gray-100 text-lg shadow-sm focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10 outline-none transition-all placeholder:text-outline/50"
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="media_date">
-            When was this? <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_title">
+            Title
           </label>
-          <div className="relative">
-            <input
-              id="media_date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-16 w-full rounded-2xl px-6 bg-white border-2 border-gray-100 text-lg shadow-sm focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10 outline-none transition-all placeholder:text-outline/50"
-            />
-          </div>
+          <input
+            id="media_title"
+            type="text"
+            required
+            placeholder="Family reunion 2012"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            className="h-16 w-full rounded-2xl border-2 border-gray-100 bg-white px-6 text-lg shadow-sm outline-none transition-all placeholder:text-outline/50 focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10"
+          />
         </div>
-        
+
         <div className="space-y-3">
-          <label className="font-headline font-bold text-2xl text-on-surface tracking-tight" htmlFor="media_story">
-            The Story <span className="text-sm font-normal text-outline italic ml-2">(Optional)</span>
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
           </label>
-          <div className="relative">
-            <textarea
-              id="media_story"
-              placeholder="Where were you? Who is in this?"
-              rows={4}
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              className="appearance-none w-full p-6 bg-surface-container-highest border-none rounded-2xl text-xl font-medium focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/50 resize-none"
-            ></textarea>
-          </div>
+          <input
+            id="media_date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="h-16 w-full rounded-2xl border-2 border-gray-100 bg-white px-6 text-lg shadow-sm outline-none transition-all placeholder:text-outline/50 focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10"
+          />
+        </div>
+
+        <div className="space-y-3">
+          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_story">
+            The Story <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          </label>
+          <textarea
+            id="media_story"
+            placeholder="Where were you? Who is in this?"
+            rows={4}
+            value={story}
+            onChange={(event) => setStory(event.target.value)}
+            className="w-full resize-none rounded-2xl border-none bg-surface-container-highest p-6 text-xl font-medium transition-all placeholder:text-outline/50 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
       </section>
 
-      {error && (
-        <p className="text-red-500 font-medium text-sm text-center px-1">{error}</p>
-      )}
+      {error ? (
+        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+      ) : null}
 
       <button
+        type="button"
         onClick={handleSave}
         disabled={isSaving || !isFormValid}
-        className="h-16 w-full rounded-full bg-linear-to-r from-[#4e0078] to-[#7a2e9e] text-white font-semibold text-xl shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 mb-8 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white shadow-md transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSaving ? <><Loader2 className="w-6 h-6 animate-spin" />Uploading & Saving…</> : 'Save Photo/Video'}
+        {isSaving ? (
+          <>
+            <Loader2 className="h-6 w-6 animate-spin" />
+            Uploading and Saving...
+          </>
+        ) : (
+          "Save Photo/Video"
+        )}
       </button>
     </div>
   );

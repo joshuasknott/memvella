@@ -1,55 +1,79 @@
-import Link from 'next/link';
-import { Bell, ChevronRight, MonitorSmartphone, User } from 'lucide-react';
+"use client";
+
+import Link from "next/link";
+import { Bell, ChevronRight, MonitorSmartphone, User } from "lucide-react";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function SupporterSettingsPage() {
-  const friendName = "your friend"; // TODO: wire to Convex profile
+  const { seniorDisplayName } = useFamilySpaceProfile();
 
   return (
-    <div className="flex flex-col gap-6 px-4 w-full">
+    <div className="flex w-full flex-col gap-6 px-4">
       <div>
-        <h1 className="font-headline font-extrabold text-3xl text-gray-900 tracking-tight">Settings</h1>
-        <p className="text-gray-500 text-sm mt-2">Manage your account and device connections.</p>
+        <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+          Settings
+        </h1>
+        <p className="mt-2 text-lg text-gray-500">
+          Manage your account and device connections.
+        </p>
       </div>
 
-      {/* General Settings */}
       <section className="space-y-3">
-        <Link href="/supporter/settings/account" className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex items-center justify-between active:bg-gray-50 transition-colors">
+        <Link
+          href="/supporter/settings/account"
+          className="flex items-center justify-between rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition-colors active:bg-gray-50"
+        >
           <div className="flex items-center gap-4">
-             <div className="bg-gray-100 p-2.5 rounded-xl flex items-center justify-center">
-               <User className="w-5 h-5 text-gray-600" />
-             </div>
-             <span className="text-gray-900 font-semibold text-[17px]">Account Details</span>
+            <div className="flex items-center justify-center rounded-xl bg-gray-100 p-2.5">
+              <User className="h-5 w-5 text-gray-600" />
+            </div>
+            <span className="text-lg font-semibold text-gray-900">
+              Account Details
+            </span>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="h-5 w-5 text-gray-400" />
         </Link>
 
-        <Link href="/supporter/settings/notifications" className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex items-center justify-between active:bg-gray-50 transition-colors">
+        <Link
+          href="/supporter/settings/notifications"
+          className="flex items-center justify-between rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition-colors active:bg-gray-50"
+        >
           <div className="flex items-center gap-4">
-             <div className="bg-gray-100 p-2.5 rounded-xl flex items-center justify-center">
-               <Bell className="w-5 h-5 text-gray-600" />
-             </div>
-             <span className="text-gray-900 font-semibold text-[17px]">Notifications</span>
+            <div className="flex items-center justify-center rounded-xl bg-gray-100 p-2.5">
+              <Bell className="h-5 w-5 text-gray-600" />
+            </div>
+            <span className="text-lg font-semibold text-gray-900">
+              Notifications
+            </span>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="h-5 w-5 text-gray-400" />
         </Link>
       </section>
 
-      {/* Device Pairing */}
       <section>
         <div className="mb-3 px-2">
-          <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Connections</span>
+          <span className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400">
+            Connections
+          </span>
         </div>
-        <Link href="/supporter/settings/pairing" className="bg-purple-50/30 rounded-3xl p-5 shadow-sm border border-purple-200 flex items-center justify-between active:bg-purple-50/60 transition-colors mt-2">
+        <Link
+          href="/supporter/settings/pairing"
+          className="mt-2 flex items-center justify-between rounded-3xl border border-purple-200 bg-purple-50/30 p-5 shadow-sm transition-colors active:bg-purple-50/60"
+        >
           <div className="flex items-center gap-4">
-             <div className="bg-purple-100 p-2.5 rounded-xl flex items-center justify-center">
-               <MonitorSmartphone className="w-5 h-5 text-purple-600" />
-             </div>
-             <div className="flex flex-col text-left">
-                 <span className="text-gray-900 font-semibold text-[17px]">Pair Senior Tablet</span>
-                 <span className="text-[12px] font-medium text-purple-600/70 mt-0.5">Link a new device for {friendName}</span>
-             </div>
+            <div className="flex items-center justify-center rounded-xl bg-purple-100 p-2.5">
+              <MonitorSmartphone className="h-5 w-5 text-purple-600" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-lg font-semibold text-gray-900">
+                Pair Assisted Senior Tablet
+              </span>
+              <span className="mt-1 text-sm font-medium text-purple-600/70">
+                Link a new tablet for {seniorDisplayName}
+              </span>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-purple-400" />
+          <ChevronRight className="h-5 w-5 text-purple-400" />
         </Link>
       </section>
     </div>

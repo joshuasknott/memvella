@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useQuery, useMutation, useConvexAuth } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { UserPlus, BookOpen, Calendar, MessageSquare, ArrowRight, Coffee, Heart, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import Link from "next/link";
+import { useQuery } from "convex/react";
+import {
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Coffee,
+  Heart,
+  MessageSquare,
+  UserPlus,
+} from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
-// Icon map for timeline row types
 const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {
   Daily: Coffee,
   Weekly: Calendar,
@@ -16,12 +23,15 @@ const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {
 function TimelineSkeleton() {
   return (
     <div className="space-y-3">
-      {[1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg animate-pulse">
-          <div className="w-12 h-12 rounded-full bg-surface-container" />
+      {[1, 2].map((item) => (
+        <div
+          key={item}
+          className="flex items-center gap-5 rounded-2xl bg-surface-container-low p-4 animate-pulse"
+        >
+          <div className="h-12 w-12 rounded-full bg-surface-container" />
           <div className="flex-1 space-y-2">
-            <div className="h-2.5 bg-surface-container rounded w-16" />
-            <div className="h-3 bg-surface-container rounded w-40" />
+            <div className="h-3 w-20 rounded bg-surface-container" />
+            <div className="h-4 w-40 rounded bg-surface-container" />
           </div>
         </div>
       ))}
@@ -30,159 +40,155 @@ function TimelineSkeleton() {
 }
 
 export default function SupporterDashboard() {
-  // ── Auth state must be declared FIRST — before any useQuery calls.
-  // This prevents Convex from executing queries before the JWT is established,
-  // which is what was causing the "Unauthenticated" error in requireCaregiver().
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading, seniorDisplayName } = useFamilySpaceProfile();
+  const summary = useQuery(
+    api.supporter.getSupporterDashboardSummary,
+    isAuthenticated ? undefined : "skip",
+  );
+  const timeline = useQuery(
+    api.supporter.getTodayTimeline,
+    isAuthenticated ? undefined : "skip",
+  );
 
-  // All three queries are gated on isAuthenticated. Passing "skip" tells
-  // Convex to hold the subscription entirely until the session is ready.
-  const summary = useQuery(api.caregiver.getCaregiverDashboardSummary, isAuthenticated ? undefined : "skip");
-  const timeline = useQuery(api.caregiver.getTodayTimeline, isAuthenticated ? undefined : "skip");
-  const profile = useQuery(api.caregiver.getCaregiverProfile, isAuthenticated ? undefined : "skip");
-  const createProfile = useMutation(api.caregiver.createCaregiverProfile);
-
-  const friendName = profile?.lovedOneName ?? 'Your friend';
-
-  // Flush the friendName bridged via localStorage during sign-up.
-  // Guarded by both isAuthenticated AND !isLoading — ensures the Convex JWT
-  // is fully established before firing the mutation, preventing the
-  // "Unauthenticated" race condition on post-signup redirect.
-  useEffect(() => {
-    if (isLoading || !isAuthenticated) return;
-    const friendNameLocal = localStorage.getItem('memvella_friendName');
-    if (!friendNameLocal) return;
-    createProfile({ lovedOneName: friendNameLocal })
-      .then(() => localStorage.removeItem('memvella_friendName'))
-      .catch((err) => console.warn('Profile creation deferred:', err));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, isAuthenticated, createProfile]);
-
-  const handleUpdate = (id: string, type: string) => {
-    console.log(`Update ${type}: ${id}`);
-  };
-
-  const handleDelete = (id: string, type: string) => {
-    console.log(`Delete ${type}: ${id}`);
-  };
-
-  // While the Convex session is being established, render a clean loading
-  // state to prevent unauthenticated queries from firing.
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-        <p className="text-on-surface-variant text-sm font-medium">Loading your dashboard…</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+        <p className="text-lg font-medium text-on-surface-variant">
+          Loading your dashboard...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 w-full">
-      {/* Connection Hero: Engagement Summary */}
-      <section className="bg-linear-to-br from-primary-fixed to-secondary-fixed rounded-lg p-6 relative overflow-hidden shadow-sm">
+    <div className="flex w-full flex-col gap-6 px-4">
+      <section className="relative overflow-hidden rounded-3xl bg-surface-container-low p-6 shadow-sm">
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-            <span className="font-label text-xs font-semibold tracking-widest uppercase text-primary/60">Current Status</span>
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/70">
+              Current Status
+            </span>
           </div>
-          <h2 className="font-headline font-bold text-xl leading-tight text-on-primary-fixed mb-1">
-            {summary?.statusSummary ?? 'Loading status…'}
+          <h2 className="mb-2 font-headline text-2xl font-bold leading-tight text-on-surface">
+            {summary?.statusSummary ?? "Preparing your FamilySpace..."}
           </h2>
-          <p className="text-[#1a1c1a] text-sm leading-relaxed">{friendName} chatted with Memvella this morning and looked at the family photos.</p>
+          <p className="text-lg leading-relaxed text-on-surface-variant">
+            Memvella is ready to support {seniorDisplayName} today.
+          </p>
         </div>
-        {/* Decorative Asymmetry */}
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/5 blur-2xl" />
       </section>
 
-      {/* Quick Actions */}
       <section className="relative z-10">
         <div className="flex justify-between gap-4">
-          <Link href="/supporter/add-person" className="flex-1 min-h-[100px] flex flex-col items-center justify-center gap-3 p-4 bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.03)] active:scale-95 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center">
-              <UserPlus className="text-on-secondary-fixed-variant w-6 h-6" />
+          <Link
+            href="/supporter/add-person"
+            className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-fixed">
+              <UserPlus className="h-6 w-6 text-on-secondary-fixed-variant" />
             </div>
-            <span className="font-label text-[10px] font-bold text-on-surface text-center">Add Person</span>
+            <span className="text-center text-base font-bold text-on-surface">
+              Add Person
+            </span>
           </Link>
-          <Link href="/supporter/add-memory" className="flex-1 min-h-[100px] flex flex-col items-center justify-center gap-3 p-4 bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.03)] active:scale-95 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
-              <BookOpen className="text-on-primary-fixed-variant w-6 h-6" />
+
+          <Link
+            href="/supporter/add-memory"
+            className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <BookOpen className="h-6 w-6 text-primary" />
             </div>
-            <span className="font-label text-[10px] font-bold text-on-surface text-center">Add Memory</span>
+            <span className="text-center text-base font-bold text-on-surface">
+              Add Memory
+            </span>
           </Link>
-          <Link href="/supporter/add-routine" className="flex-1 min-h-[100px] flex flex-col items-center justify-center gap-3 p-4 bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.03)] active:scale-95 transition-transform">
-            <div className="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center">
-              <Calendar className="text-on-tertiary-fixed-variant w-6 h-6" />
+
+          <Link
+            href="/supporter/add-routine"
+            className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+              <Calendar className="h-6 w-6 text-[#1D4ED8]" />
             </div>
-            <span className="font-label text-[10px] font-bold text-on-surface text-center">Add Routine</span>
+            <span className="text-center text-base font-bold text-on-surface">
+              Add Routine
+            </span>
           </Link>
         </div>
       </section>
 
-      {/* The Review Card */}
       <section className="-mt-2 relative z-20">
         {summary === undefined ? (
-          <div className="bg-primary p-5 rounded-lg shadow-sm border border-primary/5 animate-pulse">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-8 h-8 rounded-full bg-on-primary-container/20" />
-              <div className="w-24 h-6 rounded-full bg-on-primary-container/10" />
+          <div className="rounded-3xl border border-primary/5 bg-primary/10 p-5 shadow-sm animate-pulse">
+            <div className="mb-3 flex items-start justify-between">
+              <div className="h-8 w-8 rounded-full bg-on-primary-container/20" />
+              <div className="h-6 w-24 rounded-full bg-on-primary-container/10" />
             </div>
-            <div className="space-y-2 mb-4">
-              <div className="h-4 bg-on-primary-container/10 rounded w-full" />
-              <div className="h-4 bg-on-primary-container/10 rounded w-2/3" />
+            <div className="mb-4 space-y-2">
+              <div className="h-4 w-full rounded bg-on-primary-container/10" />
+              <div className="h-4 w-2/3 rounded bg-on-primary-container/10" />
             </div>
-            <div className="w-full h-12 bg-on-primary-container/10 rounded-full" />
+            <div className="h-12 w-full rounded-full bg-on-primary-container/10" />
           </div>
         ) : (
-          <div className="bg-surface-container-low p-5 rounded-lg border border-outline-variant/30 flex flex-col items-center justify-center text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-3">
-              <MessageSquare className="text-on-surface-variant w-5 h-5 opacity-50" />
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-outline-variant/30 bg-surface-container-low p-5 text-center shadow-sm">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-highest">
+              <MessageSquare className="h-5 w-5 text-on-surface-variant opacity-50" />
             </div>
-            <p className="text-on-surface-variant font-medium text-sm">
-              Memvella is gathering insights today...
+            <p className="text-lg font-medium text-on-surface-variant">
+              Insights review arrives in the next sprint.
             </p>
           </div>
         )}
       </section>
 
-      {/* Today's Updates — Live from Convex */}
       <section className="space-y-4">
-        <h3 className="font-headline font-bold text-xl px-2">Today&apos;s Updates</h3>
+        <h3 className="px-2 font-headline text-xl font-bold">Today&apos;s Updates</h3>
+
         {timeline === undefined ? (
           <TimelineSkeleton />
         ) : timeline.length === 0 ? (
-          <div className="flex items-center gap-5 p-4 bg-surface-container-low rounded-lg">
-            <div className="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <Calendar className="text-on-surface-variant w-6 h-6" />
+          <div className="flex items-center gap-5 rounded-2xl bg-surface-container-low p-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-lowest shadow-sm">
+              <Calendar className="h-6 w-6 text-on-surface-variant" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-on-surface-variant text-sm">No routines scheduled yet.</p>
-              <Link href="/supporter/add-routine" className="text-primary text-xs font-bold mt-0.5 block">+ Add a routine</Link>
+              <p className="text-lg font-medium text-on-surface-variant">
+                No routines scheduled yet.
+              </p>
+              <Link
+                href="/supporter/add-routine"
+                className="mt-1 block text-base font-bold text-primary"
+              >
+                Add a routine
+              </Link>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             {timeline.map((item) => {
               const Icon = ROUTINE_ICON_MAP[item.type] ?? Calendar;
+
               return (
-                <div key={item.id} className="flex flex-col p-4 bg-surface-container-low rounded-lg hover:bg-gray-50 transition-colors group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                        <Icon className="text-secondary w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-outline uppercase tracking-wider mb-0.5">{item.time}</p>
-                        <p className="font-medium text-on-surface text-sm">{item.title}</p>
-                      </div>
+                <div
+                  key={item.id}
+                  className="rounded-2xl bg-surface-container-low p-4 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-lowest shadow-sm">
+                      <Icon className="h-5 w-5 text-secondary" />
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={(e) => { e.preventDefault(); handleUpdate(item.id, 'routine'); }} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={(e) => { e.preventDefault(); handleDelete(item.id, 'routine'); }} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
+                    <div>
+                      <p className="mb-1 text-sm font-bold uppercase tracking-[0.2em] text-outline">
+                        {item.time}
+                      </p>
+                      <p className="text-lg font-medium text-on-surface">
+                        {item.title}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -191,20 +197,19 @@ export default function SupporterDashboard() {
           </div>
         )}
 
-        {/* Family connection summary card — kept for visual richness */}
-        <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm hover:bg-gray-50 cursor-pointer transition-colors group">
-          <div className="p-4 flex items-center justify-between">
+        <div className="group cursor-pointer overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm transition-colors hover:bg-gray-50">
+          <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
-                <Heart className="text-on-tertiary-fixed-variant w-4 h-4 fill-on-tertiary-fixed-variant" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-tertiary-fixed">
+                <Heart className="h-4 w-4 fill-on-tertiary-fixed-variant text-on-tertiary-fixed-variant" />
               </div>
-              <p className="font-medium text-on-surface text-sm">
+              <p className="text-lg font-medium text-on-surface">
                 {summary
-                  ? `${summary.totalFamilyMembers} connection${summary.totalFamilyMembers !== 1 ? 's' : ''} & ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? 's' : ''} set up.`
-                  : 'Loading connections summary…'}
+                  ? `${summary.totalFamilyMembers} connection${summary.totalFamilyMembers !== 1 ? "s" : ""} and ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? "s" : ""} set up.`
+                  : "Loading connections summary..."}
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors shrink-0" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400 transition-colors group-hover:text-primary" />
           </div>
         </div>
       </section>

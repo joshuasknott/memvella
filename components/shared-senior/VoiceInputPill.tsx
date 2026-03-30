@@ -1,63 +1,96 @@
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import { useCallback, useRef, useState } from "react";
+import { Mic, MicOff } from "lucide-react";
 
 interface VoiceInputPillProps {
   onSubmit: (text: string) => void;
   isProcessing?: boolean;
 }
 
-export function VoiceInputPill({ onSubmit, isProcessing = false }: VoiceInputPillProps) {
-  const [inputValue, setInputValue] = useState('');
+interface SpeechRecognitionResultLike {
+  0: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface ISpeechRecognition {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+type SpeechRecognitionCtor = new () => ISpeechRecognition;
+type SpeechWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionCtor;
+  webkitSpeechRecognition?: SpeechRecognitionCtor;
+};
+
+export function VoiceInputPill({
+  onSubmit,
+  isProcessing = false,
+}: VoiceInputPillProps) {
+  const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {
-        // Handle abort
+      } catch {
+        // Ignore stop calls after the recording has already ended.
       }
     }
+
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+
     setIsListening(false);
   }, []);
 
   const startRecording = useCallback(async () => {
-    window.speechSynthesis?.cancel(); 
-    setInputValue('');
+    window.speechSynthesis?.cancel();
+    setInputValue("");
     setIsListening(true);
-    
+
     try {
       streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const win = window as any;
-      const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        alert("Voice recognition isn't supported in this browser. Please type instead.");
+
+      const speechWindow = window as SpeechWindow;
+      const RecognitionApi =
+        speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+
+      if (!RecognitionApi) {
+        alert("Voice recognition is not supported in this browser. Please type instead.");
         setIsListening(false);
         return;
       }
 
-      const recognition = new SpeechRecognition();
+      const recognition = new RecognitionApi();
       recognitionRef.current = recognition;
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
       recognition.interimResults = true;
-      recognition.continuous = false; 
+      recognition.continuous = false;
 
-      let finalCaptured = '';
+      let finalCaptured = "";
 
-      recognition.onresult = (e: any) => {
-        const currentTranscript = Array.from(e.results)
-          .map((r: any) => r[0].transcript)
-          .join('');
+      recognition.onresult = (event) => {
+        const currentTranscript = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join("");
         setInputValue(currentTranscript);
         finalCaptured = currentTranscript;
       };
@@ -66,14 +99,14 @@ export function VoiceInputPill({ onSubmit, isProcessing = false }: VoiceInputPil
         stopRecording();
         if (finalCaptured) {
           onSubmit(finalCaptured);
-          setInputValue('');
+          setInputValue("");
         }
       };
 
       recognition.start();
-    } catch (err) {
-      console.error(err);
-      alert("Microphone access denied. Please type instead.");
+    } catch (error) {
+      console.error(error);
+      alert("Microphone access was denied. Please type instead.");
       setIsListening(false);
     }
   }, [onSubmit, stopRecording]);
@@ -81,60 +114,59 @@ export function VoiceInputPill({ onSubmit, isProcessing = false }: VoiceInputPil
   const toggleRecording = () => {
     if (isListening) {
       stopRecording();
-    } else {
-      if (!isProcessing) {
-        startRecording();
-      }
+    } else if (!isProcessing) {
+      void startRecording();
     }
   };
 
-  const handleTextInputSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  const handleTextInputSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!inputValue.trim()) {
+      return;
+    }
 
     onSubmit(inputValue);
-    setInputValue('');
+    setInputValue("");
   };
 
   return (
-    <form 
+    <form
       onSubmit={handleTextInputSubmit}
-      className="absolute bottom-12 w-full px-6 flex justify-center animate-in slide-in-from-bottom-8 duration-700 z-10"
+      className="absolute bottom-12 z-10 flex w-full justify-center px-6 animate-in slide-in-from-bottom-8 duration-700"
     >
-      <div className="flex items-center w-full max-w-2xl bg-white rounded-full p-2 pr-3 shadow-lg border border-gray-100 mx-auto transition-all focus-within:ring-4 focus-within:ring-[#4e0078]/10">
-        <input 
+      <div className="mx-auto flex w-full max-w-2xl items-center rounded-full border border-gray-100 bg-white p-2 pr-3 shadow-lg transition-all focus-within:ring-4 focus-within:ring-[#4e0078]/10">
+        <input
           type="text"
           value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
+          onChange={(event) => setInputValue(event.target.value)}
           disabled={isListening || isProcessing}
           placeholder={isListening ? "Listening..." : "Type or speak..."}
-          className="flex-1 bg-transparent text-xl outline-none min-w-0 px-6 text-gray-800 placeholder:text-gray-400 disabled:opacity-70"
+          className="min-w-0 flex-1 bg-transparent px-6 text-xl text-gray-800 outline-none placeholder:text-gray-400 disabled:opacity-70"
         />
-        
-        {/* Enter to submit hint if typing */}
-        {inputValue.trim() && !isListening && (
-          <button 
+
+        {inputValue.trim() && !isListening ? (
+          <button
             type="submit"
-            className="shrink-0 bg-surface-container text-on-surface-variant rounded-xl px-4 py-2 font-semibold text-sm hover:bg-surface-container-highest transition-colors mr-2"
+            className="mr-2 shrink-0 rounded-xl bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-highest"
           >
-            Press Enter ↵
+            Press Enter
           </button>
-        )}
+        ) : null}
 
         <button
           type="button"
           onClick={toggleRecording}
           disabled={isProcessing}
-          className={`h-[72px] w-[72px] rounded-full shrink-0 flex items-center justify-center transition-all duration-300 ${
-            isListening 
-              ? 'bg-red-500 text-white scale-105 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
-              : 'bg-[#6B21A8] text-white shadow-md active:scale-95'
+          className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+            isListening
+              ? "scale-105 bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+              : "bg-[#6B21A8] text-white shadow-md active:scale-95"
           }`}
         >
           {isListening ? (
-            <MicOff className="w-6 h-6" strokeWidth={2.5} />
+            <MicOff className="h-6 w-6" strokeWidth={2.5} />
           ) : (
-            <Mic className="w-6 h-6" strokeWidth={2.5} />
+            <Mic className="h-6 w-6" strokeWidth={2.5} />
           )}
         </button>
       </div>

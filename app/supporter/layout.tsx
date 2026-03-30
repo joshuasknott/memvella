@@ -1,26 +1,32 @@
 "use client";
 
-import { usePathname } from 'next/navigation';
-import SupporterBottomNav from '@/components/SupporterBottomNav';
-import SupporterHeader from '@/components/SupporterHeader';
+import { usePathname } from "next/navigation";
+import SupporterBottomNav from "@/components/SupporterBottomNav";
+import SupporterHeader from "@/components/SupporterHeader";
+import SupporterProfileBootstrap from "@/components/supporter/SupporterProfileBootstrap";
 
-export default function SupporterLayout({ children }: { children: React.ReactNode }) {
+export default function SupporterLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/supporter/signin';
+  const isAuthPage = pathname === "/supporter/signin";
 
   if (isAuthPage) {
     return (
-      <div className="bg-surface text-on-surface font-body min-h-screen flex flex-col relative w-full">
+      <div className="relative flex min-h-screen w-full flex-col bg-surface font-body text-on-surface">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="bg-surface text-on-surface font-body min-h-screen flex flex-col relative">
-      <div className="relative mx-auto max-w-md w-full min-h-dvh bg-surface shadow-2xl flex flex-col">
+    <div className="relative flex min-h-screen flex-col bg-surface font-body text-on-surface">
+      <SupporterProfileBootstrap />
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-surface shadow-2xl">
         <SupporterHeader />
-        <main className="flex-1 pt-24 pb-24 overflow-y-auto flex flex-col">
+        <main className="flex flex-1 flex-col overflow-y-auto pb-24 pt-24">
           {children}
         </main>
         <SupporterBottomNav />

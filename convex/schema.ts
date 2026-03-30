@@ -1,128 +1,144 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// =============================================================================
-// MEMVELLA — Convex Schema
-// =============================================================================
-// Auth tables (users, sessions, accounts, verifications) are managed by the
-// @convex-dev/better-auth component. Only application-specific tables live here.
-// =============================================================================
-
 export default defineSchema({
-  // ---------------------------------------------------------------------------
-  // Caregiver Profiles (app-level user data)
-  // ---------------------------------------------------------------------------
-  // Better Auth manages its own `users` table internally. This table stores
-  // application-specific profile data keyed to the auth identity.
-  caregiverProfiles: defineTable({
-    // The tokenIdentifier from ctx.auth.getUserIdentity() — stable identity key
-    authUserId: v.string(),
-    caregiverName: v.optional(v.string()),
-    lovedOneName: v.optional(v.string()),
-    role: v.optional(v.union(
-      v.literal("caregiver"),
-      v.literal("assisted_senior"),
-      v.literal("independent_senior"),
-    )),
-    onboarding_step: v.optional(v.number()),
-  })
-    .index("by_authUserId", ["authUserId"]),
+  familySpaces: defineTable({
+    displayName: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    // Deprecated compatibility field kept until a data migration removes legacy docs.
+    primarySupporterAuthUserId: v.optional(v.string()),
+  }).index("by_primarySupporterAuthUserId", ["primarySupporterAuthUserId"]),
 
-  // ---------------------------------------------------------------------------
-  // Kiosk Devices — Tablet PIN Pairing (Custom Auth)
-  // ---------------------------------------------------------------------------
-  // Seniors do NOT log in via Better Auth. Instead, a caregiver generates a
-  // 6-digit PIN. The senior enters this PIN on the tablet to "pair" it.
-  // This is a lookup-based session, not an OAuth flow.
-  kioskDevices: defineTable({
-    caregiverId: v.string(),       // tokenIdentifier of the caregiver
-    pinCode: v.string(),            // 6-digit alphanumeric code
-    isActive: v.boolean(),          // true = currently paired and active
-    seniorName: v.string(),         // display name for the tablet UI
-    lastActiveAt: v.optional(v.number()), // heartbeat timestamp
+  familySpaceMemberships: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    authIdentityToken: v.string(),
+    authEmail: v.union(v.string(), v.null()),
+    displayName: v.string(),
+    role: v.union(v.literal("supporter"), v.literal("independent_senior")),
+    seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
+    onboardingStep: v.optional(v.number()),
+    lastSeenAt: v.optional(v.number()),
   })
-    .index("by_caregiverId", ["caregiverId"])
+    .index("by_authIdentityToken", ["authIdentityToken"])
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_familySpaceId_and_authIdentityToken", [
+      "familySpaceId",
+      "authIdentityToken",
+    ])
+    .index("by_familySpaceId_and_role", ["familySpaceId", "role"])
+    .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  seniorProfiles: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    displayName: v.string(),
+    seniorMode: v.union(v.literal("assisted"), v.literal("independent")),
+    accessStatus: v.union(
+      v.literal("pending"),
+      v.literal("active"),
+      v.literal("recovery_required"),
+      v.literal("revoked"),
+    ),
+    recoveryEmail: v.union(v.string(), v.null()),
+    timezone: v.union(v.string(), v.null()),
+    locale: v.union(v.string(), v.null()),
+    lastSessionAt: v.optional(v.number()),
+  })
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"])
+    .index("by_recoveryEmail", ["recoveryEmail"]),
+
+  // Compatibility table kept permissive while legacy rows are migrated forward.
+  supporterProfiles: defineTable(v.any())
+    .index("by_authUserId", ["authUserId"])
+    .index("by_familySpaceId", ["familySpaceId"]),
+
+  assistedDevicePins: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    createdByMembershipId: v.id("familySpaceMemberships"),
+    pinHash: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+    failedAttempts: v.number(),
+    maxAttempts: v.number(),
+  })
+    .index("by_pinHash", ["pinHash"])
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  seniorAccessSessions: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    sessionType: v.union(
+      v.literal("assisted_device"),
+      v.literal("independent_web"),
+    ),
+    sessionTokenHash: v.string(),
+    deviceFingerprintHash: v.string(),
+    issuedAt: v.number(),
+    lastValidatedAt: v.number(),
+    expiresAt: v.number(),
+    idleExpiresAt: v.number(),
+    revokedAt: v.union(v.number(), v.null()),
+    revokedReason: v.union(v.string(), v.null()),
+    sourcePinId: v.union(v.id("assistedDevicePins"), v.null()),
+    sourceMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    sourcePasskeyId: v.union(v.id("independentSeniorPasskeys"), v.null()),
+  })
+    .index("by_sessionTokenHash", ["sessionTokenHash"])
+    .index("by_seniorProfileId", ["seniorProfileId"])
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_seniorProfileId_and_sessionType", [
+      "seniorProfileId",
+      "sessionType",
+    ]),
+
+  independentSeniorPasskeys: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    credentialId: v.string(),
+    credentialPublicKey: v.string(),
+    counter: v.number(),
+    deviceType: v.string(),
+    backedUp: v.boolean(),
+    transports: v.array(v.string()),
+    lastUsedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+  })
+    .index("by_credentialId", ["credentialId"])
+    .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  seniorAuthChallenges: defineTable({
+    seniorProfileId: v.id("seniorProfiles"),
+    purpose: v.union(
+      v.literal("passkey_registration"),
+      v.literal("passkey_authentication"),
+    ),
+    challenge: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+  })
+    .index("by_challenge", ["challenge"])
+    .index("by_seniorProfileId_and_purpose", ["seniorProfileId", "purpose"]),
+
+  // Compatibility table kept permissive while legacy rows are migrated forward.
+  assistedDevices: defineTable(v.any())
+    .index("by_familySpaceId", ["familySpaceId"])
     .index("by_pinCode", ["pinCode"]),
 
-  // ---------------------------------------------------------------------------
-  // SAFETY DIRECTORY — Family Members
-  // ---------------------------------------------------------------------------
-  // The Dual-Graph RAG Architecture separates Truth from Memories.
-  // This table is part of the "Truth Graph" — factual, verified data.
-  //
-  // ⚠️  CRITICAL: `isLiving` is the TEMPORAL SAFETY FLAG.
-  // The AI must NEVER imply a deceased relative is alive.
-  // This flag gates all generative output referencing family members.
-  // ---------------------------------------------------------------------------
-  familyMembers: defineTable({
-    caregiverId: v.string(),        // tokenIdentifier of the caregiver
-    name: v.string(),
-    relationship: v.string(),       // "Son", "Daughter", "Grandchild", "Friend", etc.
-    isLiving: v.boolean(),          // TEMPORAL SAFETY FLAG — true = alive, false = deceased
-    aiContext: v.string(),          // free-text notes for the AI ("David loves gardening…")
-    photoStorageId: v.optional(v.id("_storage")),
-  })
-    .index("by_caregiverId", ["caregiverId"]),
+  // Legacy content tables stay permissive during the widen phase so older rows
+  // can coexist while new writes are anchored to FamilySpace ids.
+  familyMembers: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
-  // ---------------------------------------------------------------------------
-  // TRUTH GRAPH — Routines
-  // ---------------------------------------------------------------------------
-  // Structured, factual daily routines. The AI uses these as ground-truth
-  // anchors to avoid hallucinating schedule information.
-  routines: defineTable({
-    caregiverId: v.string(),
-    routineName: v.string(),        // e.g. "Morning Tea"
-    time: v.string(),               // e.g. "10:00 AM"
-    frequency: v.array(v.string()), // e.g. ["Daily"] or ["Monday", "Wednesday", "Friday"]
-    aiInstructions: v.string(),     // specific handling directions for the AI
-  })
-    .index("by_caregiverId", ["caregiverId"]),
+  routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
-  // ---------------------------------------------------------------------------
-  // CONVERSATIONAL GRAPH — Memories
-  // ---------------------------------------------------------------------------
-  // Stories, songs, voice recordings, and media. These are subjective,
-  // emotional content — separated from the Truth Graph to prevent the AI
-  // from treating a remembered story as a verifiable fact.
-  memories: defineTable({
-    caregiverId: v.string(),
-    title: v.string(),
-    date: v.string(),               // free-text date, e.g. "Spring 2019"
-    story: v.string(),              // the narrative / context
-    mediaType: v.union(
-      v.literal("text"),
-      v.literal("audio"),
-      v.literal("voice"),
-      v.literal("media"),
-    ),
-    storageId: v.optional(v.id("_storage")),   // photo, audio, or video file
-    songLink: v.optional(v.string()),           // Spotify / Apple Music URL
-  })
-    .index("by_caregiverId", ["caregiverId"])
-    .index("by_caregiverId_and_mediaType", ["caregiverId", "mediaType"]),
+  memories: defineTable(v.any())
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_familySpaceId_and_mediaType", ["familySpaceId", "mediaType"]),
 
-  // ---------------------------------------------------------------------------
-  // Notification Settings
-  // ---------------------------------------------------------------------------
-  // Per-caregiver boolean toggles for push/email notification preferences.
-  notificationSettings: defineTable({
-    caregiverId: v.string(),
-    dailySummary: v.boolean(),      // evening wrap-up alerts
-    urgentAlerts: v.boolean(),      // emergency fallback alerts
-    routineReminders: v.boolean(),  // ping alerts for completed/missed routines
-  })
-    .index("by_caregiverId", ["caregiverId"]),
+  notificationSettings: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
-  // ---------------------------------------------------------------------------
-  // Voice Logs — Tap-to-Talk Sessions
-  // ---------------------------------------------------------------------------
-  // Stores exact transcripts and duration of the Senior's voice sessions
-  // with Memvella. Used for caregiver review and AI context enrichment.
-  voiceLogs: defineTable({
-    caregiverId: v.string(),
-    seniorName: v.string(),
-    transcript: v.string(),
-    durationSeconds: v.number(),
-  })
-    .index("by_caregiverId", ["caregiverId"]),
+  voiceLogs: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 });
