@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Loader2, Mic, Square } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 
 interface ISpeechRecognition {
@@ -25,6 +26,7 @@ type RecordState = "idle" | "recording" | "done";
 
 export default function VoiceMemoryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const addMemoryVoice = useMutation(api.memories.addMemoryVoice);
 
   const [title, setTitle] = useState("");
@@ -102,10 +104,24 @@ export default function VoiceMemoryPage() {
         date: date.trim() || undefined,
         transcript: transcript.trim(),
       });
+      toast({
+        tone: "success",
+        title: "Voice memory saved",
+        description: `${title.trim()} was added to the FamilySpace.`,
+      });
       router.push("/supporter/memories");
     } catch (saveError) {
       console.error(saveError);
-      setError("Failed to save memory. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Failed to save memory. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Voice memory did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

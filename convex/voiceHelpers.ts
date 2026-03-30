@@ -155,7 +155,7 @@ export const saveVoiceInteraction = internalMutation({
     const evidenceTranscript = buildTranscriptExcerpt(args.transcript);
 
     if (args.distressDetected) {
-      await ctx.db.insert("supporterInsights", {
+      const distressInsightId = await ctx.db.insert("supporterInsights", {
         familySpaceId: args.familySpaceId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
@@ -174,6 +174,12 @@ export const saveVoiceInteraction = internalMutation({
         reviewedAt: null,
         reviewedByMembershipId: null,
       });
+
+      await ctx.scheduler.runAfter(
+        0,
+        internal.notificationsWorker.dispatchUrgentInsightNotification,
+        { insightId: distressInsightId },
+      );
     }
 
     if (args.medicalRejected) {

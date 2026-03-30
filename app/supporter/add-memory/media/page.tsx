@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { inferMemoryAssetType, uploadFileToConvex } from "@/lib/convex-upload";
 
 export default function MediaMemoryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const addMemoryMedia = useMutation(api.memories.addMemoryMedia);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
@@ -48,7 +50,13 @@ export default function MediaMemoryPage() {
     setIsSaving(true);
 
     try {
-      const storageId = await uploadFileToConvex(generateUploadUrl, selectedFile);
+      const assetKind =
+        inferMemoryAssetType(selectedFile) === "video" ? "video" : "image";
+      const storageId = await uploadFileToConvex(
+        generateUploadUrl,
+        selectedFile,
+        assetKind,
+      );
       await addMemoryMedia({
         title: title.trim(),
         date: date.trim() || undefined,
@@ -56,12 +64,26 @@ export default function MediaMemoryPage() {
         mediaStorageId: storageId as Id<"_storage">,
         mediaMimeType: selectedFile.type || undefined,
         mediaFileName: selectedFile.name || undefined,
-        mediaAssetType: inferMemoryAssetType(selectedFile) === "video" ? "video" : "image",
+        mediaAssetType: assetKind,
+      });
+      toast({
+        tone: "success",
+        title: "Media memory saved",
+        description: `${title.trim()} was added to the FamilySpace.`,
       });
       router.push("/supporter/memories");
     } catch (saveError) {
       console.error(saveError);
-      setError("Failed to save memory. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Failed to save memory. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Media memory did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

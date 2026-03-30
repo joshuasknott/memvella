@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, Upload, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { FormCard } from "@/components/ui/FormCard";
@@ -45,6 +46,7 @@ function AssetPreview({
 export default function SupporterMemoryEditPage() {
   const params = useParams<{ memoryId: string }>();
   const router = useRouter();
+  const { toast } = useToast();
   const memoryRecordId = params.memoryId as Id<"memoryRecords">;
   const memoryDetail = useQuery(api.memories.getMemoryRecordDetail, { memoryRecordId });
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
@@ -182,8 +184,18 @@ export default function SupporterMemoryEditPage() {
     setIsSaving(true);
 
     try {
+      const uploadKind =
+        selectedFile && memoryDetail.recordType === "media"
+          ? inferMemoryAssetType(selectedFile) === "video"
+            ? "video"
+            : "image"
+          : selectedFile && memoryDetail.recordType === "audio"
+            ? "audio"
+            : selectedFile
+              ? "image"
+              : undefined;
       const uploadedStorageId = selectedFile
-        ? await uploadFileToConvex(generateUploadUrl, selectedFile)
+        ? await uploadFileToConvex(generateUploadUrl, selectedFile, uploadKind)
         : undefined;
 
       switch (memoryDetail.recordType) {
@@ -240,10 +252,24 @@ export default function SupporterMemoryEditPage() {
           break;
       }
 
+      toast({
+        tone: "success",
+        title: "Memory updated",
+        description: `${title.trim()} was updated in the FamilySpace.`,
+      });
       router.push(`/supporter/memories/${memoryRecordId}`);
     } catch (saveError) {
       console.error(saveError);
-      setError("Unable to save these changes. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save these changes. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Memory changes did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

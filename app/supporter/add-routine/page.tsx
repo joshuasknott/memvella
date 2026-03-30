@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { CalendarDays, Loader2, Sparkles } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { FormCard } from "@/components/ui/FormCard";
@@ -32,6 +33,7 @@ function sameDays(left: number[], right: number[]) {
 
 export default function AddRoutinePage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { seniorDisplayName } = useFamilySpaceProfile();
   const createRoutineSchedule = useMutation(api.routines.createRoutineSchedule);
 
@@ -79,10 +81,24 @@ export default function AddRoutinePage() {
         timezone,
         aiInstructions: notes.trim() || undefined,
       });
+      toast({
+        tone: "success",
+        title: "Routine saved",
+        description: `${title.trim()} is now scheduled in this FamilySpace.`,
+      });
       router.push("/supporter/routines");
     } catch (saveError) {
       console.error(saveError);
-      setError("Unable to save this schedule. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save this schedule. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Routine did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

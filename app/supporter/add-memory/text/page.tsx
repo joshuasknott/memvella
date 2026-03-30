@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Camera, Lightbulb, Loader2, Sparkles, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { FormCard } from "@/components/ui/FormCard";
 import { uploadFileToConvex } from "@/lib/convex-upload";
@@ -12,6 +13,7 @@ import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function TextMemoryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { seniorDisplayName } = useFamilySpaceProfile();
   const addMemoryText = useMutation(api.memories.addMemoryText);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
@@ -54,7 +56,11 @@ export default function TextMemoryPage() {
       let photoStorageId: Id<"_storage"> | undefined;
 
       if (selectedPhoto) {
-        photoStorageId = await uploadFileToConvex(generateUploadUrl, selectedPhoto);
+        photoStorageId = await uploadFileToConvex(
+          generateUploadUrl,
+          selectedPhoto,
+          "image",
+        );
       }
 
       await addMemoryText({
@@ -66,10 +72,24 @@ export default function TextMemoryPage() {
         photoFileName: selectedPhoto?.name || undefined,
       });
 
+      toast({
+        tone: "success",
+        title: "Memory saved",
+        description: `${title.trim()} was added to the FamilySpace.`,
+      });
       router.push("/supporter/memories");
     } catch (saveError) {
       console.error(saveError);
-      setError("Failed to save memory. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Failed to save memory. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Memory did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

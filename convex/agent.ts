@@ -26,6 +26,11 @@ Role guidance:
 - If the speaker says they are setting Memvella up for another senior, use "supporter".
 - If the speaker says the senior uses the read-only tablet mode, use "assisted_senior".`;
 
+function formatRetryMessage(retryAfterMs: number) {
+  const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  return `Please wait ${retryAfterSeconds} seconds before trying the onboarding assistant again.`;
+}
+
 export const handleOnboardingInput = action({
   args: {
     userInput: v.string(),
@@ -36,6 +41,18 @@ export const handleOnboardingInput = action({
       throw new Error(
         "Unauthenticated: handleOnboardingInput requires a valid session.",
       );
+    }
+
+    const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: `onboarding:${identity.tokenIdentifier}`,
+      actionKey: "handleOnboardingInput",
+      maxHits: 12,
+      windowMs: 5 * 60 * 1000,
+      blockDurationMs: 10 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      throw new Error(formatRetryMessage(rateLimit.retryAfterMs));
     }
 
     const apiKey = process.env.GEMINI_API_KEY;

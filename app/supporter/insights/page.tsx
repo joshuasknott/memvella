@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle2, Sparkles, TriangleAlert, XCircle } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
+import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 
 function formatTimestamp(timestamp: number) {
@@ -17,6 +19,33 @@ function formatTimestamp(timestamp: number) {
 export default function SupporterInsightsPage() {
   const insights = useQuery(api.insights.listSupporterInsights);
   const reviewSupporterInsight = useMutation(api.insights.reviewSupporterInsight);
+  const { toast } = useToast();
+
+  const updateInsightStatus = async (
+    insightId: Id<"supporterInsights">,
+    status: "reviewed" | "dismissed",
+  ) => {
+    try {
+      await reviewSupporterInsight({
+        insightId,
+        status,
+      });
+      toast({
+        tone: "success",
+        title: status === "reviewed" ? "Insight reviewed" : "Insight dismissed",
+        description: "The Supporter queue was updated.",
+      });
+    } catch (error) {
+      toast({
+        tone: "error",
+        title: "Insight status did not update",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment.",
+      });
+    }
+  };
 
   if (insights === undefined) {
     return (
@@ -137,10 +166,7 @@ export default function SupporterInsightsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    void reviewSupporterInsight({
-                      insightId: insight.id,
-                      status: "reviewed",
-                    });
+                    void updateInsightStatus(insight.id, "reviewed");
                   }}
                   className="flex min-h-[60px] flex-1 items-center justify-center gap-2 rounded-full bg-[#1D4ED8] px-6 text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
                 >
@@ -150,10 +176,7 @@ export default function SupporterInsightsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    void reviewSupporterInsight({
-                      insightId: insight.id,
-                      status: "dismissed",
-                    });
+                    void updateInsightStatus(insight.id, "dismissed");
                   }}
                   className="flex min-h-[60px] flex-1 items-center justify-center gap-2 rounded-full bg-white px-6 text-lg font-bold text-slate-900 shadow-sm transition-transform active:scale-95"
                 >

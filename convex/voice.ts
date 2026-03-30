@@ -4,7 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { action } from "./_generated/server";
+import { action, type ActionCtx } from "./_generated/server";
 import { describeRoutineDays, formatTimeLabel, normalizeDateKey, normalizeDaysOfWeek } from "./routineHelpers";
 import { normalizeOptionalText } from "./security";
 import {
@@ -73,6 +73,29 @@ type IndependentVoiceActionResult = {
   distressDetected: boolean;
   draft: IndependentDraft | null;
 };
+
+function formatRetryMessage(retryAfterMs: number) {
+  const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  return `Please wait ${retryAfterSeconds} seconds before trying voice again.`;
+}
+
+async function enforceVoiceRateLimit(
+  ctx: ActionCtx,
+  session: ResolvedSeniorSession,
+  actionKey: string,
+) {
+  const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+    scopeKey: `senior-session:${session.sessionId}`,
+    actionKey,
+    maxHits: 15,
+    windowMs: 5 * 60 * 1000,
+    blockDurationMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    throw new Error(formatRetryMessage(rateLimit.retryAfterMs));
+  }
+}
 
 function getAiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -327,6 +350,7 @@ export const handleAssistedVoiceTurn = action({
         expectedSessionType: "assisted_device",
       },
     );
+    await enforceVoiceRateLimit(ctx, session, "handleAssistedVoiceTurn");
     const context = (await ctx.runQuery(
       internal.voiceHelpers.gatherSeniorContext,
       { familySpaceId: session.familySpaceId },
@@ -409,6 +433,7 @@ export const parseIndependentVoiceIntent = action({
         expectedSessionType: "independent_web",
       },
     );
+    await enforceVoiceRateLimit(ctx, session, "parseIndependentVoiceIntent");
     const context = (await ctx.runQuery(
       internal.voiceHelpers.gatherSeniorContext,
       { familySpaceId: session.familySpaceId },

@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "convex/react";
 import { Bell, ChevronRight, MonitorSmartphone, User } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function SupporterSettingsPage() {
   const { seniorDisplayName } = useFamilySpaceProfile();
+  const assistedSessions = useQuery(api.supporter.listAssistedDeviceSessions);
+  const activeSessionCount = assistedSessions?.length ?? 0;
 
   return (
     <div className="flex w-full flex-col gap-6 px-4">
@@ -69,7 +73,9 @@ export default function SupporterSettingsPage() {
                 Pair Assisted Senior Tablet
               </span>
               <span className="mt-1 text-sm font-medium text-purple-600/70">
-                Link a new tablet for {seniorDisplayName}
+                {activeSessionCount > 0
+                  ? `${activeSessionCount} active tablet session${activeSessionCount === 1 ? "" : "s"} for ${seniorDisplayName}`
+                  : `Link a new tablet for ${seniorDisplayName}`}
               </span>
             </div>
           </div>

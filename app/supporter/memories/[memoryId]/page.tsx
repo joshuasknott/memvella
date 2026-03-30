@@ -15,6 +15,7 @@ import {
   Video,
 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { formatLastEditedLabel, formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
@@ -66,6 +67,7 @@ function MemoryAssetCard({
 export default function SupporterMemoryDetailPage() {
   const params = useParams<{ memoryId: string }>();
   const router = useRouter();
+  const { toast } = useToast();
   const memoryRecordId = params.memoryId as Id<"memoryRecords">;
   const memoryDetail = useQuery(api.memories.getMemoryRecordDetail, { memoryRecordId });
   const deleteMemoryRecord = useMutation(api.memories.deleteMemoryRecord);
@@ -80,8 +82,24 @@ export default function SupporterMemoryDetailPage() {
       return;
     }
 
-    await deleteMemoryRecord({ memoryRecordId });
-    router.push("/supporter/memories");
+    try {
+      await deleteMemoryRecord({ memoryRecordId });
+      toast({
+        tone: "success",
+        title: "Memory deleted",
+        description: `"${memoryDetail.title}" was removed from this FamilySpace.`,
+      });
+      router.push("/supporter/memories");
+    } catch (error) {
+      toast({
+        tone: "error",
+        title: "Memory was not deleted",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please try again in a moment.",
+      });
+    }
   };
 
   if (memoryDetail === undefined) {

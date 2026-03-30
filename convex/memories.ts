@@ -1,15 +1,17 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import { requireFamilySpaceMembership } from "./familySpaceAuth";
 import {
   createMemoryRecord,
   deleteMemoryRecordCascade,
   getMemoryDetailForFamilySpace,
   listMemoryCardsForFamilySpace,
+  type MemoryAssetInput,
   replaceMemoryAssets,
 } from "./memoryHelpers";
 import { normalizeOptionalText } from "./security";
+import { assertValidStoredUpload } from "./uploadValidation";
 
 function normalizeOptionalDate(value: string | undefined) {
   const trimmed = value?.trim();
@@ -23,7 +25,7 @@ function buildStorageAsset(
   fileName: string | undefined,
 ) {
   if (!storageId) {
-    return [];
+    return [] as MemoryAssetInput[];
   }
 
   return [
@@ -34,7 +36,31 @@ function buildStorageAsset(
       fileName: normalizeOptionalText(fileName) ?? null,
       externalUrl: null,
     },
-  ] as const;
+  ];
+}
+
+async function buildValidatedStorageAsset(
+  ctx: MutationCtx,
+  assetType: "image" | "video" | "audio",
+  storageId: Id<"_storage"> | undefined,
+  mimeType: string | undefined,
+  fileName: string | undefined,
+) {
+  if (!storageId) {
+    return [] as MemoryAssetInput[];
+  }
+
+  const validated = await assertValidStoredUpload(ctx, {
+    storageId,
+    kind: assetType,
+  });
+
+  return buildStorageAsset(
+    assetType,
+    storageId,
+    validated.contentType || mimeType,
+    fileName,
+  );
 }
 
 export const listMemoryRecords = query({
@@ -69,6 +95,13 @@ export const addMemoryText = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const assets = await buildValidatedStorageAsset(
+      ctx,
+      "image",
+      args.photoStorageId,
+      args.photoMimeType,
+      args.photoFileName,
+    );
 
     return await createMemoryRecord(ctx, {
       familySpaceId: membership.familySpaceId,
@@ -77,14 +110,7 @@ export const addMemoryText = mutation({
       title: args.title.trim(),
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      assets: [
-        ...buildStorageAsset(
-          "image",
-          args.photoStorageId,
-          args.photoMimeType,
-          args.photoFileName,
-        ),
-      ],
+      assets,
     });
   },
 });
@@ -101,6 +127,13 @@ export const addMemoryAudio = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const assets = await buildValidatedStorageAsset(
+      ctx,
+      "audio",
+      args.audioStorageId,
+      args.audioMimeType,
+      args.audioFileName,
+    );
 
     return await createMemoryRecord(ctx, {
       familySpaceId: membership.familySpaceId,
@@ -110,14 +143,7 @@ export const addMemoryAudio = mutation({
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       externalUrl: normalizeOptionalText(args.songLink) ?? null,
-      assets: [
-        ...buildStorageAsset(
-          "audio",
-          args.audioStorageId,
-          args.audioMimeType,
-          args.audioFileName,
-        ),
-      ],
+      assets,
     });
   },
 });
@@ -154,6 +180,13 @@ export const addMemoryMedia = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const assets = await buildValidatedStorageAsset(
+      ctx,
+      args.mediaAssetType ?? "image",
+      args.mediaStorageId,
+      args.mediaMimeType,
+      args.mediaFileName,
+    );
 
     return await createMemoryRecord(ctx, {
       familySpaceId: membership.familySpaceId,
@@ -162,14 +195,7 @@ export const addMemoryMedia = mutation({
       title: args.title.trim(),
       story: normalizeOptionalText(args.story) ?? null,
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      assets: [
-        ...buildStorageAsset(
-          args.mediaAssetType ?? "image",
-          args.mediaStorageId,
-          args.mediaMimeType,
-          args.mediaFileName,
-        ),
-      ],
+      assets,
     });
   },
 });
@@ -201,20 +227,19 @@ export const updateTextMemory = mutation({
     });
 
     if (args.removePhoto || args.replacePhotoStorageId) {
+      const assets = args.replacePhotoStorageId
+        ? await buildValidatedStorageAsset(
+            ctx,
+            "image",
+            args.replacePhotoStorageId,
+            args.replacePhotoMimeType,
+            args.replacePhotoFileName,
+          )
+        : [];
       await replaceMemoryAssets(ctx, {
         familySpaceId: membership.familySpaceId,
         memoryRecordId: record._id,
-        assets: args.replacePhotoStorageId
-          ? [
-              {
-                assetType: "image",
-                storageId: args.replacePhotoStorageId,
-                mimeType: normalizeOptionalText(args.replacePhotoMimeType) ?? null,
-                fileName: normalizeOptionalText(args.replacePhotoFileName) ?? null,
-                externalUrl: null,
-              },
-            ]
-          : [],
+        assets,
       });
     }
 
@@ -251,20 +276,19 @@ export const updateAudioMemory = mutation({
     });
 
     if (args.removeAudio || args.replaceAudioStorageId) {
+      const assets = args.replaceAudioStorageId
+        ? await buildValidatedStorageAsset(
+            ctx,
+            "audio",
+            args.replaceAudioStorageId,
+            args.replaceAudioMimeType,
+            args.replaceAudioFileName,
+          )
+        : [];
       await replaceMemoryAssets(ctx, {
         familySpaceId: membership.familySpaceId,
         memoryRecordId: record._id,
-        assets: args.replaceAudioStorageId
-          ? [
-              {
-                assetType: "audio",
-                storageId: args.replaceAudioStorageId,
-                mimeType: normalizeOptionalText(args.replaceAudioMimeType) ?? null,
-                fileName: normalizeOptionalText(args.replaceAudioFileName) ?? null,
-                externalUrl: null,
-              },
-            ]
-          : [],
+        assets,
       });
     }
 
@@ -326,20 +350,19 @@ export const updateMediaMemory = mutation({
     });
 
     if (args.removeMedia || args.replaceMediaStorageId) {
+      const assets = args.replaceMediaStorageId
+        ? await buildValidatedStorageAsset(
+            ctx,
+            args.replaceMediaAssetType ?? "image",
+            args.replaceMediaStorageId,
+            args.replaceMediaMimeType,
+            args.replaceMediaFileName,
+          )
+        : [];
       await replaceMemoryAssets(ctx, {
         familySpaceId: membership.familySpaceId,
         memoryRecordId: record._id,
-        assets: args.replaceMediaStorageId
-          ? [
-              {
-                assetType: args.replaceMediaAssetType ?? "image",
-                storageId: args.replaceMediaStorageId,
-                mimeType: normalizeOptionalText(args.replaceMediaMimeType) ?? null,
-                fileName: normalizeOptionalText(args.replaceMediaFileName) ?? null,
-                externalUrl: null,
-              },
-            ]
-          : [],
+        assets,
       });
     }
 

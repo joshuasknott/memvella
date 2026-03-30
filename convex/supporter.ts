@@ -12,6 +12,7 @@ import {
   normalizeOptionalEmail,
   normalizeOptionalText,
 } from "./security";
+import { revokeSeniorSessionsForProfile } from "./seniorAccessHelpers";
 import {
   formatTimeLabel,
   getNextRoutineEventForFamilySpace,
@@ -20,6 +21,9 @@ import {
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
 } from "./routineHelpers";
+import { assertValidStoredUpload } from "./uploadValidation";
+
+const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 
 const legacyRoleValidator = v.optional(
   v.union(
@@ -81,6 +85,12 @@ export const addFamilyMember = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    if (args.photoStorageId) {
+      await assertValidStoredUpload(ctx, {
+        storageId: args.photoStorageId,
+        kind: "image",
+      });
+    }
 
     return await ctx.db.insert("familyMembers", {
       familySpaceId: membership.familySpaceId,
@@ -156,21 +166,25 @@ export const updateNotificationSettings = mutation({
         query.eq("familySpaceId", membership.familySpaceId),
       )
       .unique();
+    const updatedAt = Date.now();
+    const payload = {
+      dailySummary: args.dailySummary,
+      urgentAlerts: args.urgentAlerts,
+      routineReminders: args.routineReminders,
+      dailySummaryTimeMinutes:
+        existing?.dailySummaryTimeMinutes ?? DEFAULT_DAILY_SUMMARY_TIME_MINUTES,
+      updatedByMembershipId: membership._id,
+      updatedAt,
+    };
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        dailySummary: args.dailySummary,
-        urgentAlerts: args.urgentAlerts,
-        routineReminders: args.routineReminders,
-      });
+      await ctx.db.patch(existing._id, payload);
       return existing._id;
     }
 
     return await ctx.db.insert("notificationSettings", {
       familySpaceId: membership.familySpaceId,
-      dailySummary: args.dailySummary,
-      urgentAlerts: args.urgentAlerts,
-      routineReminders: args.routineReminders,
+      ...payload,
     });
   },
 });
@@ -462,11 +476,123 @@ export const getNotificationSettings = query({
 
     return (
       settings ?? {
-        dailySummary: false,
-        urgentAlerts: false,
+        dailySummary: true,
+        urgentAlerts: true,
         routineReminders: false,
+        dailySummaryTimeMinutes: DEFAULT_DAILY_SUMMARY_TIME_MINUTES,
       }
     );
+  },
+});
+
+export const listAssistedDeviceSessions = query({
+  args: {},
+  handler: async (ctx) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const assistedSenior = await getSeniorProfileByMode(
+      ctx,
+      membership.familySpaceId,
+      "assisted",
+    );
+
+    if (!assistedSenior) {
+      return [] as Array<{
+        id: Id<"seniorAccessSessions">;
+        issuedAt: number;
+        lastValidatedAt: number;
+        expiresAt: number;
+        idleExpiresAt: number;
+      }>;
+    }
+
+    const now = Date.now();
+    const sessions = await ctx.db
+      .query("seniorAccessSessions")
+      .withIndex("by_seniorProfileId_and_sessionType", (query) =>
+        query
+          .eq("seniorProfileId", assistedSenior._id)
+          .eq("sessionType", "assisted_device"),
+      )
+      .take(50);
+
+    return sessions
+      .filter(
+        (session) =>
+          session.revokedAt === null &&
+          session.expiresAt > now &&
+          session.idleExpiresAt > now,
+      )
+      .sort((left, right) => right.lastValidatedAt - left.lastValidatedAt)
+      .map((session) => ({
+        id: session._id,
+        issuedAt: session.issuedAt,
+        lastValidatedAt: session.lastValidatedAt,
+        expiresAt: session.expiresAt,
+        idleExpiresAt: session.idleExpiresAt,
+      }));
+  },
+});
+
+export const revokeAssistedDeviceSession = mutation({
+  args: {
+    sessionId: v.id("seniorAccessSessions"),
+  },
+  handler: async (ctx, args) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const session = await ctx.db.get(args.sessionId);
+
+    if (
+      !session ||
+      session.familySpaceId !== membership.familySpaceId ||
+      session.sessionType !== "assisted_device"
+    ) {
+      throw new Error("This Assisted Senior device session is not available.");
+    }
+
+    if (session.revokedAt !== null) {
+      return { revoked: false as const };
+    }
+
+    await ctx.db.patch(session._id, {
+      revokedAt: Date.now(),
+      revokedReason: "supporter_revoked_device_session",
+    });
+
+    return { revoked: true as const };
+  },
+});
+
+export const revokeAllAssistedDeviceSessions = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const assistedSenior = await getSeniorProfileByMode(
+      ctx,
+      membership.familySpaceId,
+      "assisted",
+    );
+
+    if (!assistedSenior) {
+      return { revokedCount: 0 };
+    }
+
+    const sessions = await ctx.db
+      .query("seniorAccessSessions")
+      .withIndex("by_seniorProfileId_and_sessionType", (query) =>
+        query
+          .eq("seniorProfileId", assistedSenior._id)
+          .eq("sessionType", "assisted_device"),
+      )
+      .take(50);
+
+    const activeSessions = sessions.filter((session) => session.revokedAt === null);
+    await revokeSeniorSessionsForProfile(ctx, {
+      seniorProfileId: assistedSenior._id,
+      sessionType: "assisted_device",
+      reason: "supporter_revoked_all_device_sessions",
+    });
+
+    return { revokedCount: activeSessions.length };
   },
 });
 

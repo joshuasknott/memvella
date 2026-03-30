@@ -5,14 +5,17 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Camera, Check, Lightbulb, Loader2, Plus, Sparkles, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { FormCard } from "@/components/ui/FormCard";
+import { uploadFileToConvex } from "@/lib/convex-upload";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 const RELATIONSHIP_OPTIONS = ["Son", "Daughter", "Grandchild", "Friend"];
 
 export default function AddPersonPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { seniorDisplayName } = useFamilySpaceProfile();
   const addFamilyMember = useMutation(api.supporter.addFamilyMember);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
@@ -58,19 +61,11 @@ export default function AddPersonPage() {
       let photoStorageId: Id<"_storage"> | undefined;
 
       if (selectedPhoto) {
-        const postUrl = await generateUploadUrl();
-        const result = await fetch(postUrl, {
-          method: "POST",
-          headers: { "Content-Type": selectedPhoto.type },
-          body: selectedPhoto,
-        });
-
-        if (!result.ok) {
-          throw new Error("Photo upload failed.");
-        }
-
-        const { storageId } = (await result.json()) as { storageId: Id<"_storage"> };
-        photoStorageId = storageId;
+        photoStorageId = await uploadFileToConvex(
+          generateUploadUrl,
+          selectedPhoto,
+          "image",
+        );
       }
 
       await addFamilyMember({
@@ -81,10 +76,24 @@ export default function AddPersonPage() {
         photoStorageId,
       });
 
+      toast({
+        tone: "success",
+        title: "Connection saved",
+        description: `${name.trim()} is now available in this FamilySpace.`,
+      });
       router.push("/supporter/memories");
     } catch (saveError) {
       console.error(saveError);
-      setError("Something went wrong. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Something went wrong. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Connection did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }

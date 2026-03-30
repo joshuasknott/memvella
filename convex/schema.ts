@@ -178,11 +178,16 @@ export default defineSchema({
   })
     .index("by_routineScheduleId", ["routineScheduleId"])
     .index("by_familySpaceId_status_occurrenceDateKey_startTimeMinutes", [
-        "familySpaceId",
-        "status",
-        "occurrenceDateKey",
-        "startTimeMinutes",
-      ]),
+      "familySpaceId",
+      "status",
+      "occurrenceDateKey",
+      "startTimeMinutes",
+    ])
+    .index("by_status_occurrenceDateKey_startTimeMinutes", [
+      "status",
+      "occurrenceDateKey",
+      "startTimeMinutes",
+    ]),
 
   memories: defineTable(v.any())
     .index("by_familySpaceId", ["familySpaceId"])
@@ -232,7 +237,99 @@ export default defineSchema({
     .index("by_memoryRecordId_and_sortOrder", ["memoryRecordId", "sortOrder"])
     .index("by_familySpaceId", ["familySpaceId"]),
 
-  notificationSettings: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
+  notificationSettings: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    dailySummary: v.boolean(),
+    urgentAlerts: v.boolean(),
+    routineReminders: v.boolean(),
+    dailySummaryTimeMinutes: v.number(),
+    updatedByMembershipId: v.id("familySpaceMemberships"),
+    updatedAt: v.number(),
+  })
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_dailySummary_and_familySpaceId", [
+      "dailySummary",
+      "familySpaceId",
+    ])
+    .index("by_routineReminders_and_familySpaceId", [
+      "routineReminders",
+      "familySpaceId",
+    ]),
+
+  pushSubscriptions: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    membershipId: v.id("familySpaceMemberships"),
+    endpoint: v.string(),
+    expirationTime: v.union(v.number(), v.null()),
+    p256dh: v.string(),
+    auth: v.string(),
+    deviceLabel: v.union(v.string(), v.null()),
+    userAgent: v.union(v.string(), v.null()),
+    permissionState: v.union(
+      v.literal("granted"),
+      v.literal("denied"),
+      v.literal("prompt"),
+      v.literal("unsupported"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastSeenAt: v.number(),
+    lastDeliveryAt: v.union(v.number(), v.null()),
+    lastFailureAt: v.union(v.number(), v.null()),
+    failureCount: v.number(),
+    revokedAt: v.union(v.number(), v.null()),
+    revokedReason: v.union(v.string(), v.null()),
+  })
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_membershipId", ["membershipId"])
+    .index("by_endpoint", ["endpoint"])
+    .index("by_familySpaceId_and_revokedAt", ["familySpaceId", "revokedAt"]),
+
+  notificationDeliveries: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    membershipId: v.id("familySpaceMemberships"),
+    pushSubscriptionId: v.id("pushSubscriptions"),
+    notificationType: v.union(
+      v.literal("routine_reminder"),
+      v.literal("urgent_alert"),
+      v.literal("daily_summary"),
+    ),
+    dedupeKey: v.string(),
+    title: v.string(),
+    body: v.string(),
+    deepLink: v.union(v.string(), v.null()),
+    scheduledFor: v.number(),
+    payloadTag: v.union(v.string(), v.null()),
+    routineOccurrenceId: v.union(v.id("routineOccurrences"), v.null()),
+    supporterInsightId: v.union(v.id("supporterInsights"), v.null()),
+    summaryDateKey: v.union(v.string(), v.null()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("skipped"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    dispatchedAt: v.union(v.number(), v.null()),
+    lastError: v.union(v.string(), v.null()),
+  })
+    .index("by_dedupeKey", ["dedupeKey"])
+    .index("by_status_and_scheduledFor", ["status", "scheduledFor"])
+    .index("by_familySpaceId_and_status_and_scheduledFor", [
+      "familySpaceId",
+      "status",
+      "scheduledFor",
+    ]),
+
+  rateLimitWindows: defineTable({
+    scopeKey: v.string(),
+    actionKey: v.string(),
+    windowStart: v.number(),
+    hits: v.number(),
+    blockedUntil: v.union(v.number(), v.null()),
+    updatedAt: v.number(),
+  }).index("by_scopeKey_and_actionKey", ["scopeKey", "actionKey"]),
 
   voiceInteractions: defineTable({
     familySpaceId: v.id("familySpaces"),

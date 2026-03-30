@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Loader2, Music, Upload, X } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput } from "@/components/ui/Input";
@@ -13,6 +14,7 @@ import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 export default function AudioMemoryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { seniorDisplayName } = useFamilySpaceProfile();
   const addMemoryAudio = useMutation(api.memories.addMemoryAudio);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
@@ -50,7 +52,7 @@ export default function AudioMemoryPage() {
 
     try {
       const audioStorageId = selectedAudio
-        ? await uploadFileToConvex(generateUploadUrl, selectedAudio)
+        ? await uploadFileToConvex(generateUploadUrl, selectedAudio, "audio")
         : undefined;
 
       await addMemoryAudio({
@@ -63,10 +65,24 @@ export default function AudioMemoryPage() {
         audioFileName: selectedAudio?.name || undefined,
       });
 
+      toast({
+        tone: "success",
+        title: "Audio memory saved",
+        description: `${title.trim()} was added to the FamilySpace.`,
+      });
       router.push("/supporter/memories");
     } catch (saveError) {
       console.error(saveError);
-      setError("Failed to save memory. Please try again.");
+      const message =
+        saveError instanceof Error
+          ? saveError.message
+          : "Failed to save memory. Please try again.";
+      setError(message);
+      toast({
+        tone: "error",
+        title: "Audio memory did not save",
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }
