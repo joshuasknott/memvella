@@ -8,6 +8,7 @@ import {
   resolveFamilySpaceTimeZone,
 } from "./routineHelpers";
 import { buildTranscriptExcerpt } from "./voiceSafety";
+import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 
 function voiceIntentValidator() {
   return v.union(
@@ -86,7 +87,8 @@ export const gatherSeniorContext = internalQuery({
       ]);
 
     return {
-      familySpaceName: familySpace?.displayName ?? "FamilySpace",
+      familySpaceName:
+        normalizeUserFacingText(familySpace?.displayName) ?? "Circle",
       timeZone,
       locale: familySpace?.locale ?? "en-US",
       routines: routines.map((routine) => ({
@@ -125,7 +127,8 @@ export const getSeniorLocaleContext = internalQuery({
     ]);
 
     return {
-      familySpaceName: familySpace?.displayName ?? "FamilySpace",
+      familySpaceName:
+        normalizeUserFacingText(familySpace?.displayName) ?? "Circle",
       timeZone,
       locale: familySpace?.locale ?? "en-US",
     };
@@ -183,7 +186,8 @@ export const saveVoiceInteraction = internalMutation({
     });
 
     const seniorProfile = await ctx.db.get(args.seniorProfileId);
-    const seniorName = seniorProfile?.displayName ?? "Senior";
+    const seniorName =
+      normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL;
     const evidenceTranscript = buildTranscriptExcerpt(args.transcript);
 
     if (args.distressDetected) {
@@ -199,7 +203,7 @@ export const saveVoiceInteraction = internalMutation({
           `${seniorName} used language that suggests distress. Review the transcript and reach out quickly.`,
         ),
         suggestedAction:
-          "Open this interaction, contact the senior directly, and confirm they are safe.",
+          "Open this interaction, contact them directly, and confirm they are safe.",
         evidenceTranscript,
         status: "queued",
         createdAt: now,
@@ -224,7 +228,7 @@ export const saveVoiceInteraction = internalMutation({
         priority: "normal",
         title: `Review a medical question from ${seniorName}`,
         summary: truncateInsightText(
-          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Supporter review.`,
+          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Admin review.`,
         ),
         suggestedAction:
           "Follow up directly or route the question to a licensed clinician.",
@@ -297,11 +301,14 @@ export const listPendingVoiceInteractionsForInsights = internalQuery({
     );
     const seniorNameById = new Map(
       seniorProfiles
-        .filter(
-          (seniorProfile): seniorProfile is NonNullable<typeof seniorProfile> =>
-            seniorProfile !== null,
-        )
-        .map((seniorProfile) => [seniorProfile._id, seniorProfile.displayName]),
+      .filter(
+        (seniorProfile): seniorProfile is NonNullable<typeof seniorProfile> =>
+          seniorProfile !== null,
+      )
+        .map((seniorProfile) => [
+          seniorProfile._id,
+          normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
+        ]),
     );
 
     return interactions.map((interaction) => ({
@@ -309,7 +316,7 @@ export const listPendingVoiceInteractionsForInsights = internalQuery({
       familySpaceId: interaction.familySpaceId,
       seniorProfileId: interaction.seniorProfileId,
       seniorName:
-        seniorNameById.get(interaction.seniorProfileId) ?? "Independent Senior",
+        seniorNameById.get(interaction.seniorProfileId) ?? MEMBER_LABEL,
       sessionType: interaction.sessionType,
       channel: interaction.channel,
       transcript: interaction.transcript,

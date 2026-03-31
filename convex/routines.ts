@@ -122,7 +122,7 @@ export const updateRoutineSchedule = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
-      throw new Error("This routine schedule does not belong to your FamilySpace.");
+      throw new Error("This routine schedule does not belong to your Circle.");
     }
 
     const title = normalizeOptionalText(args.title);
@@ -173,7 +173,7 @@ export const deleteRoutineSchedule = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
-      throw new Error("This routine schedule does not belong to your FamilySpace.");
+      throw new Error("This routine schedule does not belong to your Circle.");
     }
 
     const occurrences = await ctx.db

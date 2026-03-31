@@ -8,6 +8,11 @@ import {
   buildSeniorDashboard,
   validateSeniorSession,
 } from "./seniorAccessHelpers";
+import {
+  formatInvalidSessionMessage,
+  MEMBER_LABEL,
+  normalizeUserFacingText,
+} from "./terminology";
 
 export const getSeniorDashboard = query({
   args: {
@@ -28,7 +33,9 @@ export const getSeniorDashboard = query({
     return {
       status: "active" as const,
       sessionType: validation.session.sessionType,
-      seniorName: validation.seniorProfile.displayName,
+      seniorName:
+        normalizeUserFacingText(validation.seniorProfile.displayName) ??
+        MEMBER_LABEL,
       seniorMode: validation.seniorProfile.seniorMode,
       nextEvent: dashboard.nextEvent,
       gallery: dashboard.gallery,
@@ -53,13 +60,15 @@ export const resolveSeniorSession = internalQuery({
       expectedSessionType: args.expectedSessionType,
     });
     if (validation.status === "invalid") {
-      throw new Error(`Invalid senior session: ${validation.reason}`);
+      throw new Error(formatInvalidSessionMessage(validation.reason));
     }
 
     return {
       familySpaceId: validation.familySpace._id,
       seniorProfileId: validation.seniorProfile._id,
-      seniorName: validation.seniorProfile.displayName,
+      seniorName:
+        normalizeUserFacingText(validation.seniorProfile.displayName) ??
+        MEMBER_LABEL,
       seniorMode: validation.seniorProfile.seniorMode,
       sessionType: validation.session.sessionType,
       sessionId: validation.session._id,

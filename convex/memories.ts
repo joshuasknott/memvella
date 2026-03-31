@@ -215,7 +215,7 @@ export const updateTextMemory = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "text") {
-      throw new Error("This memory record does not belong to your FamilySpace.");
+      throw new Error("This memory record does not belong to your Circle.");
     }
 
     await ctx.db.patch(record._id, {
@@ -263,7 +263,7 @@ export const updateAudioMemory = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "audio") {
-      throw new Error("This memory record does not belong to your FamilySpace.");
+      throw new Error("This memory record does not belong to your Circle.");
     }
 
     await ctx.db.patch(record._id, {
@@ -307,7 +307,7 @@ export const updateVoiceMemory = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "voice") {
-      throw new Error("This memory record does not belong to your FamilySpace.");
+      throw new Error("This memory record does not belong to your Circle.");
     }
 
     await ctx.db.patch(record._id, {
@@ -338,7 +338,7 @@ export const updateMediaMemory = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "media") {
-      throw new Error("This memory record does not belong to your FamilySpace.");
+      throw new Error("This memory record does not belong to your Circle.");
     }
 
     await ctx.db.patch(record._id, {
@@ -378,7 +378,7 @@ export const deleteMemoryRecord = mutation({
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.familySpaceId !== membership.familySpaceId) {
-      throw new Error("This memory record does not belong to your FamilySpace.");
+      throw new Error("This memory record does not belong to your Circle.");
     }
 
     await deleteMemoryRecordCascade(ctx, record._id);

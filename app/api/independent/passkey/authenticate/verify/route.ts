@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Both the senior profile and device fingerprint are required for passkey sign-in.",
+            "Both the profile and device fingerprint are required for passkey sign-in.",
         },
         { status: 400 },
       );
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     );
     if (!passkey) {
       return NextResponse.json(
-        { error: "That passkey is not linked to this FamilySpace." },
+        { error: "That passkey is not linked to this Circle." },
         { status: 400 },
       );
     }

@@ -23,6 +23,14 @@ import {
   replaceRoutineOccurrences,
 } from "./routineHelpers";
 import { assertValidStoredUpload } from "./uploadValidation";
+import {
+  ADMIN_LABEL,
+  buildCircleName,
+  CIRCLE_LABEL,
+  MEMBER_LABEL,
+  normalizeUserFacingText,
+  TABLET_PROFILE_LABEL,
+} from "./terminology";
 
 const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 
@@ -218,7 +226,7 @@ export const createSupporterProfile = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthenticated: a valid Supporter session is required.");
+      throw new Error("Unauthenticated: a valid Admin session is required.");
     }
 
     const authIdentityToken = identity.tokenIdentifier;
@@ -229,7 +237,7 @@ export const createSupporterProfile = mutation({
       authIdentityToken,
     );
 
-    const supporterName = normalizeOptionalText(args.supporterName) ?? "Supporter";
+    const supporterName = normalizeOptionalText(args.supporterName) ?? ADMIN_LABEL;
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =
       args.role === "independent_senior" ? "independent" : "assisted";
@@ -268,7 +276,7 @@ export const createSupporterProfile = mutation({
         }
 
         await ctx.db.patch(existingMembership.familySpaceId, {
-          displayName: `${seniorDisplayName} FamilySpace`,
+          displayName: buildCircleName(seniorDisplayName),
         });
       }
 
@@ -277,8 +285,8 @@ export const createSupporterProfile = mutation({
 
     const familySpaceId = await ctx.db.insert("familySpaces", {
       displayName: seniorDisplayName
-        ? `${seniorDisplayName} FamilySpace`
-        : `${supporterName} FamilySpace`,
+        ? buildCircleName(seniorDisplayName)
+        : buildCircleName(supporterName),
       timezone: undefined,
       locale: undefined,
     });
@@ -358,7 +366,7 @@ export const patchSupporterProfile = mutation({
       }
 
       await ctx.db.patch(membership.familySpaceId, {
-        displayName: `${seniorDisplayName} FamilySpace`,
+        displayName: buildCircleName(seniorDisplayName),
       });
     }
 
@@ -452,7 +460,7 @@ export const getSupporterDashboardSummary = query({
       totalRoutines: routines.length,
       statusSummary: nextRoutine
         ? `${nextRoutine.title} is next at ${nextRoutine.time}.`
-        : "Your FamilySpace is ready for today.",
+        : `Your ${CIRCLE_LABEL} is ready for today.`,
     };
   },
 });
@@ -565,7 +573,7 @@ export const revokeAssistedDeviceSession = mutation({
       session.familySpaceId !== membership.familySpaceId ||
       session.sessionType !== "assisted_device"
     ) {
-      throw new Error("This Assisted Senior device session is not available.");
+      throw new Error(`This ${TABLET_PROFILE_LABEL} session is not available.`);
     }
 
     if (session.revokedAt !== null) {
@@ -637,8 +645,11 @@ export const getSupporterProfile = query({
     return {
       _id: supporterContext.membership._id,
       familySpaceId: supporterContext.membership.familySpaceId,
-      supporterName: supporterContext.membership.displayName,
-      seniorDisplayName: seniorProfile?.displayName,
+      supporterName:
+        normalizeUserFacingText(supporterContext.membership.displayName) ??
+        ADMIN_LABEL,
+      seniorDisplayName:
+        normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL,
       role: "supporter" as const,
       onboardingStep: supporterContext.membership.onboardingStep,
       seniorProfileId: seniorProfile?._id ?? null,

@@ -10,6 +10,7 @@ import {
   getOptionalFamilySpaceMembership,
   requireFamilySpaceMembership,
 } from "./familySpaceAuth";
+import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 
 function aiInsightTypeValidator() {
   return v.union(
@@ -44,7 +45,10 @@ async function enrichInsights<
         (seniorProfile): seniorProfile is NonNullable<typeof seniorProfile> =>
           seniorProfile !== null,
       )
-      .map((seniorProfile) => [seniorProfile._id, seniorProfile.displayName]),
+      .map((seniorProfile) => [
+        seniorProfile._id,
+        normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
+      ]),
   );
 
   return insights.map((insight) => ({
@@ -59,7 +63,7 @@ async function enrichInsights<
     insightType: insight.insightType,
     createdAt: insight.createdAt,
     reviewedAt: insight.reviewedAt,
-    seniorName: seniorNameById.get(insight.seniorProfileId) ?? "Senior",
+    seniorName: seniorNameById.get(insight.seniorProfileId) ?? MEMBER_LABEL,
   }));
 }
 
@@ -137,7 +141,7 @@ export const reviewSupporterInsight = mutation({
     const insight = await ctx.db.get(args.insightId);
 
     if (!insight || insight.familySpaceId !== membership.familySpaceId) {
-      throw new Error("This insight is not available in your FamilySpace.");
+      throw new Error("This insight is not available in your Circle.");
     }
 
     await ctx.db.patch(insight._id, {

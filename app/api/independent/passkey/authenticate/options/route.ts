@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     };
     if (!seniorProfileId) {
       return NextResponse.json(
-        { error: "A senior profile is required for passkey recovery." },
+        { error: "A profile is required for passkey recovery." },
         { status: 400 },
       );
     }

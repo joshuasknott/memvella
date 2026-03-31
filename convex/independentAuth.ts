@@ -11,6 +11,12 @@ import {
   issueSeniorAccessSession,
   revokeSeniorSessionsForProfile,
 } from "./seniorAccessHelpers";
+import {
+  buildCircleName,
+  INDEPENDENT_PROFILE_LABEL,
+  MEMBER_LABEL,
+  normalizeUserFacingText,
+} from "./terminology";
 
 type ChallengePurpose = "passkey_registration" | "passkey_authentication";
 type FinalizeMagicLinkSignInResult =
@@ -84,6 +90,7 @@ async function getActivePasskeys(
 
 export const finalizeMagicLinkSignIn = mutation({
   args: {
+    name: v.optional(v.string()),
     displayName: v.optional(v.string()),
     deviceFingerprint: v.string(),
   },
@@ -98,9 +105,10 @@ export const finalizeMagicLinkSignIn = mutation({
       identity.tokenIdentifier,
     );
     const normalizedDisplayName =
+      normalizeOptionalText(args.name) ??
       normalizeOptionalText(args.displayName) ??
       normalizeOptionalText(identity.name) ??
-      "Independent Senior";
+      MEMBER_LABEL;
     const normalizedEmail = normalizeOptionalEmail(identity.email) ?? null;
 
     let membershipId: Id<"familySpaceMemberships">;
@@ -112,7 +120,7 @@ export const finalizeMagicLinkSignIn = mutation({
         return {
           status: "role_collision",
           message:
-            "This email is already registered as a Supporter. Please use a different email for the Independent Senior device.",
+            "This email is already registered as an Admin. Please use a different email for the independent device.",
         };
       }
 
@@ -130,7 +138,7 @@ export const finalizeMagicLinkSignIn = mutation({
         }));
 
       if (!ensuredSeniorProfile) {
-        throw new Error("Unable to prepare the Independent Senior profile.");
+        throw new Error(`Unable to prepare the ${INDEPENDENT_PROFILE_LABEL}.`);
       }
 
       seniorProfileId = ensuredSeniorProfile._id;
@@ -144,11 +152,11 @@ export const finalizeMagicLinkSignIn = mutation({
       });
 
       await ctx.db.patch(familySpaceId, {
-        displayName: `${normalizedDisplayName} FamilySpace`,
+        displayName: buildCircleName(normalizedDisplayName),
       });
     } else {
       familySpaceId = await ctx.db.insert("familySpaces", {
-        displayName: `${normalizedDisplayName} FamilySpace`,
+        displayName: buildCircleName(normalizedDisplayName),
         timezone: undefined,
         locale: undefined,
       });
@@ -160,7 +168,7 @@ export const finalizeMagicLinkSignIn = mutation({
       });
 
       if (!seniorProfile) {
-        throw new Error("Unable to create the Independent Senior profile.");
+        throw new Error(`Unable to create the ${INDEPENDENT_PROFILE_LABEL}.`);
       }
 
       seniorProfileId = seniorProfile._id;
@@ -223,7 +231,7 @@ export const getCurrentIndependentSeniorPasskeyContext = query({
 
     return {
       seniorProfileId: seniorProfile._id,
-      seniorName: seniorProfile.displayName,
+      seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
       recoveryEmail: seniorProfile.recoveryEmail,
       passkeys: await getActivePasskeys(ctx, seniorProfile._id),
       activeRegistrationChallenge: await getActiveChallenge(
@@ -247,7 +255,7 @@ export const storeCurrentIndependentSeniorPasskeyRegistrationChallenge = mutatio
     );
 
     if (membership.seniorProfileId === null) {
-      throw new Error("This account is not linked to an Independent Senior profile.");
+      throw new Error(`This account is not linked to an ${INDEPENDENT_PROFILE_LABEL}.`);
     }
 
     await invalidateChallenges(
@@ -283,7 +291,7 @@ export const saveCurrentIndependentSeniorPasskey = mutation({
     );
 
     if (membership.seniorProfileId === null) {
-      throw new Error("This account is not linked to an Independent Senior profile.");
+      throw new Error(`This account is not linked to an ${INDEPENDENT_PROFILE_LABEL}.`);
     }
 
     const activeChallenge = await getActiveChallenge(
@@ -350,7 +358,7 @@ export const getIndependentSeniorRecoveryProfile = query({
     const passkeys = await getActivePasskeys(ctx, seniorProfile._id);
     return {
       seniorProfileId: seniorProfile._id,
-      seniorName: seniorProfile.displayName,
+      seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
       recoveryEmail: seniorProfile.recoveryEmail,
       hasPasskey: passkeys.length > 0,
     };
@@ -366,7 +374,7 @@ export const storePasskeyAuthenticationChallenge = mutation({
   handler: async (ctx, args) => {
     const seniorProfile = await ctx.db.get(args.seniorProfileId);
     if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
-      throw new Error("This Independent Senior profile could not be found.");
+      throw new Error(`This ${INDEPENDENT_PROFILE_LABEL} could not be found.`);
     }
 
     await invalidateChallenges(
@@ -418,7 +426,7 @@ export const completePasskeyAuthentication = mutation({
   handler: async (ctx, args) => {
     const seniorProfile = await ctx.db.get(args.seniorProfileId);
     if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
-      throw new Error("This Independent Senior profile could not be found.");
+      throw new Error(`This ${INDEPENDENT_PROFILE_LABEL} could not be found.`);
     }
 
     const activeChallenge = await getActiveChallenge(
@@ -468,7 +476,7 @@ export const completePasskeyAuthentication = mutation({
     return {
       sessionToken: session.sessionToken,
       seniorProfileId: seniorProfile._id,
-      seniorName: seniorProfile.displayName,
+      seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
     };
   },
 });

@@ -13,6 +13,7 @@ import {
 } from "./routineHelpers";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
+import { formatInvalidSessionMessage } from "./terminology";
 
 async function requireIndependentVoiceActor(
   ctx: MutationCtx,
@@ -25,7 +26,7 @@ async function requireIndependentVoiceActor(
   });
 
   if (validation.status === "invalid") {
-    throw new Error(`Invalid senior session: ${validation.reason}`);
+    throw new Error(formatInvalidSessionMessage(validation.reason));
   }
 
   if (validation.seniorProfile.seniorMode !== "independent") {
@@ -38,9 +39,7 @@ async function requireIndependentVoiceActor(
     validation.seniorProfile._id,
   );
   if (!membership) {
-    throw new Error(
-      "No Independent Senior membership is linked to this FamilySpace.",
-    );
+    throw new Error("No independent access is linked to this Circle.");
   }
 
   return { validation, membership };

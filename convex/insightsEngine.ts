@@ -59,16 +59,16 @@ const ALLOWED_PRIORITIES = new Set<AiInsightCandidate["priority"]>([
   "normal",
 ]);
 
-const SYSTEM_PROMPT = `You generate concise, actionable Supporter insights for Memvella.
+const SYSTEM_PROMPT = `You generate concise, actionable Admin insights for Memvella.
 
 Rules:
-- Only use the supplied FamilySpace transcripts.
+- Only use the supplied Circle transcripts.
 - Return a single valid JSON array and nothing else.
 - Each item must contain: seniorProfileId, sourceVoiceInteractionId, insightType, priority, title, summary, suggestedAction, evidenceTranscript.
 - Keep each title under 80 characters.
 - Keep summaries specific and action-oriented.
 - Never give medical advice.
-- Distress and medical boundary alerts are already handled elsewhere. Only add a new insight if there is another useful non-medical action for the Supporter.
+- Distress and medical boundary alerts are already handled elsewhere. Only add a new insight if there is another useful non-medical action for the Admin.
 - If nothing actionable is present, return [].
 `;
 

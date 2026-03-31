@@ -15,6 +15,11 @@ import {
   issueSeniorAccessSession,
   revokeSeniorSessionsForProfile,
 } from "./seniorAccessHelpers";
+import {
+  MEMBER_LABEL,
+  normalizeUserFacingText,
+  TABLET_PROFILE_LABEL,
+} from "./terminology";
 
 async function getActivePinByHash(
   ctx: MutationCtx,
@@ -71,7 +76,7 @@ export const pairTabletSession = mutation({
     if (!activePin) {
       return {
         success: false as const,
-        error: "Invalid code. Ask your Supporter for a new 6-digit code.",
+        error: "Invalid code. Ask your Admin for a new 6-digit code.",
       };
     }
 
@@ -79,7 +84,7 @@ export const pairTabletSession = mutation({
     if (!seniorProfile) {
       return {
         success: false as const,
-        error: "This Assisted Senior profile is no longer available.",
+        error: `This ${TABLET_PROFILE_LABEL} is no longer available.`,
       };
     }
 
@@ -106,7 +111,7 @@ export const pairTabletSession = mutation({
 
     return {
       success: true as const,
-      seniorName: seniorProfile.displayName,
+      seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
       sessionToken: session.sessionToken,
       expiresAt: session.expiresAt,
       idleExpiresAt: session.idleExpiresAt,
@@ -121,7 +126,7 @@ export const generateKioskPin = mutation({
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
     const supporterSeniorName =
-      normalizeOptionalText(args.seniorName) ?? "Assisted Senior";
+      normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
 
     const assistedSenior =
       (await getSeniorProfileByMode(
@@ -136,7 +141,7 @@ export const generateKioskPin = mutation({
       }));
 
     if (!assistedSenior) {
-      throw new Error("Unable to prepare the Assisted Senior profile.");
+      throw new Error(`Unable to prepare the ${TABLET_PROFILE_LABEL}.`);
     }
 
     const now = Date.now();
@@ -174,7 +179,7 @@ export const generateKioskPin = mutation({
 
     return {
       pinCode,
-      seniorName: assistedSenior.displayName,
+      seniorName: normalizeUserFacingText(assistedSenior.displayName) ?? MEMBER_LABEL,
       expiresAt: now + 10 * 60 * 1000,
     };
   },

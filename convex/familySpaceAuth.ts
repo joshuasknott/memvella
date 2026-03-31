@@ -4,6 +4,9 @@ import {
   normalizeOptionalEmail,
   normalizeOptionalText,
 } from "./security";
+import {
+  MEMBER_LABEL,
+} from "./terminology";
 
 type DbCtx = MutationCtx | QueryCtx;
 
@@ -72,7 +75,7 @@ export async function requireFamilySpaceMembership(
   const membership = await getMembershipByAuthIdentityToken(ctx, authIdentityToken);
 
   if (!membership) {
-    throw new Error("No FamilySpace membership is linked to this account.");
+    throw new Error("No Circle membership is linked to this account.");
   }
 
   if (expectedRole && membership.role !== expectedRole) {
@@ -81,7 +84,7 @@ export async function requireFamilySpaceMembership(
 
   const familySpace = await ctx.db.get(membership.familySpaceId);
   if (!familySpace) {
-    throw new Error("The linked FamilySpace could not be found.");
+    throw new Error("The linked Circle could not be found.");
   }
 
   return { authIdentityToken, membership, familySpace };
@@ -136,7 +139,7 @@ export async function upsertAssistedSeniorProfile(
     args.familySpaceId,
     "assisted",
   );
-  const displayName = normalizeOptionalText(args.displayName) ?? "Assisted Senior";
+  const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
   const recoveryEmail = normalizeOptionalEmail(args.recoveryEmail) ?? null;
 
   if (!assistedSenior) {
@@ -176,8 +179,7 @@ export async function upsertIndependentSeniorProfile(
     args.familySpaceId,
     "independent",
   );
-  const displayName =
-    normalizeOptionalText(args.displayName) ?? "Independent Senior";
+  const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
   const recoveryEmail = normalizeOptionalEmail(args.recoveryEmail) ?? null;
 
   if (!independentSenior) {

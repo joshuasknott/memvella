@@ -43,7 +43,7 @@ async function sendMagicLinkEmail(data: {
         <div style="font-family: Arial, sans-serif; color: #1a1a1a; line-height: 1.6;">
           <h1 style="font-size: 24px; margin-bottom: 12px;">Sign in to Memvella</h1>
           <p style="margin-bottom: 20px;">
-            Tap the button below to continue to your FamilySpace.
+            Tap the button below to continue to your Circle.
           </p>
           <a
             href="${data.url}"

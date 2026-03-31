@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     if (!passkeyContext) {
       return NextResponse.json(
-        { error: "No Independent Senior profile is ready for passkeys." },
+        { error: "No independent profile is ready for passkeys." },
         { status: 400 },
       );
     }

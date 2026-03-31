@@ -14,6 +14,11 @@ import {
   getNextRoutineEventForFamilySpace,
 } from "./routineHelpers";
 import { normalizeOptionalText } from "./security";
+import {
+  ADMIN_DEVICE_LABEL,
+  CIRCLE_LABEL,
+  normalizeUserFacingText,
+} from "./terminology";
 
 const DAILY_SUMMARY_DEFAULT_TIME_MINUTES = 19 * 60;
 const ROUTINE_REMINDER_LOOKAHEAD_MINUTES = 15;
@@ -109,7 +114,7 @@ function getUtcDateKey(offsetDays = 0) {
 
 function buildCurrentDeviceLabel(input: string | undefined) {
   const normalized = normalizeOptionalText(input);
-  return normalized ?? "Supporter device";
+  return normalizeUserFacingText(normalized) ?? ADMIN_DEVICE_LABEL;
 }
 
 async function listActivePushSubscriptionsForFamilySpace(
@@ -172,14 +177,14 @@ async function buildDailySummaryBody(
   }
 
   if (queuedInsights.length > 0) {
-    return `${queuedInsights.length} insight${queuedInsights.length === 1 ? "" : "s"} are waiting for review in your FamilySpace.`;
+    return `${queuedInsights.length} insight${queuedInsights.length === 1 ? "" : "s"} are waiting for review in your Circle.`;
   }
 
   if (nextRoutine) {
     return `${last24Hours} voice update${last24Hours === 1 ? "" : "s"} were logged in the last day. Next routine: ${nextRoutine.title} at ${nextRoutine.time}.`;
   }
 
-  return `${last24Hours} voice update${last24Hours === 1 ? "" : "s"} were logged in the last day. Your FamilySpace has no upcoming routine right now.`;
+  return `${last24Hours} voice update${last24Hours === 1 ? "" : "s"} were logged in the last day. Your Circle has no upcoming routine right now.`;
 }
 
 export const getSupporterNotificationSettings = query({
@@ -200,7 +205,7 @@ export const getSupporterNotificationSettings = query({
       ...resolvedSettings,
       activeSubscriptions: activeSubscriptions.map((subscription) => ({
         id: subscription._id,
-        deviceLabel: subscription.deviceLabel ?? "Supporter device",
+        deviceLabel: subscription.deviceLabel ?? ADMIN_DEVICE_LABEL,
         userAgent: subscription.userAgent,
         lastSeenAt: subscription.lastSeenAt,
         lastDeliveryAt: subscription.lastDeliveryAt,
@@ -482,14 +487,14 @@ export const getDailySummaryDigestPayload = internalQuery({
   handler: async (ctx, args) => {
     const familySpace = await ctx.db.get(args.familySpaceId);
     const title = familySpace?.displayName
-      ? `${familySpace.displayName} daily summary`
-      : "Your FamilySpace daily summary";
+      ? `${normalizeUserFacingText(familySpace.displayName) ?? familySpace.displayName} daily summary`
+      : `Your ${CIRCLE_LABEL} daily summary`;
     const body = await buildDailySummaryBody(ctx, args.familySpaceId);
 
     return {
       title,
       body,
-      deepLink: "/supporter/insights",
+      deepLink: "/admin/insights",
       payloadTag: "daily-summary",
     };
   },
@@ -522,7 +527,7 @@ export const getUrgentInsightDispatchPlan = internalQuery({
       familySpaceId: insight.familySpaceId,
       title: insight.title,
       body: insight.summary,
-      deepLink: "/supporter/insights",
+      deepLink: "/admin/insights",
       payloadTag: "urgent-alert",
       subscriptions: activeSubscriptions.map((subscription) => ({
         pushSubscriptionId: subscription._id,

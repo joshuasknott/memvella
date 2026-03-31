@@ -6,6 +6,7 @@ import {
   upsertIndependentSeniorProfile,
 } from "./familySpaceAuth";
 import { normalizeOptionalText } from "./security";
+import { buildCircleName } from "./terminology";
 
 export const processOnboardingAction = internalMutation({
   args: {
@@ -63,7 +64,7 @@ export const processOnboardingAction = internalMutation({
                   : membership.seniorProfileId,
             });
             await ctx.db.patch(membership.familySpaceId, {
-              displayName: `${seniorDisplayName} FamilySpace`,
+              displayName: buildCircleName(seniorDisplayName),
             });
           }
         }

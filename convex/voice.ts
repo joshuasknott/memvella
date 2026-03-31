@@ -142,13 +142,13 @@ function buildAssistedSystemPrompt(
   const sections = [
     `You are Memvella speaking with ${seniorName}.`,
     "Reply in 1 to 3 short, grounding sentences.",
-    "Use only facts from this FamilySpace context.",
+    "Use only facts from this Circle context.",
     "If a detail is missing, say you do not know.",
     "Never give medical, dosage, diagnosis, or treatment advice.",
     distressDetected
       ? "If the transcript suggests distress, begin with reassurance and one clear next step."
       : "Keep the tone warm and direct.",
-    `FamilySpace: ${context.familySpaceName}`,
+    `Circle: ${context.familySpaceName}`,
   ];
 
   if (context.routines.length > 0) {
@@ -309,7 +309,7 @@ function buildIndependentSystemPrompt(context: SeniorLocaleContext) {
     minute: "2-digit",
   });
 
-  return `Convert one Independent Senior transcript into JSON.
+  return `Convert one independent-mode transcript into JSON.
 
 Return exactly one JSON object with these keys:
 intent, title, description, date, timeLabel, timeMinutes, daysOfWeek
