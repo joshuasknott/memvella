@@ -16,9 +16,9 @@ export default function SupporterError({
 
   return (
     <ErrorState
-      title="Supporter tools are temporarily unavailable"
-      description="The Supporter workspace hit an unexpected error while loading this route. Retry to restore the latest FamilySpace data."
-      actionLabel="Retry Supporter view"
+      title="Admin tools are temporarily unavailable"
+      description="The Admin workspace hit an unexpected error while loading this route. Retry to restore the latest Circle data."
+      actionLabel="Retry Admin view"
       onRetry={unstable_retry}
     />
   );

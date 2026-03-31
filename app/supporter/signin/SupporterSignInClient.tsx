@@ -40,7 +40,7 @@ export function SupporterSignInFallback() {
             Welcome Back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-            Sign in to your Supporter account to continue.
+            Sign in to your Admin account to continue.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function SupporterSignInClient() {
             Welcome Back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-            Sign in to your Supporter account to continue.
+            Sign in to your Admin account to continue.
           </p>
         </div>
 

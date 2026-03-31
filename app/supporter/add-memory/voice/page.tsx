@@ -107,7 +107,7 @@ export default function VoiceMemoryPage() {
       toast({
         tone: "success",
         title: "Voice memory saved",
-        description: `${title.trim()} was added to the FamilySpace.`,
+        description: `${title.trim()} was added to the Circle.`,
       });
       router.push("/supporter/memories");
     } catch (saveError) {

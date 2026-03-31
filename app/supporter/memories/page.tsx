@@ -55,7 +55,7 @@ export default function SupporterMemoriesPage() {
               Memories
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-gray-600">
-              Review, edit, and organize the stories, photos, voice notes, and recordings that shape {seniorDisplayName}&apos;s FamilySpace.
+              Review, edit, and organize the stories, photos, voice notes, and recordings that shape {seniorDisplayName}&apos;s Circle.
             </p>
           </div>
           <Link
@@ -68,7 +68,7 @@ export default function SupporterMemoriesPage() {
         </div>
 
         <div className="mt-5 inline-flex rounded-full bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-800">
-          {memoryRecords === undefined ? "Loading memories..." : `${memoryRecords.length} record${memoryRecords.length === 1 ? "" : "s"} in this FamilySpace`}
+          {memoryRecords === undefined ? "Loading memories..." : `${memoryRecords.length} record${memoryRecords.length === 1 ? "" : "s"} in this Circle`}
         </div>
       </section>
 
@@ -85,7 +85,7 @@ export default function SupporterMemoriesPage() {
           </div>
           <p className="mt-4 text-xl font-bold text-gray-900">No memories yet</p>
           <p className="mt-2 text-lg leading-relaxed text-gray-500">
-            Add the first record so the Supporter dashboard and Senior gallery have meaningful moments to surface.
+            Add the first record so the Admin dashboard and Senior gallery have meaningful moments to surface.
           </p>
           <div className="mt-6">
             <PrimaryButton href="/supporter/add-memory">

@@ -6,8 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/Input";
 import { FormCard } from "@/components/ui/FormCard";
-import { VoiceInputPill } from "@/components/shared-senior/VoiceInputPill";
 import { authClient } from "@/lib/auth-client";
+import BrandLogo from "@/components/BrandLogo";
 
 type Step = 1 | 2 | 3;
 
@@ -31,9 +31,9 @@ function IndependentSetupVoiceContent() {
     return null;
   }, [sessionReason]);
 
-  const handleVoiceSubmit = (text: string) => {
-    if (step === 1) {
-      setName(text.trim());
+  const handleNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (name.trim() && step === 1) {
       setStep(2);
       setError(null);
     }
@@ -115,7 +115,11 @@ function IndependentSetupVoiceContent() {
         </div>
       </div>
 
-      <div className="flex-1 w-full max-w-3xl flex flex-col items-center justify-center mb-24 relative">
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
+        <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
+      </div>
+
+      <div className="flex-1 w-full max-w-3xl flex flex-col items-center justify-center mb-24 relative z-10">
         {bannerMessage ? (
           <div className="mb-6 w-full max-w-xl rounded-3xl border border-blue-100 bg-blue-50 px-6 py-5 text-center text-lg leading-relaxed text-blue-900">
             {bannerMessage}
@@ -123,10 +127,32 @@ function IndependentSetupVoiceContent() {
         ) : null}
 
         {step === 1 ? (
-          <div className="w-full text-center animate-in slide-in-from-right-8 fade-in duration-500 space-y-4">
+          <div className="w-full max-w-md animate-in slide-in-from-right-8 fade-in duration-500">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a] text-center mb-8">
               Hi there! What should I call you?
             </h1>
+            <FormCard
+              as="form"
+              onSubmit={handleNameSubmit}
+              className="flex flex-col gap-6"
+            >
+              <div className="space-y-2">
+                <TextInput
+                  type="text"
+                  autoFocus
+                  required
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g., David"
+                  disabled={isSubmitting}
+                  className="text-center font-bold text-xl md:text-2xl py-6"
+                />
+              </div>
+
+              <PrimaryButton type="submit" disabled={!name.trim() || isSubmitting} className="mt-4">
+                Continue
+              </PrimaryButton>
+            </FormCard>
           </div>
         ) : null}
 
@@ -214,13 +240,6 @@ function IndependentSetupVoiceContent() {
           </div>
         ) : null}
       </div>
-
-      {step === 1 ? (
-        <VoiceInputPill
-          onSubmit={handleVoiceSubmit}
-          voiceState={isSubmitting ? "processing" : "idle"}
-        />
-      ) : null}
     </div>
   );
 }

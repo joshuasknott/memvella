@@ -1,11 +1,12 @@
 import BrandLogo from '@/components/BrandLogo';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
+import { PrimaryButton, SecondaryButton, GhostButton } from '@/components/ui/Button';
+import { ShieldCheck, Smartphone, UserRound } from 'lucide-react';
 
 export default function UniversalSplash() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-linear-to-b from-primary-fixed border-t border-transparent to-surface px-6 text-center font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
       <div className="mb-12">
-        <BrandLogo className="w-auto h-20 md:h-24 drop-shadow-sm transition-all" />
+        <BrandLogo standalone animated className="w-auto h-20 md:h-24 drop-shadow-sm" />
       </div>
       
       <div className="w-full max-w-lg flex flex-col items-center animate-in slide-in-from-bottom-4 fade-in duration-500 zoom-in-95">
@@ -19,17 +20,20 @@ export default function UniversalSplash() {
         </div>
 
         <div className="flex flex-col space-y-4 md:space-y-6 w-full max-w-sm md:max-w-md mx-auto">
-          <PrimaryButton href="/assisted/login">
-            I have a Connection Code
+          <PrimaryButton href="/onboarding/supporter">
+            <ShieldCheck className="w-6 h-6 mr-2" />
+            Set up as Admin
           </PrimaryButton>
 
-          <SecondaryButton href="/onboarding/supporter">
-            Start a new Family Space
+          <SecondaryButton href="/assisted/login">
+            <Smartphone className="w-6 h-6 mr-2" />
+            Enter Connection Code
           </SecondaryButton>
 
-          <SecondaryButton href="/onboarding/independent">
-            I am setting this up for myself
-          </SecondaryButton>
+          <GhostButton href="/onboarding/independent">
+            <UserRound className="w-6 h-6 mr-2" />
+            Set up Personal Profile
+          </GhostButton>
         </div>
       </div>
     </main>

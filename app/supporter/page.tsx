@@ -76,7 +76,7 @@ export default function SupporterDashboard() {
             </span>
           </div>
           <h2 className="mb-2 font-headline text-2xl font-bold leading-tight text-on-surface">
-            {summary?.statusSummary ?? "Preparing your FamilySpace..."}
+            {summary?.statusSummary ?? "Preparing your Circle..."}
           </h2>
           <p className="text-lg leading-relaxed text-on-surface-variant">
             Memvella is ready to support {seniorDisplayName} today.
@@ -95,7 +95,7 @@ export default function SupporterDashboard() {
               <UserPlus className="h-6 w-6 text-on-secondary-fixed-variant" />
             </div>
             <span className="text-center text-base font-bold text-on-surface">
-              Add Person
+              Add Profile
             </span>
           </Link>
 

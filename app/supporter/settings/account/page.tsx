@@ -59,7 +59,7 @@ export default function AccountSettingsPage() {
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
-              Supporter profile
+              Admin profile
             </p>
             <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
               Account
@@ -70,7 +70,7 @@ export default function AccountSettingsPage() {
         <div className="space-y-4">
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
-              Supporter name
+              Admin name
             </p>
             <p className="mt-2 text-lg font-bold text-gray-900">{supporterName}</p>
           </div>
@@ -84,7 +84,7 @@ export default function AccountSettingsPage() {
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
-              FamilySpace
+              Circle
             </p>
             <p className="mt-2 text-lg font-bold text-gray-900">
               {seniorDisplayName}
@@ -106,7 +106,7 @@ export default function AccountSettingsPage() {
               Assisted device access
             </h2>
             <p className="mt-2 text-base leading-relaxed text-gray-600">
-              Review the active Assisted Senior tablet sessions tied to this FamilySpace and revoke them if a device should no longer stay signed in.
+              Review the active Assisted Senior tablet sessions tied to this Circle and revoke them if a device should no longer stay signed in.
             </p>
           </div>
         </div>

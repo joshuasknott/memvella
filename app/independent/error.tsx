@@ -17,7 +17,7 @@ export default function IndependentError({
   return (
     <ErrorState
       title="The Independent Senior view needs a retry"
-      description="This route hit an unexpected rendering failure. Retry to reopen the FamilySpace experience."
+      description="This route hit an unexpected rendering failure. Retry to reopen the Circle experience."
       actionLabel="Retry Independent view"
       onRetry={unstable_retry}
     />

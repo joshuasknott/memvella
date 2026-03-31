@@ -93,7 +93,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Notification settings updated",
-        description: "Your Supporter alert preferences are now saved.",
+        description: "Your Admin alert preferences are now saved.",
       });
     } catch (error) {
       toast({
@@ -125,7 +125,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts enabled",
-        description: "This Supporter device will now receive FamilySpace alerts.",
+        description: "This Admin device will now receive Circle alerts.",
       });
     } catch (error) {
       toast({
@@ -156,7 +156,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts disabled",
-        description: "This Supporter device will stop receiving push alerts.",
+        description: "This Admin device will stop receiving push alerts.",
       });
     } catch (error) {
       toast({
@@ -192,7 +192,7 @@ export default function NotificationsSettingsPage() {
               Notifications
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-gray-600">
-              Manage the alerts that reach your Supporter devices for {seniorDisplayName}&apos;s FamilySpace.
+              Manage the alerts that reach your Admin devices for {seniorDisplayName}&apos;s Circle.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
@@ -211,7 +211,7 @@ export default function NotificationsSettingsPage() {
               This device
             </h2>
             <p className="mt-1 text-base leading-relaxed text-gray-600">
-              Turn browser push alerts on or off for the current Supporter device.
+              Turn browser push alerts on or off for the current Admin device.
             </p>
             {!pushConfigured ? (
               <p className="mt-3 rounded-2xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
@@ -268,7 +268,7 @@ export default function NotificationsSettingsPage() {
               Daily summary
             </label>
             <p className="mt-1 text-sm leading-relaxed text-gray-500">
-              Evening recap around {summaryTimeLabel} with queued insights and the next FamilySpace routine.
+              Evening recap around {summaryTimeLabel} with queued insights and the next Circle routine.
             </p>
           </div>
           <Toggle
@@ -289,7 +289,7 @@ export default function NotificationsSettingsPage() {
               Urgent alerts
             </label>
             <p className="mt-1 text-sm leading-relaxed text-gray-500">
-              Immediate Supporter notifications when Memvella detects distress markers in a FamilySpace voice session.
+              Immediate Admin notifications when Memvella detects distress markers in a Circle voice session.
             </p>
           </div>
           <Toggle
@@ -310,7 +310,7 @@ export default function NotificationsSettingsPage() {
               Routine reminders
             </label>
             <p className="mt-1 text-sm leading-relaxed text-gray-500">
-              Alerts before {seniorDisplayName}&apos;s scheduled FamilySpace routines begin.
+              Alerts before {seniorDisplayName}&apos;s scheduled Circle routines begin.
             </p>
           </div>
           <Toggle
@@ -330,7 +330,7 @@ export default function NotificationsSettingsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-headline text-xl font-bold text-gray-900">
-              Connected Supporter devices
+              Connected Admin devices
             </h2>
             <p className="mt-1 text-base leading-relaxed text-gray-600">
               {settings.activeSubscriptions.length} device
@@ -342,7 +342,7 @@ export default function NotificationsSettingsPage() {
         <div className="mt-5 space-y-3">
           {settings.activeSubscriptions.length === 0 ? (
             <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
-              No Supporter devices are subscribed for push alerts yet.
+              No Admin devices are subscribed for push alerts yet.
             </div>
           ) : (
             settings.activeSubscriptions.map((subscription) => (

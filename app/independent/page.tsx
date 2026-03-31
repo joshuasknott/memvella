@@ -85,7 +85,7 @@ function IndependentRecoveryState() {
           Your session needs to be refreshed.
         </h1>
         <p className="mb-6 text-xl leading-relaxed text-slate-600">
-          Sign back in with your secure link or use Face ID / Touch ID to reopen your FamilySpace.
+          Sign back in with your secure link or use Face ID / Touch ID to reopen your Circle.
         </p>
         <a
           href="/independent/recover"
@@ -193,8 +193,8 @@ export default function IndependentHomePage() {
 
       const successMessage =
         result.savedEntityType === "memory"
-          ? `Saved "${pendingDraft.draft.title}" to your FamilySpace.`
-          : `Created "${pendingDraft.draft.title}" in your FamilySpace.`;
+          ? `Saved "${pendingDraft.draft.title}" to your Circle.`
+          : `Created "${pendingDraft.draft.title}" in your Circle.`;
 
       setPendingDraft(null);
       setVoiceStatus(successMessage);

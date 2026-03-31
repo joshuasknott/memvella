@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput } from "@/components/ui/Input";
 import { PrimaryButton } from "@/components/ui/Button";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function SupporterSetupPage() {
   const router = useRouter();
@@ -68,6 +69,10 @@ export default function SupporterSetupPage() {
       <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
+        <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
+      </div>
+
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
         <Link
           href="/"
@@ -83,7 +88,7 @@ export default function SupporterSetupPage() {
                 Supporter Setup
               </h1>
               <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-                Create your Supporter account and start your FamilySpace.
+                Create your Admin account and start your Circle.
               </p>
             </div>
 
@@ -111,7 +116,7 @@ export default function SupporterSetupPage() {
                   className="font-headline text-lg font-bold"
                   htmlFor="senior_display_name"
                 >
-                  Who should this FamilySpace support?
+                  Who should this Circle support?
                 </label>
                 <TextInput
                   id="senior_display_name"
@@ -121,7 +126,7 @@ export default function SupporterSetupPage() {
                   onChange={(event) => setSeniorDisplayName(event.target.value)}
                 />
                 <p className="px-1 text-sm text-gray-500">
-                  Optional. You can update this from your Supporter dashboard.
+                  Optional. You can update this from your Admin dashboard.
                 </p>
               </div>
 

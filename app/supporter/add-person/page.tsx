@@ -79,7 +79,7 @@ export default function AddPersonPage() {
       toast({
         tone: "success",
         title: "Connection saved",
-        description: `${name.trim()} is now available in this FamilySpace.`,
+        description: `${name.trim()} is now available in this Circle.`,
       });
       router.push("/supporter/memories");
     } catch (saveError) {

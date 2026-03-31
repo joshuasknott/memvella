@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { FormCard } from "@/components/ui/FormCard";
+import BrandLogo from "@/components/BrandLogo";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
@@ -250,8 +251,11 @@ export default function IndependentVerifyPage() {
 
   if (roleCollisionMessage) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 md:p-12">
-        <FormCard className="flex w-full max-w-xl flex-col gap-6 p-8 text-center md:p-10">
+      <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 md:p-12 relative">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
+          <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
+        </div>
+        <FormCard className="flex w-full max-w-xl flex-col gap-6 p-8 text-center md:p-10 relative z-10">
           <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a] md:text-4xl">
             Use a Different Email
           </h1>
@@ -274,14 +278,17 @@ export default function IndependentVerifyPage() {
 
   if (isSessionPending || isFinalizing || !deviceFingerprint || !finalizedSession) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6">
-        <FormCard className="flex w-full max-w-xl flex-col items-center gap-6 p-10 text-center">
+      <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 relative">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
+          <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
+        </div>
+        <FormCard className="flex w-full max-w-xl flex-col items-center gap-6 p-10 text-center relative z-10">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
           <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">
             Preparing your secure session
           </h1>
           <p className="text-lg leading-relaxed text-on-surface-variant">
-            Memvella is connecting this Independent Senior account to your FamilySpace.
+            Memvella is connecting this Independent Senior account to your Circle.
           </p>
           {error ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-600">
@@ -294,8 +301,11 @@ export default function IndependentVerifyPage() {
   }
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 md:p-12">
-      <FormCard className="flex w-full max-w-xl flex-col gap-6 p-8 text-center md:p-10">
+    <main className="flex min-h-[100dvh] items-center justify-center bg-surface p-6 md:p-12 relative">
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
+        <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
+      </div>
+      <FormCard className="flex w-full max-w-xl flex-col gap-6 p-8 text-center md:p-10 relative z-10">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1a1a1a]">
           Enable Faster Access
         </h1>

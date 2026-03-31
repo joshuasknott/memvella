@@ -176,7 +176,7 @@ export default function IndependentRecoveryPage() {
           Restore Independent Senior access
         </h1>
         <p className="text-center text-lg leading-relaxed text-on-surface-variant">
-          Reopen your FamilySpace with a secure sign-in link or Face ID / Touch ID.
+          Reopen your Circle with a secure sign-in link or Face ID / Touch ID.
         </p>
 
         {recoveryHint?.hasPasskey && recoveryHint.seniorProfileId ? (

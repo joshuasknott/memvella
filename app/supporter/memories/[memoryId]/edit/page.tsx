@@ -136,7 +136,7 @@ export default function SupporterMemoryEditPage() {
         <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
           <p className="text-xl font-bold text-gray-900">Memory not found</p>
           <p className="mt-2 text-lg leading-relaxed text-gray-500">
-            This record is no longer available in the current FamilySpace.
+            This record is no longer available in the current Circle.
           </p>
         </div>
         <SecondaryButton href="/supporter/memories">
@@ -255,7 +255,7 @@ export default function SupporterMemoryEditPage() {
       toast({
         tone: "success",
         title: "Memory updated",
-        description: `${title.trim()} was updated in the FamilySpace.`,
+        description: `${title.trim()} was updated in the Circle.`,
       });
       router.push(`/supporter/memories/${memoryRecordId}`);
     } catch (saveError) {
@@ -286,7 +286,7 @@ export default function SupporterMemoryEditPage() {
             {memoryDetail.title}
           </h1>
           <p className="mt-2 text-lg leading-relaxed text-gray-600">
-            Keep this FamilySpace record accurate and easy to revisit.
+            Keep this Circle record accurate and easy to revisit.
           </p>
         </section>
 

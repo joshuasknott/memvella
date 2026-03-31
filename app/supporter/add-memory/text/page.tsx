@@ -75,7 +75,7 @@ export default function TextMemoryPage() {
       toast({
         tone: "success",
         title: "Memory saved",
-        description: `${title.trim()} was added to the FamilySpace.`,
+        description: `${title.trim()} was added to the Circle.`,
       });
       router.push("/supporter/memories");
     } catch (saveError) {

@@ -100,7 +100,7 @@ export default function PairingSettingsPage() {
       toast({
         tone: "success",
         title: "Assisted device session revoked",
-        description: "That tablet must pair again before it can reopen the FamilySpace.",
+        description: "That tablet must pair again before it can reopen the Circle.",
       });
     } catch (error) {
       toast({
@@ -128,7 +128,7 @@ export default function PairingSettingsPage() {
               Pairing
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-gray-600">
-              Generate a secure pairing code for {seniorDisplayName} and manage every active Assisted Senior tablet session linked to this FamilySpace.
+              Generate a secure pairing code for {seniorDisplayName} and manage every active Assisted Senior tablet session linked to this Circle.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">

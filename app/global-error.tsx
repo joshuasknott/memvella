@@ -25,7 +25,7 @@ export default function GlobalError({
               Memvella needs to reload
             </h1>
             <p className="mt-3 text-lg leading-relaxed text-[#494453]">
-              The app hit an unexpected failure before the main layout could finish. Retry to restore the latest FamilySpace state.
+              The app hit an unexpected failure before the main layout could finish. Retry to restore the latest Circle state.
             </p>
             <button
               type="button"

@@ -1,4 +1,4 @@
-import type {
+import {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
   ReactNode,
@@ -34,6 +34,10 @@ function secondaryClasses(className = "") {
   return `flex h-[72px] w-full items-center justify-center gap-2 rounded-full border-2 border-[#1D4ED8]/15 bg-white px-6 text-lg font-semibold text-[#1D4ED8] shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
 }
 
+function ghostClasses(className = "") {
+  return `flex h-[72px] w-full items-center justify-center gap-2 rounded-full px-6 text-lg font-semibold text-on-surface hover:bg-surface-container-low transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
+}
+
 export function PrimaryButton(props: ButtonProps) {
   if (isLinkProps(props)) {
     const { className = "", children, href, ...linkProps } = props;
@@ -65,6 +69,24 @@ export function SecondaryButton(props: ButtonProps) {
   const { className = "", children, ...buttonProps } = props;
   return (
     <button className={secondaryClasses(className)} {...buttonProps}>
+      {children}
+    </button>
+  );
+}
+
+export function GhostButton(props: ButtonProps) {
+  if (isLinkProps(props)) {
+    const { className = "", children, href, ...linkProps } = props;
+    return (
+      <Link href={href} className={ghostClasses(className)} {...linkProps}>
+        {children}
+      </Link>
+    );
+  }
+
+  const { className = "", children, ...buttonProps } = props;
+  return (
+    <button className={ghostClasses(className)} {...buttonProps}>
       {children}
     </button>
   );

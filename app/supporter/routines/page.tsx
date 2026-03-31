@@ -143,7 +143,7 @@ export default function SupporterRoutinesPage() {
             All schedules
           </h2>
           <p className="mt-1 text-base text-gray-500">
-            Every routine anchored to this FamilySpace.
+            Every routine anchored to this Circle.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export default function SupporterRoutinesPage() {
           <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
             <p className="text-xl font-bold text-gray-900">No routine schedules yet</p>
             <p className="mt-2 text-lg leading-relaxed text-gray-500">
-              Add your first schedule to create dependable daily structure for this FamilySpace.
+              Add your first schedule to create dependable daily structure for this Circle.
             </p>
           </div>
         )}

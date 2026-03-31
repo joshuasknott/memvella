@@ -69,7 +69,7 @@ export default function MediaMemoryPage() {
       toast({
         tone: "success",
         title: "Media memory saved",
-        description: `${title.trim()} was added to the FamilySpace.`,
+        description: `${title.trim()} was added to the Circle.`,
       });
       router.push("/supporter/memories");
     } catch (saveError) {

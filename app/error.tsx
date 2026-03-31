@@ -17,7 +17,7 @@ export default function AppError({
   return (
     <ErrorState
       title="This screen ran into a problem"
-      description="Memvella could not finish rendering this route. Try the screen again to recover your FamilySpace session."
+      description="Memvella could not finish rendering this route. Try the screen again to recover your Circle session."
       actionLabel="Try again"
       onRetry={unstable_retry}
     />

@@ -52,6 +52,15 @@
   --font-headline: var(--font-plus-jakarta-sans);
   --font-body: var(--font-lexend);
   --font-label: var(--font-lexend);
+
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
 }
 
 @layer base {
