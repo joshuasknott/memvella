@@ -20,6 +20,16 @@ type RoutineTimelineItem = {
   source: "structured";
 };
 
+export type ScheduledRoutineOccurrence = {
+  occurrenceId: Id<"routineOccurrences">;
+  familySpaceId: Id<"familySpaces">;
+  routineScheduleId: Id<"routineSchedules">;
+  occurrenceDateKey: string;
+  startTimeMinutes: number;
+  timezone: string;
+  softCheckInAt: number;
+};
+
 type TimeZoneClock = {
   currentMinutes: number;
   dateKey: string;
@@ -53,6 +63,26 @@ function getTimeZoneClock(date: Date, timeZone: string): TimeZoneClock {
     currentMinutes: hour * 60 + minute,
     dateKey: `${values.year}-${values.month}-${values.day}`,
   };
+}
+
+function getTimeZoneOffsetMs(date: Date, timeZone: string) {
+  const parts = getFormatter(timeZone).formatToParts(date);
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+  const utcFromTimeZoneParts = Date.UTC(
+    Number(values.year ?? "1970"),
+    Number(values.month ?? "1") - 1,
+    Number(values.day ?? "1"),
+    Number(values.hour ?? "0"),
+    Number(values.minute ?? "0"),
+    0,
+    0,
+  );
+
+  return utcFromTimeZoneParts - date.getTime();
 }
 
 export function parseTimeInputToMinutes(timeValue: string) {
@@ -125,6 +155,22 @@ export function getDayOfWeekForDateKey(dateKey: string) {
   return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 }
 
+export function getOccurrenceStartTimestampMs(
+  occurrenceDateKey: string,
+  startTimeMinutes: number,
+  timeZone: string,
+) {
+  const [year, month, day] = occurrenceDateKey.split("-").map(Number);
+  const hour = Math.floor(startTimeMinutes / 60);
+  const minute = startTimeMinutes % 60;
+  const firstGuess = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
+  const firstOffset = getTimeZoneOffsetMs(new Date(firstGuess), timeZone);
+  const adjusted = firstGuess - firstOffset;
+  const secondOffset = getTimeZoneOffsetMs(new Date(adjusted), timeZone);
+
+  return adjusted - (secondOffset - firstOffset);
+}
+
 function routineMatchesDay(daysOfWeek: number[], dayOfWeek: number) {
   return daysOfWeek.includes(dayOfWeek);
 }
@@ -183,12 +229,13 @@ export async function replaceRoutineOccurrences(
   }
 
   if (schedule.status !== "active") {
-    return;
+    return [] as ScheduledRoutineOccurrence[];
   }
 
   const { dateKey } = getTimeZoneClock(new Date(), schedule.timezone);
   const startDate = normalizeDateKey(schedule.startDate);
   const endDate = normalizeDateKey(schedule.endDate);
+  const createdOccurrences: ScheduledRoutineOccurrence[] = [];
   for (let dayOffset = 0; dayOffset <= LOOKAHEAD_DAYS; dayOffset += 1) {
     const occurrenceDateKey = addDaysToDateKey(dateKey, dayOffset);
     if (startDate && occurrenceDateKey < startDate) {
@@ -205,7 +252,7 @@ export async function replaceRoutineOccurrences(
       continue;
     }
 
-    await ctx.db.insert("routineOccurrences", {
+    const occurrenceId = await ctx.db.insert("routineOccurrences", {
       familySpaceId: schedule.familySpaceId,
       routineScheduleId: schedule._id,
       occurrenceDateKey,
@@ -214,7 +261,25 @@ export async function replaceRoutineOccurrences(
       timezone: schedule.timezone,
       status: "scheduled",
     });
+
+    createdOccurrences.push({
+      occurrenceId,
+      familySpaceId: schedule.familySpaceId,
+      routineScheduleId: schedule._id,
+      occurrenceDateKey,
+      startTimeMinutes: schedule.startTimeMinutes,
+      timezone: schedule.timezone,
+      softCheckInAt:
+        getOccurrenceStartTimestampMs(
+          occurrenceDateKey,
+          schedule.startTimeMinutes,
+          schedule.timezone,
+        ) +
+        15 * 60 * 1000,
+    });
   }
+
+  return createdOccurrences;
 }
 
 export async function listTodayTimelineForFamilySpace(

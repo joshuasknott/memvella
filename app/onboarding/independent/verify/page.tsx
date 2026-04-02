@@ -21,7 +21,7 @@ const pendingEmailStorageKey = "memvella_pending_independent_email";
 
 type FinalizedSession = {
   sessionToken: string;
-  seniorProfileId: string;
+  recoveryKey: string;
   seniorName: string;
   recoveryEmail: string | null;
   hasPasskey: boolean;
@@ -121,7 +121,7 @@ export default function IndependentVerifyPage() {
 
         const nextSession = {
           sessionToken: result.sessionToken,
-          seniorProfileId: result.seniorProfileId,
+          recoveryKey: result.recoveryKey,
           seniorName: result.seniorName,
           recoveryEmail,
           hasPasskey: result.hasPasskey,
@@ -129,7 +129,7 @@ export default function IndependentVerifyPage() {
 
         saveSeniorSession("independent", nextSession);
         saveSeniorRecoveryHint("independent", {
-          seniorProfileId: result.seniorProfileId,
+          recoveryKey: result.recoveryKey,
           seniorName: result.seniorName,
           recoveryEmail,
           hasPasskey: result.hasPasskey,
@@ -206,7 +206,7 @@ export default function IndependentVerifyPage() {
       }
 
       saveSeniorRecoveryHint("independent", {
-        seniorProfileId: finalizedSession.seniorProfileId,
+        recoveryKey: finalizedSession.recoveryKey,
         seniorName: finalizedSession.seniorName,
         recoveryEmail: finalizedSession.recoveryEmail,
         hasPasskey: true,

@@ -80,7 +80,7 @@ export default function IndependentRecoveryPage() {
   };
 
   const handlePasskeyRecovery = async () => {
-    if (!recoveryHint?.seniorProfileId || !deviceFingerprint) {
+    if (!recoveryHint?.recoveryKey || !deviceFingerprint) {
       return;
     }
 
@@ -95,7 +95,7 @@ export default function IndependentRecoveryPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ seniorProfileId: recoveryHint.seniorProfileId }),
+          body: JSON.stringify({ recoveryKey: recoveryHint.recoveryKey }),
         },
       );
       const optionsPayload = (await optionsResponse.json()) as {
@@ -121,7 +121,7 @@ export default function IndependentRecoveryPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            seniorProfileId: recoveryHint.seniorProfileId,
+            recoveryKey: recoveryHint.recoveryKey,
             deviceFingerprint,
             responseJSON,
           }),
@@ -130,11 +130,15 @@ export default function IndependentRecoveryPage() {
       const verifyPayload = (await verifyResponse.json()) as {
         error?: string;
         sessionToken?: string;
-        seniorProfileId?: string;
+        recoveryKey?: string;
         seniorName?: string;
       };
 
-      if (!verifyResponse.ok || !verifyPayload.sessionToken) {
+      if (
+        !verifyResponse.ok ||
+        !verifyPayload.sessionToken ||
+        !verifyPayload.recoveryKey
+      ) {
         throw new Error(
           verifyPayload.error ?? "Unable to finish Face ID / Touch ID sign-in.",
         );
@@ -142,13 +146,13 @@ export default function IndependentRecoveryPage() {
 
       saveSeniorSession("independent", {
         sessionToken: verifyPayload.sessionToken,
-        seniorProfileId: verifyPayload.seniorProfileId,
+        recoveryKey: verifyPayload.recoveryKey,
         seniorName: verifyPayload.seniorName,
         recoveryEmail: recoveryHint.recoveryEmail ?? email.trim().toLowerCase(),
         hasPasskey: true,
       });
       const nextRecoveryHint = {
-        seniorProfileId: verifyPayload.seniorProfileId,
+        recoveryKey: verifyPayload.recoveryKey,
         seniorName: verifyPayload.seniorName,
         recoveryEmail: recoveryHint.recoveryEmail ?? email.trim().toLowerCase(),
         hasPasskey: true,
@@ -179,7 +183,7 @@ export default function IndependentRecoveryPage() {
           Reopen your Circle with a secure sign-in link or Face ID / Touch ID.
         </p>
 
-        {recoveryHint?.hasPasskey && recoveryHint.seniorProfileId ? (
+        {recoveryHint?.hasPasskey && recoveryHint.recoveryKey ? (
           <PrimaryButton
             type="button"
             onClick={handlePasskeyRecovery}

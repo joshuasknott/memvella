@@ -22,6 +22,7 @@ import {
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
 } from "./routineHelpers";
+import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
 import { assertValidStoredUpload } from "./uploadValidation";
 import {
   ADMIN_LABEL,
@@ -155,7 +156,8 @@ export const addRoutine = mutation({
       throw new Error("Unable to save this routine.");
     }
 
-    await replaceRoutineOccurrences(ctx, schedule);
+    const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
+    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
     return routineScheduleId;
   },
 });

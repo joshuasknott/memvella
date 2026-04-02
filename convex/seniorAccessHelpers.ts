@@ -96,6 +96,16 @@ export async function validateSeniorSession(
     return { status: "invalid", reason: "not_found" };
   }
 
+  if (seniorProfile.familySpaceId !== session.familySpaceId) {
+    return { status: "invalid", reason: "not_found" };
+  }
+
+  const expectedSeniorMode =
+    session.sessionType === "assisted_device" ? "assisted" : "independent";
+  if (seniorProfile.seniorMode !== expectedSeniorMode) {
+    return { status: "invalid", reason: "wrong_experience" };
+  }
+
   return {
     status: "active",
     familySpace,
@@ -224,7 +234,7 @@ export async function buildSeniorDashboard(
         }
       : { title: "Enjoy your day.", time: null as string | null };
 
-  let gallery: GalleryItem[] = (
+  const gallery: GalleryItem[] = (
     await Promise.all(
       memoryRecords.map(async (record) => {
         const [asset] = await ctx.db

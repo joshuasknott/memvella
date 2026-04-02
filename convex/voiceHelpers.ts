@@ -64,9 +64,15 @@ function truncatePromptField(value: string | null | undefined, maxLength: number
 export const gatherSeniorContext = internalQuery({
   args: {
     familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    recentInteractionLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const [routines, familyMembers, recentMemories, timeZone, familySpace] =
+    const recentInteractionLimit = Math.min(
+      Math.max(args.recentInteractionLimit ?? 5, 3),
+      5,
+    );
+    const [routines, familyMembers, recentMemories, recentVoiceInteractions, timeZone, familySpace, seniorProfile] =
       await Promise.all([
         listRoutineSchedulesForFamilySpace(ctx, args.familySpaceId, 6),
         ctx.db
@@ -82,9 +88,25 @@ export const gatherSeniorContext = internalQuery({
           )
           .order("desc")
           .take(4),
+        ctx.db
+          .query("voiceInteractions")
+          .withIndex("by_seniorProfileId_and_createdAt", (query) =>
+            query.eq("seniorProfileId", args.seniorProfileId),
+          )
+          .order("desc")
+          .take(recentInteractionLimit),
         resolveFamilySpaceTimeZone(ctx, args.familySpaceId),
         ctx.db.get(args.familySpaceId),
+        ctx.db.get(args.seniorProfileId),
       ]);
+
+    if (
+      !seniorProfile ||
+      seniorProfile.familySpaceId !== args.familySpaceId ||
+      seniorProfile.seniorMode !== "assisted"
+    ) {
+      throw new Error("The assisted voice context is not linked to this Circle.");
+    }
 
     return {
       familySpaceName:
@@ -111,6 +133,17 @@ export const gatherSeniorContext = internalQuery({
         summary:
           truncatePromptField(summarizeMemory(record), 96) ??
           "No details added yet.",
+      })),
+      recentVoiceInteractions: recentVoiceInteractions.map((interaction) => ({
+        transcript:
+          truncatePromptField(
+            buildTranscriptExcerpt(interaction.transcript, 140),
+            140,
+          ) ?? "No transcript available.",
+        assistantResponse: truncatePromptField(interaction.assistantResponse, 140),
+        intentType: interaction.intentType,
+        distressDetected: interaction.distressDetected,
+        createdAt: interaction.createdAt,
       })),
     };
   },
@@ -367,7 +400,8 @@ export const getRecentVoiceInteractionsForSenior = internalQuery({
       .withIndex("by_seniorProfileId_and_createdAt", (query) =>
         query.eq("seniorProfileId", args.seniorProfileId),
       )
-      .take(10);
+      .order("desc")
+      .take(5);
   },
 });
 

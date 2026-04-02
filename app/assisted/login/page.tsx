@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { api } from "@/convex/_generated/api";
 import { Numpad } from "@/components/shared-senior/Numpad";
-import { getDeviceFingerprint } from "@/lib/device-fingerprint";
+import { persistDeviceFingerprint } from "@/lib/device-fingerprint";
 import {
   clearSeniorSession,
   saveSeniorSession,
@@ -14,7 +12,6 @@ import {
 
 export default function AssistedSetupPage() {
   const router = useRouter();
-  const pairTablet = useMutation(api.kiosk.pairTabletSession);
 
   const [pin, setPin] = useState("");
   const [isPairing, setIsPairing] = useState(false);
@@ -40,11 +37,26 @@ export default function AssistedSetupPage() {
     setIsPairing(true);
 
     try {
-      const deviceFingerprint = await getDeviceFingerprint("assisted");
-      const result = await pairTablet({
-        pinCode: pin,
-        deviceFingerprint,
+      const response = await fetch("/api/assisted/pairing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pinCode: pin,
+        }),
       });
+      const result = (await response.json()) as
+        | {
+            success: true;
+            sessionToken: string;
+            seniorName: string;
+            deviceFingerprint: string;
+          }
+        | {
+            success: false;
+            error: string;
+          };
 
       if (!result.success) {
         setError(result.error);
@@ -52,10 +64,12 @@ export default function AssistedSetupPage() {
         return;
       }
 
+      persistDeviceFingerprint("assisted", result.deviceFingerprint);
       clearSeniorSession("assisted");
       saveSeniorSession("assisted", {
         sessionToken: result.sessionToken,
         seniorName: result.seniorName,
+        deviceFingerprint: result.deviceFingerprint,
       });
       router.push("/assisted");
     } catch (pairingError) {

@@ -6,7 +6,13 @@ import {
   requireFamilySpaceMembership,
   upsertIndependentSeniorProfile,
 } from "./familySpaceAuth";
-import { PASSKEY_CHALLENGE_TTL_MS, normalizeOptionalEmail, normalizeOptionalText } from "./security";
+import {
+  PASSKEY_CHALLENGE_TTL_MS,
+  createSeniorRecoveryKey,
+  normalizeOptionalEmail,
+  normalizeOptionalText,
+  parseSeniorRecoveryKey,
+} from "./security";
 import {
   issueSeniorAccessSession,
   revokeSeniorSessionsForProfile,
@@ -23,7 +29,7 @@ type FinalizeMagicLinkSignInResult =
   | {
       status: "ready";
       sessionToken: string;
-      seniorProfileId: Id<"seniorProfiles">;
+      recoveryKey: string;
       seniorName: string;
       hasPasskey: boolean;
     }
@@ -86,6 +92,23 @@ async function getActivePasskeys(
     .take(20);
 
   return passkeys.filter((passkey) => passkey.revokedAt === null);
+}
+
+async function resolveIndependentRecoveryProfile(
+  ctx: QueryCtx | MutationCtx,
+  recoveryKey: string,
+) {
+  const seniorProfileId = await parseSeniorRecoveryKey(recoveryKey);
+  if (!seniorProfileId) {
+    return null;
+  }
+
+  const seniorProfile = await ctx.db.get(seniorProfileId);
+  if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    return null;
+  }
+
+  return seniorProfile;
 }
 
 export const finalizeMagicLinkSignIn = mutation({
@@ -205,7 +228,7 @@ export const finalizeMagicLinkSignIn = mutation({
     return {
       status: "ready",
       sessionToken: session.sessionToken,
-      seniorProfileId,
+      recoveryKey: await createSeniorRecoveryKey(seniorProfileId),
       seniorName: normalizedDisplayName,
       hasPasskey: activePasskeys.length > 0,
     };
@@ -316,6 +339,13 @@ export const saveCurrentIndependentSeniorPasskey = mutation({
       .unique();
 
     if (existingPasskey) {
+      if (
+        existingPasskey.familySpaceId !== membership.familySpaceId ||
+        existingPasskey.seniorProfileId !== membership.seniorProfileId
+      ) {
+        throw new Error("This Face ID / Touch ID passkey is already linked to another Circle.");
+      }
+
       await ctx.db.patch(existingPasskey._id, {
         familySpaceId: membership.familySpaceId,
         seniorProfileId: membership.seniorProfileId,
@@ -347,17 +377,19 @@ export const saveCurrentIndependentSeniorPasskey = mutation({
 
 export const getIndependentSeniorRecoveryProfile = query({
   args: {
-    seniorProfileId: v.id("seniorProfiles"),
+    recoveryKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const seniorProfile = await ctx.db.get(args.seniorProfileId);
-    if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    const seniorProfile = await resolveIndependentRecoveryProfile(
+      ctx,
+      args.recoveryKey,
+    );
+    if (!seniorProfile) {
       return null;
     }
 
     const passkeys = await getActivePasskeys(ctx, seniorProfile._id);
     return {
-      seniorProfileId: seniorProfile._id,
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
       recoveryEmail: seniorProfile.recoveryEmail,
       hasPasskey: passkeys.length > 0,
@@ -367,24 +399,27 @@ export const getIndependentSeniorRecoveryProfile = query({
 
 export const storePasskeyAuthenticationChallenge = mutation({
   args: {
-    seniorProfileId: v.id("seniorProfiles"),
+    recoveryKey: v.string(),
     challenge: v.string(),
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const seniorProfile = await ctx.db.get(args.seniorProfileId);
-    if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    const seniorProfile = await resolveIndependentRecoveryProfile(
+      ctx,
+      args.recoveryKey,
+    );
+    if (!seniorProfile) {
       throw new Error(`This ${INDEPENDENT_PROFILE_LABEL} could not be found.`);
     }
 
     await invalidateChallenges(
       ctx,
-      args.seniorProfileId,
+      seniorProfile._id,
       "passkey_authentication",
     );
 
     return await ctx.db.insert("seniorAuthChallenges", {
-      seniorProfileId: args.seniorProfileId,
+      seniorProfileId: seniorProfile._id,
       purpose: "passkey_authentication",
       challenge: args.challenge,
       expiresAt: args.expiresAt ?? Date.now() + PASSKEY_CHALLENGE_TTL_MS,
@@ -395,20 +430,22 @@ export const storePasskeyAuthenticationChallenge = mutation({
 
 export const getPasskeyAuthenticationMaterial = query({
   args: {
-    seniorProfileId: v.id("seniorProfiles"),
+    recoveryKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const seniorProfile = await ctx.db.get(args.seniorProfileId);
-    if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    const seniorProfile = await resolveIndependentRecoveryProfile(
+      ctx,
+      args.recoveryKey,
+    );
+    if (!seniorProfile) {
       return null;
     }
 
     return {
-      seniorProfile,
-      passkeys: await getActivePasskeys(ctx, args.seniorProfileId),
+      passkeys: await getActivePasskeys(ctx, seniorProfile._id),
       activeAuthenticationChallenge: await getActiveChallenge(
         ctx,
-        args.seniorProfileId,
+        seniorProfile._id,
         "passkey_authentication",
       ),
     };
@@ -417,21 +454,24 @@ export const getPasskeyAuthenticationMaterial = query({
 
 export const completePasskeyAuthentication = mutation({
   args: {
-    seniorProfileId: v.id("seniorProfiles"),
+    recoveryKey: v.string(),
     challenge: v.string(),
     credentialId: v.string(),
     nextCounter: v.number(),
     deviceFingerprint: v.string(),
   },
   handler: async (ctx, args) => {
-    const seniorProfile = await ctx.db.get(args.seniorProfileId);
-    if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    const seniorProfile = await resolveIndependentRecoveryProfile(
+      ctx,
+      args.recoveryKey,
+    );
+    if (!seniorProfile) {
       throw new Error(`This ${INDEPENDENT_PROFILE_LABEL} could not be found.`);
     }
 
     const activeChallenge = await getActiveChallenge(
       ctx,
-      args.seniorProfileId,
+      seniorProfile._id,
       "passkey_authentication",
     );
     if (!activeChallenge || activeChallenge.challenge !== args.challenge) {
@@ -447,6 +487,13 @@ export const completePasskeyAuthentication = mutation({
 
     if (!passkey || passkey.revokedAt !== null) {
       throw new Error("That passkey is no longer available.");
+    }
+
+    if (
+      passkey.seniorProfileId !== seniorProfile._id ||
+      passkey.familySpaceId !== seniorProfile.familySpaceId
+    ) {
+      throw new Error("That passkey is not linked to this Circle.");
     }
 
     await ctx.db.patch(activeChallenge._id, {
@@ -475,7 +522,7 @@ export const completePasskeyAuthentication = mutation({
 
     return {
       sessionToken: session.sessionToken,
-      seniorProfileId: seniorProfile._id,
+      recoveryKey: await createSeniorRecoveryKey(seniorProfile._id),
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
     };
   },

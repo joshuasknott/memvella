@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import { getPasskeyConfig } from "@/lib/passkey";
 
@@ -10,22 +9,21 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const { seniorProfileId } = (await request.json()) as {
-      seniorProfileId: string;
+    const { recoveryKey } = (await request.json()) as {
+      recoveryKey: string;
     };
-    if (!seniorProfileId) {
+    if (!recoveryKey) {
       return NextResponse.json(
-        { error: "A profile is required for passkey recovery." },
+        { error: "A recovery key is required for passkey recovery." },
         { status: 400 },
       );
     }
 
-    const typedSeniorProfileId = seniorProfileId as Id<"seniorProfiles">;
     const convex = createConvexHttpClient();
     const authenticationMaterial = await convex.query(
       api.independentAuth.getPasskeyAuthenticationMaterial,
       {
-        seniorProfileId: typedSeniorProfileId,
+        recoveryKey,
       },
     );
 
@@ -48,7 +46,7 @@ export async function POST(request: Request) {
     });
 
     await convex.mutation(api.independentAuth.storePasskeyAuthenticationChallenge, {
-      seniorProfileId: typedSeniorProfileId,
+      recoveryKey,
       challenge: optionsJSON.challenge,
     });
 

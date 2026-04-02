@@ -1,7 +1,9 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { requireFamilySpaceMembership } from "./familySpaceAuth";
-import { normalizeOptionalText } from "./security";
+import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  getSeniorProfileByMode,
+  requireFamilySpaceMembership,
+} from "./familySpaceAuth";
 import {
   describeRoutineDays,
   formatTimeLabel,
@@ -11,6 +13,9 @@ import {
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
 } from "./routineHelpers";
+import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
+import { validateSeniorSession } from "./seniorAccessHelpers";
+import { normalizeOptionalText } from "./security";
 
 export const createRoutineSchedule = mutation({
   args: {
@@ -63,7 +68,8 @@ export const createRoutineSchedule = mutation({
       throw new Error("Unable to save this routine schedule.");
     }
 
-    await replaceRoutineOccurrences(ctx, schedule);
+    const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
+    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
     return routineScheduleId;
   },
 });
@@ -160,7 +166,8 @@ export const updateRoutineSchedule = mutation({
       throw new Error("Unable to update this routine schedule.");
     }
 
-    await replaceRoutineOccurrences(ctx, updatedSchedule);
+    const createdOccurrences = await replaceRoutineOccurrences(ctx, updatedSchedule);
+    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
     return schedule._id;
   },
 });
@@ -189,5 +196,229 @@ export const deleteRoutineSchedule = mutation({
 
     await ctx.db.delete(schedule._id);
     return { deleted: true as const };
+  },
+});
+
+export const queueRoutineRetreatCheckIn = internalMutation({
+  args: {
+    routineOccurrenceId: v.id("routineOccurrences"),
+  },
+  handler: async (ctx, args) => {
+    const occurrence = await ctx.db.get(args.routineOccurrenceId);
+    if (!occurrence || occurrence.status !== "scheduled") {
+      return { queued: false as const, reason: "routine_not_pending" as const };
+    }
+
+    const [schedule, assistedSenior] = await Promise.all([
+      ctx.db.get(occurrence.routineScheduleId),
+      getSeniorProfileByMode(ctx, occurrence.familySpaceId, "assisted"),
+    ]);
+
+    if (!schedule || !assistedSenior) {
+      return { queued: false as const, reason: "context_missing" as const };
+    }
+
+    const existing = await ctx.db
+      .query("routineRetreatCheckIns")
+      .withIndex("by_routineOccurrenceId", (query) =>
+        query.eq("routineOccurrenceId", occurrence._id),
+      )
+      .unique();
+
+    const now = Date.now();
+    if (existing) {
+      if (
+        existing.status === "confirmed" ||
+        existing.status === "unconfirmed" ||
+        existing.status === "canceled"
+      ) {
+        return { queued: false as const, reason: "already_resolved" as const };
+      }
+
+      await ctx.db.patch(existing._id, {
+        status: "live_prompt_ready",
+        ignoredAt: now,
+        softCheckInAt: now,
+        updatedAt: now,
+      });
+
+      return { queued: true as const, checkInId: existing._id };
+    }
+
+    const checkInId = await ctx.db.insert("routineRetreatCheckIns", {
+      familySpaceId: occurrence.familySpaceId,
+      seniorProfileId: assistedSenior._id,
+      routineOccurrenceId: occurrence._id,
+      routineScheduleId: occurrence.routineScheduleId,
+      status: "live_prompt_ready",
+      ignoredAt: now,
+      softCheckInAt: now,
+      promptedAt: null,
+      resolvedAt: null,
+      promptText: null,
+      responseTranscript: null,
+      voiceInteractionId: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { queued: true as const, checkInId };
+  },
+});
+
+export const listReadyRetreatCheckIns = query({
+  args: {
+    sessionToken: v.string(),
+    deviceFingerprint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const validation = await validateSeniorSession(ctx, {
+      sessionToken: args.sessionToken,
+      deviceFingerprint: args.deviceFingerprint,
+      expectedSessionType: "assisted_device",
+    });
+    if (validation.status === "invalid") {
+      return [];
+    }
+
+    const checkIns = await ctx.db
+      .query("routineRetreatCheckIns")
+      .withIndex("by_seniorProfileId_and_status_and_softCheckInAt", (query) =>
+        query
+          .eq("seniorProfileId", validation.seniorProfile._id)
+          .eq("status", "live_prompt_ready")
+          .lte("softCheckInAt", Date.now()),
+      )
+      .take(3);
+
+    if (checkIns.length === 0) {
+      return [];
+    }
+
+    const [occurrences, schedules] = await Promise.all([
+      Promise.all(checkIns.map((checkIn) => ctx.db.get(checkIn.routineOccurrenceId))),
+      Promise.all(checkIns.map((checkIn) => ctx.db.get(checkIn.routineScheduleId))),
+    ]);
+    const occurrenceById = new Map(
+      occurrences
+        .filter((occurrence): occurrence is NonNullable<typeof occurrence> => occurrence !== null)
+        .map((occurrence) => [occurrence._id, occurrence]),
+    );
+    const scheduleById = new Map(
+      schedules
+        .filter((schedule): schedule is NonNullable<typeof schedule> => schedule !== null)
+        .map((schedule) => [schedule._id, schedule]),
+    );
+
+    return checkIns
+      .map((checkIn) => {
+        const occurrence = occurrenceById.get(checkIn.routineOccurrenceId);
+        const schedule = scheduleById.get(checkIn.routineScheduleId);
+        if (!occurrence || !schedule || occurrence.status !== "scheduled") {
+          return null;
+        }
+
+        return {
+          id: checkIn._id,
+          routineOccurrenceId: occurrence._id,
+          title: schedule.title,
+          timeLabel: occurrence.timeLabel,
+          aiInstructions: schedule.aiInstructions,
+        };
+      })
+      .filter((checkIn): checkIn is NonNullable<typeof checkIn> => checkIn !== null);
+  },
+});
+
+export const markRetreatCheckInPrompted = mutation({
+  args: {
+    sessionToken: v.string(),
+    deviceFingerprint: v.string(),
+    checkInId: v.id("routineRetreatCheckIns"),
+    promptText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const validation = await validateSeniorSession(ctx, {
+      sessionToken: args.sessionToken,
+      deviceFingerprint: args.deviceFingerprint,
+      expectedSessionType: "assisted_device",
+    });
+    if (validation.status === "invalid") {
+      throw new Error("This assisted session is no longer active.");
+    }
+
+    const checkIn = await ctx.db.get(args.checkInId);
+    if (!checkIn || checkIn.seniorProfileId !== validation.seniorProfile._id) {
+      throw new Error("This routine retreat check-in is no longer available.");
+    }
+
+    if (checkIn.status !== "live_prompt_ready") {
+      return { updated: false as const };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(checkIn._id, {
+      status: "live_prompt_sent",
+      promptedAt: now,
+      promptText: normalizeOptionalText(args.promptText) ?? args.promptText,
+      updatedAt: now,
+    });
+
+    return { updated: true as const };
+  },
+});
+
+export const resolveRetreatCheckIn = mutation({
+  args: {
+    sessionToken: v.string(),
+    deviceFingerprint: v.string(),
+    checkInId: v.id("routineRetreatCheckIns"),
+    outcome: v.union(v.literal("confirmed"), v.literal("unconfirmed")),
+    responseTranscript: v.optional(v.string()),
+    voiceInteractionId: v.optional(v.id("voiceInteractions")),
+  },
+  handler: async (ctx, args) => {
+    const validation = await validateSeniorSession(ctx, {
+      sessionToken: args.sessionToken,
+      deviceFingerprint: args.deviceFingerprint,
+      expectedSessionType: "assisted_device",
+    });
+    if (validation.status === "invalid") {
+      throw new Error("This assisted session is no longer active.");
+    }
+
+    const checkIn = await ctx.db.get(args.checkInId);
+    if (!checkIn || checkIn.seniorProfileId !== validation.seniorProfile._id) {
+      throw new Error("This routine retreat check-in is no longer available.");
+    }
+
+    if (
+      checkIn.status === "confirmed" ||
+      checkIn.status === "unconfirmed" ||
+      checkIn.status === "canceled"
+    ) {
+      return { updated: false as const };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(checkIn._id, {
+      status: args.outcome,
+      resolvedAt: now,
+      responseTranscript:
+        normalizeOptionalText(args.responseTranscript) ?? null,
+      voiceInteractionId: args.voiceInteractionId ?? null,
+      updatedAt: now,
+    });
+
+    if (args.outcome === "unconfirmed") {
+      const occurrence = await ctx.db.get(checkIn.routineOccurrenceId);
+      if (occurrence && occurrence.status === "scheduled") {
+        await ctx.db.patch(occurrence._id, {
+          status: "unconfirmed",
+        });
+      }
+    }
+
+    return { updated: true as const };
   },
 });

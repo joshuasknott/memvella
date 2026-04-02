@@ -174,6 +174,7 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("skipped"),
       v.literal("canceled"),
+      v.literal("unconfirmed"),
     ),
   })
     .index("by_routineScheduleId", ["routineScheduleId"])
@@ -188,6 +189,36 @@ export default defineSchema({
       "occurrenceDateKey",
       "startTimeMinutes",
     ]),
+
+  routineRetreatCheckIns: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    routineOccurrenceId: v.id("routineOccurrences"),
+    routineScheduleId: v.id("routineSchedules"),
+    status: v.union(
+      v.literal("live_prompt_ready"),
+      v.literal("live_prompt_sent"),
+      v.literal("confirmed"),
+      v.literal("unconfirmed"),
+      v.literal("canceled"),
+    ),
+    ignoredAt: v.number(),
+    softCheckInAt: v.number(),
+    promptedAt: v.union(v.number(), v.null()),
+    resolvedAt: v.union(v.number(), v.null()),
+    promptText: v.union(v.string(), v.null()),
+    responseTranscript: v.union(v.string(), v.null()),
+    voiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_routineOccurrenceId", ["routineOccurrenceId"])
+    .index("by_seniorProfileId_and_status_and_softCheckInAt", [
+      "seniorProfileId",
+      "status",
+      "softCheckInAt",
+    ])
+    .index("by_status_and_softCheckInAt", ["status", "softCheckInAt"]),
 
   memories: defineTable(v.any())
     .index("by_familySpaceId", ["familySpaceId"])

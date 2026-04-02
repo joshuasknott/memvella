@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAction } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Mic } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceModal } from "@/components/shared-senior/VoiceModal";
 import { api } from "@/convex/_generated/api";
-import { speakText, stopSpeaking, type VoiceUiState } from "@/lib/browser-speech";
+import { stopSpeaking } from "@/lib/browser-speech";
+import { useAssistedLiveVoice } from "@/lib/use-assisted-live-voice";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
 
 function useLiveClock() {
@@ -68,16 +70,112 @@ function AssistedRecoveryState() {
   );
 }
 
+function buildSoftCheckInInstruction(
+  seniorName: string,
+  title: string,
+  timeLabel: string,
+  aiInstructions: string | null,
+) {
+  return [
+    `Perform one soft double-tap routine check-in for ${seniorName}.`,
+    `The routine was "${title}" at ${timeLabel} and it was ignored for 15 minutes.`,
+    aiInstructions ? `Context: ${aiInstructions}` : null,
+    "Speak directly to the senior in one short sentence.",
+    "Keep the tone calm, familiar, and non-judgmental.",
+    "Invite a very simple yes or no response.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export default function AssistedHomePage() {
   const now = useLiveClock();
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
-  const [voiceState, setVoiceState] = useState<VoiceUiState>("idle");
-  const [lastTranscript, setLastTranscript] = useState<string | null>(null);
-  const [lastReply, setLastReply] = useState<string | null>(null);
-  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [activeCheckInId, setActiveCheckInId] =
+    useState<Id<"routineRetreatCheckIns"> | null>(null);
   const { dashboard, deviceFingerprint, sessionState, clearSession } =
     useSeniorDashboardSession("assisted");
-  const handleAssistedVoiceTurn = useAction(api.voice.handleAssistedVoiceTurn);
+  const logAssistedLiveTurn = useMutation(api.liveVoice.logAssistedLiveTurn);
+  const markRetreatCheckInPrompted = useMutation(
+    api.routines.markRetreatCheckInPrompted,
+  );
+  const resolveRetreatCheckIn = useMutation(api.routines.resolveRetreatCheckIn);
+  const readyRetreatCheckIns = useQuery(
+    api.routines.listReadyRetreatCheckIns,
+    sessionState?.sessionToken && deviceFingerprint
+      ? {
+          sessionToken: sessionState.sessionToken,
+          deviceFingerprint,
+        }
+      : "skip",
+  );
+  const {
+    closeSession: closeLiveSession,
+    error: voiceError,
+    isConnecting,
+    isListening,
+    lastReply,
+    lastTranscript,
+    liveTranscript,
+    sendSoftCheckIn,
+    setError: setVoiceError,
+    voiceState,
+  } = useAssistedLiveVoice({
+    sessionToken: sessionState?.sessionToken,
+    deviceFingerprint,
+    isActive: isVoiceModalOpen,
+    onTurnComplete: async (turn) => {
+      if (!sessionState?.sessionToken || !deviceFingerprint) {
+        return;
+      }
+
+      if (turn.kind === "soft_check_in_prompt") {
+        await markRetreatCheckInPrompted({
+          sessionToken: sessionState.sessionToken,
+          deviceFingerprint,
+          checkInId: turn.checkInId,
+          promptText: turn.reply || "Just checking in with you now.",
+        });
+        return;
+      }
+
+      if (!turn.transcript.trim() || !turn.reply.trim()) {
+        return;
+      }
+
+      const interactionId = await logAssistedLiveTurn({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        transcript: turn.transcript,
+        assistantResponse: turn.reply,
+      });
+
+      if (turn.kind === "soft_check_in_response") {
+        await resolveRetreatCheckIn({
+          sessionToken: sessionState.sessionToken,
+          deviceFingerprint,
+          checkInId: turn.checkInId,
+          outcome: "confirmed",
+          responseTranscript: turn.transcript,
+          ...(interactionId ? { voiceInteractionId: interactionId } : {}),
+        });
+        setActiveCheckInId(null);
+      }
+    },
+    onSoftCheckInTimeout: async (checkInId) => {
+      if (!sessionState?.sessionToken || !deviceFingerprint) {
+        return;
+      }
+
+      await resolveRetreatCheckIn({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        checkInId,
+        outcome: "unconfirmed",
+      });
+      setActiveCheckInId(null);
+    },
+  });
 
   useEffect(() => {
     if (dashboard?.status === "invalid") {
@@ -87,41 +185,68 @@ export default function AssistedHomePage() {
 
   const closeVoiceModal = () => {
     stopSpeaking();
-    setVoiceState("idle");
+    if (activeCheckInId && sessionState?.sessionToken && deviceFingerprint) {
+      void resolveRetreatCheckIn({
+        sessionToken: sessionState.sessionToken,
+        deviceFingerprint,
+        checkInId: activeCheckInId,
+        outcome: "unconfirmed",
+      });
+      setActiveCheckInId(null);
+    }
+    void closeLiveSession();
     setVoiceError(null);
     setIsVoiceModalOpen(false);
   };
 
-  const submitVoiceTurn = async (transcript: string) => {
-    if (!sessionState?.sessionToken || !deviceFingerprint) {
-      setVoiceError("This tablet session needs to be refreshed.");
+  useEffect(() => {
+    if (
+      !readyRetreatCheckIns?.length ||
+      !dashboard ||
+      dashboard.status !== "active"
+    ) {
       return;
     }
 
-    setLastTranscript(transcript);
-    setVoiceError(null);
-    setVoiceState("processing");
-
-    try {
-      const result = await handleAssistedVoiceTurn({
-        sessionToken: sessionState.sessionToken,
-        deviceFingerprint,
-        transcript,
-      });
-
-      setLastReply(result.reply);
-      await speakText(result.reply, {
-        lang: "en-GB",
-        onStart: () => setVoiceState("speaking"),
-        onEnd: () => setVoiceState("idle"),
-        onError: () => setVoiceState("idle"),
-      });
-    } catch (error) {
-      console.error(error);
-      setVoiceState("idle");
-      setVoiceError("The voice loop is unavailable right now. Please try again.");
+    const nextCheckIn = readyRetreatCheckIns[0];
+    if (!nextCheckIn || activeCheckInId) {
+      return;
     }
-  };
+
+    if (!isVoiceModalOpen) {
+      const openModalTimeout = window.setTimeout(() => {
+        setIsVoiceModalOpen(true);
+      }, 0);
+      return () => window.clearTimeout(openModalTimeout);
+    }
+
+    if (isConnecting) {
+      return;
+    }
+
+    const sent = sendSoftCheckIn(
+      buildSoftCheckInInstruction(
+        dashboard.seniorName,
+        nextCheckIn.title,
+        nextCheckIn.timeLabel,
+        nextCheckIn.aiInstructions,
+      ),
+      nextCheckIn.id,
+    );
+    if (sent) {
+      const setCheckInTimeout = window.setTimeout(() => {
+        setActiveCheckInId(nextCheckIn.id);
+      }, 0);
+      return () => window.clearTimeout(setCheckInTimeout);
+    }
+  }, [
+    activeCheckInId,
+    dashboard,
+    isConnecting,
+    isVoiceModalOpen,
+    readyRetreatCheckIns,
+    sendSoftCheckIn,
+  ]);
 
   if (!deviceFingerprint) {
     return (
@@ -184,8 +309,6 @@ export default function AssistedHomePage() {
           <button
             onClick={() => {
               setVoiceError(null);
-              setLastTranscript(null);
-              setLastReply(null);
               setIsVoiceModalOpen(true);
             }}
             className="block w-full rounded-full bg-[#6B21A8] px-8 py-6 text-center shadow-xl transition-transform duration-200 hover:scale-[1.02] active:scale-95 md:w-auto md:px-10 md:py-8"
@@ -207,11 +330,18 @@ export default function AssistedHomePage() {
       <VoiceModal
         isOpen={isVoiceModalOpen}
         onClose={closeVoiceModal}
-        onSubmit={(transcript) => {
-          void submitVoiceTurn(transcript);
+        onRetry={() => {
+          setVoiceError(null);
+          setIsVoiceModalOpen(false);
+          window.setTimeout(() => {
+            setIsVoiceModalOpen(true);
+          }, 100);
         }}
+        isConnecting={isConnecting}
+        isListening={isListening}
         isProcessing={voiceState === "processing"}
         isSpeaking={voiceState === "speaking"}
+        liveTranscript={liveTranscript}
         lastTranscript={lastTranscript}
         lastReply={lastReply}
         errorMessage={voiceError}

@@ -1,4 +1,7 @@
+import type { Id } from "./_generated/dataModel";
+
 const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 export const PASSKEY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
@@ -30,6 +33,38 @@ function bytesToBase64Url(bytes: Uint8Array) {
 
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
+
+function base64UrlToBytes(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
+  const binary = atob(`${normalized}${padding}`);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+}
+
+function timingSafeEqual(left: string, right: string) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+
+  return difference === 0;
+}
+
+type SeniorRecoveryKeyPayload = {
+  version: 1;
+  seniorProfileId: Id<"seniorProfiles">;
+  issuedAt: number;
+};
 
 async function createNamespacedHmac(namespace: string, value: string) {
   const key = await crypto.subtle.importKey(
@@ -75,6 +110,57 @@ export async function hashSeniorSessionToken(sessionToken: string) {
 
 export async function hashDeviceFingerprint(deviceFingerprint: string) {
   return createNamespacedHmac("device-fingerprint", deviceFingerprint);
+}
+
+export async function createSeniorRecoveryKey(
+  seniorProfileId: Id<"seniorProfiles">,
+) {
+  const payload: SeniorRecoveryKeyPayload = {
+    version: 1,
+    seniorProfileId,
+    issuedAt: Date.now(),
+  };
+  const encodedPayload = bytesToBase64Url(
+    textEncoder.encode(JSON.stringify(payload)),
+  );
+  const signature = await createNamespacedHmac(
+    "senior-recovery-key",
+    encodedPayload,
+  );
+
+  return `${encodedPayload}.${signature}`;
+}
+
+export async function parseSeniorRecoveryKey(recoveryKey: string) {
+  const [encodedPayload, providedSignature, ...rest] = recoveryKey.split(".");
+  if (!encodedPayload || !providedSignature || rest.length > 0) {
+    return null;
+  }
+
+  const expectedSignature = await createNamespacedHmac(
+    "senior-recovery-key",
+    encodedPayload,
+  );
+  if (!timingSafeEqual(providedSignature, expectedSignature)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(
+      textDecoder.decode(base64UrlToBytes(encodedPayload)),
+    ) as Partial<SeniorRecoveryKeyPayload>;
+    if (
+      parsed.version !== 1 ||
+      typeof parsed.seniorProfileId !== "string" ||
+      typeof parsed.issuedAt !== "number"
+    ) {
+      return null;
+    }
+
+    return parsed.seniorProfileId as Id<"seniorProfiles">;
+  } catch {
+    return null;
+  }
 }
 
 export function generateNumericCode(length = 6) {

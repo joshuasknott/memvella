@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import { base64UrlToUint8Array, getPasskeyConfig } from "@/lib/passkey";
 
@@ -10,28 +9,27 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const { seniorProfileId, deviceFingerprint, responseJSON } =
+    const { recoveryKey, deviceFingerprint, responseJSON } =
       (await request.json()) as {
-        seniorProfileId: string;
+        recoveryKey: string;
         deviceFingerprint: string;
         responseJSON: Parameters<typeof verifyAuthenticationResponse>[0]["response"];
       };
-    if (!seniorProfileId || !deviceFingerprint) {
+    if (!recoveryKey || !deviceFingerprint) {
       return NextResponse.json(
         {
           error:
-            "Both the profile and device fingerprint are required for passkey sign-in.",
+            "Both the recovery key and device fingerprint are required for passkey sign-in.",
         },
         { status: 400 },
       );
     }
 
-    const typedSeniorProfileId = seniorProfileId as Id<"seniorProfiles">;
     const convex = createConvexHttpClient();
     const authenticationMaterial = await convex.query(
       api.independentAuth.getPasskeyAuthenticationMaterial,
       {
-        seniorProfileId: typedSeniorProfileId,
+        recoveryKey,
       },
     );
 
@@ -42,10 +40,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const passkeys = authenticationMaterial.passkeys;
     const passkey = authenticationMaterial.passkeys.find(
-      (candidate: (typeof passkeys)[number]) =>
-        candidate.credentialId === responseJSON.id,
+      (candidate) => candidate.credentialId === responseJSON.id,
     );
     if (!passkey) {
       return NextResponse.json(
@@ -79,7 +75,7 @@ export async function POST(request: Request) {
     const session = await convex.mutation(
       api.independentAuth.completePasskeyAuthentication,
       {
-        seniorProfileId: typedSeniorProfileId,
+        recoveryKey,
         challenge: authenticationMaterial.activeAuthenticationChallenge.challenge,
         credentialId: passkey.credentialId,
         nextCounter: verification.authenticationInfo.newCounter,
@@ -90,7 +86,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       verified: true,
       sessionToken: session.sessionToken,
-      seniorProfileId: session.seniorProfileId,
+      recoveryKey: session.recoveryKey,
       seniorName: session.seniorName,
     });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx } from "./_generated/server";
 import {
@@ -9,6 +10,7 @@ import {
 import {
   generateNumericCode,
   hashAssistedPin,
+  hashDeviceFingerprint,
   normalizeOptionalText,
 } from "./security";
 import {
@@ -20,6 +22,19 @@ import {
   normalizeUserFacingText,
   TABLET_PROFILE_LABEL,
 } from "./terminology";
+
+type PairTabletSessionResult =
+  | {
+      success: true;
+      seniorName: string;
+      sessionToken: string;
+      expiresAt: number;
+      idleExpiresAt: number;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 async function getActivePinByHash(
   ctx: MutationCtx,
@@ -64,12 +79,36 @@ async function revokeOutstandingPins(
   }
 }
 
+function formatRetryMessage(retryAfterMs: number) {
+  const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  return `Too many pairing attempts. Wait ${retryAfterSeconds} seconds before trying another code.`;
+}
+
 export const pairTabletSession = mutation({
   args: {
     pinCode: v.string(),
     deviceFingerprint: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<PairTabletSessionResult> => {
+    const deviceScopeKey = await hashDeviceFingerprint(args.deviceFingerprint);
+    const rateLimit = await ctx.runMutation(
+      internal.rateLimits.consumeRateLimit,
+      {
+        scopeKey: `assisted-pairing:${deviceScopeKey}`,
+        actionKey: "pairTabletSession",
+        maxHits: 5,
+        windowMs: 10 * 60 * 1000,
+        blockDurationMs: 20 * 60 * 1000,
+      },
+    );
+
+    if (!rateLimit.allowed) {
+      return {
+        success: false as const,
+        error: formatRetryMessage(rateLimit.retryAfterMs),
+      };
+    }
+
     const pinHash = await hashAssistedPin(args.pinCode);
     const activePin = await getActivePinByHash(ctx, pinHash);
 
@@ -82,6 +121,20 @@ export const pairTabletSession = mutation({
 
     const seniorProfile = await ctx.db.get(activePin.seniorProfileId);
     if (!seniorProfile) {
+      return {
+        success: false as const,
+        error: `This ${TABLET_PROFILE_LABEL} is no longer available.`,
+      };
+    }
+
+    if (
+      seniorProfile.familySpaceId !== activePin.familySpaceId ||
+      seniorProfile.seniorMode !== "assisted"
+    ) {
+      await ctx.db.patch(activePin._id, {
+        revokedAt: Date.now(),
+      });
+
       return {
         success: false as const,
         error: `This ${TABLET_PROFILE_LABEL} is no longer available.`,

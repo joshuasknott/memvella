@@ -4,6 +4,8 @@ export type SeniorExperience = "assisted" | "independent";
 
 export type SeniorSessionState = {
   sessionToken: string;
+  deviceFingerprint?: string;
+  recoveryKey?: string;
   seniorProfileId?: string;
   seniorName?: string;
   recoveryEmail?: string | null;

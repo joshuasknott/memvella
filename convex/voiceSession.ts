@@ -11,6 +11,7 @@ import {
   replaceRoutineOccurrences,
   resolveFamilySpaceTimeZone,
 } from "./routineHelpers";
+import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
 import { formatInvalidSessionMessage } from "./terminology";
@@ -121,7 +122,7 @@ export const confirmIndependentVoiceDraft = mutation({
     }
 
     let normalizedDays = normalizeDaysOfWeek(args.daysOfWeek ?? []);
-    let startDate = normalizedDate;
+    const startDate = normalizedDate;
     let endDate: string | undefined;
 
     if (normalizedDate && normalizedDays.length === 0) {
@@ -159,7 +160,8 @@ export const confirmIndependentVoiceDraft = mutation({
       throw new Error("Unable to save this routine.");
     }
 
-    await replaceRoutineOccurrences(ctx, schedule);
+    const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
+    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
 
     await ctx.db.patch(interaction._id, {
       draftTitle: title,

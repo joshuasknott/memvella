@@ -1,51 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Mic, MicOff, Volume2 } from "lucide-react";
 
 interface VoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (text: string) => void;
+  onRetry?: () => void;
+  isConnecting?: boolean;
+  isListening?: boolean;
   isProcessing?: boolean;
   isSpeaking?: boolean;
+  liveTranscript?: string | null;
   lastTranscript?: string | null;
   lastReply?: string | null;
   errorMessage?: string | null;
 }
 
-interface SpeechRecognitionResultLike {
-  0: {
-    transcript: string;
-  };
-}
-
-interface SpeechRecognitionEventLike {
-  results: ArrayLike<SpeechRecognitionResultLike>;
-}
-
-interface ISpeechRecognition {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-type SpeechRecognitionCtor = new () => ISpeechRecognition;
-type SpeechWindow = Window & {
-  SpeechRecognition?: SpeechRecognitionCtor;
-  webkitSpeechRecognition?: SpeechRecognitionCtor;
-};
-
 function VoiceStateHeadline({
+  isConnecting,
   isListening,
   isProcessing,
   isSpeaking,
   hasError,
 }: {
+  isConnecting: boolean;
   isListening: boolean;
   isProcessing: boolean;
   isSpeaking: boolean;
@@ -53,6 +31,10 @@ function VoiceStateHeadline({
 }) {
   if (hasError) {
     return "Try Again";
+  }
+
+  if (isConnecting) {
+    return "Connecting";
   }
 
   if (isSpeaking) {
@@ -73,104 +55,17 @@ function VoiceStateHeadline({
 export function VoiceModal({
   isOpen,
   onClose,
-  onSubmit,
+  onRetry,
+  isConnecting = false,
+  isListening = false,
   isProcessing = false,
   isSpeaking = false,
+  liveTranscript,
   lastTranscript,
   lastReply,
   errorMessage,
 }: VoiceModalProps) {
-  const [isListening, setIsListening] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [liveTranscript, setLiveTranscript] = useState("");
-
-  const recognitionRef = useRef<ISpeechRecognition | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  const combinedError = errorMessage ?? localError;
-
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // Ignore repeat stop requests after recognition already ended.
-      }
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    setIsListening(false);
-  }, []);
-
-  const startRecording = useCallback(async () => {
-    setLocalError(null);
-    setLiveTranscript("");
-    setIsListening(true);
-
-    try {
-      streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const speechWindow = window as SpeechWindow;
-      const RecognitionApi =
-        speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-
-      if (!RecognitionApi) {
-        setLocalError("Voice recognition is not available in this browser.");
-        setIsListening(false);
-        return;
-      }
-
-      const recognition = new RecognitionApi();
-      recognitionRef.current = recognition;
-      recognition.lang = "en-GB";
-      recognition.interimResults = true;
-      recognition.continuous = false;
-
-      let finalCaptured = "";
-
-      recognition.onresult = (event) => {
-        const currentTranscript = Array.from(event.results)
-          .map((result) => result[0].transcript)
-          .join("");
-        setLiveTranscript(currentTranscript);
-        finalCaptured = currentTranscript;
-      };
-
-      recognition.onend = () => {
-        stopRecording();
-        if (finalCaptured.trim()) {
-          onSubmit(finalCaptured.trim());
-          setLiveTranscript("");
-          return;
-        }
-
-        setLocalError("I didn't hear anything. Tap listen again.");
-      };
-
-      recognition.start();
-    } catch (error) {
-      console.error(error);
-      setLocalError("Microphone access is blocked on this device.");
-      setIsListening(false);
-    }
-  }, [onSubmit, stopRecording]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      stopRecording();
-      setLocalError(null);
-      setLiveTranscript("");
-      return;
-    }
-
-    if (!isListening && !isProcessing && !isSpeaking && !combinedError) {
-      void startRecording();
-    }
-  }, [combinedError, isListening, isOpen, isProcessing, isSpeaking, startRecording, stopRecording]);
+  const combinedError = errorMessage;
 
   if (!isOpen) {
     return null;
@@ -181,6 +76,7 @@ export function VoiceModal({
       <div className="flex w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10">
         <h2 className="font-headline text-4xl font-bold text-slate-900 md:text-5xl">
           <VoiceStateHeadline
+            isConnecting={isConnecting}
             isListening={isListening}
             isProcessing={isProcessing}
             isSpeaking={isSpeaking}
@@ -191,6 +87,8 @@ export function VoiceModal({
         <p className="mt-3 max-w-xl text-xl leading-relaxed text-slate-600 md:text-2xl">
           {combinedError
             ? combinedError
+            : isConnecting
+              ? "Memvella is opening the live voice loop."
             : isSpeaking
               ? "Memvella is speaking back now."
               : isProcessing
@@ -260,12 +158,11 @@ export function VoiceModal({
             <button
               type="button"
               onClick={() => {
-                setLocalError(null);
-                void startRecording();
+                onRetry?.();
               }}
               className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-[#1D4ED8] px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95"
             >
-              Listen Again
+              Reconnect Voice
             </button>
             <button
               type="button"

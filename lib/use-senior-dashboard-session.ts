@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { getDeviceFingerprint } from "@/lib/device-fingerprint";
+import {
+  getDeviceFingerprint,
+  persistDeviceFingerprint,
+} from "@/lib/device-fingerprint";
 import {
   clearSeniorSession,
   loadSeniorSession,
@@ -13,12 +16,31 @@ import {
 
 export function useSeniorDashboardSession(experience: SeniorExperience) {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string | null>(null);
-  const [sessionState, setSessionState] = useState<SeniorSessionState | null>(null);
+  const [sessionState, setSessionState] = useState<SeniorSessionState | null>(
+    () =>
+      typeof window === "undefined" ? null : loadSeniorSession(experience),
+  );
   const keepSessionAlive = useMutation(api.seniorAccess.keepSessionAlive);
 
   useEffect(() => {
-    setSessionState(loadSeniorSession(experience));
+    const nextSession = loadSeniorSession(experience);
+    const syncSessionId = window.setTimeout(() => {
+      setSessionState(nextSession);
+    }, 0);
+
+    if (nextSession?.deviceFingerprint) {
+      persistDeviceFingerprint(experience, nextSession.deviceFingerprint);
+      const syncFingerprintId = window.setTimeout(() => {
+        setDeviceFingerprint(nextSession.deviceFingerprint!);
+      }, 0);
+      return () => {
+        window.clearTimeout(syncSessionId);
+        window.clearTimeout(syncFingerprintId);
+      };
+    }
+
     void getDeviceFingerprint(experience).then(setDeviceFingerprint);
+    return () => window.clearTimeout(syncSessionId);
   }, [experience]);
 
   const dashboard = useQuery(
