@@ -1,0 +1,52 @@
+'use client';
+
+import React, { useState } from 'react';
+
+export default function WaitlistForm() {
+    const [email, setEmail] = useState('');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setStatus('loading');
+        // Simulate network request
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setStatus('success');
+    };
+
+    if (status === 'success') {
+        return (
+            <div className="bg-surface-container-high p-6 rounded-[40px] flex items-center justify-center shadow-ambient animate-in fade-in zoom-in duration-500">
+                <p className="text-xl font-bold text-primary">Thank you! You've been added to the priority waitlist.</p>
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-surface-container-low p-2 rounded-[40px] flex flex-col md:flex-row items-center shadow-ambient transition-all hover:bg-surface-container-high group">
+            <input 
+                className="bg-transparent border-none focus:ring-0 px-8 py-6 w-full text-lg placeholder:text-zinc-400 font-medium text-on-surface" 
+                id="waitlist-email" 
+                placeholder="Enter your email address" 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={status === 'loading'}
+            />
+            <button 
+                type="submit"
+                disabled={status === 'loading'}
+                className="w-full md:w-auto whitespace-nowrap bg-gradient-to-br from-primary-container to-primary text-white font-bold h-[72px] px-12 rounded-full transition-all focus:scale-95 active:scale-95 hover:shadow-xl disabled:opacity-75 disabled:active:scale-100 flex items-center justify-center"
+            >
+                {status === 'loading' ? (
+                    <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                    "Request Early Access"
+                )}
+            </button>
+        </form>
+    );
+}

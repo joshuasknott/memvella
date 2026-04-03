@@ -1,0 +1,5 @@
+/*
+ * Custom animations previously defined here have been migrated to
+ * app/globals.css inside the @theme block for Tailwind v4 compatibility.
+ * This file is kept as a CSS module entry point for page-scoped styles.
+ */
