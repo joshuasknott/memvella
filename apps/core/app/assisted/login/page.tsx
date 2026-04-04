@@ -84,7 +84,7 @@ export default function AssistedSetupPage() {
   const boxes = Array.from({ length: 6 });
 
   return (
-    <main className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center bg-white p-6 font-body">
+    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-white p-6 font-body">
       <div className="flex w-full flex-col items-center">
         <div className="mb-8 w-full max-w-lg">
           <button
@@ -100,7 +100,7 @@ export default function AssistedSetupPage() {
             Let&apos;s connect your tablet.
           </h1>
           <p className="font-headline text-2xl font-medium text-slate-600 md:text-3xl">
-            Ask your Supporter for the 6-digit code on their phone.
+            Ask an Organiser for the 6-digit code on their phone.
           </p>
         </div>
 

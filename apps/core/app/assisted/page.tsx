@@ -57,7 +57,7 @@ function AssistedRecoveryState() {
           Tablet pairing expired.
         </h1>
         <p className="mb-6 text-xl leading-relaxed text-slate-600">
-          This Assisted Senior tablet needs a fresh 6-digit code from a Supporter.
+          This Tablet needs a fresh 6-digit code from an Organiser.
         </p>
         <a
           href="/assisted/login"
@@ -295,7 +295,7 @@ export default function AssistedHomePage() {
               </p>
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-[32px] border border-slate-200 border-l-[12px] border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
+            <div className="relative overflow-hidden rounded-[32px] border border-slate-200 border-l-12 border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
               <p className="font-headline text-2xl font-bold leading-tight text-on-surface md:text-3xl">
                 {dashboard.nextEvent.time
                   ? `${dashboard.nextEvent.title} at ${dashboard.nextEvent.time}.`

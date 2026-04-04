@@ -1,6 +1,6 @@
 import BrandLogo from '@/components/BrandLogo';
 import { PrimaryButton, SecondaryButton, GhostButton } from '@/components/ui/Button';
-import { ShieldCheck, Smartphone, UserRound } from 'lucide-react';
+import { ShieldCheck, Smartphone, UserRound, Users } from 'lucide-react';
 
 export default function UniversalSplash() {
   return (
@@ -20,20 +20,31 @@ export default function UniversalSplash() {
         </div>
 
         <div className="flex flex-col space-y-4 md:space-y-6 w-full max-w-sm md:max-w-md mx-auto">
-          <PrimaryButton href="/onboarding/supporter">
-            <ShieldCheck className="w-6 h-6 mr-2" />
-            Set up as Admin
-          </PrimaryButton>
+          <div className="flex flex-col space-y-4 md:space-y-6">
+            <PrimaryButton href="/onboarding/supporter">
+              <ShieldCheck className="w-6 h-6 mr-2" />
+              Start a New Circle
+            </PrimaryButton>
 
-          <SecondaryButton href="/assisted/login">
-            <Smartphone className="w-6 h-6 mr-2" />
-            Enter Connection Code
-          </SecondaryButton>
+            <PrimaryButton href="/supporter/signin">
+              <Users className="w-6 h-6 mr-2" />
+              Join a Circle
+            </PrimaryButton>
+          </div>
 
-          <GhostButton href="/onboarding/independent">
-            <UserRound className="w-6 h-6 mr-2" />
-            Set up Personal Profile
-          </GhostButton>
+          <div className="h-px w-full bg-black/10 my-2 md:my-4" />
+
+          <div className="flex flex-col space-y-4 md:space-y-6">
+            <SecondaryButton href="/assisted/login">
+              <Smartphone className="w-6 h-6 mr-2" />
+              Connect a Tablet
+            </SecondaryButton>
+
+            <GhostButton href="/onboarding/independent">
+              <UserRound className="w-6 h-6 mr-2" />
+              Set Up My Own Profile
+            </GhostButton>
+          </div>
         </div>
       </div>
     </main>

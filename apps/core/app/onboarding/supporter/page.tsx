@@ -65,7 +65,7 @@ export default function SupporterSetupPage() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
       <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
@@ -85,10 +85,10 @@ export default function SupporterSetupPage() {
           <div className="space-y-8">
             <div>
               <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
-                Supporter Setup
+                Organiser Setup
               </h1>
               <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-                Create your Admin account and start your Circle.
+                Create your Organiser account and start your Circle.
               </p>
             </div>
 
@@ -126,7 +126,7 @@ export default function SupporterSetupPage() {
                   onChange={(event) => setSeniorDisplayName(event.target.value)}
                 />
                 <p className="px-1 text-sm text-gray-500">
-                  Optional. You can update this from your Admin dashboard.
+                  Optional. You can update this from your Organiser dashboard.
                 </p>
               </div>
 
@@ -175,7 +175,7 @@ export default function SupporterSetupPage() {
                     Creating Account...
                   </>
                 ) : (
-                  "Create Supporter Account"
+                  "Create Organiser Account"
                 )}
               </PrimaryButton>
 
