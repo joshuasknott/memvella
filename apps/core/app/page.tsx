@@ -26,7 +26,7 @@ export default function UniversalSplash() {
               Start a New Circle
             </PrimaryButton>
 
-            <PrimaryButton href="/supporter/signin">
+            <PrimaryButton href="/onboarding/member">
               <Users className="w-6 h-6 mr-2" />
               Join a Circle
             </PrimaryButton>
