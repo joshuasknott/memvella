@@ -1,5 +1,5 @@
 import BrandLogo from '@/components/BrandLogo';
-import { PrimaryButton, SecondaryButton, GhostButton } from '@/components/ui/Button';
+import { PrimaryButton, SecondaryButton, HighContrastButton } from '@/components/ui/Button';
 import { ShieldCheck, Smartphone, UserRound, Users } from 'lucide-react';
 
 export default function UniversalSplash() {
@@ -40,10 +40,10 @@ export default function UniversalSplash() {
               Connect a Tablet
             </SecondaryButton>
 
-            <GhostButton href="/onboarding/independent">
+            <HighContrastButton href="/onboarding/independent">
               <UserRound className="w-6 h-6 mr-2" />
               Set Up My Own Profile
-            </GhostButton>
+            </HighContrastButton>
           </div>
         </div>
       </div>
