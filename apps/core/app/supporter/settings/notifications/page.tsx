@@ -93,7 +93,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Notification settings updated",
-        description: "Your Admin alert preferences are now saved.",
+        description: "Your Organiser alert preferences are now saved.",
       });
     } catch (error) {
       toast({
@@ -125,7 +125,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts enabled",
-        description: "This Admin device will now receive Circle alerts.",
+        description: "This Organiser device will now receive Circle alerts.",
       });
     } catch (error) {
       toast({
@@ -156,7 +156,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts disabled",
-        description: "This Admin device will stop receiving push alerts.",
+        description: "This Organiser device will stop receiving push alerts.",
       });
     } catch (error) {
       toast({
@@ -192,7 +192,7 @@ export default function NotificationsSettingsPage() {
               Notifications
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-gray-600">
-              Manage the alerts that reach your Admin devices for {seniorDisplayName}&apos;s Circle.
+              Manage the alerts that reach your Organiser devices for {seniorDisplayName}&apos;s Circle.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
@@ -211,7 +211,7 @@ export default function NotificationsSettingsPage() {
               This device
             </h2>
             <p className="mt-1 text-base leading-relaxed text-gray-600">
-              Turn browser push alerts on or off for the current Admin device.
+              Turn browser push alerts on or off for the current Organiser device.
             </p>
             {!pushConfigured ? (
               <p className="mt-3 rounded-2xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
@@ -289,7 +289,7 @@ export default function NotificationsSettingsPage() {
               Urgent alerts
             </label>
             <p className="mt-1 text-sm leading-relaxed text-gray-500">
-              Immediate Admin notifications when Memvella detects distress markers in a Circle voice session.
+              Immediate Organiser notifications when Memvella detects distress markers in a Circle voice session.
             </p>
           </div>
           <Toggle
@@ -330,7 +330,7 @@ export default function NotificationsSettingsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-headline text-xl font-bold text-gray-900">
-              Connected Admin devices
+              Connected Organiser devices
             </h2>
             <p className="mt-1 text-base leading-relaxed text-gray-600">
               {settings.activeSubscriptions.length} device
@@ -342,7 +342,7 @@ export default function NotificationsSettingsPage() {
         <div className="mt-5 space-y-3">
           {settings.activeSubscriptions.length === 0 ? (
             <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
-              No Admin devices are subscribed for push alerts yet.
+              No Organiser devices are subscribed for push alerts yet.
             </div>
           ) : (
             settings.activeSubscriptions.map((subscription) => (

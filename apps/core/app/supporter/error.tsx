@@ -16,9 +16,9 @@ export default function SupporterError({
 
   return (
     <ErrorState
-      title="Admin tools are temporarily unavailable"
-      description="The Admin workspace hit an unexpected error while loading this route. Retry to restore the latest Circle data."
-      actionLabel="Retry Admin view"
+      title="Organiser tools are temporarily unavailable"
+      description="The Organiser workspace hit an unexpected error while loading this route. Retry to restore the latest Circle data."
+      actionLabel="Retry Organiser view"
       onRetry={unstable_retry}
     />
   );

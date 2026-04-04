@@ -115,7 +115,7 @@ export const pairTabletSession = mutation({
     if (!activePin) {
       return {
         success: false as const,
-        error: "Invalid code. Ask your Admin for a new 6-digit code.",
+        error: "Invalid code. Ask your Organiser for a new 6-digit code.",
       };
     }
 

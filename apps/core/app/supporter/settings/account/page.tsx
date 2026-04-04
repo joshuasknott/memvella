@@ -59,7 +59,7 @@ export default function AccountSettingsPage() {
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
-              Admin profile
+              Organiser profile
             </p>
             <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
               Account
@@ -70,7 +70,7 @@ export default function AccountSettingsPage() {
         <div className="space-y-4">
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
-              Admin name
+              Organiser name
             </p>
             <p className="mt-2 text-lg font-bold text-gray-900">{supporterName}</p>
           </div>

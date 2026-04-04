@@ -85,7 +85,7 @@ export default function SupporterMemoriesPage() {
           </div>
           <p className="mt-4 text-xl font-bold text-gray-900">No memories yet</p>
           <p className="mt-2 text-lg leading-relaxed text-gray-500">
-            Add the first record so the Admin dashboard and Senior gallery have meaningful moments to surface.
+            Add the first record so the Organiser dashboard and Senior gallery have meaningful moments to surface.
           </p>
           <div className="mt-6">
             <PrimaryButton href="/supporter/add-memory">

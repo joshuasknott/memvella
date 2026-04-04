@@ -1,9 +1,11 @@
 import type { SeniorSessionInvalidReason } from "./seniorAccessHelpers";
 
-export const ADMIN_LABEL = "Admin";
+export const ORGANISER_LABEL = "Organiser";
+/** @deprecated Use ORGANISER_LABEL. Kept for incremental migration of backend identifiers. */
+export const ADMIN_LABEL = ORGANISER_LABEL;
 export const CIRCLE_LABEL = "Circle";
 export const MEMBER_LABEL = "Member";
-export const ADMIN_DEVICE_LABEL = `${ADMIN_LABEL} device`;
+export const ADMIN_DEVICE_LABEL = `${ORGANISER_LABEL} device`;
 export const TABLET_PROFILE_LABEL = "Tablet profile";
 export const INDEPENDENT_PROFILE_LABEL = "Independent profile";
 
@@ -25,12 +27,13 @@ export function normalizeUserFacingText(value: string | null | undefined) {
     return MEMBER_LABEL;
   }
 
-  if (normalized === "Supporter") {
-    return ADMIN_LABEL;
+  if (normalized === "Supporter" || normalized === "Admin") {
+    return ORGANISER_LABEL;
   }
 
   return normalized
-    .replace(/\bSupporter\b/g, ADMIN_LABEL)
+    .replace(/\bSupporter\b/g, ORGANISER_LABEL)
+    .replace(/\bAdmin\b/g, ORGANISER_LABEL)
     .replace(/\bFamilySpace\b/g, CIRCLE_LABEL)
     .replace(/\bfamily space\b/gi, "circle");
 }

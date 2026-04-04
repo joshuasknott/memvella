@@ -33,7 +33,7 @@ export default function SupporterInsightsPage() {
       toast({
         tone: "success",
         title: status === "reviewed" ? "Insight reviewed" : "Insight dismissed",
-        description: "The Admin queue was updated.",
+        description: "The Organiser queue was updated.",
       });
     } catch (error) {
       toast({
@@ -74,7 +74,7 @@ export default function SupporterInsightsPage() {
           No new insights to review right now.
         </p>
         <p className="mb-6 max-w-[260px] text-base leading-relaxed text-gray-500">
-          New transcript signals and AI summaries will appear here for Supporter review.
+          New transcript signals and AI summaries will appear here for Organiser review.
         </p>
         <Link
           href="/supporter"
@@ -95,7 +95,7 @@ export default function SupporterInsightsPage() {
               Review Queue
             </p>
             <h1 className="font-headline text-2xl font-bold text-slate-900">
-              Admin Insights
+              Organiser Insights
             </h1>
           </div>
           <div className="rounded-full bg-[#1D4ED8] px-4 py-2 text-sm font-bold text-white">
