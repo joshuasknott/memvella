@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Bell, ChevronRight, MonitorSmartphone, User } from "lucide-react";
+import { Bell, ChevronRight, MonitorSmartphone, User, UserPlus } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
@@ -37,7 +37,20 @@ export default function SupporterSettingsPage() {
           </div>
           <ChevronRight className="h-5 w-5 text-gray-400" />
         </Link>
-
+        <Link
+          href="/supporter/settings/invite"
+          className="flex items-center justify-between rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition-colors active:bg-gray-50"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center rounded-xl bg-gray-100 p-2.5">
+              <UserPlus className="h-5 w-5 text-gray-600" />
+            </div>
+            <span className="text-lg font-semibold text-gray-900">
+              Circle Members
+            </span>
+          </div>
+          <ChevronRight className="h-5 w-5 text-gray-400" />
+        </Link>
         <Link
           href="/supporter/settings/notifications"
           className="flex items-center justify-between rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition-colors active:bg-gray-50"

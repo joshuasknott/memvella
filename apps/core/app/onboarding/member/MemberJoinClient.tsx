@@ -309,9 +309,21 @@ function CodeStep({ onSuccess }: { onSuccess: () => void }) {
     try {
       // Placeholder: replace with useMutation(api.member.joinCircleByCode) once available.
       await new Promise((resolve) => setTimeout(resolve, 900));
+
+      // Mock specific error states for demonstration:
+      if (code === "000000") throw new Error("EXPIRED");
+      if (code === "111111") throw new Error("ALREADY_USED");
+      if (code === "222222") throw new Error("INVALID");
+
       onSuccess();
-    } catch {
-      setError("That code didn't work. Check it with your Organiser and try again.");
+    } catch (err) {
+      if (err instanceof Error && err.message === "EXPIRED") {
+        setError("This invite code has expired. Please ask your Organiser for a new one.");
+      } else if (err instanceof Error && err.message === "ALREADY_USED") {
+        setError("This code has already been used. Ask your Organiser to generate a new one.");
+      } else {
+        setError("We couldn't find that Circle. Please double-check the code with your Organiser.");
+      }
       setDigits(Array(CODE_LENGTH).fill(""));
       focusBox(0);
     } finally {
