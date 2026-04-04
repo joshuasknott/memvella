@@ -1,90 +1,41 @@
-# Welcome to your Convex functions directory!
+# Memvella Convex Backend
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+This directory contains the Convex backend for `apps/core`.
 
-A query function that takes two arguments looks like:
+## Before Editing
 
-```ts
-// convex/myFunctions.ts
-import { query } from "./_generated/server";
-import { v } from "convex/values";
+1. Read `apps/core/convex/_generated/ai/guidelines.md`.
+2. Read `docs/auth-and-identity.md` if you are touching auth, onboarding, passkeys, or senior sessions.
+3. Read `docs/data-model.md` if you are touching schema, tables, or migrations.
 
-export const myQueryFunction = query({
-  // Validators for arguments.
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
+## What Lives Here
 
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Read the database as many times as you need here.
-    // See https://docs.convex.dev/database/reading-data.
-    const documents = await ctx.db.query("tablename").collect();
+- `schema.ts`: the current database schema, including canonical tables and legacy compatibility tables that are still present during migration.
+- `auth.ts`, `auth.config.ts`, `http.ts`: Better Auth and Convex auth integration.
+- `supporter.ts`: Supporter-side mutations and queries.
+- `independentAuth.ts`: independent onboarding, recovery, and passkey enrollment.
+- `kiosk.ts`, `seniorAccessHelpers.ts`: Assisted Senior pairing and device-bound session handling.
+- `voice*.ts`, `aiActions.ts`, `insights*.ts`: voice orchestration, AI processing, and insight generation.
 
-    // Arguments passed from the client are properties of the args object.
-    console.log(args.first, args.second);
+## Data Model Guidance
 
-    // Write arbitrary JavaScript here: filter, aggregate, build derived data,
-    // remove non-public properties, or create new objects.
-    return documents;
-  },
-});
-```
+- Prefer the FamilySpace-based model for new work.
+- Do not build new features on legacy compatibility tables unless the task is explicitly a migration.
+- When schema changes affect existing data, document the migration plan in `docs/data-model.md` and use a safe rollout pattern.
 
-Using this query function in a React component looks like:
+## Commands
 
-```ts
-const data = useQuery(api.myFunctions.myQueryFunction, {
-  first: 10,
-  second: "hello",
-});
-```
+From the repo root:
 
-A mutation function looks like:
+- `pnpm convex:dev`
+- `pnpm convex:deploy`
 
-```ts
-// convex/myFunctions.ts
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
+From `apps/core` directly:
 
-export const myMutationFunction = mutation({
-  // Validators for arguments.
-  args: {
-    first: v.string(),
-    second: v.string(),
-  },
+- `pnpm exec convex dev`
+- `pnpm exec convex deploy`
 
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Insert or modify documents in the database here.
-    // Mutations can also read from the database like queries.
-    // See https://docs.convex.dev/database/writing-data.
-    const message = { body: args.first, author: args.second };
-    const id = await ctx.db.insert("messages", message);
+## Environment
 
-    // Optionally, return a value from your mutation.
-    return await ctx.db.get("messages", id);
-  },
-});
-```
-
-Using this mutation function in a React component looks like:
-
-```ts
-const mutation = useMutation(api.myFunctions.myMutationFunction);
-function handleButtonPress() {
-  // fire and forget, the most common way to use mutations
-  mutation({ first: "Hello!", second: "me" });
-  // OR
-  // use the result once the mutation has completed
-  mutation({ first: "Hello!", second: "me" }).then((result) =>
-    console.log(result),
-  );
-}
-```
-
-Use the Convex CLI to push your functions to a deployment. See everything
-the Convex CLI can do by running `npx convex -h` in your project root
-directory. To learn more, launch the docs with `npx convex docs`.
+The local app example lives in `apps/core/.env.example`.
+Keep the documented contract in sync with `docs/env.md` when adding, renaming, or removing variables.
