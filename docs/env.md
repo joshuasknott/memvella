@@ -17,6 +17,7 @@ The local example for the core app lives at `apps/core/.env.example`.
 | --- | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | yes | client and server | Better Auth callbacks, passkey origin | Must match the actual browser origin you use for auth flows |
 | `BETTER_AUTH_URL` | yes | server | Better Auth base URL | Usually the same value as `NEXT_PUBLIC_SITE_URL` |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | optional | server | Better Auth origin validation | Comma-separated list of extra trusted origins for staging or multi-origin setups |
 | `SITE_URL` | no | server | legacy fallback in auth helpers | Prefer `BETTER_AUTH_URL` instead |
 | `NEXT_PUBLIC_CONVEX_URL` | yes | client and server | Convex React client and HTTP client | Convex deployment URL |
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | Better Auth and Convex Next.js bridge | Convex site URL |
@@ -32,7 +33,7 @@ The local example for the core app lives at `apps/core/.env.example`.
 
 ## Local Auth Rule
 
-If you are testing auth on a phone, tablet, or another machine, set the site URL variables to the actual host you are using in the browser. Do not keep them on `localhost` while opening the app from a LAN IP or alternate hostname.
+If you are testing auth on a phone, tablet, or another machine, set the site URL variables to the actual host you are using in the browser. If you intentionally need more than one browser origin, add the extras to `BETTER_AUTH_TRUSTED_ORIGINS`.
 
 ## Convex Rule
 

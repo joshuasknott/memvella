@@ -17,21 +17,21 @@ Before testing auth-sensitive changes:
 
 ## Manual Smoke Tests
 
-### Supporter
+### Family-Side Account
 
-- create a new Supporter account
+- create a new family-side account
 - sign out and sign back in
-- confirm the Supporter dashboard resolves a Circle membership
+- confirm the dashboard resolves a Circle membership
 - confirm pairing settings, memories, routines, and notifications still load
 
-### Assisted Senior
+### Tablet User
 
-- generate a 6-digit pairing code from the Supporter side
+- generate a 6-digit pairing code from the Organiser side
 - pair a tablet or browser session through the assisted login screen
 - verify the assisted dashboard loads and the session survives a refresh
 - verify an expired or revoked session falls back to reconnect messaging
 
-### Independent Senior
+### Independent User
 
 - complete first-run onboarding
 - verify passwordless sign-in works end to end

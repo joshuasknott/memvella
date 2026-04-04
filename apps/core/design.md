@@ -9,7 +9,7 @@ Depends on: docs/product.md, docs/terminology.md
 
 ## Core Principle
 
-The product app should feel calm, legible, and operationally clear. Supporter surfaces may be denser than senior surfaces, but every experience should still feel deliberate and low-friction.
+The product app should feel calm, legible, and operationally clear. Family-side surfaces may be denser than senior surfaces, but every experience should still feel deliberate and low-friction.
 
 ## Shared Rules
 
@@ -26,7 +26,7 @@ The product app should feel calm, legible, and operationally clear. Supporter su
 - Secondary action: strong blue when a distinct secondary control is needed
 - Typography: highly legible sans-serif with generous line height
 
-## Supporter Experience
+## Organiser And Member Experience
 
 Target user:
 
@@ -41,7 +41,25 @@ Rules:
 - Dense cards and lists are acceptable if hierarchy is clear.
 - Destructive actions must be explicit and easy to back out of.
 
-## Assisted Senior Experience
+## Root Onboarding Entry Screen
+
+The root welcome screen is the highest-priority terminology and hierarchy checkpoint in `apps/core`.
+
+Required structure:
+
+- Heading: `Welcome to Memvella.`
+- Subheading: `How would you like to begin?`
+- Primary action group using solid purple buttons:
+- `Start a New Circle`
+- `Join a Circle`
+- Visual separation between primary and secondary actions through spacing or a subtle divider
+- Secondary action group using outlined or lighter treatment:
+- `Connect a Tablet`
+- `Set Up My Own Profile`
+
+Do not reintroduce `Admin`, `Connection Code`, or `Personal Profile` labels on this screen.
+
+## Tablet User Experience
 
 Target user:
 
@@ -57,7 +75,7 @@ Rules:
 - The main voice action must have distinct idle, listening, processing, and speaking states.
 - Do not rely on native keyboard entry except for the constrained pairing flow.
 
-## Independent Senior Experience
+## Independent User Experience
 
 Target user:
 

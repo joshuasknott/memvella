@@ -16,16 +16,18 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 | Concept | Preferred term | Notes |
 | --- | --- | --- |
 | Shared family space | `Circle` | Current core product term for the shared space |
-| Family-side operator | `Supporter` | Preferred term for docs and new copy |
-| Assisted tablet user | `Assisted Senior` | Device is paired by someone else |
-| Self-managing user | `Independent Senior` | Uses passwordless sign-in and voice-driven creation |
+| Circle creator and manager | `Organiser` | Creates the Circle, manages settings, and sends invitations |
+| Family or friend invited into a Circle | `Member` | Joins an existing Circle to help out and stay connected |
+| Assisted senior using a linked tablet | `Tablet User` | Replaces the vague connection-code persona label |
+| Self-managing senior | `Independent User` | Creates and manages their own profile independently |
 | Memvella itself | `digital wellness companion` or `companion` | Avoid medical framing |
 
 ## Transitional Terms In The Current Codebase
 
-- `Admin` currently appears in parts of `apps/core`.
-- Treat `Admin` as a transitional implementation label, not as a separate role.
-- Do not introduce new `Admin` strings into docs unless the work is specifically documenting current implementation drift.
+- `Admin` currently appears in parts of `apps/core` and should be replaced by `Organiser`.
+- `Supporter` currently appears in docs, UI, and backend role strings.
+- The current backend schema still uses a single `supporter` role for family-side memberships, so `Organiser` and `Member` are not fully split at the data-model level yet.
+- `Personal Profile` and `Connection Code` are legacy onboarding labels and should not be reused.
 
 ## Avoid In Generic Product Copy
 
@@ -42,9 +44,9 @@ These words may appear only when they are legally, clinically, or historically n
 
 - Prefer direct, concrete phrasing over sentimental phrasing.
 - Use `Circle` consistently instead of mixing `family space`, `group`, and `network`.
-- Use `Supporter` in new product docs and new product copy unless a dedicated terminology review changes that decision.
+- Use `Organiser`, `Member`, `Tablet User`, and `Independent User` in new product docs and new product copy.
 - Keep role names consistent across onboarding, settings, and error states.
 
-## Open Decision To Revisit
+## Current Gap
 
-- Whether shipped UI should fully replace `Admin` with `Supporter` across `apps/core`
+- The shipped codebase still needs a coordinated migration away from `Admin` and `Supporter` implementation labels.

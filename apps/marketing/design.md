@@ -30,6 +30,7 @@ The marketing app can be more expressive than the product app, but it still need
 - Do not claim unsupported onboarding paths as though they are already shipped.
 - If a feature is directional rather than implemented, describe it carefully.
 - Avoid creating a second vocabulary for the same role or flow.
+- Use `Organiser`, `Member`, `Tablet User`, and `Independent User` consistently when marketing copy refers to product roles.
 
 ## Conversion Guardrails
 

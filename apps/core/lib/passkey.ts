@@ -8,11 +8,13 @@ export function uint8ArrayToBase64Url(value: Uint8Array | ArrayBuffer) {
 }
 
 export function getPasskeyConfig(request: Request) {
+  const requestOrigin = new URL(request.url).origin;
   const configuredBaseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    process.env.BETTER_AUTH_URL ??
-    request.url;
-  const origin = new URL(configuredBaseUrl).origin;
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? request.url;
+  const origin =
+    process.env.NODE_ENV === "production"
+      ? new URL(configuredBaseUrl).origin
+      : requestOrigin;
   const rpID = new URL(origin).hostname;
 
   return {
