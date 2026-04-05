@@ -39,7 +39,7 @@ function TimelineSkeleton() {
   );
 }
 
-export default function SupporterDashboard() {
+export default function OrganiserDashboard() {
   const { isAuthenticated, isLoading, seniorDisplayName } = useFamilySpaceProfile();
   const summary = useQuery(
     api.supporter.getSupporterDashboardSummary,

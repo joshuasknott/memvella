@@ -24,9 +24,9 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 
 ## Transitional Terms In The Current Codebase
 
-- `Admin` currently appears in parts of `apps/core` and should be replaced by `Organiser`.
-- `Supporter` currently appears in docs, UI, and backend role strings.
-- The current backend schema still uses a single `supporter` role for family-side memberships, so `Organiser` and `Member` are not fully split at the data-model level yet.
+- `Admin` should only appear when documenting a historical implementation detail.
+- `Supporter` now survives mainly in legacy route, module, API, and table names that have not been broadly renamed yet.
+- The backend schema now stores `organiser`, `member`, and `independent_senior`, while still allowing legacy `supporter` rows during the migration window.
 - `Personal Profile` and `Connection Code` are legacy onboarding labels and should not be reused.
 
 ## Avoid In Generic Product Copy
@@ -49,4 +49,4 @@ These words may appear only when they are legally, clinically, or historically n
 
 ## Current Gap
 
-- The shipped codebase still needs a coordinated migration away from `Admin` and `Supporter` implementation labels.
+- The shipped codebase still has legacy `supporter` implementation names in some routes, modules, and tables.

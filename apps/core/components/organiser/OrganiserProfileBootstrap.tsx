@@ -11,7 +11,7 @@ function normalizeName(value: string | null | undefined) {
   return trimmed ? trimmed : undefined;
 }
 
-export default function SupporterProfileBootstrap() {
+export default function OrganiserProfileBootstrap() {
   const { data: session } = authClient.useSession();
   const { isAuthenticated, isLoading, profile } = useFamilySpaceProfile();
   const createProfile = useMutation(api.supporter.createSupporterProfile);
@@ -25,15 +25,15 @@ export default function SupporterProfileBootstrap() {
     const pendingSeniorDisplayName = normalizeName(
       localStorage.getItem("memvella_pendingSeniorDisplayName"),
     );
-    const supporterName = normalizeName(session?.user?.name);
+    const organiserName = normalizeName(session?.user?.name);
 
     const syncProfile = async () => {
       try {
         if (profile === null) {
           await createProfile({
-            supporterName,
+            organiserName,
             seniorDisplayName: pendingSeniorDisplayName,
-            role: "supporter",
+            role: "organiser",
           });
         } else if (
           pendingSeniorDisplayName &&

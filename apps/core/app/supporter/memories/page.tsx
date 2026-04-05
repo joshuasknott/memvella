@@ -39,7 +39,7 @@ function MemorySkeleton() {
   );
 }
 
-export default function SupporterMemoriesPage() {
+export default function OrganiserMemoriesPage() {
   const { seniorDisplayName } = useFamilySpaceProfile();
   const memoryRecords = useQuery(api.memories.listMemoryRecords);
 

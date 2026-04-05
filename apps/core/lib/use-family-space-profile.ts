@@ -14,7 +14,7 @@ export function useFamilySpaceProfile() {
     isAuthenticated,
     isLoading,
     profile,
-    supporterName: profile?.supporterName?.trim() || "Supporter",
+    organiserName: profile?.organiserName?.trim() || "Organiser",
     seniorDisplayName: profile?.seniorDisplayName?.trim() || "your senior",
   };
 }

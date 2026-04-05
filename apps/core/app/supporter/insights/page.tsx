@@ -16,7 +16,7 @@ function formatTimestamp(timestamp: number) {
   });
 }
 
-export default function SupporterInsightsPage() {
+export default function OrganiserInsightsPage() {
   const insights = useQuery(api.insights.listSupporterInsights);
   const reviewSupporterInsight = useMutation(api.insights.reviewSupporterInsight);
   const { toast } = useToast();

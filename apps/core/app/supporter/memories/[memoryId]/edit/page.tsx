@@ -43,7 +43,7 @@ function AssetPreview({
   return <audio controls src={asset.resolvedUrl} className="w-full" />;
 }
 
-export default function SupporterMemoryEditPage() {
+export default function OrganiserMemoryEditPage() {
   const params = useParams<{ memoryId: string }>();
   const router = useRouter();
   const { toast } = useToast();

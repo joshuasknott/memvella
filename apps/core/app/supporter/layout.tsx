@@ -1,11 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import SupporterBottomNav from "@/components/SupporterBottomNav";
-import SupporterHeader from "@/components/SupporterHeader";
-import SupporterProfileBootstrap from "@/components/supporter/SupporterProfileBootstrap";
+import OrganiserBottomNav from "@/components/OrganiserBottomNav";
+import OrganiserHeader from "@/components/OrganiserHeader";
+import OrganiserProfileBootstrap from "@/components/organiser/OrganiserProfileBootstrap";
 
-export default function SupporterLayout({
+export default function OrganiserLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -23,13 +23,13 @@ export default function SupporterLayout({
 
   return (
     <div className="relative flex min-h-screen flex-col bg-surface font-body text-on-surface">
-      <SupporterProfileBootstrap />
+      <OrganiserProfileBootstrap />
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-surface shadow-2xl">
-        <SupporterHeader />
+        <OrganiserHeader />
         <main className="flex flex-1 flex-col overflow-y-auto pb-24 pt-24">
           {children}
         </main>
-        <SupporterBottomNav />
+        <OrganiserBottomNav />
       </div>
     </div>
   );

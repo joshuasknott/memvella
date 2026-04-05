@@ -178,7 +178,7 @@ export const generateKioskPin = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    const supporterSeniorName =
+    const organiserSeniorName =
       normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
 
     const assistedSenior =
@@ -189,7 +189,7 @@ export const generateKioskPin = mutation({
       )) ??
       (await upsertAssistedSeniorProfile(ctx, {
         familySpaceId: membership.familySpaceId,
-        displayName: supporterSeniorName,
+        displayName: organiserSeniorName,
         recoveryEmail: membership.authEmail ?? undefined,
       }));
 
@@ -202,7 +202,7 @@ export const generateKioskPin = mutation({
     await revokeSeniorSessionsForProfile(ctx, {
       seniorProfileId: assistedSenior._id,
       sessionType: "assisted_device",
-      reason: "supporter_requested_new_pairing",
+      reason: "organiser_requested_new_pairing",
     });
 
     let pinCode = generateNumericCode();
@@ -257,7 +257,7 @@ export const deactivateKioskDevice = mutation({
     await revokeSeniorSessionsForProfile(ctx, {
       seniorProfileId: assistedSenior._id,
       sessionType: "assisted_device",
-      reason: "supporter_revoked_device_access",
+      reason: "organiser_revoked_device_access",
     });
 
     return { deactivated: true as const };

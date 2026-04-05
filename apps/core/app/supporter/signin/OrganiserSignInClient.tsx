@@ -9,7 +9,7 @@ import { FormCard } from "@/components/ui/FormCard";
 import { TextInput } from "@/components/ui/Input";
 import { PrimaryButton } from "@/components/ui/Button";
 
-function SupporterAuthLayout({ children }: { children: React.ReactNode }) {
+function OrganiserAuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
       <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
@@ -31,9 +31,9 @@ function SupporterAuthLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SupporterSignInFallback() {
+export function OrganiserSignInFallback() {
   return (
-    <SupporterAuthLayout>
+    <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
           <h1 className="mb-2 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
@@ -52,11 +52,11 @@ export function SupporterSignInFallback() {
           <div className="h-[72px] animate-pulse rounded-full bg-[#6B21A8]/20" />
         </FormCard>
       </div>
-    </SupporterAuthLayout>
+    </OrganiserAuthLayout>
   );
 }
 
-export default function SupporterSignInClient() {
+export default function OrganiserSignInClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/supporter";
@@ -100,7 +100,7 @@ export default function SupporterSignInClient() {
   };
 
   return (
-    <SupporterAuthLayout>
+    <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
           <h1 className="mb-2 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
@@ -172,6 +172,6 @@ export default function SupporterSignInClient() {
           </p>
         </FormCard>
       </div>
-    </SupporterAuthLayout>
+    </OrganiserAuthLayout>
   );
 }

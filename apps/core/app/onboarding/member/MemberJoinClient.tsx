@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, KeyboardEvent, ClipboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useMutation } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput } from "@/components/ui/Input";
@@ -241,6 +243,9 @@ function AuthStep({
 const CODE_LENGTH = 6;
 
 function CodeStep({ onSuccess }: { onSuccess: () => void }) {
+  const redeemMemberInviteCode = useMutation(
+    api.familyInvites.redeemMemberInviteCode,
+  );
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -309,25 +314,32 @@ function CodeStep({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true);
 
     try {
-      // Placeholder: replace with useMutation(api.member.joinCircleByCode) once available.
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      const result = await redeemMemberInviteCode({
+        inviteCode: code,
+      });
 
-      // Mock specific error states for demonstration:
-      if (code === "000000") throw new Error("EXPIRED");
-      if (code === "111111") throw new Error("ALREADY_USED");
-      if (code === "222222") throw new Error("INVALID");
-
-      onSuccess();
-    } catch (err) {
-      if (err instanceof Error && err.message === "EXPIRED") {
-        setError("This invite code has expired. Please ask your Organiser for a new one.");
-      } else if (err instanceof Error && err.message === "ALREADY_USED") {
-        setError("This code has already been used. Ask your Organiser to generate a new one.");
-      } else {
-        setError("We couldn't find that Circle. Please double-check the code with your Organiser.");
+      if (result.status === "joined" || result.status === "already_joined") {
+        onSuccess();
+        return;
       }
-      setDigits(Array(CODE_LENGTH).fill(""));
-      focusBox(0);
+
+      setError(result.message);
+
+      if (
+        result.status === "invalid_code" ||
+        result.status === "expired" ||
+        result.status === "revoked" ||
+        result.status === "already_used"
+      ) {
+        setDigits(Array(CODE_LENGTH).fill(""));
+        focusBox(0);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while joining the Circle. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -417,11 +429,10 @@ function CodeStep({ onSuccess }: { onSuccess: () => void }) {
 function SuccessStep() {
   const router = useRouter();
 
-  // Redirect to the family dashboard after a short pause so the user can read the confirmation.
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => router.push("/supporter"), 2500);
     return () => clearTimeout(timer);
-  });
+  }, [router]);
 
   return (
     <div className="flex flex-col items-center gap-8 text-center">
@@ -431,7 +442,7 @@ function SuccessStep() {
 
       <div>
         <h1 className="mb-3 font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
-          You've joined the Circle.
+          You&apos;ve joined the Circle.
         </h1>
         <p className="mx-auto max-w-xs text-lg text-on-surface-variant">
           You can now see updates and help out.
@@ -449,15 +460,23 @@ function SuccessStep() {
 // ─── Root export ──────────────────────────────────────────────────────────────
 
 export default function MemberJoinClient() {
-  const [step, setStep] = useState<Step>("auth");
+  const { data: session } = authClient.useSession();
+  const [isAuthComplete, setIsAuthComplete] = useState(false);
+  const [hasJoinedSuccessfully, setHasJoinedSuccessfully] = useState(false);
+
+  const step: Step = hasJoinedSuccessfully
+    ? "success"
+    : session || isAuthComplete
+      ? "code"
+      : "auth";
 
   return (
     <MemberLayout>
       {step === "auth" && (
-        <AuthStep onSuccess={() => setStep("code")} />
+        <AuthStep onSuccess={() => setIsAuthComplete(true)} />
       )}
       {step === "code" && (
-        <CodeStep onSuccess={() => setStep("success")} />
+        <CodeStep onSuccess={() => setHasJoinedSuccessfully(true)} />
       )}
       {step === "success" && (
         <SuccessStep />

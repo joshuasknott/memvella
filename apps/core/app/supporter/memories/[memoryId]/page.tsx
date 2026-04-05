@@ -64,7 +64,7 @@ function MemoryAssetCard({
   );
 }
 
-export default function SupporterMemoryDetailPage() {
+export default function OrganiserMemoryDetailPage() {
   const params = useParams<{ memoryId: string }>();
   const router = useRouter();
   const { toast } = useToast();

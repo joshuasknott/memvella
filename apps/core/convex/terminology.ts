@@ -1,11 +1,9 @@
 import type { SeniorSessionInvalidReason } from "./seniorAccessHelpers";
 
 export const ORGANISER_LABEL = "Organiser";
-/** @deprecated Use ORGANISER_LABEL. Kept for incremental migration of backend identifiers. */
-export const ADMIN_LABEL = ORGANISER_LABEL;
 export const CIRCLE_LABEL = "Circle";
 export const MEMBER_LABEL = "Member";
-export const ADMIN_DEVICE_LABEL = `${ORGANISER_LABEL} device`;
+export const ORGANISER_DEVICE_LABEL = `${ORGANISER_LABEL} device`;
 export const TABLET_PROFILE_LABEL = "Tablet profile";
 export const INDEPENDENT_PROFILE_LABEL = "Independent profile";
 

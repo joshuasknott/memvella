@@ -19,7 +19,7 @@ function formatDateTime(timestamp: number) {
 export default function AccountSettingsPage() {
   const { data: session } = authClient.useSession();
   const { toast } = useToast();
-  const { supporterName, seniorDisplayName, profile } = useFamilySpaceProfile();
+  const { organiserName, seniorDisplayName, profile } = useFamilySpaceProfile();
   const assistedSessions = useQuery(api.supporter.listAssistedDeviceSessions);
   const revokeAllAssistedDeviceSessions = useMutation(
     api.supporter.revokeAllAssistedDeviceSessions,
@@ -72,7 +72,7 @@ export default function AccountSettingsPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
               Organiser name
             </p>
-            <p className="mt-2 text-lg font-bold text-gray-900">{supporterName}</p>
+            <p className="mt-2 text-lg font-bold text-gray-900">{organiserName}</p>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">

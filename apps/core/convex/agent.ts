@@ -17,7 +17,7 @@ The JSON object must have exactly two keys:
 2. "actionPayload": an object with an "action" key.
 
 Allowed actions:
-- "update_profile": use when the speaker shares their name, another person's display name, or their role. Valid keys are supporterName, seniorDisplayName, role ("organiser" | "assisted_senior" | "independent_senior"), and onboardingStep.
+- "update_profile": use when the speaker shares their name, another person's display name, or their role. Valid keys are organiserName, seniorDisplayName, role ("organiser" | "assisted_senior" | "independent_senior"), and onboardingStep.
 - "add_relation": use when the speaker mentions a connection. Valid keys are name, relationship, and aiContext.
 - "none": use for greetings or unstructured input.
 

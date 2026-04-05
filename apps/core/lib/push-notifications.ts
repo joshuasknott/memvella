@@ -129,7 +129,7 @@ export async function unsubscribeFromPushNotifications() {
 
 export function getCurrentDeviceLabel() {
   if (typeof navigator === "undefined") {
-    return "Supporter device";
+    return "Organiser device";
   }
 
   const navigatorWithUserAgentData = navigator as Navigator & {
@@ -141,5 +141,5 @@ export function getCurrentDeviceLabel() {
     navigatorWithUserAgentData.userAgentData?.platform ||
     navigator.platform ||
     "Device";
-  return `Supporter ${platform}`.trim();
+  return `Organiser ${platform}`.trim();
 }

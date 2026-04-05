@@ -6,7 +6,7 @@ import { Bell, ChevronRight, MonitorSmartphone, User, UserPlus } from "lucide-re
 import { api } from "@/convex/_generated/api";
 import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
-export default function SupporterSettingsPage() {
+export default function OrganiserSettingsPage() {
   const { seniorDisplayName } = useFamilySpaceProfile();
   const assistedSessions = useQuery(api.supporter.listAssistedDeviceSessions);
   const activeSessionCount = assistedSessions?.length ?? 0;

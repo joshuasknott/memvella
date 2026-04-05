@@ -4,7 +4,7 @@ import { internalMutation } from "./_generated/server";
 const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 200;
 
-export const backfillLegacySupporterMembershipRoles = internalMutation({
+export const backfillLegacyOrganiserMembershipRoles = internalMutation({
   args: {
     limit: v.optional(v.number()),
   },

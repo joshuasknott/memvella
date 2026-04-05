@@ -19,7 +19,7 @@ export default function WaitlistForm() {
     if (status === 'success') {
         return (
             <div className="bg-surface-container-high p-6 rounded-[40px] flex items-center justify-center shadow-ambient animate-in fade-in zoom-in duration-500">
-                <p className="text-xl font-bold text-primary">Thank you! You've been added to the priority waitlist.</p>
+                <p className="text-xl font-bold text-primary">Thank you! You&apos;ve been added to the priority waitlist.</p>
             </div>
         );
     }

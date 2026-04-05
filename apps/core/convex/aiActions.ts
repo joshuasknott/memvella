@@ -19,9 +19,9 @@ export const processOnboardingAction = internalMutation({
 
     switch (action) {
       case "update_profile": {
-        const supporterName = normalizeOptionalText(
-          typeof payload.supporterName === "string"
-            ? payload.supporterName
+        const organiserName = normalizeOptionalText(
+          typeof payload.organiserName === "string"
+            ? payload.organiserName
             : undefined,
         );
         const seniorDisplayName = normalizeOptionalText(
@@ -32,9 +32,9 @@ export const processOnboardingAction = internalMutation({
         const incomingRole =
           typeof payload.role === "string" ? payload.role : "assisted_senior";
 
-        if (supporterName || typeof payload.onboardingStep === "number") {
+        if (organiserName || typeof payload.onboardingStep === "number") {
           await ctx.db.patch(membership._id, {
-            ...(supporterName ? { displayName: supporterName } : {}),
+            ...(organiserName ? { displayName: organiserName } : {}),
             ...(typeof payload.onboardingStep === "number"
               ? { onboardingStep: payload.onboardingStep }
               : {}),

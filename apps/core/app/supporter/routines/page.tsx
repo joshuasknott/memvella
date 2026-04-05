@@ -17,7 +17,7 @@ function RoutineSkeleton() {
   );
 }
 
-export default function SupporterRoutinesPage() {
+export default function OrganiserRoutinesPage() {
   const timeline = useQuery(api.supporter.getTodayTimeline);
   const schedules = useQuery(api.routines.listRoutineSchedules);
   const summary = useQuery(api.supporter.getSupporterDashboardSummary);

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Home, Calendar, BookOpen, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
-export default function SupporterBottomNav() {
+export default function OrganiserBottomNav() {
   const pathname = usePathname();
   const isHomeRoute = pathname === '/supporter';
   const isRoutinesRoute = pathname.startsWith('/supporter/routines') || pathname.startsWith('/supporter/add-routine');

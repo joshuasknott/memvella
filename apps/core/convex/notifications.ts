@@ -15,9 +15,9 @@ import {
 } from "./routineHelpers";
 import { normalizeOptionalText } from "./security";
 import {
-  ADMIN_DEVICE_LABEL,
   CIRCLE_LABEL,
   normalizeUserFacingText,
+  ORGANISER_DEVICE_LABEL,
 } from "./terminology";
 
 const DAILY_SUMMARY_DEFAULT_TIME_MINUTES = 19 * 60;
@@ -114,7 +114,7 @@ function getUtcDateKey(offsetDays = 0) {
 
 function buildCurrentDeviceLabel(input: string | undefined) {
   const normalized = normalizeOptionalText(input);
-  return normalizeUserFacingText(normalized) ?? ADMIN_DEVICE_LABEL;
+  return normalizeUserFacingText(normalized) ?? ORGANISER_DEVICE_LABEL;
 }
 
 async function listActivePushSubscriptionsForFamilySpace(
@@ -205,7 +205,7 @@ export const getSupporterNotificationSettings = query({
       ...resolvedSettings,
       activeSubscriptions: activeSubscriptions.map((subscription) => ({
         id: subscription._id,
-        deviceLabel: subscription.deviceLabel ?? ADMIN_DEVICE_LABEL,
+        deviceLabel: subscription.deviceLabel ?? ORGANISER_DEVICE_LABEL,
         userAgent: subscription.userAgent,
         lastSeenAt: subscription.lastSeenAt,
         lastDeliveryAt: subscription.lastDeliveryAt,
@@ -326,7 +326,7 @@ export const revokePushSubscription = mutation({
 
     await ctx.db.patch(existing._id, {
       revokedAt: Date.now(),
-      revokedReason: "supporter_disabled_push",
+      revokedReason: "organiser_disabled_push",
       updatedAt: Date.now(),
     });
 

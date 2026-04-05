@@ -21,22 +21,23 @@ Memvella currently uses two identity layers:
 This is the current implementation path for the future `Organiser` and `Member` family-side roles.
 
 - Sign-up UI: `apps/core/app/onboarding/supporter/page.tsx`
-- Sign-in UI: `apps/core/app/supporter/signin/SupporterSignInClient.tsx`
+- Sign-in UI: `apps/core/app/supporter/signin/OrganiserSignInClient.tsx`
 - Better Auth client calls: `authClient.signUp.email` and `authClient.signIn.email`
-- After auth succeeds, `SupporterProfileBootstrap` ensures a matching Circle membership exists by calling `createSupporterProfile` or `patchSupporterProfile`
+- After auth succeeds, `apps/core/components/organiser/OrganiserProfileBootstrap.tsx` ensures a matching Circle membership exists by calling `createSupporterProfile` or `patchSupporterProfile`
 
 Current behavior:
 
 - A new family-side account creates a new Circle when no existing membership is found.
-- The current shipped UI labels this account as `Admin` in some places and `Supporter` in others.
+- The shipped UI now labels this account as `Organiser`.
 - Family-side auth is currently email and password.
-- The current backend role string is still `supporter`.
+- Legacy `supporter` rows are still accepted during rollout, but new memberships now store `organiser` or `member`.
 
 ### Member Join Flow
 
 Current status:
 
-- Terminology is decided, but there is no implemented onboarding path yet for joining an existing Circle as a `Member`.
+- The backend join flow now exists for joining an existing Circle as a `Member`.
+- The current member onboarding UI still needs to be wired to that backend flow.
 - That means there is no current auth bootstrap for a new family or friend invitee.
 
 ### Independent User Auth

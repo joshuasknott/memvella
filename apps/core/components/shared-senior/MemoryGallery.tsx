@@ -131,7 +131,7 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
               No photos or videos yet
             </p>
             <p className="mt-3 text-lg leading-relaxed text-slate-600 md:text-xl">
-              Add a memory with a photo or video from the Supporter app to fill this gallery.
+              Add a memory with a photo or video from the Organiser app to fill this gallery.
             </p>
           </div>
         ) : null}

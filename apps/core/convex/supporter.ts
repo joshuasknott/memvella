@@ -222,7 +222,7 @@ export const saveVoiceSessionLog = mutation({
 
 export const createSupporterProfile = mutation({
   args: {
-    supporterName: v.optional(v.string()),
+    organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
     role: legacyRoleValidator,
     onboardingStep: v.optional(v.number()),
@@ -241,7 +241,7 @@ export const createSupporterProfile = mutation({
       authIdentityToken,
     );
 
-    const supporterName = normalizeOptionalText(args.supporterName) ?? ORGANISER_LABEL;
+    const organiserName = normalizeOptionalText(args.organiserName) ?? ORGANISER_LABEL;
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =
       args.role === "independent_senior" ? "independent" : "assisted";
@@ -252,7 +252,7 @@ export const createSupporterProfile = mutation({
       }
 
       await ctx.db.patch(existingMembership._id, {
-        displayName: supporterName,
+        displayName: organiserName,
         authEmail,
         onboardingStep: args.onboardingStep,
         lastSeenAt: Date.now(),
@@ -290,7 +290,7 @@ export const createSupporterProfile = mutation({
     const familySpaceId = await ctx.db.insert("familySpaces", {
       displayName: seniorDisplayName
         ? buildCircleName(seniorDisplayName)
-        : buildCircleName(supporterName),
+        : buildCircleName(organiserName),
       timezone: undefined,
       locale: undefined,
     });
@@ -315,7 +315,7 @@ export const createSupporterProfile = mutation({
       familySpaceId,
       authIdentityToken,
       authEmail,
-      displayName: supporterName,
+      displayName: organiserName,
       role: "organiser",
       seniorProfileId: linkedSeniorProfileId,
       onboardingStep: args.onboardingStep,
@@ -326,21 +326,21 @@ export const createSupporterProfile = mutation({
 
 export const patchSupporterProfile = mutation({
   args: {
-    supporterName: v.optional(v.string()),
+    organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
     role: legacyRoleValidator,
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    const supporterName = normalizeOptionalText(args.supporterName);
+    const organiserName = normalizeOptionalText(args.organiserName);
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =
       args.role === "independent_senior" ? "independent" : "assisted";
 
-    if (supporterName || args.onboardingStep !== undefined) {
+    if (organiserName || args.onboardingStep !== undefined) {
       await ctx.db.patch(membership._id, {
-        ...(supporterName ? { displayName: supporterName } : {}),
+        ...(organiserName ? { displayName: organiserName } : {}),
         ...(args.onboardingStep !== undefined
           ? { onboardingStep: args.onboardingStep }
           : {}),
@@ -381,18 +381,18 @@ export const patchSupporterProfile = mutation({
 export const getFamilyDirectory = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return [];
     }
 
     const members = await ctx.db
       .query("familyMembers")
       .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", supporterContext.membership.familySpaceId),
+        query.eq("familySpaceId", familyContext.membership.familySpaceId),
       )
       .take(100);
 
@@ -414,17 +414,17 @@ export const getFamilyDirectory = query({
 export const getTodayTimeline = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return [];
     }
 
     return await listTodayTimelineForFamilySpace(
       ctx,
-      supporterContext.membership.familySpaceId,
+      familyContext.membership.familySpaceId,
     );
   },
 });
@@ -432,11 +432,11 @@ export const getTodayTimeline = query({
 export const getSupporterDashboardSummary = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
     }
 
@@ -444,18 +444,18 @@ export const getSupporterDashboardSummary = query({
       ctx.db
         .query("familyMembers")
         .withIndex("by_familySpaceId", (query) =>
-          query.eq("familySpaceId", supporterContext.membership.familySpaceId),
+          query.eq("familySpaceId", familyContext.membership.familySpaceId),
         )
         .take(200),
       ctx.db
         .query("routineSchedules")
         .withIndex("by_familySpaceId", (query) =>
-          query.eq("familySpaceId", supporterContext.membership.familySpaceId),
+          query.eq("familySpaceId", familyContext.membership.familySpaceId),
         )
         .take(200),
       getNextRoutineEventForFamilySpace(
         ctx,
-        supporterContext.membership.familySpaceId,
+        familyContext.membership.familySpaceId,
       ),
     ]);
 
@@ -472,11 +472,11 @@ export const getSupporterDashboardSummary = query({
 export const getNotificationSettings = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return {
         dailySummary: false,
         urgentAlerts: false,
@@ -487,7 +487,7 @@ export const getNotificationSettings = query({
     const settings = await ctx.db
       .query("notificationSettings")
       .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", supporterContext.membership.familySpaceId),
+        query.eq("familySpaceId", familyContext.membership.familySpaceId),
       )
       .unique();
 
@@ -505,11 +505,11 @@ export const getNotificationSettings = query({
 export const listAssistedDeviceSessions = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return [] as Array<{
         id: Id<"seniorAccessSessions">;
         issuedAt: number;
@@ -519,7 +519,7 @@ export const listAssistedDeviceSessions = query({
       }>;
     }
 
-    const { membership } = supporterContext;
+    const { membership } = familyContext;
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,
@@ -586,7 +586,7 @@ export const revokeAssistedDeviceSession = mutation({
 
     await ctx.db.patch(session._id, {
       revokedAt: Date.now(),
-      revokedReason: "supporter_revoked_device_session",
+      revokedReason: "organiser_revoked_device_session",
     });
 
     return { revoked: true as const };
@@ -620,7 +620,7 @@ export const revokeAllAssistedDeviceSessions = mutation({
     await revokeSeniorSessionsForProfile(ctx, {
       seniorProfileId: assistedSenior._id,
       sessionType: "assisted_device",
-      reason: "supporter_revoked_all_device_sessions",
+      reason: "organiser_revoked_all_device_sessions",
     });
 
     return { revokedCount: activeSessions.length };
@@ -630,35 +630,35 @@ export const revokeAllAssistedDeviceSessions = mutation({
 export const getSupporterProfile = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return null;
     }
 
     const seniorProfile =
-      supporterContext.membership.seniorProfileId !== null
-        ? await ctx.db.get(supporterContext.membership.seniorProfileId)
+      familyContext.membership.seniorProfileId !== null
+        ? await ctx.db.get(familyContext.membership.seniorProfileId)
         : await getPreferredSeniorProfile(
-            supporterContext.membership.familySpaceId,
+            familyContext.membership.familySpaceId,
             ctx,
           );
 
     return {
-      _id: supporterContext.membership._id,
-      familySpaceId: supporterContext.membership.familySpaceId,
-      supporterName:
-        normalizeUserFacingText(supporterContext.membership.displayName) ??
+      _id: familyContext.membership._id,
+      familySpaceId: familyContext.membership.familySpaceId,
+      organiserName:
+        normalizeUserFacingText(familyContext.membership.displayName) ??
         ORGANISER_LABEL,
       seniorDisplayName:
         normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL,
-      role: supporterContext.membership.role,
-      onboardingStep: supporterContext.membership.onboardingStep,
+      role: familyContext.membership.role,
+      onboardingStep: familyContext.membership.onboardingStep,
       seniorProfileId: seniorProfile?._id ?? null,
       seniorMode: seniorProfile?.seniorMode ?? null,
-      authEmail: supporterContext.membership.authEmail,
+      authEmail: familyContext.membership.authEmail,
     };
   },
 });
@@ -666,11 +666,11 @@ export const getSupporterProfile = query({
 export const getFamilySpaceId = query({
   args: {},
   handler: async (ctx): Promise<Id<"familySpaces"> | null> => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
 
-    return supporterContext?.membership.familySpaceId ?? null;
+    return familyContext?.membership.familySpaceId ?? null;
   },
 });

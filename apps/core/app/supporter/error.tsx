@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
 
-export default function SupporterError({
+export default function OrganiserError({
   error,
   unstable_retry,
 }: {

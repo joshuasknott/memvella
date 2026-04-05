@@ -4,7 +4,7 @@ Memvella is a PNPM/Turbo monorepo for a voice-first digital wellness companion.
 
 ## Workspace
 
-- `apps/core`: the product app. This includes the Supporter, Assisted Senior, and Independent Senior experiences, the Next.js frontend, and the Convex backend.
+- `apps/core`: the product app. This includes the Organiser, Assisted Senior, and Independent Senior experiences, the Next.js frontend, and the Convex backend.
 - `apps/marketing`: the marketing and waitlist app.
 
 ## Stack

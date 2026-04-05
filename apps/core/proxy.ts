@@ -1,7 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
-const publicSupporterPaths = ["/supporter/signin"];
+const publicOrganiserPaths = ["/supporter/signin"];
 const protectedPrefix = "/supporter";
 
 export function proxy(request: NextRequest) {
@@ -11,7 +11,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (publicSupporterPaths.some((path) => pathname.startsWith(path))) {
+  if (publicOrganiserPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 

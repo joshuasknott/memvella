@@ -10,7 +10,7 @@ import { TextInput } from "@/components/ui/Input";
 import { PrimaryButton } from "@/components/ui/Button";
 import BrandLogo from "@/components/BrandLogo";
 
-export default function SupporterSetupPage() {
+export default function OrganiserSetupPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");

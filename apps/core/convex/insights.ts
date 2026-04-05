@@ -70,18 +70,18 @@ async function enrichInsights<
 export const listSupporterInsights = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return {
         queued: [] as Awaited<ReturnType<typeof enrichInsights>>,
         reviewed: [] as Awaited<ReturnType<typeof enrichInsights>>,
       };
     }
 
-    const { membership } = supporterContext;
+    const { membership } = familyContext;
     const [queued, reviewed] = await Promise.all([
       ctx.db
         .query("supporterInsights")
@@ -111,15 +111,15 @@ export const listSupporterInsights = query({
 export const getQueuedSupporterInsightCount = query({
   args: {},
   handler: async (ctx) => {
-    const supporterContext = await getOptionalFamilySpaceMembership(
+    const familyContext = await getOptionalFamilySpaceMembership(
       ctx,
       "family_side",
     );
-    if (!supporterContext) {
+    if (!familyContext) {
       return 0;
     }
 
-    const { membership } = supporterContext;
+    const { membership } = familyContext;
     const queued = await ctx.db
       .query("supporterInsights")
       .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>

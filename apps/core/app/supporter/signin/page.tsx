@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import SupporterSignInClient, {
-  SupporterSignInFallback,
-} from "./SupporterSignInClient";
+import OrganiserSignInClient, {
+  OrganiserSignInFallback,
+} from "./OrganiserSignInClient";
 
-export default function SupporterSignInPage() {
+export default function OrganiserSignInPage() {
   return (
-    <Suspense fallback={<SupporterSignInFallback />}>
-      <SupporterSignInClient />
+    <Suspense fallback={<OrganiserSignInFallback />}>
+      <OrganiserSignInClient />
     </Suspense>
   );
 }

@@ -105,7 +105,7 @@ export default function WaitlistPage() {
                                             <Users className="text-primary" size={32} />
                                         </div>
                                         <h3 className="font-headline font-extrabold text-3xl text-on-surface mb-6 leading-tight">A Circle of Support (Instant Relief for You)</h3>
-                                        <p className="text-lg text-on-secondary-container leading-relaxed">Step out of the role of full-time calendar and back into the role of family. As a "Supporter," you can securely schedule their routines from your phone, drop fresh photos directly onto their screen, and receive quiet, reassuring insights that their day is going beautifully.</p>
+                                        <p className="text-lg text-on-secondary-container leading-relaxed">Step out of the role of full-time calendar and back into the role of family. As an Organiser, you can securely schedule their routines from your phone, drop fresh photos directly onto their screen, and receive quiet, reassuring insights that their day is going beautifully.</p>
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +134,7 @@ export default function WaitlistPage() {
                             <div>
                                 <h2 className="font-headline font-extrabold text-4xl md:text-5xl text-on-surface mb-8 tracking-tight">Honest Onboarding: Designed for Your Reality</h2>
                                 <p className="text-xl text-on-surface-variant leading-relaxed mb-12">
-                                    Every family's starting line is different. Memvella offers frictionless ways to begin, and adapts as your loved one's needs change:
+                                    Every family&apos;s starting line is different. Memvella offers frictionless ways to begin, and adapts as your loved one&apos;s needs change:
                                 </p>
                                 
                                 <div className="space-y-10">
@@ -144,7 +144,7 @@ export default function WaitlistPage() {
                                         <div>
                                             <h3 className="font-headline font-bold text-2xl text-on-surface mb-3">The Supported Setup <span className="text-primary font-semibold text-xl block mt-1 sm:inline sm:mt-0">(For Guided Care)</span></h3>
                                             <p className="text-lg text-on-surface-variant leading-relaxed">
-                                                You set up a "Circle" from your phone, generate a secure 6-digit code, and simply type it into their tablet. In under five minutes, you are fully connected, managing their routines, and effortlessly sharing family memories remotely.
+                                                You set up a &ldquo;Circle&rdquo; from your phone, generate a secure 6-digit code, and simply type it into their tablet. In under five minutes, you are fully connected, managing their routines, and effortlessly sharing family memories remotely.
                                             </p>
                                         </div>
                                     </div>
@@ -203,7 +203,7 @@ export default function WaitlistPage() {
                                 {/* Pull quote icon */}
                                 <Quote className="absolute -top-12 -left-12 text-6xl text-primary/5 select-none" size={64} style={{ fill: "currentColor" }} />
                                 <p className="text-xl md:text-2xl text-on-surface-variant leading-relaxed font-light italic mb-12 relative z-10">
-                                    "Built from the burden we lived. We are currently opening Memvella's private beta to a small group of founding families. Join the waitlist to secure early access, share your feedback directly with our team, and help us build the dignified memory companion we all wish our families had."
+                                    &ldquo;Built from the burden we lived. We are currently opening Memvella&apos;s private beta to a small group of founding families. Join the waitlist to secure early access, share your feedback directly with our team, and help us build the dignified memory companion we all wish our families had.&rdquo;
                                 </p>
                             </div>
                             <div className="flex items-center gap-6">
@@ -261,7 +261,7 @@ export default function WaitlistPage() {
                                     <span className="text-primary transform transition-transform group-open:rotate-180">↓</span>
                                 </summary>
                                 <p className="text-on-surface-variant leading-relaxed">
-                                    Memvella fiercely protects your family's privacy. It does not use the tablet's camera, so it cannot see them. It uses "ambient audio gating"—meaning it briefly listens for general room noise so it knows not to speak to an empty room. It only processes what is spoken directly to it.
+                                    Memvella fiercely protects your family&apos;s privacy. It does not use the tablet&apos;s camera, so it cannot see them. It uses &ldquo;ambient audio gating&rdquo; meaning it briefly listens for general room noise so it knows not to speak to an empty room. It only processes what is spoken directly to it.
                                 </p>
                             </details>
                             
