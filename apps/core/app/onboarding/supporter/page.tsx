@@ -69,17 +69,19 @@ export default function SupporterSetupPage() {
       <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-0 hidden md:block">
-        <BrandLogo standalone animated className="w-auto h-16 opacity-20" />
-      </div>
-
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
-        <Link
-          href="/"
-          className="mb-8 flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
-        >
-          <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
-        </Link>
+        <header className="mb-8 flex h-14 items-center justify-between relative">
+          <Link
+            href="/"
+            className="flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80 z-10"
+          >
+            <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
+          </Link>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <BrandLogo standalone animated className="w-auto h-8 md:h-10 drop-shadow-sm" />
+          </div>
+          <div className="w-[84px]" aria-hidden="true" />
+        </header>
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-12">
           <div className="space-y-8">

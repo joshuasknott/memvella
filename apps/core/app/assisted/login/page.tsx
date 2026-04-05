@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Numpad } from "@/components/shared-senior/Numpad";
+import BrandLogo from "@/components/BrandLogo";
 import { persistDeviceFingerprint } from "@/lib/device-fingerprint";
 import {
   clearSeniorSession,
@@ -86,14 +87,18 @@ export default function AssistedSetupPage() {
   return (
     <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-white p-6 font-body">
       <div className="flex w-full flex-col items-center">
-        <div className="mb-8 w-full max-w-lg">
+        <header className="mb-8 flex h-14 w-full max-w-lg items-center justify-between relative">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 font-medium text-[#4e0078] transition-opacity hover:opacity-80"
+            className="flex w-fit items-center gap-2 font-medium text-[#4e0078] transition-opacity hover:opacity-80 z-10"
           >
             <ArrowLeft size={24} /> Back
           </button>
-        </div>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <BrandLogo standalone animated className="w-auto h-8 md:h-10 drop-shadow-sm" />
+          </div>
+          <div className="w-[84px]" aria-hidden="true" />
+        </header>
 
         <div className="mb-12 space-y-4 text-center">
           <h1 className="font-headline text-5xl font-bold tracking-tight text-slate-900 md:text-6xl">
