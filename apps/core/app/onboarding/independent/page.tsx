@@ -245,6 +245,8 @@ function IndependentSetupVoiceContent() {
                   placeholder="e.g., David"
                   disabled={isSubmitting}
                 />
+              </div>
+
               <div className="space-y-2">
                 <label className="font-medium text-on-surface-variant ml-2 text-lg">
                   Your Phone Number
