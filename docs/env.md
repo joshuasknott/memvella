@@ -9,7 +9,10 @@ Depends on: docs/auth-and-identity.md
 
 ## Local Example File
 
-The local example for the core app lives at `apps/core/.env.example`.
+The local examples live at:
+
+- `apps/core/.env.example`
+- `apps/marketing/.env.example`
 
 ## Variable Contract
 
@@ -23,13 +26,15 @@ The local example for the core app lives at `apps/core/.env.example`.
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | Better Auth and Convex Next.js bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
 | `MEMVELLA_AUTH_PEPPER` | recommended | server and Convex | extra hashing/pepper helpers | Secret value |
-| `RESEND_API_KEY` | optional | server and Convex | magic link email delivery | If empty, dev currently logs the link instead of sending |
-| `RESEND_FROM_EMAIL` | optional | server and Convex | magic link email sender | Example: `Memvella <no-reply@example.com>` |
+| `TWILIO_ACCOUNT_SID` | yes for independent SMS auth | server and Convex | Twilio SMS delivery | Used for Independent User sign-in codes |
+| `TWILIO_AUTH_TOKEN` | yes for independent SMS auth | server and Convex | Twilio SMS delivery | Secret value |
+| `TWILIO_SMS_FROM_NUMBER` | yes for independent SMS auth | server and Convex | Twilio SMS sender | E.164 sender number |
 | `GEMINI_API_KEY` | required for AI features | server and Convex | live voice and AI actions | Needed for voice and insights paths |
 | `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default model when omitted |
 | `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push notification subscription flow | Needed for browser push |
 | `MEMVELLA_WEB_PUSH_PRIVATE_KEY` | optional | Convex | push delivery worker | Secret value |
 | `MEMVELLA_WEB_PUSH_SUBJECT` | optional | Convex | push delivery worker | Usually a `mailto:` value |
+| `CONVEX_URL` | yes for marketing waitlist writes | server | marketing waitlist API route | `apps/marketing` server route uses this to submit waitlist entries |
 
 ## Local Auth Rule
 

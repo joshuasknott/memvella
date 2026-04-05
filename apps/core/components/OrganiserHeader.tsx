@@ -5,10 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 
 const TAB_ROUTES = [
-  "/supporter",
-  "/supporter/routines",
-  "/supporter/memories",
-  "/supporter/settings",
+  "/circle",
+  "/circle/routines",
+  "/circle/memories",
+  "/circle/settings",
 ];
 
 /** Map sub-route path segments to human-readable titles. */
@@ -27,8 +27,8 @@ const SUB_ROUTE_TITLES: Record<string, string> = {
 };
 
 function getTitleFromPath(pathname: string): string {
-  // Strip the /supporter/ prefix and match against known sub-routes
-  const sub = pathname.replace("/supporter/", "");
+  // Strip the /circle/ prefix and match against known sub-routes.
+  const sub = pathname.replace("/circle/", "");
   if (sub.startsWith("memories/") && sub.endsWith("/edit")) {
     return "Edit Memory";
   }

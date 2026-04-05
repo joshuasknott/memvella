@@ -5,22 +5,47 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/admin",
-        destination: "/supporter",
+        destination: "/circle",
         permanent: false,
       },
       {
         source: "/admin/:path*",
-        destination: "/supporter/:path*",
+        destination: "/circle/:path*",
         permanent: false,
       },
       {
         source: "/onboarding/admin",
-        destination: "/onboarding/supporter",
+        destination: "/onboarding/organiser",
         permanent: false,
       },
       {
         source: "/onboarding/admin/:path*",
-        destination: "/onboarding/supporter/:path*",
+        destination: "/onboarding/organiser/:path*",
+        permanent: false,
+      },
+      {
+        source: "/supporter/signin",
+        destination: "/organiser/signin",
+        permanent: false,
+      },
+      {
+        source: "/supporter",
+        destination: "/circle",
+        permanent: false,
+      },
+      {
+        source: "/supporter/:path*",
+        destination: "/circle/:path*",
+        permanent: false,
+      },
+      {
+        source: "/onboarding/supporter",
+        destination: "/onboarding/organiser",
+        permanent: false,
+      },
+      {
+        source: "/onboarding/supporter/:path*",
+        destination: "/onboarding/organiser/:path*",
         permanent: false,
       },
     ];

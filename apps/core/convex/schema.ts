@@ -51,13 +51,15 @@ export default defineSchema({
       v.literal("revoked"),
     ),
     recoveryEmail: v.union(v.string(), v.null()),
+    recoveryPhoneNumber: v.union(v.string(), v.null()),
     timezone: v.union(v.string(), v.null()),
     locale: v.union(v.string(), v.null()),
     lastSessionAt: v.optional(v.number()),
   })
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"])
-    .index("by_recoveryEmail", ["recoveryEmail"]),
+    .index("by_recoveryEmail", ["recoveryEmail"])
+    .index("by_recoveryPhoneNumber", ["recoveryPhoneNumber"]),
 
   // Compatibility table kept permissive while legacy rows are migrated forward.
   supporterProfiles: defineTable(v.any())
@@ -372,6 +374,18 @@ export default defineSchema({
       "status",
       "scheduledFor",
     ]),
+
+  waitlistEntries: defineTable({
+    email: v.string(),
+    sourcePath: v.string(),
+    referrer: v.union(v.string(), v.null()),
+    userAgent: v.union(v.string(), v.null()),
+    status: v.union(v.literal("active"), v.literal("unsubscribed")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_status_and_createdAt", ["status", "createdAt"]),
 
   rateLimitWindows: defineTable({
     scopeKey: v.string(),

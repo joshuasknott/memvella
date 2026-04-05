@@ -86,7 +86,7 @@ export default function AddRoutinePage() {
         title: "Routine saved",
         description: `${title.trim()} is now scheduled in this Circle.`,
       });
-      router.push("/supporter/routines");
+      router.push("/circle/routines");
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -258,7 +258,7 @@ export default function AddRoutinePage() {
           )}
         </PrimaryButton>
 
-        <SecondaryButton href="/supporter/routines">
+        <SecondaryButton href="/circle/routines">
           Back to routines
         </SecondaryButton>
       </div>

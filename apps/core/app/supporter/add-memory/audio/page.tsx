@@ -70,7 +70,7 @@ export default function AudioMemoryPage() {
         title: "Audio memory saved",
         description: `${title.trim()} was added to the Circle.`,
       });
-      router.push("/supporter/memories");
+      router.push("/circle/memories");
     } catch (saveError) {
       console.error(saveError);
       const message =

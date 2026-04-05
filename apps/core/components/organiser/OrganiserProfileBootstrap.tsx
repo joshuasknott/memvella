@@ -14,8 +14,8 @@ function normalizeName(value: string | null | undefined) {
 export default function OrganiserProfileBootstrap() {
   const { data: session } = authClient.useSession();
   const { isAuthenticated, isLoading, profile } = useFamilySpaceProfile();
-  const createProfile = useMutation(api.supporter.createSupporterProfile);
-  const patchProfile = useMutation(api.supporter.patchSupporterProfile);
+  const createProfile = useMutation(api.organiser.createOrganiserProfile);
+  const patchProfile = useMutation(api.organiser.patchOrganiserProfile);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated || profile === undefined) {

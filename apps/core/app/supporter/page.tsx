@@ -42,15 +42,15 @@ function TimelineSkeleton() {
 export default function OrganiserDashboard() {
   const { isAuthenticated, isLoading, seniorDisplayName } = useFamilySpaceProfile();
   const summary = useQuery(
-    api.supporter.getSupporterDashboardSummary,
+    api.organiser.getOrganiserDashboardSummary,
     isAuthenticated ? undefined : "skip",
   );
   const queuedInsightCount = useQuery(
-    api.insights.getQueuedSupporterInsightCount,
+    api.insights.getQueuedOrganiserInsightCount,
     isAuthenticated ? undefined : "skip",
   );
   const timeline = useQuery(
-    api.supporter.getTodayTimeline,
+    api.organiser.getTodayTimeline,
     isAuthenticated ? undefined : "skip",
   );
 
@@ -88,7 +88,7 @@ export default function OrganiserDashboard() {
       <section className="relative z-10">
         <div className="flex justify-between gap-4">
           <Link
-            href="/supporter/add-person"
+            href="/circle/add-person"
             className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-fixed">
@@ -100,7 +100,7 @@ export default function OrganiserDashboard() {
           </Link>
 
           <Link
-            href="/supporter/add-memory"
+            href="/circle/add-memory"
             className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -112,7 +112,7 @@ export default function OrganiserDashboard() {
           </Link>
 
           <Link
-            href="/supporter/add-routine"
+            href="/circle/add-routine"
             className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-3xl bg-surface-container-lowest p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
@@ -140,7 +140,7 @@ export default function OrganiserDashboard() {
           </div>
         ) : (
           <Link
-            href="/supporter/insights"
+            href="/circle/insights"
             className="flex items-center justify-between gap-4 rounded-3xl border border-outline-variant/30 bg-surface-container-low p-5 shadow-sm transition-colors active:scale-[0.99]"
           >
             <div className="flex items-center gap-4">
@@ -178,7 +178,7 @@ export default function OrganiserDashboard() {
                 No routines scheduled yet.
               </p>
               <Link
-                href="/supporter/add-routine"
+                href="/circle/add-routine"
                 className="mt-1 block text-base font-bold text-primary"
               >
                 Add a routine
@@ -187,7 +187,7 @@ export default function OrganiserDashboard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {timeline.map((item) => {
+            {timeline.map((item: NonNullable<typeof timeline>[number]) => {
               const Icon = ROUTINE_ICON_MAP[item.type] ?? Calendar;
 
               return (

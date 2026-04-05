@@ -24,6 +24,7 @@ The marketing app can be more expressive than the product app, but it still need
 - Primary calls to action must map to a real route or a clearly documented placeholder.
 - Do not leave draft placeholders, exports, or design-tool artifacts in committed source when a production page is meant to be live.
 - Metadata should either be intentionally set or intentionally blank, never left as framework defaults.
+- The marketing app should be structured so the homepage and secondary pages can grow without rebuilding the shell or navigation each time.
 
 ## Copy Guardrails
 
@@ -37,3 +38,4 @@ The marketing app can be more expressive than the product app, but it still need
 - Waitlist or signup forms should document whether they are real or placeholder.
 - If a form is mock-only, do not present it as a production-backed pipeline in engineering docs.
 - CTA labels should be consistent across hero, footer, and supporting sections.
+- If the waitlist is live, submit to a real backend destination and handle repeat submissions honestly.

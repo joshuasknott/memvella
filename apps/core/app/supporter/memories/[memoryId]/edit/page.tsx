@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, Upload, X } from "lucide-react";
@@ -28,11 +29,15 @@ function AssetPreview({
 }) {
   if (asset.assetType === "image") {
     return (
-      <img
-        src={asset.resolvedUrl}
-        alt={asset.fileName ?? title}
-        className="h-64 w-full rounded-3xl object-cover"
-      />
+      <div className="relative h-64 w-full overflow-hidden rounded-3xl">
+        <Image
+          src={asset.resolvedUrl}
+          alt={asset.fileName ?? title}
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      </div>
     );
   }
 
@@ -139,7 +144,7 @@ export default function OrganiserMemoryEditPage() {
             This record is no longer available in the current Circle.
           </p>
         </div>
-        <SecondaryButton href="/supporter/memories">
+        <SecondaryButton href="/circle/memories">
           Back to memories
         </SecondaryButton>
       </div>
@@ -257,7 +262,7 @@ export default function OrganiserMemoryEditPage() {
         title: "Memory updated",
         description: `${title.trim()} was updated in the Circle.`,
       });
-      router.push(`/supporter/memories/${memoryRecordId}`);
+      router.push(`/circle/memories/${memoryRecordId}`);
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -444,7 +449,7 @@ export default function OrganiserMemoryEditPage() {
           )}
         </PrimaryButton>
 
-        <SecondaryButton href={`/supporter/memories/${memoryRecordId}`}>
+        <SecondaryButton href={`/circle/memories/${memoryRecordId}`}>
           Back to memory
         </SecondaryButton>
       </div>

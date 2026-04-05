@@ -16,14 +16,21 @@ Memvella currently uses two identity layers:
 
 ## Current Flows
 
+| Role | Entry route | Auth bootstrap | Secondary auth | Lands in |
+| --- | --- | --- | --- | --- |
+| `Organiser` | `/onboarding/organiser` | Better Auth email and password | none | `/circle` |
+| `Member` | `/onboarding/member` | Better Auth email and password plus 6-digit invite code | none | `/circle` |
+| `Tablet User` | `/assisted/login` | 6-digit pairing code | device-bound senior session | `/assisted` |
+| `Independent User` | `/onboarding/independent` | Better Auth phone verification via SMS | optional passkey on the same device | `/independent` |
+
 ### Family-Side Account Auth
 
-This is the current implementation path for the future `Organiser` and `Member` family-side roles.
+This is the current implementation path for `Organiser` and `Member` family-side roles.
 
-- Sign-up UI: `apps/core/app/onboarding/supporter/page.tsx`
-- Sign-in UI: `apps/core/app/supporter/signin/OrganiserSignInClient.tsx`
+- Sign-up route: `/onboarding/organiser`
+- Sign-in route: `/organiser/signin`
 - Better Auth client calls: `authClient.signUp.email` and `authClient.signIn.email`
-- After auth succeeds, `apps/core/components/organiser/OrganiserProfileBootstrap.tsx` ensures a matching Circle membership exists by calling `createSupporterProfile` or `patchSupporterProfile`
+- After auth succeeds, `apps/core/components/organiser/OrganiserProfileBootstrap.tsx` ensures a matching Circle membership exists by calling `createOrganiserProfile` or `patchOrganiserProfile`
 
 Current behavior:
 
@@ -34,32 +41,33 @@ Current behavior:
 
 ### Member Join Flow
 
-Current status:
+Current behavior:
 
-- The backend join flow now exists for joining an existing Circle as a `Member`.
-- The current member onboarding UI still needs to be wired to that backend flow.
-- That means there is no current auth bootstrap for a new family or friend invitee.
+- The join flow is live at `/onboarding/member`.
+- A family member or friend creates or signs in to a family-side account.
+- They then redeem a 6-digit Circle invite code.
+- Convex creates a `member` membership in `familySpaceMemberships`.
+- The account lands in the shared Circle workspace with organiser-only settings blocked.
 
 ### Independent User Auth
 
 - Onboarding UI: `apps/core/app/onboarding/independent/page.tsx`
-- Verification UI: `apps/core/app/onboarding/independent/verify/page.tsx`
 - Recovery UI: `apps/core/app/independent/recover/page.tsx`
-- Finalization mutation: `apps/core/convex/independentAuth.ts`
+- Finalization mutation: `finalizePhoneNumberSignIn` in `apps/core/convex/independentAuth.ts`
 
 Current behavior:
 
-- The user enters a name and email address.
-- Better Auth sends an email magic link.
-- After sign-in, Convex finalizes the identity into an `independent_senior` membership and mints a senior access session.
-- The user can then enroll a passkey for future access on that device.
-- Recovery supports another email magic link or a passkey challenge.
+- The user enters a name and phone number.
+- Better Auth sends a 6-digit SMS verification code through Twilio.
+- After verification, Convex finalizes the identity into an `independent_senior` membership and mints a senior access session.
+- The user can then enroll Face ID or Touch ID on that device through WebAuthn passkeys.
+- Recovery supports another SMS code or a passkey challenge.
 
 Guardrails:
 
 - This flow is passwordless.
-- This flow is currently email-based.
-- Product direction is moving toward SMS-only onboarding, but that change has not been implemented yet.
+- This flow is SMS-based.
+- Passkeys are optional, device-specific accelerators, not the primary bootstrap path.
 
 ### Tablet User Device Access
 
@@ -123,10 +131,9 @@ Expected failure mode:
 ## Role Collision Rules
 
 - Independent onboarding prevents reuse of an identity that is already linked to the family-side account experience.
-- That collision is surfaced in `finalizeMagicLinkSignIn` as a `role_collision` result.
+- That collision is surfaced in `finalizePhoneNumberSignIn` as a `role_collision` result.
 
 ## Known Gaps
 
-- Independent onboarding is not SMS-only yet.
-- There is no implemented flow for joining an existing Circle during onboarding.
-- The data model still does not distinguish `Organiser` from `Member` as separate family-side roles.
+- Legacy `supporter` module and table names still exist in some backend implementation details.
+- Some family-side backend APIs still use organiser-era naming even though the visible workspace is now `/circle`.

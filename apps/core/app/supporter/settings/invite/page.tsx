@@ -15,6 +15,7 @@ import { api } from "@/convex/_generated/api";
 import { useToast } from "@/components/ui/ToastProvider";
 import { FormCard } from "@/components/ui/FormCard";
 import { PrimaryButton } from "@/components/ui/Button";
+import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
 
 function formatExpiryLabel(expiresAt: number) {
   const minutesRemaining = Math.max(1, Math.ceil((expiresAt - Date.now()) / 60000));
@@ -28,7 +29,11 @@ function formatExpiryLabel(expiresAt: number) {
 
 export default function InviteMemberPage() {
   const { toast } = useToast();
-  const activeInvites = useQuery(api.familyInvites.listActiveMemberInvites);
+  const { isOrganiser } = useFamilySpaceProfile();
+  const activeInvites = useQuery(
+    api.familyInvites.listActiveMemberInvites,
+    isOrganiser ? undefined : "skip",
+  );
   const generateMemberInviteCode = useMutation(
     api.familyInvites.generateMemberInviteCode,
   );
@@ -46,6 +51,30 @@ export default function InviteMemberPage() {
   const displayedExpiresAt = inviteExpiresAt ?? activeInvite?.expiresAt ?? null;
   const hasVisibleCode = inviteCode !== null;
   const hasActiveInvite = displayedExpiresAt !== null;
+
+  if (!isOrganiser) {
+    return (
+      <div className="flex w-full flex-col gap-6 px-4 pb-12">
+        <div className="mb-2">
+          <Link
+            href="/circle/settings"
+            className="inline-flex items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+          >
+            <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back to Settings
+          </Link>
+        </div>
+
+        <FormCard className="text-center">
+          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            Invite Codes
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-gray-600">
+            Only the Organiser can create or revoke invite codes for this Circle.
+          </p>
+        </FormCard>
+      </div>
+    );
+  }
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -133,7 +162,7 @@ export default function InviteMemberPage() {
     <div className="flex w-full flex-col gap-6 px-4 pb-12">
       <div className="mb-2">
         <Link
-          href="/supporter/settings"
+          href="/circle/settings"
           className="inline-flex items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back to Settings

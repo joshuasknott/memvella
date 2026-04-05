@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
@@ -71,7 +72,7 @@ export default function MediaMemoryPage() {
         title: "Media memory saved",
         description: `${title.trim()} was added to the Circle.`,
       });
-      router.push("/supporter/memories");
+      router.push("/circle/memories");
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -107,7 +108,13 @@ export default function MediaMemoryPage() {
                 {selectedFile?.type.startsWith("video/") ? (
                   <video src={preview} className="h-full w-full rounded-3xl object-cover" />
                 ) : (
-                  <img src={preview} alt="Preview" className="h-full w-full rounded-3xl object-cover" />
+                  <Image
+                    src={preview}
+                    alt="Preview"
+                    fill
+                    unoptimized
+                    className="rounded-3xl object-cover"
+                  />
                 )}
                 <button
                   type="button"

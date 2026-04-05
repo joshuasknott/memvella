@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Camera, Lightbulb, Loader2, Sparkles, X } from "lucide-react";
@@ -77,7 +78,7 @@ export default function TextMemoryPage() {
         title: "Memory saved",
         description: `${title.trim()} was added to the Circle.`,
       });
-      router.push("/supporter/memories");
+      router.push("/circle/memories");
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -175,8 +176,14 @@ export default function TextMemoryPage() {
       />
 
       {photoPreview ? (
-        <div className="relative overflow-hidden rounded-3xl shadow-sm">
-          <img src={photoPreview} alt="Photo preview" className="h-48 w-full object-cover" />
+        <div className="relative h-48 overflow-hidden rounded-3xl shadow-sm">
+          <Image
+            src={photoPreview}
+            alt="Photo preview"
+            fill
+            unoptimized
+            className="object-cover"
+          />
           <button
             type="button"
             onClick={handleClearPhoto}

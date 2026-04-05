@@ -26,11 +26,14 @@ function formatDateTime(timestamp: number) {
 
 export default function PairingSettingsPage() {
   const { toast } = useToast();
-  const { seniorDisplayName } = useFamilySpaceProfile();
-  const assistedSessions = useQuery(api.supporter.listAssistedDeviceSessions);
+  const { seniorDisplayName, isOrganiser } = useFamilySpaceProfile();
+  const assistedSessions = useQuery(
+    api.organiser.listAssistedDeviceSessions,
+    isOrganiser ? undefined : "skip",
+  );
   const generatePin = useMutation(api.kiosk.generateKioskPin);
   const deactivate = useMutation(api.kiosk.deactivateKioskDevice);
-  const revokeSession = useMutation(api.supporter.revokeAssistedDeviceSession);
+  const revokeSession = useMutation(api.organiser.revokeAssistedDeviceSession);
 
   const [pin, setPin] = useState<string | null>(null);
   const [pinExpiresAt, setPinExpiresAt] = useState<number | null>(null);
@@ -43,6 +46,21 @@ export default function PairingSettingsPage() {
     [pin],
   );
 
+  if (!isOrganiser) {
+    return (
+      <div className="flex w-full flex-col gap-6 px-4 pb-8">
+        <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
+          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            Tablet Access
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-gray-600">
+            Only the Organiser can pair or revoke Tablet User devices for this Circle.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   const handleGeneratePin = async () => {
     setIsGenerating(true);
     try {
@@ -52,7 +70,7 @@ export default function PairingSettingsPage() {
       toast({
         tone: "success",
         title: "New pairing code generated",
-        description: `Share the 6-digit code with ${seniorDisplayName} to connect the Assisted Senior tablet.`,
+        description: `Share the 6-digit code with ${seniorDisplayName} to connect the Tablet User device.`,
       });
     } catch (error) {
       toast({
@@ -77,7 +95,7 @@ export default function PairingSettingsPage() {
       toast({
         tone: "success",
         title: "Assisted device access cleared",
-        description: "All outstanding pairing codes and active Assisted Senior tablet sessions were revoked.",
+        description: "All outstanding pairing codes and active Tablet User device sessions were revoked.",
       });
     } catch (error) {
       toast({
@@ -128,7 +146,7 @@ export default function PairingSettingsPage() {
               Pairing
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-gray-600">
-              Generate a secure pairing code for {seniorDisplayName} and manage every active Assisted Senior tablet session linked to this Circle.
+              Generate a secure pairing code for {seniorDisplayName} and manage every active Tablet User device session linked to this Circle.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
@@ -215,7 +233,7 @@ export default function PairingSettingsPage() {
           </div>
           <div>
             <h2 className="font-headline text-2xl font-bold text-gray-900">
-              Active Assisted Senior tablets
+              Active Tablet User devices
             </h2>
             <p className="mt-2 text-base leading-relaxed text-gray-600">
               Revoke an individual tablet if it is replaced, shared, or no longer trusted.
@@ -230,14 +248,15 @@ export default function PairingSettingsPage() {
             </div>
           ) : assistedSessions.length === 0 ? (
             <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
-              No active Assisted Senior tablet sessions are connected right now.
+              No active Tablet User device sessions are connected right now.
             </div>
           ) : (
-            assistedSessions.map((sessionItem) => (
-              <div
-                key={sessionItem.id}
-                className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
-              >
+            assistedSessions.map(
+              (sessionItem: NonNullable<typeof assistedSessions>[number]) => (
+                <div
+                  key={sessionItem.id}
+                  className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-blue-800 shadow-sm">
@@ -245,7 +264,7 @@ export default function PairingSettingsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-base font-bold text-gray-900">
-                        Assisted Senior tablet
+                        Tablet User device
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
                         Last active {formatDateTime(sessionItem.lastValidatedAt)}
@@ -267,8 +286,9 @@ export default function PairingSettingsPage() {
                     {revokingSessionId === sessionItem.id ? "Revoking..." : "Revoke"}
                   </button>
                 </div>
-              </div>
-            ))
+                </div>
+              ),
+            )
           )}
         </div>
       </section>

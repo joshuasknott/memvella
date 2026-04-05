@@ -55,7 +55,7 @@ export default function OrganiserSetupPage() {
         );
       }
 
-      router.push("/supporter");
+      router.push("/circle");
     } catch (signUpError) {
       console.error("Sign-up error:", signUpError);
       setError("Something went wrong. Please try again.");
@@ -184,7 +184,7 @@ export default function OrganiserSetupPage() {
               <p className="text-center text-sm text-gray-500">
                 Already have an account?{" "}
                 <Link
-                  href="/supporter/signin"
+                  href="/organiser/signin"
                   className="font-semibold text-[#4e0078] hover:underline"
                 >
                   Sign in

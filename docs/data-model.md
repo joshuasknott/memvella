@@ -14,7 +14,7 @@ New work should be built on the FamilySpace-based model.
 Primary entities:
 
 - `familySpaces`: top-level shared space for routines, memories, alerts, and voice context
-- `familySpaceMemberships`: auth-linked participants and roles
+- `familySpaceMemberships`: auth-linked participants and roles, including `organiser`, `member`, and `independent_senior`
 - `seniorProfiles`: senior-specific identity, mode, locale, and access state
 
 ## Canonical Tables
@@ -48,6 +48,7 @@ Primary entities:
 - `rateLimitWindows`
 - `voiceInteractions`
 - `supporterInsights`
+- `waitlistEntries`
 
 ## Legacy Compatibility Surfaces
 
@@ -71,7 +72,7 @@ Rules:
 
 - `familySpaceId` is the top-level partition key for most product data.
 - `familySpaceMemberships` connects authenticated users to a Circle and role.
-- `seniorProfiles` model the actual assisted or independent senior identity inside the Circle.
+- `seniorProfiles` model the actual Tablet User or Independent User identity inside the Circle.
 - Senior access sessions are device-bound and separate from Better Auth sessions.
 
 ## Authoring Rules

@@ -4,7 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx } from "./_generated/server";
 import {
   getSeniorProfileByMode,
-  requireFamilySpaceMembership,
+  requireFamilySideCapability,
   upsertAssistedSeniorProfile,
 } from "./familySpaceAuth";
 import {
@@ -177,7 +177,10 @@ export const generateKioskPin = mutation({
     seniorName: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_tablet_access",
+    );
     const organiserSeniorName =
       normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
 
@@ -241,7 +244,10 @@ export const generateKioskPin = mutation({
 export const deactivateKioskDevice = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_tablet_access",
+    );
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,

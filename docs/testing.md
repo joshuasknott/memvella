@@ -9,11 +9,20 @@ Depends on: docs/auth-and-identity.md, docs/env.md
 
 ## Preflight
 
-Before testing auth-sensitive changes:
+Before testing auth-sensitive or backend-sensitive changes:
 
 - confirm the browser origin matches `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL`
 - confirm Convex is running and the app is connected to the intended deployment
 - confirm any server-side secrets required for the path under test are configured
+- confirm `pnpm type-check`, `pnpm test`, and `pnpm build` are part of your verification pass for non-trivial changes
+
+## Automated Verification
+
+- `pnpm lint`
+- `pnpm type-check`
+- `pnpm test`
+- `pnpm build`
+- `pnpm verify` to run the full loop in sequence
 
 ## Manual Smoke Tests
 
@@ -21,8 +30,15 @@ Before testing auth-sensitive changes:
 
 - create a new family-side account
 - sign out and sign back in
-- confirm the dashboard resolves a Circle membership
+- confirm the Circle workspace resolves a Circle membership
 - confirm pairing settings, memories, routines, and notifications still load
+
+### Member Join Flow
+
+- create or sign in to a family-side account from `/onboarding/member`
+- enter a valid 6-digit invite code
+- confirm the account lands in the Circle workspace
+- confirm organiser-only settings remain unavailable to the Member account
 
 ### Tablet User
 
@@ -34,10 +50,10 @@ Before testing auth-sensitive changes:
 ### Independent User
 
 - complete first-run onboarding
-- verify passwordless sign-in works end to end
+- verify SMS code delivery and verification work end to end
 - verify verification/finalization creates a usable senior session
 - verify passkey enrollment succeeds when supported
-- verify recovery works through the available recovery path
+- verify recovery works through SMS or passkey
 
 ### Cross-Device And Origin
 
@@ -47,11 +63,10 @@ Before testing auth-sensitive changes:
 
 ### Marketing
 
-- verify the marketing app renders without placeholder metadata
-- verify the waitlist form behavior matches the documented current state
+- verify `/`, `/experience`, `/philosophy`, and `/waitlist` all render
+- verify the waitlist form submits successfully and repeat submissions dedupe cleanly
 
 ## Current Testing Gaps
 
-- No documented join-existing-Circle onboarding test yet because the feature is not implemented.
-- Independent onboarding direction is changing toward SMS-only, so auth tests will need updating when that work lands.
-- The marketing waitlist is currently a frontend-only placeholder flow and should not be treated as a production signup pipeline.
+- There is not yet an end-to-end browser test suite for the full onboarding matrix.
+- Existing lint still reports several pre-existing `<img>` warnings in older Circle workspace pages.

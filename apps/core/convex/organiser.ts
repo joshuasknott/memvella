@@ -6,6 +6,7 @@ import {
   getMembershipByAuthIdentityToken,
   getSeniorProfileByMode,
   isFamilySideRole,
+  requireFamilySideCapability,
   requireFamilySpaceMembership,
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
@@ -220,7 +221,7 @@ export const saveVoiceSessionLog = mutation({
   },
 });
 
-export const createSupporterProfile = mutation({
+export const createOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
@@ -324,7 +325,7 @@ export const createSupporterProfile = mutation({
   },
 });
 
-export const patchSupporterProfile = mutation({
+export const patchOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
@@ -429,7 +430,7 @@ export const getTodayTimeline = query({
   },
 });
 
-export const getSupporterDashboardSummary = query({
+export const getOrganiserDashboardSummary = query({
   args: {},
   handler: async (ctx) => {
     const familyContext = await getOptionalFamilySpaceMembership(
@@ -505,21 +506,10 @@ export const getNotificationSettings = query({
 export const listAssistedDeviceSessions = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const { membership } = await requireFamilySideCapability(
       ctx,
-      "family_side",
+      "manage_tablet_access",
     );
-    if (!familyContext) {
-      return [] as Array<{
-        id: Id<"seniorAccessSessions">;
-        issuedAt: number;
-        lastValidatedAt: number;
-        expiresAt: number;
-        idleExpiresAt: number;
-      }>;
-    }
-
-    const { membership } = familyContext;
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,
@@ -569,7 +559,10 @@ export const revokeAssistedDeviceSession = mutation({
     sessionId: v.id("seniorAccessSessions"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_tablet_access",
+    );
     const session = await ctx.db.get(args.sessionId);
 
     if (
@@ -596,7 +589,10 @@ export const revokeAssistedDeviceSession = mutation({
 export const revokeAllAssistedDeviceSessions = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_tablet_access",
+    );
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,
@@ -627,7 +623,7 @@ export const revokeAllAssistedDeviceSessions = mutation({
   },
 });
 
-export const getSupporterProfile = query({
+export const getOrganiserProfile = query({
   args: {},
   handler: async (ctx) => {
     const familyContext = await getOptionalFamilySpaceMembership(

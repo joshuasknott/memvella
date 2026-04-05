@@ -6,6 +6,7 @@ import {
   getMembershipByAuthIdentityToken,
   isFamilySideRole,
   requireFamilySideMembership,
+  requireFamilySideCapability,
 } from "./familySpaceAuth";
 import {
   generateNumericCode,
@@ -13,7 +14,7 @@ import {
   normalizeOptionalEmail,
   normalizeOptionalText,
 } from "./security";
-import { MEMBER_LABEL } from "./terminology";
+import { MEMBER_LABEL, ORGANISER_LABEL } from "./terminology";
 
 const FAMILY_INVITE_TTL_MS = 10 * 60 * 1000;
 const MAX_ACTIVE_INVITE_COLLISION_ATTEMPTS = 20;
@@ -159,10 +160,55 @@ function buildRateLimitMessage(retryAfterMs: number) {
   return `Too many invite attempts. Wait ${retryAfterSeconds} seconds before trying another code.`;
 }
 
-export const listActiveMemberInvites = query({
+function getFamilyRoleLabel(role: Doc<"familySpaceMemberships">["role"]) {
+  switch (role) {
+    case "supporter":
+    case "organiser":
+      return ORGANISER_LABEL;
+    case "member":
+      return MEMBER_LABEL;
+    default:
+      return role;
+  }
+}
+
+export const listCircleMembers = query({
   args: {},
   handler: async (ctx) => {
     const { membership } = await requireFamilySideMembership(ctx);
+    const memberships = await ctx.db
+      .query("familySpaceMemberships")
+      .withIndex("by_familySpaceId", (query) =>
+        query.eq("familySpaceId", membership.familySpaceId),
+      )
+      .take(50);
+
+    return memberships
+      .filter((candidate) => candidate.role !== "independent_senior")
+      .sort((left, right) => {
+        const leftRank = left.role === "member" ? 1 : 0;
+        const rightRank = right.role === "member" ? 1 : 0;
+        return leftRank - rightRank || left._creationTime - right._creationTime;
+      })
+      .map((candidate) => ({
+        id: candidate._id,
+        displayName: candidate.displayName,
+        role: candidate.role,
+        roleLabel: getFamilyRoleLabel(candidate.role),
+        authEmail: candidate.authEmail,
+        joinedAt: candidate._creationTime,
+        isCurrentAccount: candidate._id === membership._id,
+      }));
+  },
+});
+
+export const listActiveMemberInvites = query({
+  args: {},
+  handler: async (ctx) => {
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_invite_codes",
+    );
     const now = Date.now();
     const invites = await listMemberInvitesForFamilySpace(ctx, membership.familySpaceId);
 
@@ -179,7 +225,10 @@ export const listActiveMemberInvites = query({
 export const revokeActiveMemberInvites = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySideMembership(ctx);
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_invite_codes",
+    );
     return {
       revokedCount: await revokeActiveMemberInvitesForFamilySpace(
         ctx,
@@ -193,7 +242,10 @@ export const revokeActiveMemberInvites = mutation({
 export const generateMemberInviteCode = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySideMembership(ctx);
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_invite_codes",
+    );
     const now = Date.now();
 
     await revokeActiveMemberInvitesForFamilySpace(

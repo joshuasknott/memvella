@@ -21,7 +21,7 @@ export default function UniversalSplash() {
 
         <div className="flex flex-col space-y-4 md:space-y-6 w-full max-w-sm md:max-w-md mx-auto">
           <div className="flex flex-col space-y-4 md:space-y-6">
-            <PrimaryButton href="/onboarding/supporter">
+            <PrimaryButton href="/onboarding/organiser">
               <ShieldCheck className="w-6 h-6 mr-2" />
               Start a New Circle
             </PrimaryButton>

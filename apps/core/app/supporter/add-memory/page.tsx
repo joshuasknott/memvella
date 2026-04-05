@@ -20,7 +20,7 @@ export default function AddMemoryPage() {
 
       <section className="space-y-4">
         <Link
-          href="/supporter/add-memory/voice"
+          href="/circle/add-memory/voice"
           className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
@@ -37,7 +37,7 @@ export default function AddMemoryPage() {
         </Link>
 
         <Link
-          href="/supporter/add-memory/media"
+          href="/circle/add-memory/media"
           className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -54,7 +54,7 @@ export default function AddMemoryPage() {
         </Link>
 
         <Link
-          href="/supporter/add-memory/audio"
+          href="/circle/add-memory/audio"
           className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
@@ -71,7 +71,7 @@ export default function AddMemoryPage() {
         </Link>
 
         <Link
-          href="/supporter/add-memory/text"
+          href="/circle/add-memory/text"
           className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-600">

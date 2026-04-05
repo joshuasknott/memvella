@@ -23,14 +23,16 @@ import {
   MEMBER_LABEL,
   normalizeUserFacingText,
 } from "./terminology";
+import { isValidE164PhoneNumber } from "../lib/phone-number";
 
 type ChallengePurpose = "passkey_registration" | "passkey_authentication";
-type FinalizeMagicLinkSignInResult =
+type FinalizePhoneNumberSignInResult =
   | {
       status: "ready";
       sessionToken: string;
       recoveryKey: string;
       seniorName: string;
+      recoveryPhoneNumber: string;
       hasPasskey: boolean;
     }
   | {
@@ -111,13 +113,13 @@ async function resolveIndependentRecoveryProfile(
   return seniorProfile;
 }
 
-export const finalizeMagicLinkSignIn = mutation({
+export const finalizePhoneNumberSignIn = mutation({
   args: {
-    name: v.optional(v.string()),
     displayName: v.optional(v.string()),
     deviceFingerprint: v.string(),
+    phoneNumber: v.string(),
   },
-  handler: async (ctx, args): Promise<FinalizeMagicLinkSignInResult> => {
+  handler: async (ctx, args): Promise<FinalizePhoneNumberSignInResult> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Unauthenticated: a valid sign-in link is required.");
@@ -128,11 +130,15 @@ export const finalizeMagicLinkSignIn = mutation({
       identity.tokenIdentifier,
     );
     const normalizedDisplayName =
-      normalizeOptionalText(args.name) ??
       normalizeOptionalText(args.displayName) ??
       normalizeOptionalText(identity.name) ??
       MEMBER_LABEL;
     const normalizedEmail = normalizeOptionalEmail(identity.email) ?? null;
+    const normalizedPhoneNumber = args.phoneNumber.trim();
+
+    if (!isValidE164PhoneNumber(normalizedPhoneNumber)) {
+      throw new Error("A valid phone number is required.");
+    }
 
     let membershipId: Id<"familySpaceMemberships">;
     let familySpaceId: Id<"familySpaces">;
@@ -158,6 +164,7 @@ export const finalizeMagicLinkSignIn = mutation({
           familySpaceId,
           displayName: normalizedDisplayName,
           recoveryEmail: normalizedEmail ?? undefined,
+          recoveryPhoneNumber: normalizedPhoneNumber,
         }));
 
       if (!ensuredSeniorProfile) {
@@ -188,6 +195,7 @@ export const finalizeMagicLinkSignIn = mutation({
         familySpaceId,
         displayName: normalizedDisplayName,
         recoveryEmail: normalizedEmail ?? undefined,
+        recoveryPhoneNumber: normalizedPhoneNumber,
       });
 
       if (!seniorProfile) {
@@ -230,6 +238,7 @@ export const finalizeMagicLinkSignIn = mutation({
       sessionToken: session.sessionToken,
       recoveryKey: await createSeniorRecoveryKey(seniorProfileId),
       seniorName: normalizedDisplayName,
+      recoveryPhoneNumber: normalizedPhoneNumber,
       hasPasskey: activePasskeys.length > 0,
     };
   },
@@ -255,7 +264,7 @@ export const getCurrentIndependentSeniorPasskeyContext = query({
     return {
       seniorProfileId: seniorProfile._id,
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
-      recoveryEmail: seniorProfile.recoveryEmail,
+      recoveryPhoneNumber: seniorProfile.recoveryPhoneNumber,
       passkeys: await getActivePasskeys(ctx, seniorProfile._id),
       activeRegistrationChallenge: await getActiveChallenge(
         ctx,
@@ -391,7 +400,7 @@ export const getIndependentSeniorRecoveryProfile = query({
     const passkeys = await getActivePasskeys(ctx, seniorProfile._id);
     return {
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
-      recoveryEmail: seniorProfile.recoveryEmail,
+      recoveryPhoneNumber: seniorProfile.recoveryPhoneNumber,
       hasPasskey: passkeys.length > 0,
     };
   },

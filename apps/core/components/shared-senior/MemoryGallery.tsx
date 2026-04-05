@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Film, ImageIcon } from "lucide-react";
 import { formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 
@@ -53,11 +54,15 @@ function MediaPreview({ item }: { item: MemoryItem }) {
   }
 
   return (
-    <img
-      alt={item.caption}
-      className="h-full w-full rounded-[18px] bg-[#efe6d5] object-contain"
-      src={item.mediaUrl}
-    />
+    <div className="relative h-full w-full">
+      <Image
+        alt={item.caption}
+        className="rounded-[18px] bg-[#efe6d5] object-contain"
+        src={item.mediaUrl}
+        fill
+        unoptimized
+      />
+    </div>
   );
 }
 

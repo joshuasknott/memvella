@@ -37,10 +37,13 @@ function formatLastSeenLabel(timestamp: number | null) {
 }
 
 export default function NotificationsSettingsPage() {
-  const { seniorDisplayName } = useFamilySpaceProfile();
+  const { seniorDisplayName, isOrganiser } = useFamilySpaceProfile();
   const { toast } = useToast();
-  const settings = useQuery(api.notifications.getSupporterNotificationSettings);
-  const updateSettings = useMutation(api.notifications.updateSupporterNotificationSettings);
+  const settings = useQuery(
+    api.notifications.getOrganiserNotificationSettings,
+    isOrganiser ? undefined : "skip",
+  );
+  const updateSettings = useMutation(api.notifications.updateOrganiserNotificationSettings);
   const upsertPushSubscription = useMutation(api.notifications.upsertPushSubscription);
   const revokePushSubscription = useMutation(api.notifications.revokePushSubscription);
 
@@ -73,6 +76,21 @@ export default function NotificationsSettingsPage() {
   const summaryTimeLabel = formatTimeLabel(
     settings?.dailySummaryTimeMinutes ?? 19 * 60,
   );
+
+  if (!isOrganiser) {
+    return (
+      <div className="flex w-full flex-col gap-6 px-4 pb-8">
+        <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
+          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            Notifications
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-gray-600">
+            Circle-wide notification settings are managed by the Organiser.
+          </p>
+        </section>
+      </div>
+    );
+  }
 
   const handleToggle = async (
     field: "dailySummary" | "urgentAlerts" | "routineReminders",

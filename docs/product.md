@@ -35,7 +35,7 @@ The product is intended to reduce friction, preserve dignity, and keep family co
 
 - Primary device: phone
 - Main jobs: join an existing Circle, help with routines and memories, stay connected
-- Current status: terminology is decided, but the join-existing-Circle flow is not implemented yet
+- Current auth: Better Auth email and password, followed by a 6-digit Circle invite code
 
 ### Tablet User
 
@@ -47,7 +47,7 @@ The product is intended to reduce friction, preserve dignity, and keep family co
 
 - Primary device: phone or tablet
 - Main jobs: sign in without a password, reopen with passkeys, create memories or routines through voice
-- Current auth: email magic link bootstrap plus optional passkey enrollment
+- Current auth: SMS code bootstrap plus optional passkey enrollment on the same device
 
 ## Product Goals
 
@@ -64,8 +64,6 @@ The product is intended to reduce friction, preserve dignity, and keep family co
 
 ## Current Gaps
 
-- There is no documented or implemented onboarding path for joining an existing Circle.
-- Independent onboarding is currently email-based, even though product direction is moving toward SMS-only access.
-- Better Auth origin handling is fragile when local testing happens on a different host than the configured app origin.
-- The marketing waitlist form is not yet wired to a real backend destination.
-- The current backend schema still does not distinguish `Organiser` from `Member` as separate family-side roles.
+- Legacy `supporter` names still exist in some backend modules, tables, and compatibility paths.
+- The family-side product surface is now shared through the Circle workspace, but some organiser-era naming remains in implementation details.
+- Legacy compatibility tables still exist in the backend while FamilySpace-based data continues to replace them.

@@ -18,9 +18,9 @@ function RoutineSkeleton() {
 }
 
 export default function OrganiserRoutinesPage() {
-  const timeline = useQuery(api.supporter.getTodayTimeline);
+  const timeline = useQuery(api.organiser.getTodayTimeline);
   const schedules = useQuery(api.routines.listRoutineSchedules);
-  const summary = useQuery(api.supporter.getSupporterDashboardSummary);
+  const summary = useQuery(api.organiser.getOrganiserDashboardSummary);
 
   const isLoading = timeline === undefined || schedules === undefined || summary === undefined;
   const hasSchedules = (schedules?.length ?? 0) > 0;
@@ -79,7 +79,7 @@ export default function OrganiserRoutinesPage() {
             </p>
           </div>
           <Link
-            href="/supporter/add-routine"
+            href="/circle/add-routine"
             className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-[#1D4ED8] px-5 text-base font-semibold text-white"
           >
             <Plus className="mr-2 h-5 w-5" />
@@ -94,7 +94,7 @@ export default function OrganiserRoutinesPage() {
           </div>
         ) : timeline && timeline.length > 0 ? (
           <div className="space-y-3">
-            {timeline.map((item) => (
+            {timeline.map((item: NonNullable<typeof timeline>[number]) => (
               <div
                 key={item.id}
                 className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
@@ -205,7 +205,7 @@ export default function OrganiserRoutinesPage() {
         )}
       </section>
 
-      <PrimaryButton href="/supporter/add-routine">
+      <PrimaryButton href="/circle/add-routine">
         Add a routine
       </PrimaryButton>
     </div>

@@ -4,7 +4,7 @@ Memvella is a PNPM/Turbo monorepo for a voice-first digital wellness companion.
 
 ## Workspace
 
-- `apps/core`: the product app. This includes the Organiser, Assisted Senior, and Independent Senior experiences, the Next.js frontend, and the Convex backend.
+- `apps/core`: the product app. This includes the Organiser, Member, Tablet User, and Independent User experiences, the Next.js frontend, and the Convex backend.
 - `apps/marketing`: the marketing and waitlist app.
 
 ## Stack
@@ -25,8 +25,9 @@ Memvella is a PNPM/Turbo monorepo for a voice-first digital wellness companion.
 
 1. Install dependencies with `pnpm install`.
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
-3. Start the Convex dev backend with `pnpm convex:dev`.
-4. Start the monorepo dev processes with `pnpm dev`.
+3. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
+4. Start the Convex dev backend with `pnpm convex:dev`.
+5. Start the monorepo dev processes with `pnpm dev`.
 
 ## Common Commands
 
@@ -34,6 +35,8 @@ Memvella is a PNPM/Turbo monorepo for a voice-first digital wellness companion.
 - `pnpm build`: build all apps.
 - `pnpm lint`: run lint tasks across the workspace.
 - `pnpm type-check`: run type-check tasks across the workspace.
+- `pnpm test`: run workspace tests.
+- `pnpm verify`: run lint, type-check, test, and build in sequence.
 - `pnpm convex:dev`: run Convex dev for `apps/core`.
 - `pnpm convex:deploy`: deploy the Convex backend for `apps/core`.
 

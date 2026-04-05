@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import {
@@ -59,7 +60,7 @@ export default function OrganiserMemoriesPage() {
             </p>
           </div>
           <Link
-            href="/supporter/add-memory"
+            href="/circle/add-memory"
             className="inline-flex min-h-[56px] shrink-0 items-center justify-center rounded-full bg-[#6B21A8] px-5 text-base font-semibold text-white"
           >
             <Plus className="mr-2 h-5 w-5" />
@@ -88,7 +89,7 @@ export default function OrganiserMemoriesPage() {
             Add the first record so the Organiser dashboard and Senior gallery have meaningful moments to surface.
           </p>
           <div className="mt-6">
-            <PrimaryButton href="/supporter/add-memory">
+            <PrimaryButton href="/circle/add-memory">
               Add the first memory
             </PrimaryButton>
           </div>
@@ -101,14 +102,17 @@ export default function OrganiserMemoriesPage() {
             return (
               <Link
                 key={record.id}
-                href={`/supporter/memories/${record.id}`}
+                href={`/circle/memories/${record.id}`}
                 className="block rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-colors hover:border-purple-200"
               >
                 <div className="flex gap-4">
                   {record.previewAssetType === "image" && record.previewUrl ? (
-                    <img
+                    <Image
                       src={record.previewUrl}
                       alt={record.title}
+                      width={96}
+                      height={96}
+                      unoptimized
                       className="h-24 w-24 shrink-0 rounded-3xl object-cover"
                     />
                   ) : (
@@ -151,7 +155,7 @@ export default function OrganiserMemoriesPage() {
       )}
 
       {memoryRecords && memoryRecords.length > 0 ? (
-        <PrimaryButton href="/supporter/add-memory">
+        <PrimaryButton href="/circle/add-memory">
           Add another memory
         </PrimaryButton>
       ) : null}

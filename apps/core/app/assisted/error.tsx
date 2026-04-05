@@ -16,8 +16,8 @@ export default function AssistedError({
 
   return (
     <ErrorState
-      title="The Assisted Senior screen needs a retry"
-      description="This Assisted Senior route stopped rendering unexpectedly. Retry to bring the session back without a blank screen."
+      title="The Tablet User screen needs a retry"
+      description="This Tablet User route stopped rendering unexpectedly. Retry to bring the session back without a blank screen."
       actionLabel="Retry Assisted screen"
       onRetry={unstable_retry}
     />

@@ -25,6 +25,7 @@ import type * as memories from "../memories.js";
 import type * as memoryHelpers from "../memoryHelpers.js";
 import type * as notifications from "../notifications.js";
 import type * as notificationsWorker from "../notificationsWorker.js";
+import type * as organiser from "../organiser.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as routineHelpers from "../routineHelpers.js";
 import type * as routineRetreatScheduler from "../routineRetreatScheduler.js";
@@ -32,13 +33,13 @@ import type * as routines from "../routines.js";
 import type * as security from "../security.js";
 import type * as seniorAccess from "../seniorAccess.js";
 import type * as seniorAccessHelpers from "../seniorAccessHelpers.js";
-import type * as supporter from "../supporter.js";
 import type * as terminology from "../terminology.js";
 import type * as uploadValidation from "../uploadValidation.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
 import type * as voiceSafety from "../voiceSafety.js";
 import type * as voiceSession from "../voiceSession.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   memoryHelpers: typeof memoryHelpers;
   notifications: typeof notifications;
   notificationsWorker: typeof notificationsWorker;
+  organiser: typeof organiser;
   rateLimits: typeof rateLimits;
   routineHelpers: typeof routineHelpers;
   routineRetreatScheduler: typeof routineRetreatScheduler;
@@ -71,13 +73,13 @@ declare const fullApi: ApiFromModules<{
   security: typeof security;
   seniorAccess: typeof seniorAccess;
   seniorAccessHelpers: typeof seniorAccessHelpers;
-  supporter: typeof supporter;
   terminology: typeof terminology;
   uploadValidation: typeof uploadValidation;
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;
   voiceSafety: typeof voiceSafety;
   voiceSession: typeof voiceSession;
+  waitlist: typeof waitlist;
 }>;
 
 /**

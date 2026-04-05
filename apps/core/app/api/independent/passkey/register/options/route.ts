@@ -25,7 +25,8 @@ export async function POST(request: Request) {
       rpID,
       rpName,
       userName:
-        passkeyContext.recoveryEmail ?? `independent-${passkeyContext.seniorProfileId}`,
+        passkeyContext.recoveryPhoneNumber ??
+        `independent-${passkeyContext.seniorProfileId}`,
       userDisplayName: passkeyContext.seniorName,
       userID: new TextEncoder().encode(passkeyContext.seniorProfileId),
       attestationType: "none",

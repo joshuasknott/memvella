@@ -430,7 +430,7 @@ function SuccessStep() {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => router.push("/supporter"), 2500);
+    const timer = setTimeout(() => router.push("/circle"), 2500);
     return () => clearTimeout(timer);
   }, [router]);
 

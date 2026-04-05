@@ -85,7 +85,7 @@ function IndependentRecoveryState() {
           Your session needs to be refreshed.
         </h1>
         <p className="mb-6 text-xl leading-relaxed text-slate-600">
-          Sign back in with your secure link or use Face ID / Touch ID to reopen your Circle.
+          Sign back in with your secure code or use Face ID / Touch ID to reopen your Circle.
         </p>
         <a
           href="/independent/recover"

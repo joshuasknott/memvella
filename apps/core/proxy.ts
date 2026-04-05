@@ -1,8 +1,8 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
-const publicOrganiserPaths = ["/supporter/signin"];
-const protectedPrefix = "/supporter";
+const publicOrganiserPaths = ["/organiser/signin"];
+const protectedPrefix = "/circle";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,7 +17,7 @@ export function proxy(request: NextRequest) {
 
   const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) {
-    const signInUrl = new URL("/supporter/signin", request.url);
+    const signInUrl = new URL("/organiser/signin", request.url);
     signInUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(signInUrl);
   }
@@ -26,5 +26,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/supporter/:path*"],
+  matcher: ["/circle/:path*"],
 };

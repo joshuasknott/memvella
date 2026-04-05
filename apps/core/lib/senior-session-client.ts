@@ -8,6 +8,7 @@ export type SeniorSessionState = {
   recoveryKey?: string;
   seniorProfileId?: string;
   seniorName?: string;
+  recoveryPhoneNumber?: string | null;
   recoveryEmail?: string | null;
   hasPasskey?: boolean;
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -12,7 +12,6 @@ import {
   Pencil,
   Trash2,
   Type,
-  Video,
 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -43,8 +42,14 @@ function MemoryAssetCard({
 }) {
   if (asset.assetType === "image") {
     return (
-      <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-        <img src={asset.resolvedUrl ?? ""} alt={asset.fileName ?? title} className="h-72 w-full object-cover" />
+      <div className="relative h-72 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+        <Image
+          src={asset.resolvedUrl ?? ""}
+          alt={asset.fileName ?? title}
+          fill
+          unoptimized
+          className="object-cover"
+        />
       </div>
     );
   }
@@ -89,7 +94,7 @@ export default function OrganiserMemoryDetailPage() {
         title: "Memory deleted",
         description: `"${memoryDetail.title}" was removed from this Circle.`,
       });
-      router.push("/supporter/memories");
+      router.push("/circle/memories");
     } catch (error) {
       toast({
         tone: "error",
@@ -120,7 +125,7 @@ export default function OrganiserMemoryDetailPage() {
             This record is no longer available in the current Circle.
           </p>
         </div>
-        <SecondaryButton href="/supporter/memories">
+        <SecondaryButton href="/circle/memories">
           Back to memories
         </SecondaryButton>
       </div>
@@ -207,7 +212,7 @@ export default function OrganiserMemoryDetailPage() {
       ) : null}
 
       <div className="space-y-3">
-        <PrimaryButton href={`/supporter/memories/${memoryDetail.id}/edit`}>
+        <PrimaryButton href={`/circle/memories/${memoryDetail.id}/edit`}>
           <Pencil className="h-5 w-5" />
           Edit memory
         </PrimaryButton>
@@ -221,7 +226,7 @@ export default function OrganiserMemoryDetailPage() {
           Delete memory
         </button>
 
-        <SecondaryButton href="/supporter/memories">
+        <SecondaryButton href="/circle/memories">
           Back to memories
         </SecondaryButton>
       </div>

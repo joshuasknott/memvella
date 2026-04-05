@@ -12,7 +12,7 @@ This directory contains the Convex backend for `apps/core`.
 
 - `schema.ts`: the current database schema, including canonical tables and legacy compatibility tables that are still present during migration.
 - `auth.ts`, `auth.config.ts`, `http.ts`: Better Auth and Convex auth integration.
-- `supporter.ts`: organiser-side mutations and queries, kept under the legacy module name for compatibility.
+- `organiser.ts`: organiser-side mutations and queries for the shared Circle workspace.
 - `independentAuth.ts`: independent onboarding, recovery, and passkey enrollment.
 - `kiosk.ts`, `seniorAccessHelpers.ts`: Assisted Senior pairing and device-bound session handling.
 - `voice*.ts`, `aiActions.ts`, `insights*.ts`: voice orchestration, AI processing, and insight generation.

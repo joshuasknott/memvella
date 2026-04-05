@@ -86,8 +86,7 @@ Target user:
 Rules:
 
 - Keep the experience passwordless.
-- Current implementation uses an email magic link bootstrap plus optional passkey enrollment.
-- Product direction is moving toward SMS-only access, so auth-related UI changes must also update `docs/auth-and-identity.md`.
+- Current implementation uses an SMS code bootstrap plus optional passkey enrollment on the same device.
 - Voice should remain the preferred creation path for memories and routines.
 - AI-extracted actions must present explicit confirmation and rejection states.
 

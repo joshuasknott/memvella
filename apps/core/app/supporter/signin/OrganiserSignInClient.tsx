@@ -59,7 +59,7 @@ export function OrganiserSignInFallback() {
 export default function OrganiserSignInClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") ?? "/supporter";
+  const nextPath = searchParams.get("next") ?? "/circle";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -164,7 +164,7 @@ export default function OrganiserSignInClient() {
           <p className="text-center text-sm text-gray-500">
             Need an account?{" "}
             <Link
-              href="/onboarding/supporter"
+              href="/onboarding/organiser"
               className="font-semibold text-[#4e0078] hover:underline"
             >
               Create one

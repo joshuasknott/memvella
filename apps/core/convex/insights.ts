@@ -67,7 +67,7 @@ async function enrichInsights<
   }));
 }
 
-export const listSupporterInsights = query({
+export const listOrganiserInsights = query({
   args: {},
   handler: async (ctx) => {
     const familyContext = await getOptionalFamilySpaceMembership(
@@ -108,7 +108,7 @@ export const listSupporterInsights = query({
   },
 });
 
-export const getQueuedSupporterInsightCount = query({
+export const getQueuedOrganiserInsightCount = query({
   args: {},
   handler: async (ctx) => {
     const familyContext = await getOptionalFamilySpaceMembership(
@@ -131,7 +131,7 @@ export const getQueuedSupporterInsightCount = query({
   },
 });
 
-export const reviewSupporterInsight = mutation({
+export const reviewOrganiserInsight = mutation({
   args: {
     insightId: v.id("supporterInsights"),
     status: v.union(v.literal("reviewed"), v.literal("dismissed")),

@@ -7,17 +7,45 @@ import {
 import {
   MEMBER_LABEL,
 } from "./terminology";
+import { isValidE164PhoneNumber } from "../lib/phone-number";
 
 type DbCtx = MutationCtx | QueryCtx;
+
+function normalizeOptionalPhoneNumber(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed && isValidE164PhoneNumber(trimmed) ? trimmed : undefined;
+}
 
 export type FamilySideMembershipRole = "supporter" | "organiser" | "member";
 export type MembershipRole = FamilySideMembershipRole | "independent_senior";
 export type MembershipAccessRequirement = MembershipRole | "family_side";
+export type FamilySideCapability =
+  | "manage_circle_members"
+  | "manage_invite_codes"
+  | "manage_tablet_access"
+  | "manage_circle_notifications";
 
 export function isFamilySideRole(
   role: MembershipRole,
 ): role is FamilySideMembershipRole {
   return role === "supporter" || role === "organiser" || role === "member";
+}
+
+export function isOrganiserLikeRole(role: FamilySideMembershipRole) {
+  return role === "supporter" || role === "organiser";
+}
+
+export function familySideRoleHasCapability(
+  role: FamilySideMembershipRole,
+  capability: FamilySideCapability,
+) {
+  switch (capability) {
+    case "manage_circle_members":
+    case "manage_invite_codes":
+    case "manage_tablet_access":
+    case "manage_circle_notifications":
+      return isOrganiserLikeRole(role);
+  }
 }
 
 function membershipMatchesRequirement(
@@ -121,6 +149,22 @@ export async function requireFamilySideMembership(ctx: DbCtx) {
   return await requireFamilySpaceMembership(ctx, "family_side");
 }
 
+export async function requireFamilySideCapability(
+  ctx: DbCtx,
+  capability: FamilySideCapability,
+) {
+  const familyContext = await requireFamilySideMembership(ctx);
+  if (!isFamilySideRole(familyContext.membership.role)) {
+    throw new Error("This account does not have access to the family-side workspace.");
+  }
+
+  if (!familySideRoleHasCapability(familyContext.membership.role, capability)) {
+    throw new Error("This account does not have access to that Circle setting.");
+  }
+
+  return familyContext;
+}
+
 export async function getSeniorProfileByMode(
   ctx: DbCtx,
   familySpaceId: Id<"familySpaces">,
@@ -180,6 +224,7 @@ export async function upsertAssistedSeniorProfile(
       seniorMode: "assisted",
       accessStatus: "active",
       recoveryEmail,
+      recoveryPhoneNumber: null,
       timezone: null,
       locale: null,
       lastSessionAt: undefined,
@@ -191,6 +236,7 @@ export async function upsertAssistedSeniorProfile(
   await ctx.db.patch(assistedSenior._id, {
     displayName,
     recoveryEmail,
+    recoveryPhoneNumber: null,
     accessStatus: "active",
   });
 
@@ -203,6 +249,7 @@ export async function upsertIndependentSeniorProfile(
     familySpaceId: Id<"familySpaces">;
     displayName: string;
     recoveryEmail?: string;
+    recoveryPhoneNumber?: string;
   },
 ) {
   const independentSenior = await getSeniorProfileByMode(
@@ -212,6 +259,8 @@ export async function upsertIndependentSeniorProfile(
   );
   const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
   const recoveryEmail = normalizeOptionalEmail(args.recoveryEmail) ?? null;
+  const recoveryPhoneNumber =
+    normalizeOptionalPhoneNumber(args.recoveryPhoneNumber) ?? null;
 
   if (!independentSenior) {
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
@@ -220,6 +269,7 @@ export async function upsertIndependentSeniorProfile(
       seniorMode: "independent",
       accessStatus: "active",
       recoveryEmail,
+      recoveryPhoneNumber,
       timezone: null,
       locale: null,
       lastSessionAt: undefined,
@@ -231,6 +281,7 @@ export async function upsertIndependentSeniorProfile(
   await ctx.db.patch(independentSenior._id, {
     displayName,
     recoveryEmail,
+    recoveryPhoneNumber,
     accessStatus: "active",
   });
 

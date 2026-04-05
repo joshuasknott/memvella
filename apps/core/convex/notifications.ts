@@ -8,7 +8,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { requireFamilySpaceMembership } from "./familySpaceAuth";
+import { requireFamilySideCapability } from "./familySpaceAuth";
 import {
   addDaysToDateKey,
   getNextRoutineEventForFamilySpace,
@@ -187,10 +187,13 @@ async function buildDailySummaryBody(
   return `${last24Hours} voice update${last24Hours === 1 ? "" : "s"} were logged in the last day. Your Circle has no upcoming routine right now.`;
 }
 
-export const getSupporterNotificationSettings = query({
+export const getOrganiserNotificationSettings = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_notifications",
+    );
     const [settings, activeSubscriptions] = await Promise.all([
       getNotificationSettingsRecord(ctx, membership.familySpaceId),
       listActivePushSubscriptionsForFamilySpace(ctx, membership.familySpaceId),
@@ -215,7 +218,7 @@ export const getSupporterNotificationSettings = query({
   },
 });
 
-export const updateSupporterNotificationSettings = mutation({
+export const updateOrganiserNotificationSettings = mutation({
   args: {
     dailySummary: v.boolean(),
     urgentAlerts: v.boolean(),
@@ -223,7 +226,10 @@ export const updateSupporterNotificationSettings = mutation({
     dailySummaryTimeMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_notifications",
+    );
     const existing = await getNotificationSettingsRecord(ctx, membership.familySpaceId);
     const updatedAt = Date.now();
     const payload = {
@@ -261,7 +267,10 @@ export const upsertPushSubscription = mutation({
     permissionState: permissionStateValidator(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_notifications",
+    );
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
@@ -314,7 +323,10 @@ export const revokePushSubscription = mutation({
     endpoint: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_notifications",
+    );
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
@@ -494,7 +506,7 @@ export const getDailySummaryDigestPayload = internalQuery({
     return {
       title,
       body,
-      deepLink: "/supporter/insights",
+      deepLink: "/circle/insights",
       payloadTag: "daily-summary",
     };
   },
@@ -527,7 +539,7 @@ export const getUrgentInsightDispatchPlan = internalQuery({
       familySpaceId: insight.familySpaceId,
       title: insight.title,
       body: insight.summary,
-      deepLink: "/supporter/insights",
+      deepLink: "/circle/insights",
       payloadTag: "urgent-alert",
       subscriptions: activeSubscriptions.map((subscription) => ({
         pushSubscriptionId: subscription._id,

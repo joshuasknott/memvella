@@ -17,8 +17,8 @@ function formatTimestamp(timestamp: number) {
 }
 
 export default function OrganiserInsightsPage() {
-  const insights = useQuery(api.insights.listSupporterInsights);
-  const reviewSupporterInsight = useMutation(api.insights.reviewSupporterInsight);
+  const insights = useQuery(api.insights.listOrganiserInsights);
+  const reviewOrganiserInsight = useMutation(api.insights.reviewOrganiserInsight);
   const { toast } = useToast();
 
   const updateInsightStatus = async (
@@ -26,7 +26,7 @@ export default function OrganiserInsightsPage() {
     status: "reviewed" | "dismissed",
   ) => {
     try {
-      await reviewSupporterInsight({
+      await reviewOrganiserInsight({
         insightId,
         status,
       });
@@ -77,7 +77,7 @@ export default function OrganiserInsightsPage() {
           New transcript signals and AI summaries will appear here for Organiser review.
         </p>
         <Link
-          href="/supporter"
+          href="/circle"
           className="rounded-full bg-gray-100 px-6 py-4 text-base font-bold text-gray-700 shadow-sm transition-transform active:scale-95"
         >
           Return to Dashboard

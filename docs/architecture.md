@@ -25,8 +25,9 @@ Depends on: docs/product.md, docs/data-model.md
 ### Frontend
 
 - Next.js 16 App Router powers both apps.
+- `apps/core` exposes a shared family-side workspace at `/circle`, plus role-specific onboarding and senior-side routes.
 - `apps/core/app/providers.tsx` wires the Convex client and Better Auth provider integration.
-- `apps/marketing` is currently static and does not own a backend integration yet.
+- `apps/marketing` now ships a real multi-page surface and posts waitlist submissions through a server route to the Convex backend.
 
 ### Backend
 
@@ -40,11 +41,14 @@ Depends on: docs/product.md, docs/data-model.md
 - Next.js server helpers live in `apps/core/lib/auth-server.ts`.
 - Client auth calls use `apps/core/lib/auth-client.ts`.
 - Senior-side device sessions are separate from Better Auth sessions and are handled in Convex.
+- Organiser and Member family-side account sessions use Better Auth email and password.
+- Independent User onboarding uses Better Auth phone verification plus Convex-managed senior sessions and optional passkeys.
 
 ## Data Architecture
 
 - The current canonical model is anchored on `familySpaces`, `familySpaceMemberships`, and `seniorProfiles`.
 - New routines, memories, notifications, and voice records should attach to `familySpaceId` or `seniorProfileId` through canonical tables.
+- Marketing waitlist submissions are stored separately from product data.
 - Legacy compatibility tables still exist in the schema and must be treated as transitional.
 
 ## Documentation Rules

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Camera, Check, Lightbulb, Loader2, Plus, Sparkles, X } from "lucide-react";
@@ -17,7 +18,7 @@ export default function AddPersonPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { seniorDisplayName } = useFamilySpaceProfile();
-  const addFamilyMember = useMutation(api.supporter.addFamilyMember);
+  const addFamilyMember = useMutation(api.organiser.addFamilyMember);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
   const [name, setName] = useState("");
@@ -81,7 +82,7 @@ export default function AddPersonPage() {
         title: "Connection saved",
         description: `${name.trim()} is now available in this Circle.`,
       });
-      router.push("/supporter/memories");
+      router.push("/circle/memories");
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -115,7 +116,13 @@ export default function AddPersonPage() {
           <div className="relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
             {photoPreview ? (
               <>
-                <img src={photoPreview} alt="Photo preview" className="h-full w-full object-cover" />
+                <Image
+                  src={photoPreview}
+                  alt="Photo preview"
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
                 <button
                   type="button"
                   onClick={(event) => {
