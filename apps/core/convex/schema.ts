@@ -15,12 +15,18 @@ export default defineSchema({
     authIdentityToken: v.string(),
     authEmail: v.union(v.string(), v.null()),
     displayName: v.string(),
-    role: v.union(v.literal("supporter"), v.literal("independent_senior")),
+    role: v.union(
+      v.literal("supporter"),
+      v.literal("organiser"),
+      v.literal("member"),
+      v.literal("independent_senior"),
+    ),
     seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
     onboardingStep: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
   })
     .index("by_authIdentityToken", ["authIdentityToken"])
+    .index("by_role", ["role"])
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_familySpaceId_and_authIdentityToken", [
       "familySpaceId",
@@ -72,6 +78,20 @@ export default defineSchema({
     .index("by_pinHash", ["pinHash"])
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  familyInvites: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    createdByMembershipId: v.id("familySpaceMemberships"),
+    role: v.literal("member"),
+    inviteCodeHash: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+    redeemedByAuthIdentityToken: v.union(v.string(), v.null()),
+    redeemedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+  })
+    .index("by_inviteCodeHash", ["inviteCodeHash"])
+    .index("by_familySpaceId_and_role", ["familySpaceId", "role"]),
 
   seniorAccessSessions: defineTable({
     familySpaceId: v.id("familySpaces"),

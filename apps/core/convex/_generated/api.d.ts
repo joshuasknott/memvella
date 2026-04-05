@@ -12,6 +12,8 @@ import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as familyInvites from "../familyInvites.js";
+import type * as familyMembershipMigrations from "../familyMembershipMigrations.js";
 import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
 import type * as independentAuth from "../independentAuth.js";
@@ -49,6 +51,8 @@ declare const fullApi: ApiFromModules<{
   aiActions: typeof aiActions;
   auth: typeof auth;
   crons: typeof crons;
+  familyInvites: typeof familyInvites;
+  familyMembershipMigrations: typeof familyMembershipMigrations;
   familySpaceAuth: typeof familySpaceAuth;
   http: typeof http;
   independentAuth: typeof independentAuth;

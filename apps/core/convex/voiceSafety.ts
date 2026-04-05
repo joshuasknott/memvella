@@ -47,7 +47,7 @@ export function scanVoiceSafety(transcript: string): VoiceSafetyScan {
 }
 
 export function buildMedicalBoundaryReply() {
-  return "I can't tell you which pill or treatment to use. Please ask your Admin or a licensed clinician right away.";
+  return "I can't tell you which pill or treatment to use. Please ask someone in your Circle or a licensed clinician right away.";
 }
 
 export function buildSpeechRetryReply() {

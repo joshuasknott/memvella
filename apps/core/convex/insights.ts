@@ -72,7 +72,7 @@ export const listSupporterInsights = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return {
@@ -113,7 +113,7 @@ export const getQueuedSupporterInsightCount = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return 0;
@@ -137,7 +137,7 @@ export const reviewSupporterInsight = mutation({
     status: v.union(v.literal("reviewed"), v.literal("dismissed")),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const insight = await ctx.db.get(args.insightId);
 
     if (!insight || insight.familySpaceId !== membership.familySpaceId) {

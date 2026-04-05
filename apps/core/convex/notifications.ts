@@ -190,7 +190,7 @@ async function buildDailySummaryBody(
 export const getSupporterNotificationSettings = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const [settings, activeSubscriptions] = await Promise.all([
       getNotificationSettingsRecord(ctx, membership.familySpaceId),
       listActivePushSubscriptionsForFamilySpace(ctx, membership.familySpaceId),
@@ -223,7 +223,7 @@ export const updateSupporterNotificationSettings = mutation({
     dailySummaryTimeMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const existing = await getNotificationSettingsRecord(ctx, membership.familySpaceId);
     const updatedAt = Date.now();
     const payload = {
@@ -261,7 +261,7 @@ export const upsertPushSubscription = mutation({
     permissionState: permissionStateValidator(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
@@ -314,7 +314,7 @@ export const revokePushSubscription = mutation({
     endpoint: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
@@ -494,7 +494,7 @@ export const getDailySummaryDigestPayload = internalQuery({
     return {
       title,
       body,
-      deepLink: "/admin/insights",
+      deepLink: "/supporter/insights",
       payloadTag: "daily-summary",
     };
   },
@@ -527,7 +527,7 @@ export const getUrgentInsightDispatchPlan = internalQuery({
       familySpaceId: insight.familySpaceId,
       title: insight.title,
       body: insight.summary,
-      deepLink: "/admin/insights",
+      deepLink: "/supporter/insights",
       payloadTag: "urgent-alert",
       subscriptions: activeSubscriptions.map((subscription) => ({
         pushSubscriptionId: subscription._id,

@@ -10,7 +10,30 @@ import {
 
 type DbCtx = MutationCtx | QueryCtx;
 
-export type MembershipRole = "supporter" | "independent_senior";
+export type FamilySideMembershipRole = "supporter" | "organiser" | "member";
+export type MembershipRole = FamilySideMembershipRole | "independent_senior";
+export type MembershipAccessRequirement = MembershipRole | "family_side";
+
+export function isFamilySideRole(
+  role: MembershipRole,
+): role is FamilySideMembershipRole {
+  return role === "supporter" || role === "organiser" || role === "member";
+}
+
+function membershipMatchesRequirement(
+  membership: Doc<"familySpaceMemberships">,
+  expectedRole: MembershipAccessRequirement | undefined,
+) {
+  if (!expectedRole) {
+    return true;
+  }
+
+  if (expectedRole === "family_side") {
+    return isFamilySideRole(membership.role);
+  }
+
+  return membership.role === expectedRole;
+}
 
 export async function requireAuthIdentityToken(ctx: DbCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -35,7 +58,7 @@ export async function getMembershipByAuthIdentityToken(
 
 export async function getOptionalFamilySpaceMembership(
   ctx: DbCtx,
-  expectedRole?: MembershipRole,
+  expectedRole?: MembershipAccessRequirement,
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -51,7 +74,7 @@ export async function getOptionalFamilySpaceMembership(
     return null;
   }
 
-  if (expectedRole && membership.role !== expectedRole) {
+  if (!membershipMatchesRequirement(membership, expectedRole)) {
     return null;
   }
 
@@ -69,7 +92,7 @@ export async function getOptionalFamilySpaceMembership(
 
 export async function requireFamilySpaceMembership(
   ctx: DbCtx,
-  expectedRole?: MembershipRole,
+  expectedRole?: MembershipAccessRequirement,
 ) {
   const authIdentityToken = await requireAuthIdentityToken(ctx);
   const membership = await getMembershipByAuthIdentityToken(ctx, authIdentityToken);
@@ -78,7 +101,7 @@ export async function requireFamilySpaceMembership(
     throw new Error("No Circle membership is linked to this account.");
   }
 
-  if (expectedRole && membership.role !== expectedRole) {
+  if (!membershipMatchesRequirement(membership, expectedRole)) {
     throw new Error("This account does not have access to this experience.");
   }
 
@@ -88,6 +111,14 @@ export async function requireFamilySpaceMembership(
   }
 
   return { authIdentityToken, membership, familySpace };
+}
+
+export async function getOptionalFamilySideMembership(ctx: DbCtx) {
+  return await getOptionalFamilySpaceMembership(ctx, "family_side");
+}
+
+export async function requireFamilySideMembership(ctx: DbCtx) {
+  return await requireFamilySpaceMembership(ctx, "family_side");
 }
 
 export async function getSeniorProfileByMode(

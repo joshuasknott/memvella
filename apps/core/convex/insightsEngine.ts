@@ -59,7 +59,7 @@ const ALLOWED_PRIORITIES = new Set<AiInsightCandidate["priority"]>([
   "normal",
 ]);
 
-const SYSTEM_PROMPT = `You generate concise, actionable Admin insights for Memvella.
+const SYSTEM_PROMPT = `You generate concise, actionable Circle insights for Memvella.
 
 Rules:
 - Only use the supplied Circle transcripts.
@@ -68,7 +68,7 @@ Rules:
 - Keep each title under 80 characters.
 - Keep summaries specific and action-oriented.
 - Never give medical advice.
-- Distress and medical boundary alerts are already handled elsewhere. Only add a new insight if there is another useful non-medical action for the Admin.
+- Distress and medical boundary alerts are already handled elsewhere. Only add a new insight if there is another useful non-medical action for someone supporting the Circle.
 - If nothing actionable is present, return [].
 `;
 

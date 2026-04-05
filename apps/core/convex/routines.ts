@@ -29,7 +29,7 @@ export const createRoutineSchedule = mutation({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const title = normalizeOptionalText(args.title);
     const normalizedDaysOfWeek = normalizeDaysOfWeek(args.daysOfWeek);
 
@@ -77,7 +77,7 @@ export const createRoutineSchedule = mutation({
 export const listRoutineSchedules = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     return await listRoutineSchedulesForFamilySpace(ctx, membership.familySpaceId);
   },
 });
@@ -87,7 +87,7 @@ export const getRoutineSchedule = query({
     routineScheduleId: v.id("routineSchedules"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const schedule = await ctx.db.get(args.routineScheduleId);
 
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
@@ -125,7 +125,7 @@ export const updateRoutineSchedule = mutation({
     status: v.optional(v.union(v.literal("active"), v.literal("paused"))),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
       throw new Error("This routine schedule does not belong to your Circle.");
@@ -177,7 +177,7 @@ export const deleteRoutineSchedule = mutation({
     routineScheduleId: v.id("routineSchedules"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
       throw new Error("This routine schedule does not belong to your Circle.");

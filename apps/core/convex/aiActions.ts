@@ -13,7 +13,7 @@ export const processOnboardingAction = internalMutation({
     actionPayload: v.any(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const payload = args.actionPayload as Record<string, unknown>;
     const action = payload.action as string | undefined;
 

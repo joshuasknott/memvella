@@ -261,7 +261,7 @@ export const saveVoiceInteraction = internalMutation({
         priority: "normal",
         title: `Review a medical question from ${seniorName}`,
         summary: truncateInsightText(
-          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Admin review.`,
+          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Circle review.`,
         ),
         suggestedAction:
           "Follow up directly or route the question to a licensed clinician.",

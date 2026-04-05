@@ -177,7 +177,7 @@ export const generateKioskPin = mutation({
     seniorName: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const supporterSeniorName =
       normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
 
@@ -241,7 +241,7 @@ export const generateKioskPin = mutation({
 export const deactivateKioskDevice = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,

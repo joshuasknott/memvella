@@ -186,7 +186,7 @@ export const sweepRoutineReminderNotifications = internalAction({
               candidate.minutesUntil <= 1
                 ? `${candidate.title} starts now at ${candidate.timeLabel}.`
                 : `${candidate.title} starts in ${candidate.minutesUntil} minutes at ${candidate.timeLabel}.`,
-            deepLink: "/admin/routines",
+            deepLink: "/supporter/routines",
             scheduledFor: candidate.scheduledFor,
             payloadTag: "routine-reminder",
             routineOccurrenceId: candidate.occurrenceId,

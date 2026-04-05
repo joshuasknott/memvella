@@ -5,6 +5,7 @@ import {
   getOptionalFamilySpaceMembership,
   getMembershipByAuthIdentityToken,
   getSeniorProfileByMode,
+  isFamilySideRole,
   requireFamilySpaceMembership,
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
@@ -25,11 +26,11 @@ import {
 import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
 import { assertValidStoredUpload } from "./uploadValidation";
 import {
-  ADMIN_LABEL,
   buildCircleName,
   CIRCLE_LABEL,
   MEMBER_LABEL,
   normalizeUserFacingText,
+  ORGANISER_LABEL,
   TABLET_PROFILE_LABEL,
 } from "./terminology";
 
@@ -38,6 +39,7 @@ const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 const legacyRoleValidator = v.optional(
   v.union(
     v.literal("supporter"),
+    v.literal("organiser"),
     v.literal("assisted_senior"),
     v.literal("independent_senior"),
   ),
@@ -94,7 +96,7 @@ export const addFamilyMember = mutation({
     photoStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     if (args.photoStorageId) {
       await assertValidStoredUpload(ctx, {
         storageId: args.photoStorageId,
@@ -123,7 +125,7 @@ export const addRoutine = mutation({
   handler: async (ctx, args) => {
     const { membership, familySpace } = await requireFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
 
     const title = normalizeOptionalText(args.routineName);
@@ -169,7 +171,7 @@ export const updateNotificationSettings = mutation({
     routineReminders: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
 
     const existing = await ctx.db
       .query("notificationSettings")
@@ -207,7 +209,7 @@ export const saveVoiceSessionLog = mutation({
     durationSeconds: v.number(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
 
     return await ctx.db.insert("voiceLogs", {
       familySpaceId: membership.familySpaceId,
@@ -228,7 +230,7 @@ export const createSupporterProfile = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthenticated: a valid Admin session is required.");
+      throw new Error("Unauthenticated: a valid organiser session is required.");
     }
 
     const authIdentityToken = identity.tokenIdentifier;
@@ -239,13 +241,13 @@ export const createSupporterProfile = mutation({
       authIdentityToken,
     );
 
-    const supporterName = normalizeOptionalText(args.supporterName) ?? ADMIN_LABEL;
+    const supporterName = normalizeOptionalText(args.supporterName) ?? ORGANISER_LABEL;
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =
       args.role === "independent_senior" ? "independent" : "assisted";
 
     if (existingMembership) {
-      if (existingMembership.role !== "supporter") {
+      if (!isFamilySideRole(existingMembership.role)) {
         throw new Error("This account is already linked to a different experience.");
       }
 
@@ -314,7 +316,7 @@ export const createSupporterProfile = mutation({
       authIdentityToken,
       authEmail,
       displayName: supporterName,
-      role: "supporter",
+      role: "organiser",
       seniorProfileId: linkedSeniorProfileId,
       onboardingStep: args.onboardingStep,
       lastSeenAt: Date.now(),
@@ -330,7 +332,7 @@ export const patchSupporterProfile = mutation({
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const supporterName = normalizeOptionalText(args.supporterName);
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =
@@ -381,7 +383,7 @@ export const getFamilyDirectory = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return [];
@@ -414,7 +416,7 @@ export const getTodayTimeline = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return [];
@@ -432,7 +434,7 @@ export const getSupporterDashboardSummary = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
@@ -472,7 +474,7 @@ export const getNotificationSettings = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return {
@@ -505,7 +507,7 @@ export const listAssistedDeviceSessions = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return [] as Array<{
@@ -567,7 +569,7 @@ export const revokeAssistedDeviceSession = mutation({
     sessionId: v.id("seniorAccessSessions"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const session = await ctx.db.get(args.sessionId);
 
     if (
@@ -594,7 +596,7 @@ export const revokeAssistedDeviceSession = mutation({
 export const revokeAllAssistedDeviceSessions = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "supporter");
+    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
       membership.familySpaceId,
@@ -630,7 +632,7 @@ export const getSupporterProfile = query({
   handler: async (ctx) => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
     if (!supporterContext) {
       return null;
@@ -649,10 +651,10 @@ export const getSupporterProfile = query({
       familySpaceId: supporterContext.membership.familySpaceId,
       supporterName:
         normalizeUserFacingText(supporterContext.membership.displayName) ??
-        ADMIN_LABEL,
+        ORGANISER_LABEL,
       seniorDisplayName:
         normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL,
-      role: "supporter" as const,
+      role: supporterContext.membership.role,
       onboardingStep: supporterContext.membership.onboardingStep,
       seniorProfileId: seniorProfile?._id ?? null,
       seniorMode: seniorProfile?.seniorMode ?? null,
@@ -666,7 +668,7 @@ export const getFamilySpaceId = query({
   handler: async (ctx): Promise<Id<"familySpaces"> | null> => {
     const supporterContext = await getOptionalFamilySpaceMembership(
       ctx,
-      "supporter",
+      "family_side",
     );
 
     return supporterContext?.membership.familySpaceId ?? null;

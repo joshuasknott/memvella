@@ -143,7 +143,7 @@ export const finalizeMagicLinkSignIn = mutation({
         return {
           status: "role_collision",
           message:
-            "This email is already registered as an Admin. Please use a different email for the independent device.",
+            "This email is already linked to a Circle account. Please use a different email for the independent device.",
         };
       }
 
