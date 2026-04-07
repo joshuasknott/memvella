@@ -48,12 +48,10 @@ export const processOnboardingAction = internalMutation({
               ? await upsertIndependentSeniorProfile(ctx, {
                   familySpaceId: membership.familySpaceId,
                   displayName: seniorDisplayName,
-                  recoveryEmail: membership.authEmail ?? undefined,
                 })
               : await upsertAssistedSeniorProfile(ctx, {
                   familySpaceId: membership.familySpaceId,
                   displayName: seniorDisplayName,
-                  recoveryEmail: membership.authEmail ?? undefined,
                 });
 
           if (seniorProfile) {

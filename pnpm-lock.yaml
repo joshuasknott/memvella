@@ -17,6 +17,9 @@ importers:
       '@convex-dev/better-auth':
         specifier: ^0.11.3
         version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.34.1(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      '@convex-dev/migrations':
+        specifier: ^0.3.3
+        version: 0.3.3(convex@1.34.1(react@19.2.4))
       '@google/genai':
         specifier: ^1.46.0
         version: 1.48.0
@@ -251,6 +254,11 @@ packages:
       better-auth: '>=1.5.0 <1.6.0'
       convex: ^1.25.0
       react: ^18.3.1 || ^19.0.0
+
+  '@convex-dev/migrations@0.3.3':
+    resolution: {integrity: sha512-eUfqCBMjObr9sPCRL7V98CX58fViLVye7ZtYVCb0/6c6kOERZopbiQ/dWnF8NoxXg3bREr3Jb3VjZR9FjP96+A==}
+    peerDependencies:
+      convex: ^1.24.8
 
   '@emnapi/core@1.9.2':
     resolution: {integrity: sha512-UC+ZhH3XtczQYfOlu3lNEkdW/p4dsJ1r/bP7H8+rhao3TTTMO1ATq/4DdIi23XuGoFY+Cz0JmCbdVl0hz9jZcA==}
@@ -3155,6 +3163,10 @@ snapshots:
       - '@standard-schema/spec'
       - hono
       - typescript
+
+  '@convex-dev/migrations@0.3.3(convex@1.34.1(react@19.2.4))':
+    dependencies:
+      convex: 1.34.1(react@19.2.4)
 
   '@emnapi/core@1.9.2':
     dependencies:

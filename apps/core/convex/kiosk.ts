@@ -193,7 +193,6 @@ export const generateKioskPin = mutation({
       (await upsertAssistedSeniorProfile(ctx, {
         familySpaceId: membership.familySpaceId,
         displayName: organiserSeniorName,
-        recoveryEmail: membership.authEmail ?? undefined,
       }));
 
     if (!assistedSenior) {

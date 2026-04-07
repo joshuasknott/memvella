@@ -7,6 +7,11 @@ import {
   upsertIndependentSeniorProfile,
 } from "./familySpaceAuth";
 import {
+  getIndependentSeniorCredential,
+  resolveIndependentSeniorPhoneNumber,
+  upsertIndependentSeniorCredential,
+} from "./independentSeniorCredentials";
+import {
   PASSKEY_CHALLENGE_TTL_MS,
   createSeniorRecoveryKey,
   normalizeOptionalEmail,
@@ -154,18 +159,10 @@ export const finalizePhoneNumberSignIn = mutation({
       }
 
       familySpaceId = existingMembership.familySpaceId;
-      const seniorProfile =
-        existingMembership.seniorProfileId !== null
-          ? await ctx.db.get(existingMembership.seniorProfileId)
-          : null;
-      const ensuredSeniorProfile =
-        seniorProfile ??
-        (await upsertIndependentSeniorProfile(ctx, {
-          familySpaceId,
-          displayName: normalizedDisplayName,
-          recoveryEmail: normalizedEmail ?? undefined,
-          recoveryPhoneNumber: normalizedPhoneNumber,
-        }));
+      const ensuredSeniorProfile = await upsertIndependentSeniorProfile(ctx, {
+        familySpaceId,
+        displayName: normalizedDisplayName,
+      });
 
       if (!ensuredSeniorProfile) {
         throw new Error(`Unable to prepare the ${INDEPENDENT_PROFILE_LABEL}.`);
@@ -194,8 +191,6 @@ export const finalizePhoneNumberSignIn = mutation({
       const seniorProfile = await upsertIndependentSeniorProfile(ctx, {
         familySpaceId,
         displayName: normalizedDisplayName,
-        recoveryEmail: normalizedEmail ?? undefined,
-        recoveryPhoneNumber: normalizedPhoneNumber,
       });
 
       if (!seniorProfile) {
@@ -214,6 +209,12 @@ export const finalizePhoneNumberSignIn = mutation({
         lastSeenAt: Date.now(),
       });
     }
+
+    await upsertIndependentSeniorCredential(ctx, {
+      familySpaceId,
+      seniorProfileId,
+      phoneNumber: normalizedPhoneNumber,
+    });
 
     await revokeSeniorSessionsForProfile(ctx, {
       seniorProfileId,
@@ -261,10 +262,14 @@ export const getCurrentIndependentSeniorPasskeyContext = query({
       return null;
     }
 
+    const credential = await getIndependentSeniorCredential(ctx, seniorProfile._id);
+
     return {
       seniorProfileId: seniorProfile._id,
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
-      recoveryPhoneNumber: seniorProfile.recoveryPhoneNumber,
+      recoveryPhoneNumber:
+        credential?.phoneNumber ??
+        (await resolveIndependentSeniorPhoneNumber(ctx, seniorProfile)),
       passkeys: await getActivePasskeys(ctx, seniorProfile._id),
       activeRegistrationChallenge: await getActiveChallenge(
         ctx,
@@ -398,9 +403,14 @@ export const getIndependentSeniorRecoveryProfile = query({
     }
 
     const passkeys = await getActivePasskeys(ctx, seniorProfile._id);
+    const recoveryPhoneNumber = await resolveIndependentSeniorPhoneNumber(
+      ctx,
+      seniorProfile,
+    );
+
     return {
       seniorName: normalizeUserFacingText(seniorProfile.displayName) ?? MEMBER_LABEL,
-      recoveryPhoneNumber: seniorProfile.recoveryPhoneNumber,
+      recoveryPhoneNumber,
       hasPasskey: passkeys.length > 0,
     };
   },

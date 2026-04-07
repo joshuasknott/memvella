@@ -1,20 +1,13 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import {
-  normalizeOptionalEmail,
   normalizeOptionalText,
 } from "./security";
 import {
   MEMBER_LABEL,
 } from "./terminology";
-import { isValidE164PhoneNumber } from "../lib/phone-number";
 
 type DbCtx = MutationCtx | QueryCtx;
-
-function normalizeOptionalPhoneNumber(value: string | null | undefined) {
-  const trimmed = value?.trim();
-  return trimmed && isValidE164PhoneNumber(trimmed) ? trimmed : undefined;
-}
 
 export type FamilySideMembershipRole = "supporter" | "organiser" | "member";
 export type MembershipRole = FamilySideMembershipRole | "independent_senior";
@@ -206,7 +199,6 @@ export async function upsertAssistedSeniorProfile(
   args: {
     familySpaceId: Id<"familySpaces">;
     displayName: string;
-    recoveryEmail?: string;
   },
 ) {
   const assistedSenior = await getSeniorProfileByMode(
@@ -215,7 +207,6 @@ export async function upsertAssistedSeniorProfile(
     "assisted",
   );
   const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
-  const recoveryEmail = normalizeOptionalEmail(args.recoveryEmail) ?? null;
 
   if (!assistedSenior) {
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
@@ -223,8 +214,6 @@ export async function upsertAssistedSeniorProfile(
       displayName,
       seniorMode: "assisted",
       accessStatus: "active",
-      recoveryEmail,
-      recoveryPhoneNumber: null,
       timezone: null,
       locale: null,
       lastSessionAt: undefined,
@@ -235,8 +224,6 @@ export async function upsertAssistedSeniorProfile(
 
   await ctx.db.patch(assistedSenior._id, {
     displayName,
-    recoveryEmail,
-    recoveryPhoneNumber: null,
     accessStatus: "active",
   });
 
@@ -248,8 +235,6 @@ export async function upsertIndependentSeniorProfile(
   args: {
     familySpaceId: Id<"familySpaces">;
     displayName: string;
-    recoveryEmail?: string;
-    recoveryPhoneNumber?: string;
   },
 ) {
   const independentSenior = await getSeniorProfileByMode(
@@ -258,9 +243,6 @@ export async function upsertIndependentSeniorProfile(
     "independent",
   );
   const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
-  const recoveryEmail = normalizeOptionalEmail(args.recoveryEmail) ?? null;
-  const recoveryPhoneNumber =
-    normalizeOptionalPhoneNumber(args.recoveryPhoneNumber) ?? null;
 
   if (!independentSenior) {
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
@@ -268,8 +250,6 @@ export async function upsertIndependentSeniorProfile(
       displayName,
       seniorMode: "independent",
       accessStatus: "active",
-      recoveryEmail,
-      recoveryPhoneNumber,
       timezone: null,
       locale: null,
       lastSessionAt: undefined,
@@ -280,8 +260,6 @@ export async function upsertIndependentSeniorProfile(
 
   await ctx.db.patch(independentSenior._id, {
     displayName,
-    recoveryEmail,
-    recoveryPhoneNumber,
     accessStatus: "active",
   });
 

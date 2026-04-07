@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.11.3",
+    "@convex-dev/migrations": "^0.3.3",
     "@google/genai": "^1.46.0",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",
