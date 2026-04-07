@@ -1,60 +1,33 @@
-import { NextResponse } from "next/server";
-import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
-import { api } from "@/convex/_generated/api";
-import { createConvexHttpClient } from "@/lib/convex-http";
+import { appendIndependentPasskeyChallenge } from "@/lib/independent-auth-server";
 import { getPasskeyConfig } from "@/lib/passkey";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { recoveryKey } = (await request.json()) as {
-      recoveryKey: string;
-    };
-    if (!recoveryKey) {
-      return NextResponse.json(
-        { error: "A recovery key is required for passkey recovery." },
-        { status: 400 },
-      );
-    }
-
-    const convex = createConvexHttpClient();
-    const authenticationMaterial = await convex.query(
-      api.independentAuth.getPasskeyAuthenticationMaterial,
-      {
-        recoveryKey,
-      },
-    );
-
-    if (!authenticationMaterial || authenticationMaterial.passkeys.length === 0) {
-      return NextResponse.json(
-        { error: "No Face ID / Touch ID passkey is ready on this device." },
-        { status: 400 },
-      );
-    }
-
     const { rpID } = getPasskeyConfig(request);
-    const passkeys = authenticationMaterial.passkeys;
     const optionsJSON = await generateAuthenticationOptions({
       rpID,
       userVerification: "required",
-      allowCredentials: passkeys.map((passkey: (typeof passkeys)[number]) => ({
-        id: passkey.credentialId,
-        transports: passkey.transports as AuthenticatorTransportFuture[],
-      })),
     });
 
-    await convex.mutation(api.independentAuth.storePasskeyAuthenticationChallenge, {
-      recoveryKey,
-      challenge: optionsJSON.challenge,
-    });
+    const response = NextResponse.json(
+      { optionsJSON },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
+    appendIndependentPasskeyChallenge(response, request, optionsJSON.challenge);
 
-    return NextResponse.json({ optionsJSON });
+    return response;
   } catch (error) {
     console.error("Passkey authentication options failed:", error);
     return NextResponse.json(
-      { error: "Unable to prepare Face ID / Touch ID sign-in." },
+      { error: "Unable to prepare passkey sign-in." },
       { status: 500 },
     );
   }

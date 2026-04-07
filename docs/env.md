@@ -26,9 +26,9 @@ The local examples live at:
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | Better Auth and Convex Next.js bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
 | `MEMVELLA_AUTH_PEPPER` | recommended | server and Convex | extra hashing/pepper helpers | Secret value |
-| `TWILIO_ACCOUNT_SID` | yes for independent SMS auth | server and Convex | Twilio SMS delivery | Used for Independent User sign-in codes |
-| `TWILIO_AUTH_TOKEN` | yes for independent SMS auth | server and Convex | Twilio SMS delivery | Secret value |
-| `TWILIO_SMS_FROM_NUMBER` | yes for independent SMS auth | server and Convex | Twilio SMS sender | E.164 sender number |
+| `TWILIO_ACCOUNT_SID` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS delivery | Transitional only while older independent rows still rely on phone recovery |
+| `TWILIO_AUTH_TOKEN` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS delivery | Secret value |
+| `TWILIO_SMS_FROM_NUMBER` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS sender | E.164 sender number |
 | `GEMINI_API_KEY` | required for AI features | server and Convex | live voice and AI actions | Needed for voice and insights paths |
 | `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default model when omitted |
 | `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push notification subscription flow | Needed for browser push |
@@ -43,3 +43,5 @@ If you are testing auth on a phone, tablet, or another machine, set the site URL
 ## Convex Rule
 
 If a variable is read inside Convex functions, configure it for the Convex runtime as well. A value existing only in the Next.js environment is not enough for server-side Convex code.
+
+For `apps/core`, prefer `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` in `.env.local`. Avoid also defining `CONVEX_SITE_URL` there, because the Convex CLI treats the site URL aliases as the same setting and will skip automatic updates when more than one is present.

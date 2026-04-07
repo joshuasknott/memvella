@@ -9,7 +9,6 @@ export type SeniorSessionState = {
   seniorProfileId?: string;
   seniorName?: string;
   recoveryPhoneNumber?: string | null;
-  recoveryEmail?: string | null;
   hasPasskey?: boolean;
 };
 
@@ -70,4 +69,8 @@ export function saveSeniorRecoveryHint(
     getRecoveryHintKey(experience),
     JSON.stringify(recoveryHint),
   );
+}
+
+export function clearSeniorRecoveryHint(experience: SeniorExperience) {
+  localStorage.removeItem(getRecoveryHintKey(experience));
 }

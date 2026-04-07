@@ -4,6 +4,8 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 export const PASSKEY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
+export const INDEPENDENT_ONBOARDING_TTL_MS = 15 * 60 * 1000;
+export const INDEPENDENT_RECOVERY_CODE_COUNT = 6;
 
 export const SENIOR_IDLE_TIMEOUT_MS = {
   assisted_device: 45 * 60 * 1000,
@@ -108,6 +110,14 @@ export async function hashFamilyInviteCode(inviteCode: string) {
   return createNamespacedHmac("family-invite", inviteCode);
 }
 
+export async function hashIndependentOnboardingToken(token: string) {
+  return createNamespacedHmac("independent-onboarding", token);
+}
+
+export async function hashIndependentRecoveryCode(recoveryCode: string) {
+  return createNamespacedHmac("independent-recovery-code", recoveryCode);
+}
+
 export async function hashSeniorSessionToken(sessionToken: string) {
   return createNamespacedHmac("senior-session", sessionToken);
 }
@@ -176,6 +186,10 @@ export function generateNumericCode(length = 6) {
   }
 
   return code;
+}
+
+export function formatIndependentRecoveryCode(value: string) {
+  return value.match(/.{1,4}/g)?.join("-") ?? value;
 }
 
 export function generateOpaqueToken(byteLength = 32) {

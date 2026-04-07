@@ -1,13 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAction, useMutation } from "convex/react";
+import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
 import BrandLogo from "@/components/BrandLogo";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceInputPill } from "@/components/shared-senior/VoiceInputPill";
 import { api } from "@/convex/_generated/api";
 import { speakText, type VoiceUiState } from "@/lib/browser-speech";
+import { signInWithIndependentPasskey } from "@/lib/independent-passkey-client";
+import {
+  clearSeniorRecoveryHint,
+  saveSeniorSession,
+} from "@/lib/senior-session-client";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
 
 type IndependentVoiceDraft = {
@@ -77,22 +84,70 @@ function formatDraftDays(daysOfWeek: number[]) {
   return daysOfWeek.map((day) => labels[day] ?? "").filter(Boolean).join(", ");
 }
 
-function IndependentRecoveryState() {
+function IndependentRecoveryState({ deviceFingerprint }: { deviceFingerprint: string }) {
+  const router = useRouter();
+  const [isUsingPasskey, setIsUsingPasskey] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUsePasskey = async () => {
+    setIsUsingPasskey(true);
+    setError(null);
+
+    try {
+      const result = await signInWithIndependentPasskey(deviceFingerprint);
+      saveSeniorSession("independent", {
+        sessionToken: result.sessionToken,
+        deviceFingerprint,
+        hasPasskey: true,
+        ...(result.seniorName ? { seniorName: result.seniorName } : {}),
+      });
+      clearSeniorRecoveryHint("independent");
+      router.replace("/independent");
+    } catch (passkeyError) {
+      console.error(passkeyError);
+      setError(
+        passkeyError instanceof Error
+          ? passkeyError.message
+          : "Memvella could not finish passkey sign-in.",
+      );
+    } finally {
+      setIsUsingPasskey(false);
+    }
+  };
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa] p-6">
       <div className="w-full max-w-xl rounded-[32px] bg-white p-8 text-center shadow-lg">
         <h1 className="mb-3 font-headline text-3xl font-bold text-slate-900">
-          Your session needs to be refreshed.
+          Sign back in to Memvella
         </h1>
         <p className="mb-6 text-xl leading-relaxed text-slate-600">
-          Sign back in with your secure code or use Face ID / Touch ID to reopen your Circle.
+          Use the passkey on this device to reopen your Circle. If you can&apos;t use this device, choose the recovery path instead.
         </p>
-        <a
-          href="/independent/recover"
-          className="inline-flex min-h-[72px] items-center justify-center rounded-full bg-[#6B21A8] px-8 text-xl font-semibold text-white shadow-md"
+
+        {error ? (
+          <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-left text-sm font-medium text-red-600">
+            {error}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => {
+            void handleUsePasskey();
+          }}
+          disabled={isUsingPasskey}
+          className="inline-flex min-h-[72px] w-full items-center justify-center rounded-full bg-[#6B21A8] px-8 text-xl font-semibold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
         >
-          Restore Access
-        </a>
+          {isUsingPasskey ? "Checking passkey..." : "Use passkey"}
+        </button>
+
+        <Link
+          href="/independent/recover"
+          className="mt-4 inline-flex min-h-[72px] w-full items-center justify-center rounded-full border-2 border-[#24005b] bg-white px-8 text-xl font-semibold text-[#24005b] shadow-sm"
+        >
+          I can&apos;t use this device
+        </Link>
       </div>
     </main>
   );
@@ -247,7 +302,7 @@ export default function IndependentHomePage() {
   }
 
   if (!sessionState?.sessionToken) {
-    return <IndependentRecoveryState />;
+    return <IndependentRecoveryState deviceFingerprint={deviceFingerprint} />;
   }
 
   if (!dashboard || dashboard.status === "invalid") {
@@ -263,7 +318,15 @@ export default function IndependentHomePage() {
   return (
     <main className="relative flex min-h-screen w-full flex-col overflow-y-auto bg-[#f0ebf5] md:flex-row md:overflow-hidden">
       <section className="flex w-full flex-none flex-col justify-between border-b border-outline-variant/10 bg-[#f8f5fa] p-4 md:w-[40%] md:border-b-0 md:border-r md:p-12">
-        <BrandLogo className="mb-8" />
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <BrandLogo className="mb-0" />
+          <Link
+            href="/independent/security"
+            className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#24005b]/15 bg-white px-5 text-base font-semibold text-[#24005b] shadow-sm"
+          >
+            Security
+          </Link>
+        </div>
 
         <div className="grow flex flex-col justify-center py-6 md:py-0">
           <div className="sticky top-0 z-40 mb-4 bg-[#f8f5fa] pb-4 pt-4 md:mb-0 md:pb-0 md:pt-0">

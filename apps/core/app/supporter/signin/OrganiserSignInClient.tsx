@@ -40,7 +40,7 @@ export function OrganiserSignInFallback() {
             Welcome Back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-            Sign in to your Organiser account to continue.
+            Sign in to your Memvella account to continue.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function OrganiserSignInClient() {
             Welcome Back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
-            Sign in to your Organiser account to continue.
+            Sign in to your Memvella account to continue.
           </p>
         </div>
 

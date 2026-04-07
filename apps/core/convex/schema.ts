@@ -50,16 +50,37 @@ export default defineSchema({
       v.literal("recovery_required"),
       v.literal("revoked"),
     ),
-    recoveryEmail: v.union(v.string(), v.null()),
-    recoveryPhoneNumber: v.union(v.string(), v.null()),
+    // Temporary widen during the migration away from independent-only auth
+    // fields living on shared senior profile records.
+    recoveryEmail: v.optional(v.union(v.string(), v.null())),
+    recoveryPhoneNumber: v.optional(v.union(v.string(), v.null())),
     timezone: v.union(v.string(), v.null()),
     locale: v.union(v.string(), v.null()),
     lastSessionAt: v.optional(v.number()),
   })
     .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"])
-    .index("by_recoveryEmail", ["recoveryEmail"])
-    .index("by_recoveryPhoneNumber", ["recoveryPhoneNumber"]),
+    .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"]),
+
+  independentSeniorCredentials: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    phoneNumber: v.string(),
+    verifiedAt: v.number(),
+  })
+    .index("by_seniorProfileId", ["seniorProfileId"])
+    .index("by_phoneNumber", ["phoneNumber"]),
+
+  independentOnboardingSessions: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    membershipId: v.id("familySpaceMemberships"),
+    tokenHash: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+  })
+    .index("by_tokenHash", ["tokenHash"])
+    .index("by_seniorProfileId", ["seniorProfileId"]),
 
   // Compatibility table kept permissive while legacy rows are migrated forward.
   supporterProfiles: defineTable(v.any())
@@ -135,6 +156,20 @@ export default defineSchema({
     revokedAt: v.union(v.number(), v.null()),
   })
     .index("by_credentialId", ["credentialId"])
+    .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  independentSeniorRecoveryCodes: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    codeHash: v.string(),
+    codeSuffix: v.string(),
+    createdAt: v.number(),
+    createdByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    createdBySource: v.union(v.literal("independent"), v.literal("organiser")),
+    consumedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+  })
+    .index("by_codeHash", ["codeHash"])
     .index("by_seniorProfileId", ["seniorProfileId"]),
 
   seniorAuthChallenges: defineTable({

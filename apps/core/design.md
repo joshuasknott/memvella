@@ -86,7 +86,9 @@ Target user:
 Rules:
 
 - Keep the experience passwordless.
-- Current implementation uses an SMS code bootstrap plus optional passkey enrollment on the same device.
+- Use a device passkey as the primary auth method.
+- Copy should work for face, fingerprint, or device screen lock without Apple-only wording.
+- Offer recovery codes clearly after passkey setup.
 - Voice should remain the preferred creation path for memories and routines.
 - AI-extracted actions must present explicit confirmation and rejection states.
 

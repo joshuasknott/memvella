@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-06
 Owners: engineering
 Read when: touching schema, queries, mutations, migrations, or onboarding
 Depends on: docs/architecture.md, docs/auth-and-identity.md
@@ -15,7 +15,7 @@ Primary entities:
 
 - `familySpaces`: top-level shared space for routines, memories, alerts, and voice context
 - `familySpaceMemberships`: auth-linked participants and roles, including `organiser`, `member`, and `independent_senior`
-- `seniorProfiles`: senior-specific identity, mode, locale, and access state
+- `seniorProfiles`: mode-neutral senior identity, mode, locale, and access state
 
 ## Canonical Tables
 
@@ -25,8 +25,11 @@ Primary entities:
 - `familySpaceMemberships`
 - `seniorProfiles`
 - `assistedDevicePins`
+- `independentSeniorCredentials`
+- `independentOnboardingSessions`
 - `seniorAccessSessions`
 - `independentSeniorPasskeys`
+- `independentSeniorRecoveryCodes`
 - `seniorAuthChallenges`
 
 ### Routines And Scheduling
@@ -73,6 +76,10 @@ Rules:
 - `familySpaceId` is the top-level partition key for most product data.
 - `familySpaceMemberships` connects authenticated users to a Circle and role.
 - `seniorProfiles` model the actual Tablet User or Independent User identity inside the Circle.
+- `independentOnboardingSessions` store short-lived setup state before the first Independent User passkey is created.
+- `independentSeniorCredentials` now remain a transitional compatibility surface for older phone-based independent rows.
+- `independentSeniorPasskeys` store trusted device passkeys for independent sign-in.
+- `independentSeniorRecoveryCodes` store hashed one-time recovery codes for independent recovery.
 - Senior access sessions are device-bound and separate from Better Auth sessions.
 
 ## Authoring Rules

@@ -35,7 +35,7 @@ The product is intended to reduce friction, preserve dignity, and keep family co
 
 - Primary device: phone
 - Main jobs: join an existing Circle, help with routines and memories, stay connected
-- Current auth: Better Auth email and password, followed by a 6-digit Circle invite code
+- Current auth: 6-digit Circle code first, then Better Auth email and password
 
 ### Tablet User
 
@@ -47,7 +47,7 @@ The product is intended to reduce friction, preserve dignity, and keep family co
 
 - Primary device: phone or tablet
 - Main jobs: sign in without a password, reopen with passkeys, create memories or routines through voice
-- Current auth: SMS code bootstrap plus optional passkey enrollment on the same device
+- Current auth: passkey-first device sign-in with recovery codes and optional organiser-assisted recovery
 
 ## Product Goals
 

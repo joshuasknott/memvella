@@ -35,8 +35,9 @@ Before testing auth-sensitive or backend-sensitive changes:
 
 ### Member Join Flow
 
-- create or sign in to a family-side account from `/onboarding/member`
-- enter a valid 6-digit invite code
+- enter a valid 6-digit invite code from `/onboarding/member`
+- confirm the target Circle name is shown before auth
+- create or sign in to a family-side account without re-entering the code
 - confirm the account lands in the Circle workspace
 - confirm organiser-only settings remain unavailable to the Member account
 
@@ -50,10 +51,11 @@ Before testing auth-sensitive or backend-sensitive changes:
 ### Independent User
 
 - complete first-run onboarding
-- verify SMS code delivery and verification work end to end
-- verify verification/finalization creates a usable senior session
-- verify passkey enrollment succeeds when supported
-- verify recovery works through SMS or passkey
+- verify passkey creation succeeds on a tablet-capable browser
+- verify onboarding lands in the independent experience without SMS
+- verify recovery codes can be created and are shown once
+- verify repeat sign-in works with the device passkey
+- verify recovery works with a recovery code and can add a fresh passkey on the new device
 
 ### Cross-Device And Origin
 

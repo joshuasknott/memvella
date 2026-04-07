@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-06
 Owners: engineering
 Read when: touching auth, onboarding, passkeys, sessions, or recovery
 Depends on: docs/product.md, docs/architecture.md, docs/env.md
@@ -19,9 +19,9 @@ Memvella currently uses two identity layers:
 | Role | Entry route | Auth bootstrap | Secondary auth | Lands in |
 | --- | --- | --- | --- | --- |
 | `Organiser` | `/onboarding/organiser` | Better Auth email and password | none | `/circle` |
-| `Member` | `/onboarding/member` | Better Auth email and password plus 6-digit invite code | none | `/circle` |
+| `Member` | `/onboarding/member` | 6-digit Circle code, then Better Auth email and password | none | `/circle` |
 | `Tablet User` | `/assisted/login` | 6-digit pairing code | device-bound senior session | `/assisted` |
-| `Independent User` | `/onboarding/independent` | Better Auth phone verification via SMS | optional passkey on the same device | `/independent` |
+| `Independent User` | `/onboarding/independent` | device passkey | recovery codes or organiser-assisted reset | `/independent` |
 
 ### Family-Side Account Auth
 
@@ -44,8 +44,10 @@ Current behavior:
 Current behavior:
 
 - The join flow is live at `/onboarding/member`.
-- A family member or friend creates or signs in to a family-side account.
-- They then redeem a 6-digit Circle invite code.
+- A family member or friend enters a 6-digit Circle invite code first.
+- Memvella previews the target Circle before any family-side credential entry.
+- If they already have an active family-side session, the invite redeems automatically.
+- Otherwise they create or sign in to a family-side account and the invite redeems automatically after auth.
 - Convex creates a `member` membership in `familySpaceMemberships`.
 - The account lands in the shared Circle workspace with organiser-only settings blocked.
 
@@ -53,21 +55,25 @@ Current behavior:
 
 - Onboarding UI: `apps/core/app/onboarding/independent/page.tsx`
 - Recovery UI: `apps/core/app/independent/recover/page.tsx`
-- Finalization mutation: `finalizePhoneNumberSignIn` in `apps/core/convex/independentAuth.ts`
+- Passkey and recovery backend: `apps/core/convex/independentAccess.ts`
+- Passkey route handlers: `apps/core/app/api/independent/passkey/**/route.ts`
+- Recovery code route: `apps/core/app/api/independent/recovery-codes/redeem/route.ts`
 
 Current behavior:
 
-- The user enters a name and phone number.
-- Better Auth sends a 6-digit SMS verification code through Twilio.
-- After verification, Convex finalizes the identity into an `independent_senior` membership and mints a senior access session.
-- The user can then enroll Face ID or Touch ID on that device through WebAuthn passkeys.
-- Recovery supports another SMS code or a passkey challenge.
+- The user enters only the minimum profile information required to create the independent profile.
+- Convex creates a short-lived onboarding session and the browser creates a platform passkey on that device.
+- Passkey registration mints the first `independent_web` senior session directly, without a Better Auth bootstrap session.
+- Repeat sign-in uses discoverable WebAuthn passkeys on the device.
+- Recovery supports one-time recovery codes and organiser-side help for explicit device revocation or recovery-code rotation.
 
 Guardrails:
 
 - This flow is passwordless.
-- This flow is SMS-based.
-- Passkeys are optional, device-specific accelerators, not the primary bootstrap path.
+- Passkeys are the primary sign-in mechanism.
+- Recovery codes are shown after setup and can be rotated later from independent security settings.
+- Organiser-side recovery help must stay explicit and must not silently impersonate the Independent User.
+- `seniorProfiles` do not store the independent phone credential directly.
 
 ### Tablet User Device Access
 
@@ -85,8 +91,18 @@ Current behavior:
 
 - Better Auth identities are mapped through `identity.tokenIdentifier`.
 - Application authorization is anchored on `familySpaceMemberships`.
+- Independent onboarding bootstrap is anchored on `independentOnboardingSessions`.
+- Independent passkeys are anchored on `independentSeniorPasskeys`.
+- Independent recovery codes are anchored on `independentSeniorRecoveryCodes`.
 - Senior-side device access is anchored on `seniorAccessSessions`.
 - Assisted and independent seniors are distinguished by `seniorProfiles.seniorMode`.
+- `seniorProfiles` carry only mode-neutral senior identity and access state.
+
+## Migration Rule
+
+- Legacy `seniorProfiles` rows that still held independent recovery data are migrated into `independentSeniorCredentials`.
+- Legacy independent memberships with no recoverable phone source are left without a credential row and moved to `accessStatus = pending`, so they must complete fresh SMS bootstrap instead of inheriting invented data.
+- The older phone-credential and SMS finalization surfaces remain transitional backend compatibility paths while existing independent profiles move onto passkeys and recovery codes.
 
 ## Origin And Callback Rules
 
@@ -137,3 +153,4 @@ Expected failure mode:
 
 - Legacy `supporter` module and table names still exist in some backend implementation details.
 - Some family-side backend APIs still use organiser-era naming even though the visible workspace is now `/circle`.
+- Existing SMS-first independent profiles still need an explicit migration path to add recovery codes before legacy phone recovery can be removed completely.

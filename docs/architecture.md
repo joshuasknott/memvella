@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-06
 Owners: engineering
 Read when: touching routing, backend integration, or repo structure
 Depends on: docs/product.md, docs/data-model.md
@@ -42,7 +42,8 @@ Depends on: docs/product.md, docs/data-model.md
 - Client auth calls use `apps/core/lib/auth-client.ts`.
 - Senior-side device sessions are separate from Better Auth sessions and are handled in Convex.
 - Organiser and Member family-side account sessions use Better Auth email and password.
-- Independent User onboarding uses Better Auth phone verification plus Convex-managed senior sessions and optional passkeys.
+- Member onboarding now validates the Circle code before family-side account auth.
+- Independent User onboarding and repeat sign-in use Convex-managed passkey, recovery-code, and senior-session flows instead of Better Auth phone bootstrap.
 
 ## Data Architecture
 

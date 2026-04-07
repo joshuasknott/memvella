@@ -21,6 +21,9 @@ const MAX_ACTIVE_INVITE_COLLISION_ATTEMPTS = 20;
 const INVITE_REDEEM_MAX_HITS = 5;
 const INVITE_REDEEM_WINDOW_MS = 10 * 60 * 1000;
 const INVITE_REDEEM_BLOCK_MS = 10 * 60 * 1000;
+const INVITE_PREVIEW_MAX_HITS = 10;
+const INVITE_PREVIEW_WINDOW_MS = 10 * 60 * 1000;
+const INVITE_PREVIEW_BLOCK_MS = 10 * 60 * 1000;
 
 type InviteLookupState =
   | { state: "active"; invite: Doc<"familyInvites"> }
@@ -54,6 +57,21 @@ type RedeemMemberInviteCodeResult =
       familySpaceId: Doc<"familyInvites">["familySpaceId"];
       membershipId: Doc<"familySpaceMemberships">["_id"];
       role: "member";
+    };
+
+type PreviewMemberInviteCodeResult =
+  | {
+      status: "ready";
+      circleName: string | null;
+    }
+  | {
+      status: "invalid_code" | "expired" | "revoked" | "already_used";
+      message: string;
+    }
+  | {
+      status: "rate_limited";
+      retryAfterMs: number;
+      message: string;
     };
 
 function isInviteActive(invite: Doc<"familyInvites">, now: number) {
@@ -273,6 +291,61 @@ export const generateMemberInviteCode = mutation({
       inviteCode,
       role: "member" as const,
       expiresAt,
+    };
+  },
+});
+
+export const previewMemberInviteCode = mutation({
+  args: {
+    inviteCode: v.string(),
+    previewScopeKey: v.string(),
+  },
+  handler: async (ctx, args): Promise<PreviewMemberInviteCodeResult> => {
+    const normalizedInviteCode = args.inviteCode.trim();
+    if (!/^\d{6}$/.test(normalizedInviteCode)) {
+      return {
+        status: "invalid_code",
+        message: "Enter a valid 6-digit Circle code.",
+      };
+    }
+
+    const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: args.previewScopeKey,
+      actionKey: "previewMemberInviteCode",
+      maxHits: INVITE_PREVIEW_MAX_HITS,
+      windowMs: INVITE_PREVIEW_WINDOW_MS,
+      blockDurationMs: INVITE_PREVIEW_BLOCK_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return {
+        status: "rate_limited",
+        retryAfterMs: rateLimit.retryAfterMs,
+        message: buildRateLimitMessage(rateLimit.retryAfterMs),
+      };
+    }
+
+    const inviteCodeHash = await hashFamilyInviteCode(normalizedInviteCode);
+    const lookup = await getInviteLookupByHash(ctx, inviteCodeHash);
+    if (lookup.state !== "active") {
+      const messages = {
+        invalid_code: "We couldn't find that Circle. Please double-check the code and try again.",
+        expired: "This Circle code has expired. Ask for a new one.",
+        revoked: "This Circle code is no longer active. Ask for a new one.",
+        already_used: "This Circle code has already been used. Ask for a new one.",
+      } satisfies Record<Exclude<InviteLookupState["state"], "active">, string>;
+
+      return {
+        status: lookup.state,
+        message: messages[lookup.state],
+      };
+    }
+
+    const familySpace = await ctx.db.get(lookup.invite.familySpaceId);
+
+    return {
+      status: "ready",
+      circleName: familySpace?.displayName ?? null,
     };
   },
 });

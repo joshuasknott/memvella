@@ -82,16 +82,28 @@ export function buildDeviceFingerprint(
   return signValue("device-fingerprint", `${seed}:${experience}`);
 }
 
-export function buildNetworkThrottleFingerprint(
+export function buildRequestThrottleFingerprint(
   seed: string,
   request: NextRequest,
+  namespace: string,
 ) {
   const userAgent = request.headers.get("user-agent") ?? "unknown-user-agent";
   const acceptLanguage =
     request.headers.get("accept-language") ?? "unknown-language";
 
   return signValue(
-    "assisted-pairing-network",
+    namespace,
     `${seed}:${getClientIp(request)}:${userAgent}:${acceptLanguage}`,
+  );
+}
+
+export function buildNetworkThrottleFingerprint(
+  seed: string,
+  request: NextRequest,
+) {
+  return buildRequestThrottleFingerprint(
+    seed,
+    request,
+    "assisted-pairing-network",
   );
 }
