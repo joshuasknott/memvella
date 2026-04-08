@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
@@ -11,8 +10,6 @@ import { PrimaryButton } from "@/components/ui/Button";
 import BrandLogo from "@/components/BrandLogo";
 
 export default function OrganiserSetupPage() {
-  const router = useRouter();
-
   const [name, setName] = useState("");
   const [seniorDisplayName, setSeniorDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,7 +52,7 @@ export default function OrganiserSetupPage() {
         );
       }
 
-      router.push("/circle");
+      window.location.replace("/circle");
     } catch (signUpError) {
       console.error("Sign-up error:", signUpError);
       setError("Something went wrong. Please try again.");
@@ -94,11 +91,8 @@ export default function OrganiserSetupPage() {
               </p>
             </div>
 
-            <FormCard
-              as="form"
-              className="flex flex-col space-y-6"
-              onSubmit={handleSubmit}
-            >
+            <form onSubmit={handleSubmit}>
+              <FormCard className="flex flex-col space-y-6">
               <div className="space-y-2">
                 <label className="font-headline text-lg font-bold" htmlFor="name">
                   What is your name?
@@ -181,16 +175,17 @@ export default function OrganiserSetupPage() {
                 )}
               </PrimaryButton>
 
-              <p className="text-center text-sm text-gray-500">
-                Already have an account?{" "}
-                <Link
-                  href="/organiser/signin"
-                  className="font-semibold text-[#4e0078] hover:underline"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </FormCard>
+                <p className="text-center text-sm text-gray-500">
+                  Already have an account?{" "}
+                  <Link
+                    href="/organiser/signin"
+                    className="font-semibold text-[#4e0078] hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </FormCard>
+            </form>
           </div>
         </div>
       </div>

@@ -196,7 +196,8 @@ function IndependentSetupContent() {
               Start with your name, then create a passkey on this device using your face, fingerprint, or device screen lock.
             </p>
 
-            <FormCard as="form" onSubmit={handleStart} className="flex flex-col gap-6">
+            <form onSubmit={handleStart}>
+              <FormCard className="flex flex-col gap-6">
               <div className="space-y-2">
                 <label className="ml-2 text-lg font-medium text-on-surface-variant">
                   What should Memvella call you?
@@ -218,21 +219,22 @@ function IndependentSetupContent() {
                 </div>
               ) : null}
 
-              <PrimaryButton
-                type="submit"
-                disabled={!name.trim() || isSubmitting || !deviceFingerprint}
-                className="mt-4"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    Preparing...
-                  </>
-                ) : (
-                  "Continue"
-                )}
-              </PrimaryButton>
-            </FormCard>
+                <PrimaryButton
+                  type="submit"
+                  disabled={!name.trim() || isSubmitting || !deviceFingerprint}
+                  className="mt-4"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Preparing...
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
+                </PrimaryButton>
+              </FormCard>
+            </form>
           </div>
         ) : null}
 

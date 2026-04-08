@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
@@ -57,7 +57,6 @@ export function OrganiserSignInFallback() {
 }
 
 export default function OrganiserSignInClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/circle";
 
@@ -90,7 +89,7 @@ export default function OrganiserSignInClient() {
         return;
       }
 
-      router.push(nextPath);
+      window.location.replace(nextPath);
     } catch (signInError) {
       console.error("Sign-in error:", signInError);
       setError("Something went wrong. Please try again.");
@@ -111,11 +110,8 @@ export default function OrganiserSignInClient() {
           </p>
         </div>
 
-        <FormCard
-          as="form"
-          className="flex flex-col space-y-6"
-          onSubmit={handleSubmit}
-        >
+        <form onSubmit={handleSubmit}>
+          <FormCard className="flex flex-col space-y-6">
           <div className="space-y-2">
             <label className="font-headline text-lg font-bold" htmlFor="email">
               Email Address
@@ -161,16 +157,17 @@ export default function OrganiserSignInClient() {
             )}
           </PrimaryButton>
 
-          <p className="text-center text-sm text-gray-500">
-            Need an account?{" "}
-            <Link
-              href="/onboarding/organiser"
-              className="font-semibold text-[#4e0078] hover:underline"
-            >
-              Create one
-            </Link>
-          </p>
-        </FormCard>
+            <p className="text-center text-sm text-gray-500">
+              Need an account?{" "}
+              <Link
+                href="/onboarding/organiser"
+                className="font-semibold text-[#4e0078] hover:underline"
+              >
+                Create one
+              </Link>
+            </p>
+          </FormCard>
+        </form>
       </div>
     </OrganiserAuthLayout>
   );

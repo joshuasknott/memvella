@@ -245,7 +245,8 @@ function CircleCodeStep({
         </p>
       </div>
 
-      <FormCard as="form" className="flex flex-col space-y-8" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
+        <FormCard className="flex flex-col space-y-8">
         <div className="flex justify-center gap-3" role="group" aria-label="6-digit Circle code">
           {digits.map((digit, index) => (
             <input
@@ -280,21 +281,22 @@ function CircleCodeStep({
           </div>
         ) : null}
 
-        <PrimaryButton
-          type="submit"
-          disabled={!isComplete || isSubmitting}
-          className={!isComplete ? "opacity-40" : ""}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Checking code...
-            </>
-          ) : (
-            "Continue"
-          )}
-        </PrimaryButton>
-      </FormCard>
+          <PrimaryButton
+            type="submit"
+            disabled={!isComplete || isSubmitting}
+            className={!isComplete ? "opacity-40" : ""}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Checking code...
+              </>
+            ) : (
+              "Continue"
+            )}
+          </PrimaryButton>
+        </FormCard>
+      </form>
     </div>
   );
 }
@@ -443,7 +445,8 @@ function MemberAuthStep({
         </p>
       </div>
 
-      <FormCard as="form" className="flex flex-col space-y-6" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
+        <FormCard className="flex flex-col space-y-6">
         {isCreate ? (
           <div className="space-y-2">
             <label className="font-headline text-lg font-bold" htmlFor="member-name">
@@ -514,14 +517,15 @@ function MemberAuthStep({
           )}
         </PrimaryButton>
 
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-center text-sm font-semibold text-[#4e0078] hover:underline"
-        >
-          Back
-        </button>
-      </FormCard>
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-center text-sm font-semibold text-[#4e0078] hover:underline"
+          >
+            Back
+          </button>
+        </FormCard>
+      </form>
     </div>
   );
 }
