@@ -126,7 +126,7 @@ Current behavior:
 
 `apps/core/lib/passkey.ts` derives WebAuthn origin and RP ID from:
 
-1. the current request URL in non-production, so local multi-device testing uses the actual browser origin
+1. the current browser request origin in non-production, preferring `Origin` or forwarded proxy headers before the raw request URL so tunnelled local testing keeps the public host
 2. `NEXT_PUBLIC_SITE_URL` in production
 3. `BETTER_AUTH_URL` as the next production fallback
 
