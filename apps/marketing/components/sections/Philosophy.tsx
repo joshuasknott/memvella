@@ -1,3 +1,5 @@
+import { FadeIn } from "@/components/ui/FadeIn";
+
 const tenets = [
   {
     icon: (
@@ -60,35 +62,39 @@ const tenets = [
 
 export function TrustAndDignity() {
   return (
-    <section id="trust" className="bg-white py-24 lg:py-40">
+    <section id="trust" className="bg-white py-32 lg:py-48">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mb-16 max-w-2xl">
-          <p className="text-base font-extrabold tracking-widest text-slate-600 uppercase">
-            Trust &amp; Dignity
-          </p>
-          <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl text-balance">
-            Built with honesty, for families who need clarity.
-          </h2>
-          <p className="mt-6 text-xl leading-relaxed text-slate-600">
-            We believe the best technology gets out of the way. These are the principles that guide every decision we make.
-          </p>
-        </div>
+        <FadeIn>
+          <div className="mb-20 max-w-3xl">
+            <p className="text-base font-extrabold tracking-widest text-slate-600 uppercase">
+              Trust &amp; Dignity
+            </p>
+            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-5xl text-balance leading-[1.05]">
+              Built with honesty, for families who need clarity.
+            </h2>
+            <p className="mt-6 text-xl leading-relaxed text-slate-600">
+              We believe the best technology gets out of the way. These are the principles that guide every decision we make.
+            </p>
+          </div>
+        </FadeIn>
 
         <div className="grid gap-12 md:grid-cols-3">
-          {tenets.map((tenet) => (
-            <div key={tenet.headline} className="flex flex-col gap-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                {tenet.icon}
+          {tenets.map((tenet, i) => (
+            <FadeIn key={tenet.headline} delay={i * 100}>
+              <div className="flex flex-col gap-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                  {tenet.icon}
+                </div>
+                <div>
+                  <h3 className="font-headline text-xl font-extrabold tracking-tighter text-slate-900 leading-[1.05]">
+                    {tenet.headline}
+                  </h3>
+                  <p className="mt-3 text-base leading-relaxed text-slate-600">
+                    {tenet.body}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-headline text-xl font-extrabold text-slate-900">
-                  {tenet.headline}
-                </h3>
-                <p className="mt-3 text-base leading-relaxed text-slate-600">
-                  {tenet.body}
-                </p>
-              </div>
-            </div>
+            </FadeIn>
           ))}
         </div>
       </div>

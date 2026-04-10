@@ -9,7 +9,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+    <header className="sticky top-0 z-50 bg-white/60 backdrop-blur-2xl border-b border-slate-200/50">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 md:px-8">
         <Link href="/" onClick={() => setOpen(false)} aria-label="Memvella home">
           <BrandLogo />
@@ -27,14 +27,14 @@ export function Header() {
             href="#trust"
             className="text-base font-semibold text-slate-700 transition-colors hover:text-slate-900"
           >
-            Trust & Dignity
+            Trust &amp; Dignity
           </Link>
         </nav>
 
         <div className="hidden md:block">
           <Link
             href="#waitlist"
-            className="inline-flex h-11 items-center justify-center rounded-full bg-purple-800 px-7 text-base font-semibold text-white transition-colors hover:bg-purple-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-purple-800 px-7 text-base font-semibold text-white transition-all duration-300 ease-out hover:bg-purple-900 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-700 focus-visible:ring-offset-2"
           >
             Get Early Access
           </Link>
@@ -54,7 +54,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t border-slate-200 bg-white px-6 py-6 md:hidden">
+        <div className="border-t border-slate-200/50 bg-white/80 backdrop-blur-2xl px-6 py-6 md:hidden">
           <nav className="flex flex-col gap-6">
             <Link
               href="#how-it-works"
@@ -68,7 +68,7 @@ export function Header() {
               className="text-xl font-semibold text-slate-800 hover:text-purple-800"
               onClick={() => setOpen(false)}
             >
-              Trust & Dignity
+              Trust &amp; Dignity
             </Link>
             <Link
               href="#waitlist"
