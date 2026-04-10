@@ -24,10 +24,7 @@ export function MarketingShell({
       <header className="sticky top-0 z-50 border-b border-white/70 bg-[#f7f2fb]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5 md:px-8">
           <Link href="/" className="flex items-center gap-3 text-slate-900">
-            <BrandLogo standalone animated className="h-9 w-auto" />
-            <span className="font-headline text-xl font-extrabold tracking-tight">
-              Memvella
-            </span>
+            <BrandLogo className="h-9 w-auto" />
           </Link>
 
           <nav className="hidden items-center gap-2 md:flex">

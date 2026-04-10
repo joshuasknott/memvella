@@ -42,17 +42,17 @@ export function Footer() {
               </h3>
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
-                  <Link href="#" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
+                  <Link href="/privacy" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
+                  <Link href="/terms" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
+                  <Link href="/contact" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
                     Contact Us
                   </Link>
                 </li>
