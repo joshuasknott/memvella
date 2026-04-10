@@ -4,20 +4,26 @@ const rows = [
   {
     label: "Independent User",
     headline: "Maintain independence with a voice-first companion.",
-    body: "Designed for self-managed seniors. Secure, passwordless entry using Passkeys ensures frustration-free access to daily routines and voice-led memory recall. No caregiver required to get started.",
-    imageAlt: "Independent User interface — voice-led daily routines",
+    body: "Designed for self-managed seniors. Secure, passwordless entry using Passkeys ensures frustration-free access to daily routines and voice-led memory recall. No complex setup required to get started.",
+    lifestyleAlt: "Lifestyle Photo: Senior smiling, at ease at home",
+    uiSnippet: "Got it, saved to today's memory timeline.",
+    uiLabel: "UI Component: Voice confirmation",
     imagePosition: "right" as const,
     imageAspect: "aspect-[4/3]",
     imageWrapper: "w-full",
+    cardCorner: "-bottom-4 -right-4",
   },
   {
     label: "The Family Circle",
-    headline: "Coordinate care without the overhead.",
-    body: "For seniors needing more support, pair a tablet to create a calm, assisted surface. The Family Circle manages routines, memories, and alerts from their own phones—sharing context seamlessly without turning every family member into an administrator.",
-    imageAlt: "Family Circle dashboard — shared care coordination",
+    headline: "Coordinate without the overhead.",
+    body: "For seniors needing more support, pair a tablet to create a calm, assisted surface. The family Circle manages routines, memories, and alerts from their own phones—sharing context without turning everyone into an administrator.",
+    lifestyleAlt: "Lifestyle Photo: Family member checking phone, reassured",
+    uiSnippet: "Dad's Heart Medication — 9:00 AM",
+    uiLabel: "UI Component: Routine reminder card",
     imagePosition: "left" as const,
     imageAspect: "aspect-[9/16] lg:aspect-[3/4]",
     imageWrapper: "max-w-sm lg:max-w-md mx-auto w-full",
+    cardCorner: "-bottom-4 -left-4",
   },
 ];
 
@@ -43,7 +49,7 @@ export function HowItWorks() {
 
         {/* Alternating rows */}
         <div className="flex flex-col gap-24 lg:gap-40">
-          {rows.map((row, i) => (
+          {rows.map((row) => (
             <div
               key={row.label}
               className={`grid items-center gap-16 lg:grid-cols-12 lg:gap-24 xl:gap-32 ${
@@ -63,14 +69,38 @@ export function HowItWorks() {
                 </p>
               </FadeIn>
 
-              {/* Image — dominant column, premium device silhouette */}
+              {/* Composite placeholder — lifestyle base + glass UI card overlay */}
               <FadeIn className={`lg:col-span-7 ${row.imageWrapper}`} delay={200}>
-                <div
-                  className={`${row.imageAspect} w-full rounded-[2.5rem] lg:rounded-[3rem] border-[12px] border-slate-100 bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-400`}
-                  role="img"
-                  aria-label={row.imageAlt}
-                >
-                  <span className="text-sm font-medium">{row.imageAlt}</span>
+                <div className={`${row.imageAspect} relative w-full`}>
+                  {/* Base layer: lifestyle photo placeholder */}
+                  <div
+                    className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
+                    role="img"
+                    aria-label={row.lifestyleAlt}
+                  >
+                    <p className="px-6 text-center text-sm font-medium text-slate-400">
+                      {row.lifestyleAlt}
+                    </p>
+                  </div>
+
+                  {/* Overlay layer: glass UI card */}
+                  <div
+                    className={`absolute ${row.cardCorner} z-10 w-[75%] max-w-sm rounded-2xl border border-white/60 bg-white/80 p-5 shadow-2xl backdrop-blur-2xl`}
+                    aria-label={row.uiLabel}
+                  >
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-purple-500" aria-hidden="true" />
+                      <span className="text-xs font-semibold uppercase tracking-widest text-purple-600">
+                        Memvella
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold leading-snug text-slate-900">
+                      {row.uiSnippet}
+                    </p>
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full w-2/3 rounded-full bg-purple-500" aria-hidden="true" />
+                    </div>
+                  </div>
                 </div>
               </FadeIn>
             </div>
