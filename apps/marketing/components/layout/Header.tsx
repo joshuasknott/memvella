@@ -23,12 +23,7 @@ export function Header() {
           >
             How it Works
           </Link>
-          <Link
-            href="#trust"
-            className="text-base font-semibold text-slate-700 transition-colors hover:text-slate-900"
-          >
-            Trust &amp; Dignity
-          </Link>
+
         </nav>
 
         <div className="hidden md:block">
@@ -63,13 +58,7 @@ export function Header() {
             >
               How it Works
             </Link>
-            <Link
-              href="#trust"
-              className="text-xl font-semibold text-slate-800 hover:text-purple-800"
-              onClick={() => setOpen(false)}
-            >
-              Trust &amp; Dignity
-            </Link>
+
             <Link
               href="#waitlist"
               className="inline-flex h-14 items-center justify-center rounded-full bg-purple-800 px-6 text-xl font-semibold text-white transition-colors hover:bg-purple-900"

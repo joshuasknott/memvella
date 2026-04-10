@@ -24,11 +24,7 @@ export function Footer() {
                     How it Works
                   </Link>
                 </li>
-                <li>
-                  <Link href="#trust" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
-                    Trust & Dignity
-                  </Link>
-                </li>
+
                 <li>
                   <Link href="#waitlist" className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900">
                     Get Early Access

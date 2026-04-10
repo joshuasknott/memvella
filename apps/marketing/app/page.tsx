@@ -2,9 +2,9 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
 import { HowItWorks } from "@/components/sections/HowItWorks";
-import { ScienceOfVoice } from "@/components/sections/ScienceOfVoice";
+import { FeatureGlimpse } from "@/components/sections/FeatureGlimpse";
 import { NoHardwareFlex } from "@/components/sections/NoHardwareFlex";
-import { TrustAndDignity } from "@/components/sections/Philosophy";
+import { OriginStory } from "@/components/sections/OriginStory";
 import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
 
 export default function MarketingHomePage() {
@@ -14,9 +14,10 @@ export default function MarketingHomePage() {
       <main className="flex-1">
         <Hero />
         <HowItWorks />
-        <ScienceOfVoice />
+        <FeatureGlimpse />
+        <WaitlistCTA />
         <NoHardwareFlex />
-        <TrustAndDignity />
+        <OriginStory />
         <WaitlistCTA />
       </main>
       <Footer />

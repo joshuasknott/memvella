@@ -48,16 +48,19 @@ export default function WaitlistForm() {
 
     if (status === 'success') {
         return (
-            <div className="bg-surface-container-high p-6 rounded-[40px] flex items-center justify-center shadow-ambient animate-in fade-in zoom-in duration-500">
-                <p className="text-xl font-bold text-primary">{message}</p>
+            <div className="p-6 rounded-[40px] flex items-center justify-center bg-slate-800 border border-slate-700">
+                <p className="text-xl font-bold text-white text-center">{message}</p>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="relative bg-surface-container-low p-2 rounded-[40px] flex flex-col md:flex-row items-center shadow-ambient transition-all hover:bg-surface-container-high group">
+        <form onSubmit={handleSubmit} className="relative p-2 rounded-[40px] flex flex-col md:flex-row items-center bg-slate-800 border border-slate-700 transition-all hover:border-slate-600 group">
+            <label htmlFor="waitlist-email" className="sr-only">
+                Email address
+            </label>
             <input
-                className="bg-transparent border-none focus:ring-0 px-8 py-6 w-full text-lg placeholder:text-zinc-400 font-medium text-on-surface" 
+                className="bg-transparent border-none focus:ring-0 px-8 py-6 w-full text-lg placeholder:text-slate-500 font-medium text-white" 
                 id="waitlist-email" 
                 placeholder="Enter your email address" 
                 type="email" 
@@ -69,13 +72,15 @@ export default function WaitlistForm() {
             <button 
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full md:w-auto whitespace-nowrap bg-gradient-to-br from-primary-container to-primary text-white font-bold h-[72px] px-12 rounded-full transition-all focus:scale-95 active:scale-95 hover:shadow-xl disabled:opacity-75 disabled:active:scale-100 flex items-center justify-center"
+                className="w-full md:w-auto whitespace-nowrap bg-purple-600 hover:bg-purple-500 text-white font-bold h-[72px] px-12 rounded-full transition-all focus:scale-95 active:scale-95 hover:shadow-xl disabled:opacity-75 disabled:active:scale-100 flex items-center justify-center"
             >
-                {status === 'loading' ? (
-                    <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                    "Request Early Access"
-                )}
+                <div aria-live="polite" aria-atomic="true" className="flex items-center justify-center">
+                    {status === 'loading' ? (
+                        <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" aria-label="Submitting, please wait" role="status" />
+                    ) : (
+                        "Request Early Access"
+                    )}
+                </div>
             </button>
             {status === 'error' && message ? (
                 <p className="w-full px-6 pb-4 pt-1 text-center text-sm font-medium text-red-600 md:absolute md:translate-y-[96px]">

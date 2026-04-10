@@ -19,20 +19,6 @@ export function NoHardwareFlex() {
           </div>
         </FadeIn>
 
-        {/* Device family badges */}
-        <FadeIn delay={100}>
-          <div className="mt-14 flex flex-wrap items-center justify-center gap-3">
-            {["iPad", "iPhone", "Android Tablet", "Android Phone"].map((device) => (
-              <span
-                key={device}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm"
-              >
-                <span className="h-2 w-2 rounded-full bg-purple-400" aria-hidden="true" />
-                {device}
-              </span>
-            ))}
-          </div>
-        </FadeIn>
       </div>
     </section>
   );

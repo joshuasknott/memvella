@@ -8,12 +8,20 @@ export function WaitlistCTA() {
           Be the first to bring Memvella to your family.
         </h2>
         <p className="mx-auto mt-6 text-lg leading-relaxed text-slate-300 md:text-xl max-w-2xl mb-10">
-          We know what you&apos;re carrying. The medication schedules, the repeated questions, the quiet worry that follows you to work and back. Memvella isn&apos;t here to replace your care—it&apos;s a quiet surface to organize it, so you can stop being the project manager and go back to being their son or daughter.
+          We know what caregivers carry. The medication schedules, the repeated questions at 2am, the quiet guilt that follows you everywhere. Memvella isn&apos;t here to replace your love—it&apos;s here to carry the repetitive weight of it, so you can stop being an administrator and go back to being their son, daughter, or partner.
         </p>
 
         <div className="mt-12 text-left">
           <WaitlistForm />
         </div>
+
+        <p className="mt-4 text-sm text-slate-400 text-center">
+          We are currently rolling out private Alpha access to ensure the highest quality experience. We will email you the moment a spot opens for your family.
+        </p>
+
+        <p className="mt-4 text-sm text-slate-500 text-center">
+          Memvella is a digital wellness companion. It is not a medical device, not a diagnostic tool, and not a replacement for professional care.
+        </p>
       </div>
     </section>
   );

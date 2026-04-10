@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const marketingTitle = "Memvella | Voice-First Digital Wellness Companion";
+const marketingTitle = "Memvella | Voice-First Memory Companion";
 const marketingDescription =
-  "Memvella is a voice-first digital wellness companion for Organisers, Members, Tablet Users, and Independent Users.";
+  "Memvella is a voice-first memory companion that helps seniors maintain independence while giving families peace of mind.";
 
 export const metadata: Metadata = {
   title: {
