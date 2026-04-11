@@ -73,21 +73,21 @@ type RedeemIndependentRecoveryCodeResult =
       message: string;
     };
 
-function buildRateLimitMessage(retryAfterMs: number, noun: string) {
+export function buildRateLimitMessage(retryAfterMs: number, noun: string) {
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
   return `Too many ${noun} attempts. Wait ${retryAfterSeconds} seconds before trying again.`;
 }
 
-function normalizeRecoveryCode(value: string) {
+export function normalizeRecoveryCode(value: string) {
   const digits = value.replace(/\D/g, "");
   return digits.length === 12 ? digits : null;
 }
 
-function isActiveDoc(document: { consumedAt: number | null; revokedAt: number | null }) {
+export function isActiveDoc(document: { consumedAt: number | null; revokedAt: number | null }) {
   return document.consumedAt === null && document.revokedAt === null;
 }
 
-function isActiveOnboardingSession(
+export function isActiveOnboardingSession(
   session: Doc<"independentOnboardingSessions">,
   now: number,
 ) {
@@ -96,6 +96,59 @@ function isActiveOnboardingSession(
     session.revokedAt === null &&
     session.expiresAt > now
   );
+}
+
+export function evaluateIndependentPasskeyOwnership(args: {
+  existingPasskey:
+    | Pick<Doc<"independentSeniorPasskeys">, "familySpaceId" | "seniorProfileId">
+    | null;
+  familySpaceId: Id<"familySpaces">;
+  seniorProfileId: Id<"seniorProfiles">;
+}) {
+  if (!args.existingPasskey) {
+    return { status: "create" as const };
+  }
+
+  if (
+    args.existingPasskey.familySpaceId !== args.familySpaceId ||
+    args.existingPasskey.seniorProfileId !== args.seniorProfileId
+  ) {
+    return {
+      status: "collision" as const,
+      message: "This device passkey is already linked to another Circle.",
+    };
+  }
+
+  return { status: "update" as const };
+}
+
+export function evaluateIndependentRecoveryRedemptionState(args: {
+  normalizedCode: string | null;
+  recoveryCode: Pick<Doc<"independentSeniorRecoveryCodes">, "_id"> | null;
+  seniorProfile: Pick<Doc<"seniorProfiles">, "seniorMode"> | null;
+}) {
+  if (!args.normalizedCode) {
+    return {
+      status: "invalid" as const,
+      message: "Enter a valid recovery code.",
+    };
+  }
+
+  if (!args.recoveryCode) {
+    return {
+      status: "invalid" as const,
+      message: "That recovery code is no longer available.",
+    };
+  }
+
+  if (!args.seniorProfile || args.seniorProfile.seniorMode !== "independent") {
+    return {
+      status: "invalid" as const,
+      message: `This ${INDEPENDENT_PROFILE_LABEL.toLowerCase()} could not be found.`,
+    };
+  }
+
+  return { status: "ready" as const };
 }
 
 async function getActiveChallenge(
@@ -258,12 +311,19 @@ async function upsertIndependentPasskey(
     .withIndex("by_credentialId", (query) => query.eq("credentialId", args.credentialId))
     .unique();
 
-  if (existingPasskey) {
-    if (
-      existingPasskey.familySpaceId !== args.familySpaceId ||
-      existingPasskey.seniorProfileId !== args.seniorProfileId
-    ) {
-      throw new Error("This device passkey is already linked to another Circle.");
+  const ownership = evaluateIndependentPasskeyOwnership({
+    existingPasskey,
+    familySpaceId: args.familySpaceId,
+    seniorProfileId: args.seniorProfileId,
+  });
+
+  if (ownership.status === "collision") {
+    throw new Error(ownership.message);
+  }
+
+  if (ownership.status === "update") {
+    if (!existingPasskey) {
+      throw new Error("This device passkey is no longer available.");
     }
 
     await ctx.db.patch(existingPasskey._id, {
@@ -774,10 +834,16 @@ export const redeemIndependentRecoveryCode = mutation({
 
     const normalizedCode = normalizeRecoveryCode(args.recoveryCode);
     if (!normalizedCode) {
-      return {
-        status: "invalid",
-        message: "Enter a valid recovery code.",
-      };
+      const invalidState = evaluateIndependentRecoveryRedemptionState({
+        normalizedCode,
+        recoveryCode: null,
+        seniorProfile: null,
+      });
+      if (invalidState.status === "invalid") {
+        return invalidState;
+      }
+
+      throw new Error("Enter a valid recovery code.");
     }
 
     const recoveryCodeHash = await hashIndependentRecoveryCode(normalizedCode);
@@ -786,20 +852,31 @@ export const redeemIndependentRecoveryCode = mutation({
       .withIndex("by_codeHash", (query) => query.eq("codeHash", recoveryCodeHash))
       .take(10);
     const recoveryCode = matchingCodes.find((code) => isActiveDoc(code));
-
     if (!recoveryCode) {
-      return {
-        status: "invalid",
-        message: "That recovery code is no longer available.",
-      };
+      const invalidState = evaluateIndependentRecoveryRedemptionState({
+        normalizedCode,
+        recoveryCode: null,
+        seniorProfile: null,
+      });
+      if (invalidState.status === "invalid") {
+        return invalidState;
+      }
+
+      throw new Error("That recovery code is no longer available.");
     }
 
     const seniorProfile = await ctx.db.get(recoveryCode.seniorProfileId);
+    const redemptionState = evaluateIndependentRecoveryRedemptionState({
+      normalizedCode,
+      recoveryCode,
+      seniorProfile,
+    });
+    if (redemptionState.status === "invalid") {
+      return redemptionState;
+    }
+
     if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
-      return {
-        status: "invalid",
-        message: `This ${INDEPENDENT_PROFILE_LABEL.toLowerCase()} could not be found.`,
-      };
+      throw new Error(`This ${INDEPENDENT_PROFILE_LABEL.toLowerCase()} could not be found.`);
     }
 
     const membership = await getIndependentMembershipForSeniorProfile(

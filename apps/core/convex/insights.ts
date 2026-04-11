@@ -39,6 +39,39 @@ function truncateValue(value: string, maxLength = 280) {
 
 type CanonicalAwarenessRecord = Doc<"insights"> | Doc<"alerts">;
 
+export function resolveReviewableInsightTarget(args: {
+  membershipId: Id<"familySpaceMemberships">;
+  membershipFamilySpaceId: Id<"familySpaces">;
+  status: "reviewed" | "dismissed";
+  now: number;
+  insight: Pick<Doc<"insights">, "_id" | "familySpaceId"> | null;
+  alert: Pick<Doc<"alerts">, "_id" | "familySpaceId"> | null;
+}) {
+  const patch = {
+    status: args.status,
+    reviewedAt: args.now,
+    reviewedByMembershipId: args.membershipId,
+  };
+
+  if (args.insight && args.insight.familySpaceId === args.membershipFamilySpaceId) {
+    return {
+      table: "insights" as const,
+      id: args.insight._id,
+      patch,
+    };
+  }
+
+  if (args.alert && args.alert.familySpaceId === args.membershipFamilySpaceId) {
+    return {
+      table: "alerts" as const,
+      id: args.alert._id,
+      patch,
+    };
+  }
+
+  return null;
+}
+
 function resolveInsightType(insight: CanonicalAwarenessRecord) {
   if ("insightType" in insight) {
     return insight.insightType;
@@ -182,23 +215,19 @@ export const reviewOrganiserInsight = mutation({
     const canonicalInsight = await ctx.db.get(
       args.insightId as Id<"insights">,
     );
-    if (canonicalInsight && canonicalInsight.familySpaceId === membership.familySpaceId) {
-      await ctx.db.patch(canonicalInsight._id, {
-        status: args.status,
-        reviewedAt: now,
-        reviewedByMembershipId: membership._id,
-      });
-      return canonicalInsight._id;
-    }
-
     const canonicalAlert = await ctx.db.get(args.insightId as Id<"alerts">);
-    if (canonicalAlert && canonicalAlert.familySpaceId === membership.familySpaceId) {
-      await ctx.db.patch(canonicalAlert._id, {
-        status: args.status,
-        reviewedAt: now,
-        reviewedByMembershipId: membership._id,
-      });
-      return canonicalAlert._id;
+    const reviewTarget = resolveReviewableInsightTarget({
+      membershipId: membership._id,
+      membershipFamilySpaceId: membership.familySpaceId,
+      status: args.status,
+      now,
+      insight: canonicalInsight,
+      alert: canonicalAlert,
+    });
+
+    if (reviewTarget) {
+      await ctx.db.patch(reviewTarget.id, reviewTarget.patch);
+      return reviewTarget.id;
     }
 
     throw new Error("This insight is not available in your Circle.");

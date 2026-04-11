@@ -118,6 +118,80 @@ function buildCurrentDeviceLabel(input: string | undefined) {
   return normalizeUserFacingText(normalized) ?? ORGANISER_DEVICE_LABEL;
 }
 
+export function resolveNotificationEnqueueDecision(
+  existingDeliveryId: Id<"notificationDeliveries"> | null,
+) {
+  if (!existingDeliveryId) {
+    return null;
+  }
+
+  return {
+    deliveryId: existingDeliveryId,
+    created: false as const,
+  };
+}
+
+export function buildNotificationDeliveryResultPatches(args: {
+  status: "queued" | "sent" | "failed" | "skipped";
+  now: number;
+  errorMessage?: string;
+  currentFailureCount: number;
+}) {
+  const deliveryPatch = {
+    status: args.status,
+    updatedAt: args.now,
+    dispatchedAt: args.now,
+    lastError: normalizeOptionalText(args.errorMessage) ?? null,
+  };
+
+  if (args.status === "sent") {
+    return {
+      deliveryPatch,
+      subscriptionPatch: {
+        lastDeliveryAt: args.now,
+        lastFailureAt: null,
+        failureCount: 0,
+        updatedAt: args.now,
+      },
+    };
+  }
+
+  if (args.status === "skipped") {
+    return {
+      deliveryPatch,
+      subscriptionPatch: {
+        updatedAt: args.now,
+      },
+    };
+  }
+
+  if (args.status === "failed") {
+    const nextFailureCount = args.currentFailureCount + 1;
+    const shouldRevoke = nextFailureCount >= 5;
+    return {
+      deliveryPatch,
+      subscriptionPatch: {
+        lastFailureAt: args.now,
+        failureCount: nextFailureCount,
+        updatedAt: args.now,
+        ...(shouldRevoke
+          ? {
+              revokedAt: args.now,
+              revokedReason: "push_delivery_failed_repeatedly" as const,
+            }
+          : {}),
+      },
+    };
+  }
+
+  return {
+    deliveryPatch,
+    subscriptionPatch: {
+      updatedAt: args.now,
+    },
+  };
+}
+
 async function listActivePushSubscriptionsForFamilySpace(
   ctx: MutationCtx | QueryCtx,
   familySpaceId: Id<"familySpaces">,
@@ -633,8 +707,9 @@ export const enqueueNotificationDelivery = internalMutation({
       .withIndex("by_dedupeKey", (query) => query.eq("dedupeKey", args.dedupeKey))
       .unique();
 
-    if (existing) {
-      return { deliveryId: existing._id, created: false as const };
+    const dedupeDecision = resolveNotificationEnqueueDecision(existing?._id ?? null);
+    if (dedupeDecision) {
+      return dedupeDecision;
     }
 
     const now = Date.now();
@@ -722,48 +797,21 @@ export const markNotificationDeliveryResult = internalMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    await ctx.db.patch(args.deliveryId, {
+    const subscription = await ctx.db.get(args.pushSubscriptionId);
+    const patches = buildNotificationDeliveryResultPatches({
       status: args.status,
-      updatedAt: now,
-      dispatchedAt: now,
-      lastError: normalizeOptionalText(args.errorMessage) ?? null,
+      now,
+      errorMessage: args.errorMessage,
+      currentFailureCount: subscription?.failureCount ?? 0,
     });
 
-    const subscription = await ctx.db.get(args.pushSubscriptionId);
+    await ctx.db.patch(args.deliveryId, patches.deliveryPatch);
+
     if (!subscription) {
       return args.deliveryId;
     }
 
-    if (args.status === "sent") {
-      await ctx.db.patch(subscription._id, {
-        lastDeliveryAt: now,
-        lastFailureAt: null,
-        failureCount: 0,
-        updatedAt: now,
-      });
-      return args.deliveryId;
-    }
-
-    if (args.status === "skipped") {
-      await ctx.db.patch(subscription._id, {
-        updatedAt: now,
-      });
-      return args.deliveryId;
-    }
-
-    const nextFailureCount = subscription.failureCount + 1;
-    const shouldRevoke = nextFailureCount >= 5;
-    await ctx.db.patch(subscription._id, {
-      lastFailureAt: now,
-      failureCount: nextFailureCount,
-      updatedAt: now,
-      ...(shouldRevoke
-        ? {
-            revokedAt: now,
-            revokedReason: "push_delivery_failed_repeatedly",
-          }
-        : {}),
-    });
+    await ctx.db.patch(subscription._id, patches.subscriptionPatch);
 
     return args.deliveryId;
   },

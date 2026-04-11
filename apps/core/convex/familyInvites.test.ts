@@ -32,15 +32,27 @@ function makeMembership(
 }
 
 describe("family invite messaging", () => {
-  it("returns deterministic messages for terminal invite states", () => {
+  it("returns deterministic preview and redeem messages for every terminal invite state", () => {
     expect(getInviteLookupMessage("invalid_code", "preview")).toBe(
+      "We couldn't find that Circle. Please double-check the code and try again.",
+    );
+    expect(getInviteLookupMessage("invalid_code", "redeem")).toBe(
       "We couldn't find that Circle. Please double-check the code and try again.",
     );
     expect(getInviteLookupMessage("expired", "preview")).toBe(
       "This Circle code has expired. Ask for a new one.",
     );
+    expect(getInviteLookupMessage("expired", "redeem")).toBe(
+      "This invite code has expired. Ask for a new one.",
+    );
+    expect(getInviteLookupMessage("revoked", "preview")).toBe(
+      "This Circle code is no longer active. Ask for a new one.",
+    );
     expect(getInviteLookupMessage("revoked", "redeem")).toBe(
       "This invite code is no longer active. Ask for a new one.",
+    );
+    expect(getInviteLookupMessage("already_used", "preview")).toBe(
+      "This Circle code has already been used. Ask for a new one.",
     );
     expect(getInviteLookupMessage("already_used", "redeem")).toBe(
       "This invite code has already been used. Ask for a new one.",

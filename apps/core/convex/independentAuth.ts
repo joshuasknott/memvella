@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import {
   getMembershipByAuthIdentityToken,
@@ -49,6 +49,42 @@ type FinalizePhoneNumberSignInResult =
       status: "role_collision";
       message: string;
     };
+
+export function evaluatePasskeyAuthenticationCandidate(args: {
+  activeChallenge: Pick<Doc<"seniorAuthChallenges">, "challenge"> | null;
+  requestedChallenge: string;
+  passkey:
+    | Pick<Doc<"independentSeniorPasskeys">, "revokedAt" | "seniorProfileId" | "familySpaceId">
+    | null;
+  seniorProfileId: Id<"seniorProfiles">;
+  familySpaceId: Id<"familySpaces">;
+}) {
+  if (!args.activeChallenge || args.activeChallenge.challenge !== args.requestedChallenge) {
+    return {
+      status: "invalid" as const,
+      message: "The passkey sign-in challenge is no longer valid.",
+    };
+  }
+
+  if (!args.passkey || args.passkey.revokedAt !== null) {
+    return {
+      status: "invalid" as const,
+      message: "That passkey is no longer available.",
+    };
+  }
+
+  if (
+    args.passkey.seniorProfileId !== args.seniorProfileId ||
+    args.passkey.familySpaceId !== args.familySpaceId
+  ) {
+    return {
+      status: "invalid" as const,
+      message: "That passkey is not linked to this Circle.",
+    };
+  }
+
+  return { status: "ready" as const };
+}
 
 async function getActiveChallenge(
   ctx: QueryCtx | MutationCtx,
@@ -515,15 +551,19 @@ export const completePasskeyAuthentication = mutation({
       )
       .unique();
 
-    if (!passkey || passkey.revokedAt !== null) {
-      throw new Error("That passkey is no longer available.");
+    const candidateState = evaluatePasskeyAuthenticationCandidate({
+      activeChallenge,
+      requestedChallenge: args.challenge,
+      passkey,
+      seniorProfileId: seniorProfile._id,
+      familySpaceId: seniorProfile.familySpaceId,
+    });
+    if (candidateState.status === "invalid") {
+      throw new Error(candidateState.message);
     }
 
-    if (
-      passkey.seniorProfileId !== seniorProfile._id ||
-      passkey.familySpaceId !== seniorProfile.familySpaceId
-    ) {
-      throw new Error("That passkey is not linked to this Circle.");
+    if (!passkey) {
+      throw new Error("That passkey is no longer available.");
     }
 
     await ctx.db.patch(activeChallenge._id, {
