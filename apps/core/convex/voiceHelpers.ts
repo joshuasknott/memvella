@@ -4,8 +4,8 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { summarizeMemory } from "./memoryHelpers";
 import {
-  listRoutineSchedulesForFamilySpace,
-  resolveFamilySpaceTimeZone,
+  listRoutineSchedulesForCircle,
+  resolveCircleRuntimeDetails,
 } from "./routineHelpers";
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
@@ -73,9 +73,9 @@ export const gatherSeniorContext = internalQuery({
       Math.max(args.recentInteractionLimit ?? 5, 3),
       5,
     );
-    const [routines, familyMembers, recentMemories, recentVoiceInteractions, timeZone, familySpace, seniorProfile] =
+    const [routines, people, recentMemories, recentVoiceInteractions, circleDetails, seniorProfile] =
       await Promise.all([
-        listRoutineSchedulesForFamilySpace(ctx, args.familySpaceId, 6),
+        listRoutineSchedulesForCircle(ctx, args.familySpaceId, 6),
         listPeopleForFamilySpace(ctx, args.familySpaceId, 8),
         ctx.db
           .query("memoryRecords")
@@ -91,8 +91,7 @@ export const gatherSeniorContext = internalQuery({
           )
           .order("desc")
           .take(recentInteractionLimit),
-        resolveFamilySpaceTimeZone(ctx, args.familySpaceId),
-        ctx.db.get(args.familySpaceId),
+        resolveCircleRuntimeDetails(ctx, args.familySpaceId),
         ctx.db.get(args.seniorProfileId),
       ]);
 
@@ -105,10 +104,12 @@ export const gatherSeniorContext = internalQuery({
     }
 
     return {
+      circleName: circleDetails.circleName,
       familySpaceName:
-        normalizeUserFacingText(familySpace?.displayName) ?? "Circle",
-      timeZone,
-      locale: familySpace?.locale ?? "en-US",
+        normalizeUserFacingText(circleDetails.familySpace?.displayName) ??
+        circleDetails.circleName,
+      timeZone: circleDetails.timeZone,
+      locale: circleDetails.locale,
       routines: routines.map((routine) => ({
         title: routine.title,
         time: routine.time,
@@ -117,7 +118,13 @@ export const gatherSeniorContext = internalQuery({
         startDate: routine.startDate,
         endDate: routine.endDate,
       })),
-      familyMembers: familyMembers.map((member) => ({
+      people: people.map((person) => ({
+        name: person.name,
+        relationship: person.relationship,
+        isLiving: person.isLiving,
+        aiContext: truncatePromptField(person.aiContext, 96) ?? "",
+      })),
+      familyMembers: people.map((member) => ({
         name: member.name,
         relationship: member.relationship,
         isLiving: member.isLiving,
@@ -150,16 +157,15 @@ export const getSeniorLocaleContext = internalQuery({
     familySpaceId: v.id("familySpaces"),
   },
   handler: async (ctx, args) => {
-    const [timeZone, familySpace] = await Promise.all([
-      resolveFamilySpaceTimeZone(ctx, args.familySpaceId),
-      ctx.db.get(args.familySpaceId),
-    ]);
+    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.familySpaceId);
 
     return {
+      circleName: circleDetails.circleName,
       familySpaceName:
-        normalizeUserFacingText(familySpace?.displayName) ?? "Circle",
-      timeZone,
-      locale: familySpace?.locale ?? "en-US",
+        normalizeUserFacingText(circleDetails.familySpace?.displayName) ??
+        circleDetails.circleName,
+      timeZone: circleDetails.timeZone,
+      locale: circleDetails.locale,
     };
   },
 });

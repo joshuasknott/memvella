@@ -4,6 +4,7 @@ import {
   assertFamilySideCapability,
   familySideRoleHasCapability,
   isFamilySideRole,
+  pickDeterministicCircleMembership,
   pickDeterministicMembership,
   normalizeFamilySideMembershipRole,
 } from "./familySpaceAuth";
@@ -16,6 +17,25 @@ function makeMembership(
     _id: id as Id<"familySpaceMemberships">,
     _creationTime: creationTime,
     familySpaceId: "family-1" as Id<"familySpaces">,
+    authIdentityToken: "token",
+    authEmail: null,
+    displayName: id,
+    role: "member",
+    seniorProfileId: null,
+    onboardingStep: undefined,
+    lastSeenAt: undefined,
+  };
+}
+
+function makeCircleMembership(
+  id: string,
+  creationTime: number,
+): Doc<"circleMemberships"> {
+  return {
+    _id: id as Id<"circleMemberships">,
+    _creationTime: creationTime,
+    circleId: "circle-1" as Id<"circles">,
+    legacyFamilySpaceMembershipId: "membership-1" as Id<"familySpaceMemberships">,
     authIdentityToken: "token",
     authEmail: null,
     displayName: id,
@@ -84,5 +104,14 @@ describe("family-side capabilities", () => {
     ]);
 
     expect(result?._id).toBe("membership-a");
+  });
+
+  it("deterministically picks one circle membership when duplicates exist", () => {
+    const result = pickDeterministicCircleMembership([
+      makeCircleMembership("circle-membership-z", 10),
+      makeCircleMembership("circle-membership-a", 10),
+    ]);
+
+    expect(result?._id).toBe("circle-membership-a");
   });
 });

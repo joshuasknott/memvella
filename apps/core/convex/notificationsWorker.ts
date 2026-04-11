@@ -7,6 +7,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 
 type ActivePushSubscription = {
+  circleId: Id<"circles"> | null;
   pushSubscriptionId: Id<"pushSubscriptions">;
   membershipId: Id<"familySpaceMemberships">;
   endpoint: string;
@@ -54,19 +55,23 @@ function getDeliveryErrorMessage(error: unknown) {
 
 async function getActiveSubscriptionsForFamilySpace(
   ctx: ActionCtx,
-  familySpaceId: Id<"familySpaces">,
-  cache: Map<Id<"familySpaces">, ActivePushSubscription[]>,
+  args: {
+    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles"> | null;
+  },
+  cache: Map<string, ActivePushSubscription[]>,
 ) {
-  const cached = cache.get(familySpaceId);
+  const cacheKey = args.circleId ?? args.familySpaceId;
+  const cached = cache.get(cacheKey);
   if (cached) {
     return cached;
   }
 
   const subscriptions = (await ctx.runQuery(
     internal.notifications.listActivePushSubscriptions,
-    { familySpaceId },
+    { familySpaceId: args.familySpaceId },
   )) as ActivePushSubscription[];
-  cache.set(familySpaceId, subscriptions);
+  cache.set(cacheKey, subscriptions);
   return subscriptions;
 }
 
@@ -152,6 +157,7 @@ export const sweepRoutineReminderNotifications = internalAction({
       {},
     )) as Array<{
       occurrenceId: Id<"routineOccurrences">;
+      circleId: Id<"circles"> | null;
       familySpaceId: Id<"familySpaces">;
       title: string;
       timeLabel: string;
@@ -159,17 +165,17 @@ export const sweepRoutineReminderNotifications = internalAction({
       minutesUntil: number;
     }>;
 
-    const subscriptionsByFamilySpaceId = new Map<
-      Id<"familySpaces">,
-      ActivePushSubscription[]
-    >();
+    const subscriptionsByCircleId = new Map<string, ActivePushSubscription[]>();
     let queued = 0;
 
     for (const candidate of candidates) {
       const subscriptions = await getActiveSubscriptionsForFamilySpace(
         ctx,
-        candidate.familySpaceId,
-        subscriptionsByFamilySpaceId,
+        {
+          familySpaceId: candidate.familySpaceId,
+          circleId: candidate.circleId,
+        },
+        subscriptionsByCircleId,
       );
 
       for (const subscription of subscriptions) {
@@ -211,23 +217,24 @@ export const sweepDailySummaryNotifications = internalAction({
       internal.notifications.listDailySummaryCandidates,
       {},
     )) as Array<{
+      circleId: Id<"circles"> | null;
       familySpaceId: Id<"familySpaces">;
       summaryDateKey: string;
       scheduledFor: number;
     }>;
 
-    const subscriptionsByFamilySpaceId = new Map<
-      Id<"familySpaces">,
-      ActivePushSubscription[]
-    >();
+    const subscriptionsByCircleId = new Map<string, ActivePushSubscription[]>();
     let queued = 0;
 
     for (const candidate of candidates) {
       const [subscriptions, payload] = await Promise.all([
         getActiveSubscriptionsForFamilySpace(
           ctx,
-          candidate.familySpaceId,
-          subscriptionsByFamilySpaceId,
+          {
+            familySpaceId: candidate.familySpaceId,
+            circleId: candidate.circleId,
+          },
+          subscriptionsByCircleId,
         ),
         ctx.runQuery(internal.notifications.getDailySummaryDigestPayload, {
           familySpaceId: candidate.familySpaceId,

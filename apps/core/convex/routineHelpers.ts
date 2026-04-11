@@ -1,5 +1,7 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { getCircleByLegacyFamilySpaceId } from "./circleCompat";
+import { normalizeUserFacingText } from "./terminology";
 
 type DbCtx = MutationCtx | QueryCtx;
 
@@ -33,6 +35,14 @@ export type ScheduledRoutineOccurrence = {
 type TimeZoneClock = {
   currentMinutes: number;
   dateKey: string;
+};
+
+export type CircleRuntimeDetails = {
+  circle: Doc<"circles"> | null;
+  familySpace: Doc<"familySpaces"> | null;
+  circleName: string;
+  timeZone: string;
+  locale: string;
 };
 
 function getFormatter(timeZone: string) {
@@ -194,13 +204,25 @@ function buildStructuredTimelineItem(
   };
 }
 
-export async function resolveFamilySpaceTimeZone(
+export async function resolveCircleRuntimeDetails(
   ctx: DbCtx,
   familySpaceId: Id<"familySpaces">,
 ) {
-  const familySpace = await ctx.db.get(familySpaceId);
-  if (familySpace?.timezone) {
-    return familySpace.timezone;
+  const [circle, familySpace] = await Promise.all([
+    getCircleByLegacyFamilySpaceId(ctx, familySpaceId),
+    ctx.db.get(familySpaceId),
+  ]);
+
+  if (circle?.timezone || familySpace?.timezone) {
+    return {
+      circle,
+      familySpace,
+      circleName:
+        normalizeUserFacingText(circle?.displayName ?? familySpace?.displayName) ??
+        "Circle",
+      timeZone: circle?.timezone ?? familySpace?.timezone ?? "UTC",
+      locale: circle?.locale ?? familySpace?.locale ?? "en-US",
+    } satisfies CircleRuntimeDetails;
   }
 
   const activeSchedule = await ctx.db
@@ -210,7 +232,30 @@ export async function resolveFamilySpaceTimeZone(
     )
     .first();
 
-  return activeSchedule?.timezone ?? "UTC";
+  return {
+    circle,
+    familySpace,
+    circleName:
+      normalizeUserFacingText(circle?.displayName ?? familySpace?.displayName) ??
+      "Circle",
+    timeZone: activeSchedule?.timezone ?? "UTC",
+    locale: circle?.locale ?? familySpace?.locale ?? "en-US",
+  } satisfies CircleRuntimeDetails;
+}
+
+export async function resolveCircleTimeZone(
+  ctx: DbCtx,
+  familySpaceId: Id<"familySpaces">,
+) {
+  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
+  return details.timeZone;
+}
+
+export async function resolveFamilySpaceTimeZone(
+  ctx: DbCtx,
+  familySpaceId: Id<"familySpaces">,
+) {
+  return await resolveCircleTimeZone(ctx, familySpaceId);
 }
 
 export async function replaceRoutineOccurrences(
@@ -282,16 +327,16 @@ export async function replaceRoutineOccurrences(
   return createdOccurrences;
 }
 
-export async function listTodayTimelineForFamilySpace(
+export async function listTodayTimelineForCircle(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
 ) {
-  const familySpace = await ctx.db.get(familySpaceId);
-  if (!familySpace) {
+  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
+  if (!details.familySpace && !details.circle) {
     return [] as RoutineTimelineItem[];
   }
 
-  const timeZone = await resolveFamilySpaceTimeZone(ctx, familySpaceId);
+  const timeZone = details.timeZone;
   const { dateKey } = getTimeZoneClock(new Date(), timeZone);
   const occurrences = await ctx.db
     .query("routineOccurrences")
@@ -326,16 +371,23 @@ export async function listTodayTimelineForFamilySpace(
     .filter((item): item is RoutineTimelineItem => item !== null);
 }
 
-export async function getNextRoutineEventForFamilySpace(
+export async function listTodayTimelineForFamilySpace(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
 ) {
-  const familySpace = await ctx.db.get(familySpaceId);
-  if (!familySpace) {
+  return await listTodayTimelineForCircle(ctx, familySpaceId);
+}
+
+export async function getNextRoutineEventForCircle(
+  ctx: QueryCtx,
+  familySpaceId: Id<"familySpaces">,
+) {
+  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
+  if (!details.familySpace && !details.circle) {
     return null;
   }
 
-  const timeZone = await resolveFamilySpaceTimeZone(ctx, familySpaceId);
+  const timeZone = details.timeZone;
   const clock = getTimeZoneClock(new Date(), timeZone);
   const occurrences = await ctx.db
     .query("routineOccurrences")
@@ -379,7 +431,14 @@ export async function getNextRoutineEventForFamilySpace(
   return null;
 }
 
-export async function listRoutineSchedulesForFamilySpace(
+export async function getNextRoutineEventForFamilySpace(
+  ctx: QueryCtx,
+  familySpaceId: Id<"familySpaces">,
+) {
+  return await getNextRoutineEventForCircle(ctx, familySpaceId);
+}
+
+export async function listRoutineSchedulesForCircle(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
   limit = 100,
@@ -406,4 +465,12 @@ export async function listRoutineSchedulesForFamilySpace(
     endDate: schedule.endDate ?? null,
     lastEditedAt: schedule.lastEditedAt,
   }));
+}
+
+export async function listRoutineSchedulesForFamilySpace(
+  ctx: QueryCtx,
+  familySpaceId: Id<"familySpaces">,
+  limit = 100,
+) {
+  return await listRoutineSchedulesForCircle(ctx, familySpaceId, limit);
 }
