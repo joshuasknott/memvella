@@ -9,7 +9,7 @@ import {
 
 type DbCtx = MutationCtx | QueryCtx;
 
-type StoredFamilySideMembershipRole = "supporter" | "organiser" | "member";
+type StoredFamilySideMembershipRole = "organiser" | "member";
 
 export type FamilySideMembershipRole = "organiser" | "member";
 export type MembershipRole = StoredFamilySideMembershipRole | "independent_senior";
@@ -27,7 +27,6 @@ export function normalizeFamilySideMembershipRole(
   role: MembershipRole,
 ): FamilySideMembershipRole | null {
   switch (role) {
-    case "supporter":
     case "organiser":
       return "organiser";
     case "member":

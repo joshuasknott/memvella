@@ -6,16 +6,14 @@ import {
 } from "./familySpaceAuth";
 
 describe("family-side capabilities", () => {
-  it("normalizes legacy supporter rows to organiser", () => {
+  it("normalizes family-side roles", () => {
     expect(normalizeFamilySideMembershipRole("organiser")).toBe("organiser");
-    expect(normalizeFamilySideMembershipRole("supporter")).toBe("organiser");
     expect(normalizeFamilySideMembershipRole("member")).toBe("member");
     expect(normalizeFamilySideMembershipRole("independent_senior")).toBe(null);
   });
 
-  it("still recognizes legacy supporter rows as family-side accounts during migration", () => {
+  it("recognizes organiser/member as family-side accounts", () => {
     expect(isFamilySideRole("organiser")).toBe(true);
-    expect(isFamilySideRole("supporter")).toBe(true);
     expect(isFamilySideRole("member")).toBe(true);
     expect(isFamilySideRole("independent_senior")).toBe(false);
   });

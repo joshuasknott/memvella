@@ -15,7 +15,6 @@ import type * as circleCompat from "../circleCompat.js";
 import type * as circleMigrations from "../circleMigrations.js";
 import type * as crons from "../crons.js";
 import type * as familyInvites from "../familyInvites.js";
-import type * as familyMembershipMigrations from "../familyMembershipMigrations.js";
 import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
 import type * as independentAccess from "../independentAccess.js";
@@ -60,7 +59,6 @@ declare const fullApi: ApiFromModules<{
   circleMigrations: typeof circleMigrations;
   crons: typeof crons;
   familyInvites: typeof familyInvites;
-  familyMembershipMigrations: typeof familyMembershipMigrations;
   familySpaceAuth: typeof familySpaceAuth;
   http: typeof http;
   independentAccess: typeof independentAccess;

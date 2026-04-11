@@ -7,7 +7,6 @@ function mapLegacyMembershipRoleToCircleRole(
   role: Doc<"familySpaceMemberships">["role"],
 ): Doc<"circleMemberships">["role"] | null {
   switch (role) {
-    case "supporter":
     case "organiser":
       return "organiser";
     case "member":
