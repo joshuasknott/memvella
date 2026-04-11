@@ -23,13 +23,13 @@ export function OriginStory() {
         <FadeIn delay={200}>
           <div className="mt-12 space-y-6 text-left">
             <p className="text-xl leading-relaxed text-slate-700">
-              When my grandmother was diagnosed with dementia, my mother became her full-time caregiver—answering the same questions on a loop, managing medications, carrying a weight that never let up. She wasn&apos;t just tired; she was drowning in logistics.
+              When my grandmother was diagnosed with dementia, my mother became her full-time caregiver. She answered the same questions on a loop, managed medications, and carried a weight that never let up. She wasn&apos;t just tired; she was drowning in logistics.
             </p>
             <p className="text-xl leading-relaxed text-slate-700">
-              And then there was the rest of the family. Siblings needed constant updates. Group chats ran endlessly. Every day she became the liaison—relaying what the doctor said, what Nan ate, how the night went—on top of everything else she was already doing.
+              And then there was the rest of the family. Siblings needed constant updates. Group chats ran endlessly. Every day she became the liaison, relaying what the doctor said, what Nan ate, and how the night went on top of everything else she was already doing.
             </p>
             <p className="text-xl leading-relaxed text-slate-700">
-              I built Memvella to carry that repetitive weight, and Circles to solve the communication overhead—automatically keeping the whole family on the same page so no one has to be the go-between.
+              I built Memvella to carry that repetitive weight, and Circles to solve the communication overhead. It automatically keeps the whole family on the same page so no one has to be the go-between.
             </p>
           </div>
         </FadeIn>

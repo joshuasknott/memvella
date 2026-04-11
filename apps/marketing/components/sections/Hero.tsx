@@ -17,7 +17,7 @@ export function Hero() {
 
             <FadeIn delay={100}>
               <p className="mt-8 text-xl leading-relaxed text-slate-600 max-w-lg">
-                Your parent gets a kind, familiar voice to lean on throughout their day. You get to stop managing every detail and go back to being their family.
+                Your loved one gets a kind, familiar voice to lean on throughout their day. You get to stop managing every detail and go back to being family.
               </p>
             </FadeIn>
 

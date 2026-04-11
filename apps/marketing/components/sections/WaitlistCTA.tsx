@@ -8,7 +8,7 @@ export function WaitlistCTA() {
           Be the first to bring Memvella to your family.
         </h2>
         <p className="mx-auto mt-6 text-lg leading-relaxed text-slate-300 md:text-xl max-w-2xl mb-10">
-          We know what caregivers carry. The medication schedules, the repeated questions at 2am, the quiet guilt that follows you everywhere. Memvella isn&apos;t here to replace your love—it&apos;s here to carry the repetitive weight of it, so you can stop being an administrator and go back to being their son, daughter, or partner.
+          We know what caregivers carry. The medication schedules, the repeated questions at 2am, the quiet guilt that follows you everywhere. Memvella isn&apos;t here to replace your love. It&apos;s here to carry the repetitive weight of it, so you can stop being an administrator and go back to being their son, daughter, or partner.
         </p>
 
         <div className="mt-12 text-left">

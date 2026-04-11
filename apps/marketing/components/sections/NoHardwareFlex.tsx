@@ -14,7 +14,7 @@ export function NoHardwareFlex() {
               <span className="text-purple-800">Nothing new to learn.</span>
             </h2>
             <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed text-slate-600">
-              Memvella runs on the iPads, tablets, and smartphones your family already owns. Pair a device, send an invite to your Circle, and it&apos;s ready in minutes—no instruction manual, no IT degree, no extra trip to the electronics store.
+              Memvella runs on the iPads, tablets, and smartphones your family already owns. Pair a device, send an invite to your Circle, and it&apos;s ready in minutes. No instruction manual, no IT degree, no extra trip to the electronics store.
             </p>
           </div>
         </FadeIn>

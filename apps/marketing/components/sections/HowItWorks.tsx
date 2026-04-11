@@ -5,7 +5,7 @@ const cards = [
     label: "For Your Loved One",
     headline: "Their day, their voice, their pace.",
     bullets: [
-      "Just say \"good morning\" — no screens, no menus, no learning curve.",
+      "Just say \"good morning\". No screens, no menus, no learning curve.",
       "Routines, reminders, and familiar stories delivered through calm conversation.",
       "Works the same way every single day. No surprises, no confusion.",
     ],

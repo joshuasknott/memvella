@@ -4,17 +4,17 @@ const rows = [
   {
     imagePosition: "left" as const,
     headline: "They just talk. Memvella handles the rest.",
-    body: "No apps to open, no buttons to find. Your parent speaks naturally and Memvella responds — guiding them through their day with the patience and warmth of a familiar voice.",
+    body: "No apps to open, no buttons to find. Your loved one speaks naturally and Memvella responds, guiding them through their day with the patience and warmth of a familiar voice.",
   },
   {
     imagePosition: "right" as const,
     headline: "No more worrying if Mum took her morning pill.",
-    body: "Gentle medication reminders, morning check-ins, and daily rhythms — set once by you, delivered through calm conversation to them. Consistent structure without the friction.",
+    body: "Gentle medication reminders, morning check-ins, and daily rhythms are set once by you and delivered through calm conversation to them. Consistent structure without the friction.",
   },
   {
     imagePosition: "left" as const,
     headline: "Filled with the stories only your family knows.",
-    body: "Upload wedding photos, a grandchild’s voice note, Dad’s favourite song. Memvella weaves them into conversations — so your parent hears their own life, not a stranger’s script.",
+    body: "Upload wedding photos, a grandchild’s voice note, Dad’s favourite song. Memvella weaves them into conversations so they hear their own life, not a stranger’s script.",
   },
 ];
 

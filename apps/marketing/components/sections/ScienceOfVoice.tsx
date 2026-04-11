@@ -3,7 +3,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 const pillars = [
   {
     title: "Zero Cognitive Friction",
-    body: "No passwords to remember. No menus to decipher. No tiny keyboards to fumble with. Voice removes the barriers that make everyday technology feel like a test—so the person using it can focus on their day, not the device.",
+    body: "No passwords to remember. No menus to decipher. No tiny keyboards to fumble with. Voice removes the barriers that make everyday technology feel like a test. The person using it can focus on their day, not the device.",
     icon: (
       // Brain — mental clarity
       <svg
@@ -23,7 +23,7 @@ const pillars = [
   },
   {
     title: "Preserved Dignity",
-    body: "When someone can still manage their own morning routine, set their own reminders, and tell their own stories, they stay connected to who they are. Memvella keeps those independent rhythms intact—because autonomy isn't a feature, it's the whole point.",
+    body: "When someone can still manage their own morning routine, set their own reminders, and tell their own stories, they stay connected to who they are. Memvella keeps those independent rhythms intact. Autonomy isn't a feature; it's the whole point.",
     icon: (
       // Heart — individual care and autonomy
       <svg
@@ -42,7 +42,7 @@ const pillars = [
   },
   {
     title: "Family Peace of Mind",
-    body: "Everyone in the Circle sees the same context—routines, updates, moments worth remembering—without a single group text. Less second-guessing, fewer frantic calls, and more room to just be family again.",
+    body: "Everyone in the Circle shares the same context, seeing routines, updates, and moments worth remembering without a single group text. Less second-guessing, fewer frantic calls, and more room to just be family again.",
     icon: (
       // Users — the family Circle
       <svg
@@ -77,7 +77,7 @@ export function ScienceOfVoice() {
               The most natural interface is the one they already know.
             </h2>
             <p className="mt-6 text-xl leading-relaxed text-slate-600">
-              Voice isn&apos;t a novelty—it&apos;s how humans have communicated for millennia. Memvella is built on that instinct.
+              Voice isn&apos;t a novelty. It&apos;s how humans have communicated for millennia. Memvella is built on that instinct.
             </p>
           </div>
         </FadeIn>
