@@ -7,6 +7,7 @@ import {
 } from "./familySpaceAuth";
 import { normalizeOptionalText } from "./security";
 import { buildCircleName } from "./terminology";
+import { patchCircleFromFamilySpace } from "./circleCompat";
 
 export const processOnboardingAction = internalMutation({
   args: {
@@ -62,6 +63,9 @@ export const processOnboardingAction = internalMutation({
                   : membership.seniorProfileId,
             });
             await ctx.db.patch(membership.familySpaceId, {
+              displayName: buildCircleName(seniorDisplayName),
+            });
+            await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
               displayName: buildCircleName(seniorDisplayName),
             });
           }

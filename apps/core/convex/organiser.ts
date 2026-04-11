@@ -35,6 +35,11 @@ import {
   ORGANISER_LABEL,
   TABLET_PROFILE_LABEL,
 } from "./terminology";
+import {
+  ensureCircleForFamilySpace,
+  ensureCircleMembershipForLegacyMembership,
+  patchCircleFromFamilySpace,
+} from "./circleCompat";
 
 const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 
@@ -258,6 +263,7 @@ export const createOrganiserProfile = mutation({
         onboardingStep: args.onboardingStep,
         lastSeenAt: Date.now(),
       });
+      await ensureCircleMembershipForLegacyMembership(ctx, existingMembership._id);
 
       if (seniorDisplayName) {
         if (seniorMode === "independent") {
@@ -283,6 +289,9 @@ export const createOrganiserProfile = mutation({
         await ctx.db.patch(existingMembership.familySpaceId, {
           displayName: buildCircleName(seniorDisplayName),
         });
+        await patchCircleFromFamilySpace(ctx, existingMembership.familySpaceId, {
+          displayName: buildCircleName(seniorDisplayName),
+        });
       }
 
       return existingMembership._id;
@@ -295,6 +304,8 @@ export const createOrganiserProfile = mutation({
       timezone: undefined,
       locale: undefined,
     });
+
+    const circle = await ensureCircleForFamilySpace(ctx, familySpaceId);
 
     let linkedSeniorProfileId: Id<"seniorProfiles"> | null = null;
     if (seniorDisplayName) {
@@ -312,7 +323,7 @@ export const createOrganiserProfile = mutation({
       linkedSeniorProfileId = seniorProfile?._id ?? null;
     }
 
-    return await ctx.db.insert("familySpaceMemberships", {
+    const legacyMembershipId = await ctx.db.insert("familySpaceMemberships", {
       familySpaceId,
       authIdentityToken,
       authEmail,
@@ -322,6 +333,20 @@ export const createOrganiserProfile = mutation({
       onboardingStep: args.onboardingStep,
       lastSeenAt: Date.now(),
     });
+
+    await ctx.db.insert("circleMemberships", {
+      circleId: circle._id,
+      legacyFamilySpaceMembershipId: legacyMembershipId,
+      authIdentityToken,
+      authEmail,
+      displayName: organiserName,
+      role: "organiser",
+      seniorProfileId: linkedSeniorProfileId,
+      onboardingStep: args.onboardingStep,
+      lastSeenAt: Date.now(),
+    });
+
+    return legacyMembershipId;
   },
 });
 
@@ -371,6 +396,9 @@ export const patchOrganiserProfile = mutation({
       }
 
       await ctx.db.patch(membership.familySpaceId, {
+        displayName: buildCircleName(seniorDisplayName),
+      });
+      await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
         displayName: buildCircleName(seniorDisplayName),
       });
     }

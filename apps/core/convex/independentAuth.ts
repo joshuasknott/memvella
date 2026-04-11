@@ -28,6 +28,11 @@ import {
   MEMBER_LABEL,
   normalizeUserFacingText,
 } from "./terminology";
+import {
+  ensureCircleForFamilySpace,
+  ensureCircleMembershipForLegacyMembership,
+  patchCircleFromFamilySpace,
+} from "./circleCompat";
 import { isValidE164PhoneNumber } from "../lib/phone-number";
 
 type ChallengePurpose = "passkey_registration" | "passkey_authentication";
@@ -181,12 +186,16 @@ export const finalizePhoneNumberSignIn = mutation({
       await ctx.db.patch(familySpaceId, {
         displayName: buildCircleName(normalizedDisplayName),
       });
+      await patchCircleFromFamilySpace(ctx, familySpaceId, {
+        displayName: buildCircleName(normalizedDisplayName),
+      });
     } else {
       familySpaceId = await ctx.db.insert("familySpaces", {
         displayName: buildCircleName(normalizedDisplayName),
         timezone: undefined,
         locale: undefined,
       });
+      await ensureCircleForFamilySpace(ctx, familySpaceId);
 
       const seniorProfile = await upsertIndependentSeniorProfile(ctx, {
         familySpaceId,
@@ -209,6 +218,8 @@ export const finalizePhoneNumberSignIn = mutation({
         lastSeenAt: Date.now(),
       });
     }
+
+    await ensureCircleMembershipForLegacyMembership(ctx, membershipId);
 
     await upsertIndependentSeniorCredential(ctx, {
       familySpaceId,

@@ -10,6 +10,13 @@ export default defineSchema({
     primarySupporterAuthUserId: v.optional(v.string()),
   }).index("by_primarySupporterAuthUserId", ["primarySupporterAuthUserId"]),
 
+  circles: defineTable({
+    legacyFamilySpaceId: v.union(v.id("familySpaces"), v.null()),
+    displayName: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    locale: v.optional(v.string()),
+  }).index("by_legacyFamilySpaceId", ["legacyFamilySpaceId"]),
+
   familySpaceMemberships: defineTable({
     familySpaceId: v.id("familySpaces"),
     authIdentityToken: v.string(),
@@ -40,6 +47,32 @@ export default defineSchema({
       "seniorProfileId",
     ])
     .index("by_seniorProfileId", ["seniorProfileId"]),
+
+  circleMemberships: defineTable({
+    circleId: v.id("circles"),
+    legacyFamilySpaceMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    authIdentityToken: v.string(),
+    authEmail: v.union(v.string(), v.null()),
+    displayName: v.string(),
+    role: v.union(
+      v.literal("organiser"),
+      v.literal("member"),
+      v.literal("independent_senior"),
+    ),
+    seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
+    onboardingStep: v.optional(v.number()),
+    lastSeenAt: v.optional(v.number()),
+  })
+    .index("by_circleId", ["circleId"])
+    .index("by_authIdentityToken", ["authIdentityToken"])
+    .index("by_circleId_and_role", ["circleId", "role"])
+    .index("by_circleId_and_role_and_seniorProfileId", [
+      "circleId",
+      "role",
+      "seniorProfileId",
+    ])
+    .index("by_seniorProfileId", ["seniorProfileId"])
+    .index("by_legacyFamilySpaceMembershipId", ["legacyFamilySpaceMembershipId"]),
 
   seniorProfiles: defineTable({
     familySpaceId: v.id("familySpaces"),
@@ -116,6 +149,22 @@ export default defineSchema({
   })
     .index("by_inviteCodeHash", ["inviteCodeHash"])
     .index("by_familySpaceId_and_role", ["familySpaceId", "role"]),
+
+  circleInviteCodes: defineTable({
+    circleId: v.id("circles"),
+    legacyFamilyInviteId: v.union(v.id("familyInvites"), v.null()),
+    createdByCircleMembershipId: v.id("circleMemberships"),
+    role: v.literal("member"),
+    inviteCodeHash: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+    revokedAt: v.union(v.number(), v.null()),
+    redeemedByAuthIdentityToken: v.union(v.string(), v.null()),
+    redeemedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
+  })
+    .index("by_inviteCodeHash", ["inviteCodeHash"])
+    .index("by_circleId_and_role", ["circleId", "role"])
+    .index("by_legacyFamilyInviteId", ["legacyFamilyInviteId"]),
 
   seniorAccessSessions: defineTable({
     familySpaceId: v.id("familySpaces"),

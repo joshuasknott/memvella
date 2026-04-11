@@ -16,6 +16,7 @@ import {
 import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
+import { patchCircleFromFamilySpace } from "./circleCompat";
 
 export const createRoutineSchedule = mutation({
   args: {
@@ -60,6 +61,9 @@ export const createRoutineSchedule = mutation({
     });
 
     await ctx.db.patch(membership.familySpaceId, {
+      timezone: args.timezone,
+    });
+    await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
       timezone: args.timezone,
     });
 
@@ -158,6 +162,9 @@ export const updateRoutineSchedule = mutation({
     });
 
     await ctx.db.patch(membership.familySpaceId, {
+      timezone: args.timezone,
+    });
+    await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
       timezone: args.timezone,
     });
 

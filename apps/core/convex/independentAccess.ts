@@ -16,6 +16,10 @@ import {
   buildCircleName,
 } from "./terminology";
 import {
+  ensureCircleForFamilySpace,
+  ensureCircleMembershipForLegacyMembership,
+} from "./circleCompat";
+import {
   formatIndependentRecoveryCode,
   generateNumericCode,
   generateOpaqueToken,
@@ -411,6 +415,7 @@ export const beginIndependentOnboarding = mutation({
       timezone: undefined,
       locale: undefined,
     });
+    await ensureCircleForFamilySpace(ctx, familySpaceId);
 
     const seniorProfile = await upsertIndependentSeniorProfile(ctx, {
       familySpaceId,
@@ -431,6 +436,7 @@ export const beginIndependentOnboarding = mutation({
       onboardingStep: 1,
       lastSeenAt: Date.now(),
     });
+    await ensureCircleMembershipForLegacyMembership(ctx, membershipId);
 
     const onboardingToken = generateOpaqueToken();
     await ctx.db.insert("independentOnboardingSessions", {

@@ -90,12 +90,29 @@ export async function getMembershipByAuthIdentityToken(
   ctx: DbCtx,
   authIdentityToken: string,
 ) {
-  return await ctx.db
+  const legacyMembership = await ctx.db
     .query("familySpaceMemberships")
     .withIndex("by_authIdentityToken", (query) =>
       query.eq("authIdentityToken", authIdentityToken),
     )
     .unique();
+
+  if (legacyMembership) {
+    return legacyMembership;
+  }
+
+  const circleMembership = await ctx.db
+    .query("circleMemberships")
+    .withIndex("by_authIdentityToken", (query) =>
+      query.eq("authIdentityToken", authIdentityToken),
+    )
+    .unique();
+
+  if (!circleMembership || !circleMembership.legacyFamilySpaceMembershipId) {
+    return null;
+  }
+
+  return await ctx.db.get(circleMembership.legacyFamilySpaceMembershipId);
 }
 
 export async function getOptionalFamilySpaceMembership(
