@@ -22,6 +22,54 @@ import {
   ensureCircleMembershipForLegacyMembership,
 } from "./circleCompat";
 
+function toInviteLookupFromLegacyInvite(
+  invite: Doc<"familyInvites">,
+): InviteLookupInvite {
+  return {
+    source: "legacy",
+    familySpaceId: invite.familySpaceId,
+    role: invite.role,
+    inviteCodeHash: invite.inviteCodeHash,
+    expiresAt: invite.expiresAt,
+    consumedAt: invite.consumedAt,
+    revokedAt: invite.revokedAt,
+    redeemedByAuthIdentityToken: invite.redeemedByAuthIdentityToken,
+    redeemedByMembershipId: invite.redeemedByMembershipId,
+    legacyInviteId: invite._id,
+    circleInviteId: null,
+  };
+}
+
+async function toInviteLookupFromCircleInvite(
+  ctx: MutationCtx,
+  invite: Doc<"circleInviteCodes">,
+): Promise<InviteLookupInvite | null> {
+  const circle = await ctx.db.get(invite.circleId);
+  if (!circle?.legacyFamilySpaceId) {
+    return null;
+  }
+
+  const redeemedByMembershipId =
+    invite.redeemedByCircleMembershipId !== null
+      ? ((await ctx.db.get(invite.redeemedByCircleMembershipId))
+          ?.legacyFamilySpaceMembershipId ?? null)
+      : null;
+
+  return {
+    source: "circle",
+    familySpaceId: circle.legacyFamilySpaceId,
+    role: invite.role,
+    inviteCodeHash: invite.inviteCodeHash,
+    expiresAt: invite.expiresAt,
+    consumedAt: invite.consumedAt,
+    revokedAt: invite.revokedAt,
+    redeemedByAuthIdentityToken: invite.redeemedByAuthIdentityToken,
+    redeemedByMembershipId,
+    legacyInviteId: invite.legacyFamilyInviteId,
+    circleInviteId: invite._id,
+  };
+}
+
 const FAMILY_INVITE_TTL_MS = 10 * 60 * 1000;
 const MAX_ACTIVE_INVITE_COLLISION_ATTEMPTS = 20;
 const INVITE_REDEEM_MAX_HITS = 5;
@@ -32,11 +80,25 @@ const INVITE_PREVIEW_WINDOW_MS = 10 * 60 * 1000;
 const INVITE_PREVIEW_BLOCK_MS = 10 * 60 * 1000;
 
 type InviteLookupState =
-  | { state: "active"; invite: Doc<"familyInvites"> }
+  | { state: "active"; invite: InviteLookupInvite }
   | { state: "invalid_code" }
-  | { state: "expired"; invite: Doc<"familyInvites"> | null }
-  | { state: "revoked"; invite: Doc<"familyInvites"> | null }
-  | { state: "already_used"; invite: Doc<"familyInvites"> | null };
+  | { state: "expired"; invite: InviteLookupInvite | null }
+  | { state: "revoked"; invite: InviteLookupInvite | null }
+  | { state: "already_used"; invite: InviteLookupInvite | null };
+
+type InviteLookupInvite = {
+  source: "legacy" | "circle";
+  familySpaceId: Id<"familySpaces">;
+  role: Doc<"familyInvites">["role"];
+  inviteCodeHash: string;
+  expiresAt: number;
+  consumedAt: number | null;
+  revokedAt: number | null;
+  redeemedByAuthIdentityToken: string | null;
+  redeemedByMembershipId: Id<"familySpaceMemberships"> | null;
+  legacyInviteId: Id<"familyInvites"> | null;
+  circleInviteId: Id<"circleInviteCodes"> | null;
+};
 
 type InviteTerminalLookupState = Exclude<InviteLookupState["state"], "active">;
 
@@ -196,56 +258,6 @@ async function mirrorLegacyInviteToCircle(
   return await ctx.db.get(circleInviteId);
 }
 
-async function ensureLegacyInviteForCircleInvite(
-  ctx: MutationCtx,
-  circleInvite: Doc<"circleInviteCodes">,
-) {
-  if (circleInvite.legacyFamilyInviteId) {
-    const legacyInvite = await ctx.db.get(circleInvite.legacyFamilyInviteId);
-    if (legacyInvite) {
-      return legacyInvite;
-    }
-  }
-
-  const circle = await ctx.db.get(circleInvite.circleId);
-  if (!circle?.legacyFamilySpaceId) {
-    return null;
-  }
-
-  const createdByCircleMembership = await ctx.db.get(
-    circleInvite.createdByCircleMembershipId,
-  );
-  const createdByLegacyMembershipId =
-    createdByCircleMembership?.legacyFamilySpaceMembershipId ?? null;
-  if (!createdByLegacyMembershipId) {
-    return null;
-  }
-
-  const redeemedByLegacyMembershipId =
-    circleInvite.redeemedByCircleMembershipId !== null
-      ? ((await ctx.db.get(circleInvite.redeemedByCircleMembershipId))
-          ?.legacyFamilySpaceMembershipId ?? null)
-      : null;
-
-  const legacyInviteId = await ctx.db.insert("familyInvites", {
-    familySpaceId: circle.legacyFamilySpaceId,
-    createdByMembershipId: createdByLegacyMembershipId,
-    role: circleInvite.role,
-    inviteCodeHash: circleInvite.inviteCodeHash,
-    expiresAt: circleInvite.expiresAt,
-    consumedAt: circleInvite.consumedAt,
-    revokedAt: circleInvite.revokedAt,
-    redeemedByAuthIdentityToken: circleInvite.redeemedByAuthIdentityToken,
-    redeemedByMembershipId: redeemedByLegacyMembershipId,
-  });
-
-  await ctx.db.patch(circleInvite._id, {
-    legacyFamilyInviteId: legacyInviteId,
-  });
-
-  return await ctx.db.get(legacyInviteId);
-}
-
 async function revokeActiveMemberInvitesForFamilySpace(
   ctx: MutationCtx,
   familySpaceId: Doc<"familyInvites">["familySpaceId"],
@@ -268,6 +280,37 @@ async function revokeActiveMemberInvitesForFamilySpace(
   return revokedCount;
 }
 
+async function revokeActiveMemberInvitesForCircle(
+  ctx: MutationCtx,
+  circleId: Id<"circles">,
+  revokedAt: number,
+) {
+  const invites = await ctx.db
+    .query("circleInviteCodes")
+    .withIndex("by_circleId_and_role", (query) =>
+      query.eq("circleId", circleId).eq("role", "member"),
+    )
+    .take(25);
+
+  let revokedCount = 0;
+  for (const invite of invites) {
+    if (!isCircleInviteActive(invite, revokedAt)) {
+      continue;
+    }
+
+    await ctx.db.patch(invite._id, {
+      revokedAt,
+    });
+    revokedCount += 1;
+  }
+
+  return revokedCount;
+}
+
+export function shouldWriteLegacyInviteForCanonicalInviteGeneration() {
+  return false;
+}
+
 async function getInviteLookupByHash(
   ctx: MutationCtx,
   inviteCodeHash: string,
@@ -286,38 +329,26 @@ async function getInviteLookupByHash(
       isCircleInviteActive(invite, now),
     );
     if (activeCircleInvite) {
-      const mirroredLegacyInvite = await ensureLegacyInviteForCircleInvite(
-        ctx,
-        activeCircleInvite,
-      );
-      if (mirroredLegacyInvite) {
-        return { state: "active", invite: mirroredLegacyInvite };
+      const lookupInvite = await toInviteLookupFromCircleInvite(ctx, activeCircleInvite);
+      if (lookupInvite) {
+        return { state: "active", invite: lookupInvite };
       }
     }
 
     const latestCircleInvite = circleInvites[0];
     if (latestCircleInvite.consumedAt !== null) {
-      const legacyInvite = await ensureLegacyInviteForCircleInvite(
-        ctx,
-        latestCircleInvite,
-      );
-      return { state: "already_used", invite: legacyInvite };
+      const lookupInvite = await toInviteLookupFromCircleInvite(ctx, latestCircleInvite);
+      return { state: "already_used", invite: lookupInvite };
     }
 
     if (latestCircleInvite.revokedAt !== null) {
-      const legacyInvite = await ensureLegacyInviteForCircleInvite(
-        ctx,
-        latestCircleInvite,
-      );
-      return { state: "revoked", invite: legacyInvite };
+      const lookupInvite = await toInviteLookupFromCircleInvite(ctx, latestCircleInvite);
+      return { state: "revoked", invite: lookupInvite };
     }
 
     if (latestCircleInvite.expiresAt <= now) {
-      const legacyInvite = await ensureLegacyInviteForCircleInvite(
-        ctx,
-        latestCircleInvite,
-      );
-      return { state: "expired", invite: legacyInvite };
+      const lookupInvite = await toInviteLookupFromCircleInvite(ctx, latestCircleInvite);
+      return { state: "expired", invite: lookupInvite };
     }
   }
 
@@ -336,20 +367,23 @@ async function getInviteLookupByHash(
   const now = Date.now();
   const activeInvite = invites.find((invite) => isInviteActive(invite, now));
   if (activeInvite) {
-    return { state: "active", invite: activeInvite };
+    return { state: "active", invite: toInviteLookupFromLegacyInvite(activeInvite) };
   }
 
   const latestInvite = invites[0];
   if (latestInvite.consumedAt !== null) {
-    return { state: "already_used", invite: latestInvite };
+    return {
+      state: "already_used",
+      invite: toInviteLookupFromLegacyInvite(latestInvite),
+    };
   }
 
   if (latestInvite.revokedAt !== null) {
-    return { state: "revoked", invite: latestInvite };
+    return { state: "revoked", invite: toInviteLookupFromLegacyInvite(latestInvite) };
   }
 
   if (latestInvite.expiresAt <= now) {
-    return { state: "expired", invite: latestInvite };
+    return { state: "expired", invite: toInviteLookupFromLegacyInvite(latestInvite) };
   }
 
   return { state: "invalid_code" };
@@ -577,15 +611,7 @@ export const listActiveMemberInvites = query({
         }));
     }
 
-    const invites = await listMemberInvitesForFamilySpace(ctx, membership.familySpaceId);
-
-    return invites
-      .filter((invite) => isInviteActive(invite, now))
-      .map((invite) => ({
-        id: invite._id,
-        role: invite.role,
-        expiresAt: invite.expiresAt,
-      }));
+    return [];
   },
 });
 
@@ -601,30 +627,20 @@ export const revokeActiveMemberInvites = mutation({
     let revokedCircleCount = 0;
     const circle = await getCircleByFamilySpaceId(ctx, membership.familySpaceId);
     if (circle) {
-      const circleInvites = await ctx.db
-        .query("circleInviteCodes")
-        .withIndex("by_circleId_and_role", (query) =>
-          query.eq("circleId", circle._id).eq("role", "member"),
-        )
-        .take(25);
-
-      for (const invite of circleInvites) {
-        if (!isCircleInviteActive(invite, revokedAt)) {
-          continue;
-        }
-
-        await ctx.db.patch(invite._id, {
-          revokedAt,
-        });
-        revokedCircleCount += 1;
-      }
+      revokedCircleCount = await revokeActiveMemberInvitesForCircle(
+        ctx,
+        circle._id,
+        revokedAt,
+      );
     }
 
-    const revokedLegacyCount = await revokeActiveMemberInvitesForFamilySpace(
-      ctx,
-      membership.familySpaceId,
-      revokedAt,
-    );
+    const revokedLegacyCount = circle
+      ? 0
+      : await revokeActiveMemberInvitesForFamilySpace(
+          ctx,
+          membership.familySpaceId,
+          revokedAt,
+        );
 
     return {
       revokedCount: Math.max(revokedLegacyCount, revokedCircleCount),
@@ -641,34 +657,33 @@ export const generateMemberInviteCode = mutation({
     );
     const now = Date.now();
 
-    await revokeActiveMemberInvitesForFamilySpace(
-      ctx,
-      membership.familySpaceId,
-      now,
-    );
+    const circle = await ensureCircleForFamilySpace(ctx, membership.familySpaceId);
+    await revokeActiveMemberInvitesForCircle(ctx, circle._id, now);
 
     const { inviteCode, inviteCodeHash } = await generateUniqueActiveInviteCode(ctx);
     const expiresAt = now + FAMILY_INVITE_TTL_MS;
 
-    const legacyInviteId = await ctx.db.insert("familyInvites", {
-      familySpaceId: membership.familySpaceId,
-      createdByMembershipId: membership._id,
-      role: "member",
-      inviteCodeHash,
-      expiresAt,
-      consumedAt: null,
-      revokedAt: null,
-      redeemedByAuthIdentityToken: null,
-      redeemedByMembershipId: null,
-    });
-
-    const circle = await ensureCircleForFamilySpace(ctx, membership.familySpaceId);
     const circleMembership = await ensureCircleMembershipForLegacyMembership(
       ctx,
       membership._id,
     );
 
     if (circleMembership) {
+      let legacyInviteId: Id<"familyInvites"> | null = null;
+      if (shouldWriteLegacyInviteForCanonicalInviteGeneration()) {
+        legacyInviteId = await ctx.db.insert("familyInvites", {
+          familySpaceId: membership.familySpaceId,
+          createdByMembershipId: membership._id,
+          role: "member",
+          inviteCodeHash,
+          expiresAt,
+          consumedAt: null,
+          revokedAt: null,
+          redeemedByAuthIdentityToken: null,
+          redeemedByMembershipId: null,
+        });
+      }
+
       await ctx.db.insert("circleInviteCodes", {
         circleId: circle._id,
         legacyFamilyInviteId: legacyInviteId,
@@ -730,7 +745,6 @@ export const previewMemberInviteCode = mutation({
       };
     }
 
-    await mirrorLegacyInviteToCircle(ctx, lookup.invite._id);
     const familySpace = await ctx.db.get(lookup.invite.familySpaceId);
 
     if (!familySpace) {
@@ -849,36 +863,114 @@ export const redeemMemberInviteCode = mutation({
     const authEmail = normalizeOptionalEmail(identity.email) ?? null;
     const consumedAt = Date.now();
 
-    const membershipId = await ctx.db.insert("familySpaceMemberships", {
-      familySpaceId: lookup.invite.familySpaceId,
-      authIdentityToken: identity.tokenIdentifier,
-      authEmail,
-      displayName,
-      role: "member",
-      seniorProfileId: null,
-      onboardingStep: undefined,
-      lastSeenAt: consumedAt,
-    });
+    let membershipId: Id<"familySpaceMemberships">;
 
-    await ensureCircleMembershipForLegacyMembership(ctx, membershipId);
+    if (lookup.invite.source === "circle") {
+      const circleInviteId = lookup.invite.circleInviteId;
+      if (!circleInviteId) {
+        throw new Error("This invite is no longer available.");
+      }
 
-    await ctx.db.patch(lookup.invite._id, {
-      consumedAt,
-      redeemedByAuthIdentityToken: identity.tokenIdentifier,
-      redeemedByMembershipId: membershipId,
-    });
+      const circleInvite = await ctx.db.get(circleInviteId);
+      if (!circleInvite || !isCircleInviteActive(circleInvite, consumedAt)) {
+        return {
+          status: "already_used",
+          message: getInviteLookupMessage("already_used", "redeem"),
+        };
+      }
 
-    const circleInvite = await mirrorLegacyInviteToCircle(ctx, lookup.invite._id);
-    if (circleInvite) {
+      const circleMembershipId = await ctx.db.insert("circleMemberships", {
+        circleId: circleInvite.circleId,
+        legacyFamilySpaceMembershipId: null,
+        authIdentityToken: identity.tokenIdentifier,
+        authEmail,
+        displayName,
+        role: "member",
+        seniorProfileId: null,
+        onboardingStep: undefined,
+        lastSeenAt: consumedAt,
+      });
+
+      const circle = await ctx.db.get(circleInvite.circleId);
+      if (!circle?.legacyFamilySpaceId) {
+        throw new Error("This invite is no longer available.");
+      }
+
+      membershipId = await ctx.db.insert("familySpaceMemberships", {
+        familySpaceId: circle.legacyFamilySpaceId,
+        authIdentityToken: identity.tokenIdentifier,
+        authEmail,
+        displayName,
+        role: "member",
+        seniorProfileId: null,
+        onboardingStep: undefined,
+        lastSeenAt: consumedAt,
+      });
+
+      await ctx.db.patch(circleMembershipId, {
+        legacyFamilySpaceMembershipId: membershipId,
+      });
+
+      await ctx.db.patch(circleInviteId, {
+        consumedAt,
+        redeemedByAuthIdentityToken: identity.tokenIdentifier,
+        redeemedByCircleMembershipId: circleMembershipId,
+      });
+
+      if (lookup.invite.legacyInviteId) {
+        const legacyInvite = await ctx.db.get(lookup.invite.legacyInviteId);
+        if (legacyInvite) {
+          await ctx.db.patch(legacyInvite._id, {
+            consumedAt,
+            redeemedByAuthIdentityToken: identity.tokenIdentifier,
+            redeemedByMembershipId: membershipId,
+          });
+        }
+      }
+    } else {
+      const legacyInviteId = lookup.invite.legacyInviteId;
+      if (!legacyInviteId) {
+        throw new Error("This invite is no longer available.");
+      }
+
+      const legacyInvite = await ctx.db.get(legacyInviteId);
+      if (!legacyInvite || !isInviteActive(legacyInvite, consumedAt)) {
+        return {
+          status: "already_used",
+          message: getInviteLookupMessage("already_used", "redeem"),
+        };
+      }
+
+      membershipId = await ctx.db.insert("familySpaceMemberships", {
+        familySpaceId: legacyInvite.familySpaceId,
+        authIdentityToken: identity.tokenIdentifier,
+        authEmail,
+        displayName,
+        role: "member",
+        seniorProfileId: null,
+        onboardingStep: undefined,
+        lastSeenAt: consumedAt,
+      });
+
       const circleMembership = await ensureCircleMembershipForLegacyMembership(
         ctx,
         membershipId,
       );
-      await ctx.db.patch(circleInvite._id, {
+
+      await ctx.db.patch(legacyInviteId, {
         consumedAt,
         redeemedByAuthIdentityToken: identity.tokenIdentifier,
-        redeemedByCircleMembershipId: circleMembership?._id ?? null,
+        redeemedByMembershipId: membershipId,
       });
+
+      const circleInvite = await mirrorLegacyInviteToCircle(ctx, legacyInviteId);
+      if (circleInvite) {
+        await ctx.db.patch(circleInvite._id, {
+          consumedAt,
+          redeemedByAuthIdentityToken: identity.tokenIdentifier,
+          redeemedByCircleMembershipId: circleMembership?._id ?? null,
+        });
+      }
     }
 
     return {

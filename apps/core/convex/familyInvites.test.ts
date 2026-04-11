@@ -3,7 +3,10 @@ import type { Doc, Id } from "./_generated/dataModel";
 import {
   evaluateRedeemMemberships,
   getInviteLookupMessage,
+  shouldWriteLegacyInviteForCanonicalInviteGeneration,
 } from "./familyInvites";
+import { shouldMirrorCanonicalPeopleToLegacy } from "./peopleCompat";
+import { shouldMirrorCanonicalInsightsToLegacy } from "./insightsCompat";
 
 let membershipCounter = 0;
 
@@ -42,6 +45,12 @@ describe("family invite messaging", () => {
     expect(getInviteLookupMessage("already_used", "redeem")).toBe(
       "This invite code has already been used. Ask for a new one.",
     );
+  });
+
+  it("keeps canonical-first compatibility gates disabled", () => {
+    expect(shouldMirrorCanonicalPeopleToLegacy()).toBe(false);
+    expect(shouldMirrorCanonicalInsightsToLegacy()).toBe(false);
+    expect(shouldWriteLegacyInviteForCanonicalInviteGeneration()).toBe(false);
   });
 });
 

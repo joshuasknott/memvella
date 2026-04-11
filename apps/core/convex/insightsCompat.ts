@@ -5,6 +5,10 @@ type LegacySupporterInsight = Doc<"supporterInsights">;
 type CanonicalInsight = Doc<"insights">;
 type CanonicalAlert = Doc<"alerts">;
 
+export function shouldMirrorCanonicalInsightsToLegacy() {
+  return false;
+}
+
 function isAlertInsightType(
   insightType: LegacySupporterInsight["insightType"],
 ) {
@@ -131,6 +135,10 @@ export async function mirrorCanonicalInsightToLegacy(
   ctx: MutationCtx,
   canonicalInsightId: Id<"insights">,
 ) {
+  if (!shouldMirrorCanonicalInsightsToLegacy()) {
+    return null;
+  }
+
   const canonicalInsight = await ctx.db.get(canonicalInsightId);
   if (!canonicalInsight) {
     return null;
@@ -171,6 +179,10 @@ export async function mirrorCanonicalAlertToLegacy(
   ctx: MutationCtx,
   canonicalAlertId: Id<"alerts">,
 ) {
+  if (!shouldMirrorCanonicalInsightsToLegacy()) {
+    return null;
+  }
+
   const canonicalAlert = await ctx.db.get(canonicalAlertId);
   if (!canonicalAlert) {
     return null;

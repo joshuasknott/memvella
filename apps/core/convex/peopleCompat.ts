@@ -3,6 +3,10 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 type DbCtx = MutationCtx | QueryCtx;
 
+export function shouldMirrorCanonicalPeopleToLegacy() {
+  return false;
+}
+
 async function resolvePreferredSeniorProfileId(
   ctx: DbCtx,
   familySpaceId: Id<"familySpaces">,
@@ -80,6 +84,10 @@ export async function mirrorPersonToLegacyFamilyMember(
     photoStorageId: Id<"_storage"> | undefined;
   },
 ) {
+  if (!shouldMirrorCanonicalPeopleToLegacy()) {
+    return null;
+  }
+
   const legacyId = await ctx.db.insert("familyMembers", {
     familySpaceId: args.familySpaceId,
     name: args.name,

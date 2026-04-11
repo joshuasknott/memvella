@@ -577,3 +577,36 @@ export const verifyCanonicalInsightsBackfill = query({
     };
   },
 });
+
+export const verifyNoCanonicalToLegacyBackfillDependencies = query({
+  args: {},
+  handler: async (ctx) => {
+    let canonicalInviteCodesCount = 0;
+    let legacyInviteCodesCount = 0;
+    let missingLegacyInviteLinks = 0;
+    const sampleCircleInviteIdsMissingLegacyLink: Id<"circleInviteCodes">[] = [];
+
+    for await (const circleInvite of ctx.db.query("circleInviteCodes")) {
+      canonicalInviteCodesCount += 1;
+      if (circleInvite.legacyFamilyInviteId === null) {
+        missingLegacyInviteLinks += 1;
+        if (sampleCircleInviteIdsMissingLegacyLink.length < 10) {
+          sampleCircleInviteIdsMissingLegacyLink.push(circleInvite._id);
+        }
+      }
+    }
+
+    for await (const _legacyInvite of ctx.db.query("familyInvites")) {
+      legacyInviteCodesCount += 1;
+    }
+
+    return {
+      canonicalInviteCodesCount,
+      legacyInviteCodesCount,
+      missingLegacyInviteLinks,
+      sampleCircleInviteIdsMissingLegacyLink,
+      note:
+        "missing legacy links are now allowed for canonical-first writes and should not block rollouts.",
+    };
+  },
+});

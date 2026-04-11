@@ -127,7 +127,7 @@ export const addFamilyMember = mutation({
     return await ctx.db.insert("people", {
       familySpaceId: membership.familySpaceId,
       seniorProfileId: membership.seniorProfileId,
-      legacyFamilyMemberId,
+      legacyFamilyMemberId: legacyFamilyMemberId ?? null,
       name: args.name,
       relationship: args.relationship,
       isLiving: args.isLiving,

@@ -103,7 +103,7 @@ export const processOnboardingAction = internalMutation({
         await ctx.db.insert("people", {
           familySpaceId: membership.familySpaceId,
           seniorProfileId: membership.seniorProfileId,
-          legacyFamilyMemberId,
+          legacyFamilyMemberId: legacyFamilyMemberId ?? null,
           name,
           relationship,
           isLiving: true,
