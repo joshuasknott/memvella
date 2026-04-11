@@ -3,6 +3,9 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation, query } from "./_generated/server";
 import { normalizeFamilySideMembershipRole } from "./familySpaceAuth";
 import { ensureCircleMembershipForLegacyMembership } from "./circleCompat";
+import { shouldWriteLegacyInviteForCanonicalInviteGeneration } from "./familyInvites";
+import { shouldMirrorCanonicalInsightsToLegacy } from "./insightsCompat";
+import { shouldMirrorCanonicalPeopleToLegacy } from "./peopleCompat";
 
 const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 200;
@@ -585,6 +588,15 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
     let legacyInviteCodesCount = 0;
     let missingLegacyInviteLinks = 0;
     const sampleCircleInviteIdsMissingLegacyLink: Id<"circleInviteCodes">[] = [];
+    let canonicalPeopleCount = 0;
+    let peopleWithoutLegacyLinkCount = 0;
+    const samplePersonIdsMissingLegacyLink: Id<"people">[] = [];
+    let canonicalInsightsCount = 0;
+    let insightsWithoutLegacyLinkCount = 0;
+    const sampleInsightIdsMissingLegacyLink: Id<"insights">[] = [];
+    let canonicalAlertsCount = 0;
+    let alertsWithoutLegacyLinkCount = 0;
+    const sampleAlertIdsMissingLegacyLink: Id<"alerts">[] = [];
 
     for await (const circleInvite of ctx.db.query("circleInviteCodes")) {
       canonicalInviteCodesCount += 1;
@@ -600,13 +612,57 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
       legacyInviteCodesCount += 1;
     }
 
+    for await (const person of ctx.db.query("people")) {
+      canonicalPeopleCount += 1;
+      if (person.legacyFamilyMemberId === null) {
+        peopleWithoutLegacyLinkCount += 1;
+        if (samplePersonIdsMissingLegacyLink.length < 10) {
+          samplePersonIdsMissingLegacyLink.push(person._id);
+        }
+      }
+    }
+
+    for await (const insight of ctx.db.query("insights")) {
+      canonicalInsightsCount += 1;
+      if (insight.legacySupporterInsightId === null) {
+        insightsWithoutLegacyLinkCount += 1;
+        if (sampleInsightIdsMissingLegacyLink.length < 10) {
+          sampleInsightIdsMissingLegacyLink.push(insight._id);
+        }
+      }
+    }
+
+    for await (const alert of ctx.db.query("alerts")) {
+      canonicalAlertsCount += 1;
+      if (alert.legacySupporterInsightId === null) {
+        alertsWithoutLegacyLinkCount += 1;
+        if (sampleAlertIdsMissingLegacyLink.length < 10) {
+          sampleAlertIdsMissingLegacyLink.push(alert._id);
+        }
+      }
+    }
+
     return {
+      canonicalFirstGates: {
+        inviteGenerationWritesLegacy: shouldWriteLegacyInviteForCanonicalInviteGeneration(),
+        peopleWritesLegacy: shouldMirrorCanonicalPeopleToLegacy(),
+        insightsWriteLegacy: shouldMirrorCanonicalInsightsToLegacy(),
+      },
       canonicalInviteCodesCount,
       legacyInviteCodesCount,
       missingLegacyInviteLinks,
       sampleCircleInviteIdsMissingLegacyLink,
+      canonicalPeopleCount,
+      peopleWithoutLegacyLinkCount,
+      samplePersonIdsMissingLegacyLink,
+      canonicalInsightsCount,
+      insightsWithoutLegacyLinkCount,
+      sampleInsightIdsMissingLegacyLink,
+      canonicalAlertsCount,
+      alertsWithoutLegacyLinkCount,
+      sampleAlertIdsMissingLegacyLink,
       note:
-        "missing legacy links are now allowed for canonical-first writes and should not block rollouts.",
+        "missing legacy links are now expected for canonical-first writes and should not block rollouts while legacy read fallback remains in place.",
     };
   },
 });
