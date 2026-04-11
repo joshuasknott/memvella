@@ -53,6 +53,8 @@ Read these files in order when you need product or implementation context:
 7. `docs/testing.md`
 8. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
 
+The root `docs/` files describe the target product and architecture contracts. During migrations, implementation may temporarily lag those contracts, but new work should move toward them rather than preserving legacy names or structures.
+
 ## Repo Rules
 
 - Root `docs/` files are the canonical written source of truth.

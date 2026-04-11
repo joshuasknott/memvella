@@ -2,107 +2,99 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-06
+Last reviewed: 2026-04-11
 Owners: engineering
-Read when: touching auth, onboarding, passkeys, sessions, or recovery
+Read when: touching auth, onboarding, passkeys, sessions, recovery, or role permissions
 Depends on: docs/product.md, docs/architecture.md, docs/env.md
 
 ## Overview
 
-Memvella currently uses two identity layers:
+Memvella uses two identity families:
 
-- Better Auth for account-backed user sessions
-- Convex-managed senior access sessions for assisted and independent senior device access
+- Better Auth for Circle participant account sessions
+- Convex-managed senior access sessions for Tablet User and Independent User device access
 
-## Current Flows
+## Target Flows
 
-| Role | Entry route | Auth bootstrap | Secondary auth | Lands in |
+| Role | Entry route | Auth bootstrap | Recovery path | Lands in |
 | --- | --- | --- | --- | --- |
-| `Organiser` | `/onboarding/organiser` | Better Auth email and password | none | `/circle` |
-| `Member` | `/onboarding/member` | 6-digit Circle code, then Better Auth email and password | none | `/circle` |
-| `Tablet User` | `/assisted/login` | 6-digit pairing code | device-bound senior session | `/assisted` |
-| `Independent User` | `/onboarding/independent` | device passkey | recovery codes or organiser-assisted reset | `/independent` |
+| `Organiser` | `/onboarding/organiser` | Better Auth account auth | standard family-side account recovery | `/circle` |
+| `Member` | `/onboarding/member` | Circle invite code, then Better Auth account auth | standard family-side account recovery | `/circle` |
+| `Tablet User` | `/assisted/login` | pairing code | re-pair or explicit organiser-side recovery | `/assisted` |
+| `Independent User` | `/onboarding/independent` | passkey-first standalone setup | recovery codes, plus a narrow fallback path only when accessibility requires it | `/independent` |
 
-### Family-Side Account Auth
+## Circle Participant Auth
 
-This is the current implementation path for `Organiser` and `Member` family-side roles.
+This path is for Organisers and Members.
 
 - Sign-up route: `/onboarding/organiser`
 - Sign-in route: `/organiser/signin`
+- Member join route: `/onboarding/member`
 - Better Auth client calls: `authClient.signUp.email` and `authClient.signIn.email`
-- After auth succeeds, `apps/core/components/organiser/OrganiserProfileBootstrap.tsx` ensures a matching Circle membership exists by calling `createOrganiserProfile` or `patchOrganiserProfile`
 
-Current behavior:
+Rules:
 
-- A new family-side account creates a new Circle when no existing membership is found.
-- The shipped UI now labels this account as `Organiser`.
-- Family-side auth is currently email and password.
-- Legacy `supporter` rows are still accepted during rollout, but new memberships now store `organiser` or `member`.
+- A new Organiser account creates a new Circle when no existing Circle membership exists.
+- A Member joins an existing Circle through an invite flow.
+- Circle authorization is anchored on `circleMemberships`.
+- A Circle may contain multiple Organisers.
+- Role changes must be explicit and auditable.
 
-### Member Join Flow
+## Member Join Flow
 
-Current behavior:
+Target behavior:
 
-- The join flow is live at `/onboarding/member`.
-- A family member or friend enters a 6-digit Circle invite code first.
-- Memvella previews the target Circle before any family-side credential entry.
-- If they already have an active family-side session, the invite redeems automatically.
-- Otherwise they create or sign in to a family-side account and the invite redeems automatically after auth.
-- Convex creates a `member` membership in `familySpaceMemberships`.
-- The account lands in the shared Circle workspace with organiser-only settings blocked.
+- A future Member enters a valid Circle invite code first.
+- Memvella previews the target Circle before any account step.
+- If the person already has an active family-side session, the invite can redeem into that session.
+- Otherwise they create or sign in to a family-side account and the invite redeems after auth.
+- The resulting membership role is `member` unless explicitly promoted later.
 
-### Independent User Auth
+## Independent User Auth
 
 - Onboarding UI: `apps/core/app/onboarding/independent/page.tsx`
 - Recovery UI: `apps/core/app/independent/recover/page.tsx`
-- Passkey and recovery backend: `apps/core/convex/independentAccess.ts`
-- Passkey route handlers: `apps/core/app/api/independent/passkey/**/route.ts`
+- Passkey routes: `apps/core/app/api/independent/passkey/**/route.ts`
 - Recovery code route: `apps/core/app/api/independent/recovery-codes/redeem/route.ts`
 
-Current behavior:
+Rules:
 
-- The user enters only the minimum profile information required to create the independent profile.
-- Convex creates a short-lived onboarding session and the browser creates a platform passkey on that device.
-- Passkey registration mints the first `independent_web` senior session directly, without a Better Auth bootstrap session.
-- Repeat sign-in uses discoverable WebAuthn passkeys on the device.
-- Recovery supports one-time recovery codes and organiser-side help for explicit device revocation or recovery-code rotation.
+- Independent auth is standalone and must not require a Circle.
+- Passkeys are the default sign-in mechanism.
+- Recovery codes are the primary recovery mechanism.
+- A fallback path may exist when accessibility requires it, but it must stay narrow and must not become the main auth model.
+- Independent users must not silently inherit family-side account state.
+- Any trusted-helper recovery or transition flow must be explicit and auditable.
 
-Guardrails:
-
-- This flow is passwordless.
-- Passkeys are the primary sign-in mechanism.
-- Recovery codes are shown after setup and can be rotated later from independent security settings.
-- Organiser-side recovery help must stay explicit and must not silently impersonate the Independent User.
-- `seniorProfiles` do not store the independent phone credential directly.
-
-### Tablet User Device Access
+## Tablet User Device Access
 
 - Pairing UI: `apps/core/app/assisted/login/page.tsx`
 - Pairing API route: `apps/core/app/api/assisted/pairing/route.ts`
-- Convex pairing logic: `apps/core/convex/kiosk.ts`
 
-Current behavior:
+Rules:
 
-- An Organiser generates a 6-digit code.
+- An Organiser generates a pairing code.
 - The assisted device submits that code.
-- Convex validates the pairing and mints an `assisted_device` senior access session that is bound to the device fingerprint.
+- Convex validates the pairing and mints an `assisted_device` senior access session bound to the device fingerprint.
+- Revocation and re-pairing must be explicit.
 
 ## Identity Model
 
 - Better Auth identities are mapped through `identity.tokenIdentifier`.
-- Application authorization is anchored on `familySpaceMemberships`.
+- Circle-side authorization is anchored on `circleMemberships`.
 - Independent onboarding bootstrap is anchored on `independentOnboardingSessions`.
 - Independent passkeys are anchored on `independentSeniorPasskeys`.
 - Independent recovery codes are anchored on `independentSeniorRecoveryCodes`.
 - Senior-side device access is anchored on `seniorAccessSessions`.
+- Senior identity is anchored on `seniorProfiles`.
 - Assisted and independent seniors are distinguished by `seniorProfiles.seniorMode`.
-- `seniorProfiles` carry only mode-neutral senior identity and access state.
 
-## Migration Rule
+## Transition Rules
 
-- Legacy `seniorProfiles` rows that still held independent recovery data are migrated into `independentSeniorCredentials`.
-- Legacy independent memberships with no recoverable phone source are left without a credential row and moved to `accessStatus = pending`, so they must complete fresh SMS bootstrap instead of inheriting invented data.
-- The older phone-credential and SMS finalization surfaces remain transitional backend compatibility paths while existing independent profiles move onto passkeys and recovery codes.
+- Independent users begin outside any Circle.
+- An explicit transition may later move an Independent User into assisted or Circle-linked mode.
+- That transition should offer a choice to migrate existing senior data or start fresh.
+- Migration must be explicit. It must never happen silently.
 
 ## Origin And Callback Rules
 
@@ -116,7 +108,7 @@ Current behavior:
 
 ### Better Auth Trusted Origins
 
-`apps/core/convex/auth.ts` now derives trusted origins from:
+`apps/core/convex/auth.ts` derives trusted origins from:
 
 1. the configured app origins above
 2. `BETTER_AUTH_TRUSTED_ORIGINS`, parsed as a comma-separated list of additional origins
@@ -132,7 +124,7 @@ Current behavior:
 
 ### Current Risk
 
-The auth setup is now more forgiving for local multi-device testing, but production still depends on explicit origin configuration.
+Production still depends on explicit origin configuration.
 
 Examples of risky setups:
 
@@ -146,11 +138,9 @@ Expected failure mode:
 
 ## Role Collision Rules
 
-- Independent onboarding prevents reuse of an identity that is already linked to the family-side account experience.
-- That collision is surfaced in `finalizePhoneNumberSignIn` as a `role_collision` result.
+- Independent onboarding must prevent reuse of an identity already linked to the Circle participant experience.
+- Family-side accounts must not silently become senior-side identities.
 
-## Known Gaps
+## Implementation Note
 
-- Legacy `supporter` module and table names still exist in some backend implementation details.
-- Some family-side backend APIs still use organiser-era naming even though the visible workspace is now `/circle`.
-- Existing SMS-first independent profiles still need an explicit migration path to add recovery codes before legacy phone recovery can be removed completely.
+The current implementation still contains legacy family-side naming and transitional independent compatibility paths. New work should move toward this target model rather than keeping those compatibility surfaces alive.

@@ -2,89 +2,139 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-06
+Last reviewed: 2026-04-11
 Owners: engineering
-Read when: touching schema, queries, mutations, migrations, or onboarding
+Read when: touching schema, queries, mutations, migrations, onboarding, or role boundaries
 Depends on: docs/architecture.md, docs/auth-and-identity.md
 
 ## Canonical Model
 
-New work should be built on the FamilySpace-based model.
+New work should be built on the `circle` model, not the retired `familySpace` model.
 
 Primary entities:
 
-- `familySpaces`: top-level shared space for routines, memories, alerts, and voice context
-- `familySpaceMemberships`: auth-linked participants and roles, including `organiser`, `member`, and `independent_senior`
-- `seniorProfiles`: mode-neutral senior identity, mode, locale, and access state
+- `circles`: top-level shared workspace for family-side coordination
+- `circleMemberships`: authenticated human participants in a Circle, with role `organiser` or `member`
+- `seniorProfiles`: canonical senior identity records for both assisted and independent experiences
 
-## Canonical Tables
+## Canonical Table Families
 
 ### Identity And Access
 
-- `familySpaces`
-- `familySpaceMemberships`
+- `circles`
+- `circleMemberships`
+- `circleInviteCodes`
 - `seniorProfiles`
 - `assistedDevicePins`
-- `independentSeniorCredentials`
 - `independentOnboardingSessions`
 - `seniorAccessSessions`
 - `independentSeniorPasskeys`
 - `independentSeniorRecoveryCodes`
 - `seniorAuthChallenges`
 
+### Senior Grounding And Memories
+
+- `people`
+- `memoryRecords`
+- `memoryAssets`
+
 ### Routines And Scheduling
 
 - `routineSchedules`
 - `routineOccurrences`
-- `routineRetreatCheckIns`
+- `routineCheckIns`
 
-### Memories And Assets
+### Awareness, Alerts, And Operations
 
-- `memoryRecords`
-- `memoryAssets`
-
-### Notifications, AI, And Operational State
-
+- `activityEvents`
+- `insights`
+- `alerts`
 - `notificationSettings`
 - `pushSubscriptions`
 - `notificationDeliveries`
 - `rateLimitWindows`
 - `voiceInteractions`
-- `supporterInsights`
 - `waitlistEntries`
 
-## Legacy Compatibility Surfaces
+## Entity Boundaries
 
-These are still present in the schema and must be treated as transitional:
+### Circle Participants Versus People
 
-- `familySpaces.primarySupporterAuthUserId`
-- `supporterProfiles`
-- `assistedDevices`
-- `familyMembers`
-- `routines`
-- `memories`
-- `voiceLogs`
+- `circleMemberships` represent actual human participants in a Circle.
+- `people` represent senior-grounding people used for memories and companion grounding.
+- A `Person` is not automatically a Circle participant.
+- A Circle participant is not automatically a `Person` in the senior's grounding data.
+
+### Circle-Scoped Data
+
+These tables should anchor on `circleId`:
+
+- circles
+- circle memberships
+- invite codes
+- Circle settings
+- push subscriptions
+- notification deliveries
+- Circle activity visibility
+
+### Senior-Scoped Data
+
+These tables should anchor on `seniorProfileId`:
+
+- people
+- memory records and assets
+- routine schedules and occurrences
+- voice interactions
+- insights
+- alerts
 
 Rules:
 
-- Do not add net-new product features to these compatibility tables.
+- Senior-facing data belongs to the senior profile first.
+- Circle-facing visibility is derived from the senior's Circle relationship when one exists.
+- Independent seniors remain valid without a Circle.
+
+## Senior Mode Rules
+
+- A `seniorProfile` may be assisted and linked to a Circle.
+- A `seniorProfile` may be independent and exist without a Circle.
+- An Independent User may later transition into assisted or Circle-linked mode.
+- That transition must support either data migration or a clean start.
+
+## Locale And Time Rules
+
+- Circle-linked family-side experiences should use Circle-level default timezone and locale.
+- Independent senior profiles should carry whatever effective timezone and locale they need until linked to a Circle.
+- Do not introduce multiple competing locale layers unless there is a clear product need.
+
+## Retired Surfaces
+
+These are legacy and should be migrated away from rather than extended:
+
+- `familySpaces`
+- `familySpaceMemberships`
+- `supporterProfiles`
+- `familyMembers`
+- `supporterInsights`
+- legacy `memories`
+- legacy `routines`
+- `voiceLogs`
+- any `supporter` or `admin` compatibility field that only exists for old naming
+
+Rules:
+
+- Do not add net-new product features to retired tables or fields.
 - Use them only when explicitly doing migration or compatibility work.
-- If a feature still reads legacy tables, document that dependency before changing the schema contract.
-
-## Relationship Rules
-
-- `familySpaceId` is the top-level partition key for most product data.
-- `familySpaceMemberships` connects authenticated users to a Circle and role.
-- `seniorProfiles` model the actual Tablet User or Independent User identity inside the Circle.
-- `independentOnboardingSessions` store short-lived setup state before the first Independent User passkey is created.
-- `independentSeniorCredentials` now remain a transitional compatibility surface for older phone-based independent rows.
-- `independentSeniorPasskeys` store trusted device passkeys for independent sign-in.
-- `independentSeniorRecoveryCodes` store hashed one-time recovery codes for independent recovery.
-- Senior access sessions are device-bound and separate from Better Auth sessions.
+- Remove them once canonical data has been migrated.
 
 ## Authoring Rules
 
 - Prefer canonical tables when writing new queries or mutations.
 - Prefer explicit indexes over broad scans.
 - Document any breaking schema change before implementing it.
+- Use a widen-migrate-narrow rollout when existing data must move.
 - If removing a compatibility surface, pair the code change with a migration plan.
+
+## Implementation Note
+
+The current schema still contains legacy names and compatibility surfaces. This document defines the target model that future migrations should converge on.

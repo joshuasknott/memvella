@@ -2,52 +2,75 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-11
 Owners: product, engineering
-Read when: touching UI copy, docs, onboarding, or marketing
+Read when: touching UI copy, docs, routes, schema names, onboarding, or marketing
 Depends on: docs/product.md
 
 ## Principle
 
-Use one name for each concept. Do not introduce parallel labels for the same role or flow unless there is an explicit migration plan.
+Use one name for each concept. Do not introduce parallel labels for the same role, entity, or flow unless there is an explicit migration plan.
 
 ## Canonical Product Terms
 
 | Concept | Preferred term | Notes |
 | --- | --- | --- |
-| Shared family space | `Circle` | Current core product term for the shared space |
-| Circle creator and manager | `Organiser` | Creates the Circle, manages settings, and sends invitations |
-| Family or friend invited into a Circle | `Member` | Joins an existing Circle to help out and stay connected |
-| Assisted senior using a linked tablet | `Tablet User` | Replaces the vague connection-code persona label |
-| Self-managing senior | `Independent User` | Creates and manages their own profile independently |
+| Shared family-side workspace | `Circle` | The shared workspace for Organisers and Members |
+| Human participant in a Circle | `Circle participant` | Generic label when the role does not matter |
+| Administrative Circle role | `Organiser` | Can manage settings, invites, pairing, people, and routines |
+| Lightweight Circle role | `Member` | Helps with memories and stays informed without owning admin surfaces |
+| Senior-grounding person | `Person` | Used for memory context and companion grounding, not for Circle membership |
+| Assisted senior using a linked device | `Tablet User` | Senior-facing assisted experience |
+| Self-managing senior | `Independent User` | Standalone senior experience |
+| Urgent actionable event | `Alert` | Organiser-directed by default |
+| Non-urgent tracking and follow-up context | `Insight` | Separate from alerts |
+| Shared event stream | `Activity` | Circle-level visibility surface |
 | Memvella itself | `digital wellness companion` or `companion` | Avoid medical framing |
 
-## Transitional Terms In The Current Codebase
+## Canonical Internal Terms
 
-- `Admin` should only appear when documenting a historical implementation detail.
-- `Supporter` now survives mainly in legacy backend module, API, and table names that have not been broadly renamed yet.
-- The backend schema now stores `organiser`, `member`, and `independent_senior`, while still allowing legacy `supporter` rows during the migration window.
-- `Personal Profile` and `Connection Code` are legacy onboarding labels and should not be reused.
-- The shared family-side app route is now `/circle`, while organiser account entry routes use `/onboarding/organiser` and `/organiser/signin`.
+- Use `circle` instead of `familySpace`.
+- Use `circleMembership` instead of `familySpaceMembership`.
+- Use `organiser` instead of `supporter` or `admin`.
+- Use `people` for senior-grounding people.
+- Use `alerts`, `insights`, and `activity` as separate concepts.
 
-## Avoid In Generic Product Copy
+## Retired Terms
+
+- `Admin`
+- `Supporter`
+- `FamilySpace`
+- `familyMembers`
+- `Personal Profile`
+- `Connection Code`
+
+These terms should appear only when documenting migration work or historical implementation details.
+
+## Product Copy Rules
+
+- Prefer direct, concrete phrasing over sentimental phrasing.
+- Use `Circle` consistently instead of mixing `family space`, `group`, and `network`.
+- Use `Organiser`, `Member`, `Tablet User`, and `Independent User` consistently in product UI and docs.
+- Keep role names stable across onboarding, settings, alerts, and error states.
+- Do not describe senior-grounding `People` as family-side participants.
+
+## Product Copy To Avoid
 
 - `caregiver`
 - `care circle`
 - `loved one`
 - `patient`
 - `sufferer`
-- `dementia` as a broad UI label
+- `dementia` as a broad product label
 
-These words may appear only when they are legally, clinically, or historically necessary.
+These terms may appear only when legally, clinically, or historically necessary.
 
-## Copy Rules
+## Marketing Copy Guidance
 
-- Prefer direct, concrete phrasing over sentimental phrasing.
-- Use `Circle` consistently instead of mixing `family space`, `group`, and `network`.
-- Use `Organiser`, `Member`, `Tablet User`, and `Independent User` in new product docs and new product copy.
-- Keep role names consistent across onboarding, settings, and error states.
+- Marketing copy may be more emotional and consumer-facing than product UI.
+- Marketing copy must still avoid implying diagnosis, treatment, clinical care, or medical-device positioning.
+- Emotional language is acceptable only if it stays consistent with Memvella being a digital wellness companion.
 
-## Current Gap
+## Implementation Note
 
-- The shipped codebase still has legacy `supporter` implementation names in some backend modules and tables.
+The shipped codebase still contains legacy names in routes, modules, and schema surfaces. Those names are migration debt, not acceptable targets for new work.

@@ -19,7 +19,7 @@ This directory contains the Convex backend for `apps/core`.
 
 ## Data Model Guidance
 
-- Prefer the FamilySpace-based model for new work.
+- Prefer the target `circle`-based model for new work.
 - Do not build new features on legacy compatibility tables unless the task is explicitly a migration.
 - When schema changes affect existing data, document the migration plan in `docs/data-model.md` and use a safe rollout pattern.
 

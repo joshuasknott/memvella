@@ -2,9 +2,9 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-06
+Last reviewed: 2026-04-11
 Owners: engineering
-Read when: touching routing, backend integration, or repo structure
+Read when: touching routing, backend integration, schema design, or repo structure
 Depends on: docs/product.md, docs/data-model.md
 
 ## Monorepo Layout
@@ -20,14 +20,46 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core/lib`: frontend helpers, auth glue, device fingerprinting, push helpers
 - `apps/core/convex`: schema, queries, mutations, actions, HTTP router, and auth integration
 
+## Routing Model
+
+### Core Product Routes
+
+- `/`: role-selection entry point
+- `/circle`: shared family-side workspace for Organisers and Members
+- `/onboarding/organiser`: organiser account creation
+- `/organiser/signin`: organiser sign-in
+- `/onboarding/member`: member join flow
+- `/assisted/login`: Tablet User pairing and assisted session bootstrap
+- `/assisted`: Tablet User experience
+- `/onboarding/independent`: Independent User onboarding
+- `/independent`: Independent User experience
+
+Rules:
+
+- `/circle` is the canonical family-side workspace route.
+- Organiser and Member entry flows may differ, but they converge into `/circle`.
+- Legacy `/supporter` and `/admin` routes are migration debt and should be removed.
+
+### Marketing Routes
+
+- `/`: single-page homepage
+- `/privacy`: privacy policy
+- `/terms`: terms of service
+- `/contact`: contact page
+
+Rules:
+
+- Marketing is single-page-first.
+- Separate marketing subpages should exist only when they have a real information architecture reason.
+- Waitlist submission belongs to the homepage flow, even if the backend may expose a dedicated API route.
+
 ## Runtime Architecture
 
 ### Frontend
 
 - Next.js 16 App Router powers both apps.
-- `apps/core` exposes a shared family-side workspace at `/circle`, plus role-specific onboarding and senior-side routes.
 - `apps/core/app/providers.tsx` wires the Convex client and Better Auth provider integration.
-- `apps/marketing` now ships a real multi-page surface and posts waitlist submissions through a server route to the Convex backend.
+- `apps/marketing` posts waitlist submissions through a server route to the Convex backend.
 
 ### Backend
 
@@ -35,22 +67,48 @@ Depends on: docs/product.md, docs/data-model.md
 - Better Auth routes are registered into the Convex HTTP router in `apps/core/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
 
-### Auth Path
+## Auth Architecture
 
-- Better Auth configuration lives in `apps/core/convex/auth.ts`.
-- Next.js server helpers live in `apps/core/lib/auth-server.ts`.
-- Client auth calls use `apps/core/lib/auth-client.ts`.
-- Senior-side device sessions are separate from Better Auth sessions and are handled in Convex.
-- Organiser and Member family-side account sessions use Better Auth email and password.
-- Member onboarding now validates the Circle code before family-side account auth.
-- Independent User onboarding and repeat sign-in use Convex-managed passkey, recovery-code, and senior-session flows instead of Better Auth phone bootstrap.
+- Better Auth handles authenticated family-side account sessions for Circle participants.
+- Convex-managed senior sessions handle Tablet User and Independent User device access.
+- Independent auth is standalone and must not assume an existing Circle membership.
 
 ## Data Architecture
 
-- The current canonical model is anchored on `familySpaces`, `familySpaceMemberships`, and `seniorProfiles`.
-- New routines, memories, notifications, and voice records should attach to `familySpaceId` or `seniorProfileId` through canonical tables.
-- Marketing waitlist submissions are stored separately from product data.
-- Legacy compatibility tables still exist in the schema and must be treated as transitional.
+### Circle-Scoped Data
+
+Circle-scoped data exists to coordinate human participants and Circle-level settings.
+
+Examples:
+
+- circles
+- circle memberships
+- invite codes
+- Circle settings
+- push subscriptions
+- notification delivery state
+- Circle activity visibility
+
+### Senior-Scoped Data
+
+Senior-scoped data exists to represent the senior's world, not the Circle's admin surface.
+
+Examples:
+
+- senior profiles
+- people used for grounding and memory context
+- memories and memory assets
+- routines and routine history
+- voice interactions
+- insights
+- alerts
+
+Rules:
+
+- Senior-facing content should anchor on `seniorProfileId`.
+- Circle-facing coordination data should anchor on `circleId`.
+- When a senior is linked to a Circle, Circle visibility derives from that senior's Circle relationship.
+- Independent seniors remain valid without a Circle.
 
 ## Documentation Rules
 
@@ -70,5 +128,10 @@ These are not source material and should not be treated as product or architectu
 ## New Work Guidance
 
 - Update the relevant canonical doc when a contract changes.
-- Prefer the smallest change that keeps the current FamilySpace model coherent.
-- Do not rebuild removed caregiver-era architecture through new docs or new code.
+- Prefer the smallest change that moves the codebase toward the target `circle` model.
+- Do not preserve legacy route, schema, or module names once a clean replacement exists.
+- Do not rebuild retired caregiver-era or FamilySpace-era concepts through new code or docs.
+
+## Implementation Note
+
+The current implementation still contains legacy route aliases, module names, and schema surfaces. Those are temporary migration concerns, not the target architecture.
