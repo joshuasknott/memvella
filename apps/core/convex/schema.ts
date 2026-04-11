@@ -15,6 +15,7 @@ export default defineSchema({
     authIdentityToken: v.string(),
     authEmail: v.union(v.string(), v.null()),
     displayName: v.string(),
+    // Temporary widen kept until legacy supporter rows are fully backfilled.
     role: v.union(
       v.literal("supporter"),
       v.literal("organiser"),

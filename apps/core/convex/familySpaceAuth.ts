@@ -9,23 +9,36 @@ import {
 
 type DbCtx = MutationCtx | QueryCtx;
 
-export type FamilySideMembershipRole = "supporter" | "organiser" | "member";
-export type MembershipRole = FamilySideMembershipRole | "independent_senior";
-export type MembershipAccessRequirement = MembershipRole | "family_side";
+type StoredFamilySideMembershipRole = "supporter" | "organiser" | "member";
+
+export type FamilySideMembershipRole = "organiser" | "member";
+export type MembershipRole = StoredFamilySideMembershipRole | "independent_senior";
+export type MembershipAccessRequirement =
+  | FamilySideMembershipRole
+  | "independent_senior"
+  | "family_side";
 export type FamilySideCapability =
   | "manage_circle_members"
   | "manage_invite_codes"
   | "manage_tablet_access"
   | "manage_circle_notifications";
 
-export function isFamilySideRole(
+export function normalizeFamilySideMembershipRole(
   role: MembershipRole,
-): role is FamilySideMembershipRole {
-  return role === "supporter" || role === "organiser" || role === "member";
+): FamilySideMembershipRole | null {
+  switch (role) {
+    case "supporter":
+    case "organiser":
+      return "organiser";
+    case "member":
+      return "member";
+    default:
+      return null;
+  }
 }
 
-export function isOrganiserLikeRole(role: FamilySideMembershipRole) {
-  return role === "supporter" || role === "organiser";
+export function isFamilySideRole(role: MembershipRole) {
+  return normalizeFamilySideMembershipRole(role) !== null;
 }
 
 export function familySideRoleHasCapability(
@@ -37,7 +50,7 @@ export function familySideRoleHasCapability(
     case "manage_invite_codes":
     case "manage_tablet_access":
     case "manage_circle_notifications":
-      return isOrganiserLikeRole(role);
+      return role === "organiser";
   }
 }
 
@@ -45,12 +58,20 @@ function membershipMatchesRequirement(
   membership: Doc<"familySpaceMemberships">,
   expectedRole: MembershipAccessRequirement | undefined,
 ) {
+  const normalizedFamilySideRole = normalizeFamilySideMembershipRole(
+    membership.role,
+  );
+
   if (!expectedRole) {
     return true;
   }
 
   if (expectedRole === "family_side") {
-    return isFamilySideRole(membership.role);
+    return normalizedFamilySideRole !== null;
+  }
+
+  if (expectedRole === "organiser" || expectedRole === "member") {
+    return normalizedFamilySideRole === expectedRole;
   }
 
   return membership.role === expectedRole;
@@ -147,15 +168,21 @@ export async function requireFamilySideCapability(
   capability: FamilySideCapability,
 ) {
   const familyContext = await requireFamilySideMembership(ctx);
-  if (!isFamilySideRole(familyContext.membership.role)) {
+  const familySideRole = normalizeFamilySideMembershipRole(
+    familyContext.membership.role,
+  );
+  if (!familySideRole) {
     throw new Error("This account does not have access to the family-side workspace.");
   }
 
-  if (!familySideRoleHasCapability(familyContext.membership.role, capability)) {
+  if (!familySideRoleHasCapability(familySideRole, capability)) {
     throw new Error("This account does not have access to that Circle setting.");
   }
 
-  return familyContext;
+  return {
+    ...familyContext,
+    familySideRole,
+  };
 }
 
 export async function getSeniorProfileByMode(

@@ -10,7 +10,7 @@ export function useCircleProfile() {
     isAuthenticated ? undefined : "skip",
   );
   const role = profile?.role ?? null;
-  const isOrganiser = role === "organiser" || role === "supporter";
+  const isOrganiser = role === "organiser";
   const isMember = role === "member";
 
   return {

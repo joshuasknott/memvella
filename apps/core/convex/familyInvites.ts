@@ -5,8 +5,9 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/s
 import {
   getMembershipByAuthIdentityToken,
   isFamilySideRole,
-  requireFamilySideMembership,
+  normalizeFamilySideMembershipRole,
   requireFamilySideCapability,
+  requireFamilySideMembership,
 } from "./familySpaceAuth";
 import {
   generateNumericCode,
@@ -179,8 +180,9 @@ function buildRateLimitMessage(retryAfterMs: number) {
 }
 
 function getFamilyRoleLabel(role: Doc<"familySpaceMemberships">["role"]) {
-  switch (role) {
-    case "supporter":
+  const normalizedRole = normalizeFamilySideMembershipRole(role);
+
+  switch (normalizedRole) {
     case "organiser":
       return ORGANISER_LABEL;
     case "member":
@@ -204,19 +206,30 @@ export const listCircleMembers = query({
     return memberships
       .filter((candidate) => candidate.role !== "independent_senior")
       .sort((left, right) => {
-        const leftRank = left.role === "member" ? 1 : 0;
-        const rightRank = right.role === "member" ? 1 : 0;
+        const leftRank =
+          normalizeFamilySideMembershipRole(left.role) === "member" ? 1 : 0;
+        const rightRank =
+          normalizeFamilySideMembershipRole(right.role) === "member" ? 1 : 0;
         return leftRank - rightRank || left._creationTime - right._creationTime;
       })
-      .map((candidate) => ({
-        id: candidate._id,
-        displayName: candidate.displayName,
-        role: candidate.role,
-        roleLabel: getFamilyRoleLabel(candidate.role),
-        authEmail: candidate.authEmail,
-        joinedAt: candidate._creationTime,
-        isCurrentAccount: candidate._id === membership._id,
-      }));
+      .flatMap((candidate) => {
+        const role = normalizeFamilySideMembershipRole(candidate.role);
+        if (!role) {
+          return [];
+        }
+
+        return [
+          {
+            id: candidate._id,
+            displayName: candidate.displayName,
+            role,
+            roleLabel: getFamilyRoleLabel(candidate.role),
+            authEmail: candidate.authEmail,
+            joinedAt: candidate._creationTime,
+            isCurrentAccount: candidate._id === membership._id,
+          },
+        ];
+      });
   },
 });
 
@@ -418,11 +431,14 @@ export const redeemMemberInviteCode = mutation({
       }
 
       if (existingMembership.familySpaceId === lookup.invite.familySpaceId) {
+        const familySideRole = normalizeFamilySideMembershipRole(
+          existingMembership.role,
+        );
         return {
           status: "already_joined" as const,
           familySpaceId: existingMembership.familySpaceId,
           membershipId: existingMembership._id,
-          role: existingMembership.role,
+          role: familySideRole ?? "member",
         };
       }
 

@@ -6,6 +6,7 @@ import {
   getMembershipByAuthIdentityToken,
   getSeniorProfileByMode,
   isFamilySideRole,
+  normalizeFamilySideMembershipRole,
   requireFamilySideCapability,
   requireFamilySpaceMembership,
   upsertAssistedSeniorProfile,
@@ -37,9 +38,8 @@ import {
 
 const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 
-const legacyRoleValidator = v.optional(
+const organiserProfileRoleValidator = v.optional(
   v.union(
-    v.literal("supporter"),
     v.literal("organiser"),
     v.literal("assisted_senior"),
     v.literal("independent_senior"),
@@ -225,7 +225,7 @@ export const createOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
-    role: legacyRoleValidator,
+    role: organiserProfileRoleValidator,
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -329,7 +329,7 @@ export const patchOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
-    role: legacyRoleValidator,
+    role: organiserProfileRoleValidator,
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -650,7 +650,9 @@ export const getOrganiserProfile = query({
         ORGANISER_LABEL,
       seniorDisplayName:
         normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL,
-      role: familyContext.membership.role,
+      role:
+        normalizeFamilySideMembershipRole(familyContext.membership.role) ??
+        "organiser",
       onboardingStep: familyContext.membership.onboardingStep,
       seniorProfileId: seniorProfile?._id ?? null,
       seniorMode: seniorProfile?.seniorMode ?? null,
