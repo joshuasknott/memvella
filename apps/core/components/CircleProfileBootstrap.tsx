@@ -4,16 +4,16 @@ import { useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
-import { useFamilySpaceProfile } from "@/lib/use-family-space-profile";
+import { useCircleProfile } from "@/lib/use-circle-profile";
 
 function normalizeName(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
 }
 
-export default function OrganiserProfileBootstrap() {
+export default function CircleProfileBootstrap() {
   const { data: session } = authClient.useSession();
-  const { isAuthenticated, isLoading, profile } = useFamilySpaceProfile();
+  const { isAuthenticated, isLoading, profile } = useCircleProfile();
   const createProfile = useMutation(api.organiser.createOrganiserProfile);
   const patchProfile = useMutation(api.organiser.patchOrganiserProfile);
 

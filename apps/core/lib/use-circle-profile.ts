@@ -3,7 +3,7 @@
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-export function useFamilySpaceProfile() {
+export function useCircleProfile() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
     api.organiser.getOrganiserProfile,

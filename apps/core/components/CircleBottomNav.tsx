@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Home, Calendar, BookOpen, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
-export default function OrganiserBottomNav() {
+export default function CircleBottomNav() {
   const pathname = usePathname();
   const isHomeRoute = pathname === '/circle';
   const isRoutinesRoute = pathname.startsWith('/circle/routines') || pathname.startsWith('/circle/add-routine');

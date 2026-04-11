@@ -38,7 +38,7 @@ function getTitleFromPath(pathname: string): string {
   return SUB_ROUTE_TITLES[sub] ?? "Back";
 }
 
-export default function OrganiserHeader() {
+export default function CircleHeader() {
   const pathname = usePathname();
   const router = useRouter();
 
