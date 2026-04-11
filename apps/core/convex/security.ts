@@ -19,12 +19,37 @@ export const SENIOR_SESSION_TTL_MS = {
 
 export type SeniorSessionType = keyof typeof SENIOR_IDLE_TIMEOUT_MS;
 
+const LOCAL_DEV_SECURITY_PEPPER = "memvella-local-dev-pepper";
+
+function getTrimmedEnvValue(name: string) {
+  const value = process.env[name]?.trim();
+  return value && value.length > 0 ? value : null;
+}
+
+function isProductionRuntime() {
+  if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
+    return true;
+  }
+
+  const deployment = getTrimmedEnvValue("CONVEX_DEPLOYMENT")?.toLowerCase();
+  return deployment?.startsWith("prod:") ?? false;
+}
+
 function getSecurityPepper() {
-  return (
-    process.env.MEMVELLA_AUTH_PEPPER ??
-    process.env.BETTER_AUTH_SECRET ??
-    "memvella-local-dev-pepper"
-  );
+  const configuredPepper =
+    getTrimmedEnvValue("MEMVELLA_AUTH_PEPPER") ??
+    getTrimmedEnvValue("BETTER_AUTH_SECRET");
+  if (configuredPepper) {
+    return configuredPepper;
+  }
+
+  if (isProductionRuntime()) {
+    throw new Error(
+      "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
+    );
+  }
+
+  return LOCAL_DEV_SECURITY_PEPPER;
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {

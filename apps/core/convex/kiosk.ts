@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx } from "./_generated/server";
+import { buildPairingRetryMessage } from "../lib/pairing-rate-limit";
 import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
@@ -79,17 +80,33 @@ async function revokeOutstandingPins(
   }
 }
 
-function formatRetryMessage(retryAfterMs: number) {
-  const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
-  return `Too many pairing attempts. Wait ${retryAfterSeconds} seconds before trying another code.`;
-}
-
 export const pairTabletSession = mutation({
   args: {
     pinCode: v.string(),
     deviceFingerprint: v.string(),
+    networkScopeKey: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<PairTabletSessionResult> => {
+    const networkRateLimit = await ctx.runMutation(
+      internal.rateLimits.consumeRateLimit,
+      {
+        scopeKey:
+          normalizeOptionalText(args.networkScopeKey) ??
+          `assisted-pairing-network:${await hashDeviceFingerprint(args.deviceFingerprint)}`,
+        actionKey: "pairTabletSessionNetwork",
+        maxHits: 5,
+        windowMs: 10 * 60 * 1000,
+        blockDurationMs: 20 * 60 * 1000,
+      },
+    );
+
+    if (!networkRateLimit.allowed) {
+      return {
+        success: false as const,
+        error: buildPairingRetryMessage(networkRateLimit.retryAfterMs),
+      };
+    }
+
     const deviceScopeKey = await hashDeviceFingerprint(args.deviceFingerprint);
     const rateLimit = await ctx.runMutation(
       internal.rateLimits.consumeRateLimit,
@@ -105,7 +122,7 @@ export const pairTabletSession = mutation({
     if (!rateLimit.allowed) {
       return {
         success: false as const,
-        error: formatRetryMessage(rateLimit.retryAfterMs),
+        error: buildPairingRetryMessage(rateLimit.retryAfterMs),
       };
     }
 

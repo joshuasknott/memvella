@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import {
   getSeniorProfileByMode,
+  requireFamilySideCapability,
   requireFamilySpaceMembership,
 } from "./familySpaceAuth";
 import {
@@ -30,7 +31,7 @@ export const createRoutineSchedule = mutation({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
     const title = normalizeOptionalText(args.title);
     const normalizedDaysOfWeek = normalizeDaysOfWeek(args.daysOfWeek);
 
@@ -129,7 +130,7 @@ export const updateRoutineSchedule = mutation({
     status: v.optional(v.union(v.literal("active"), v.literal("paused"))),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
       throw new Error("This routine schedule does not belong to your Circle.");
@@ -184,7 +185,7 @@ export const deleteRoutineSchedule = mutation({
     routineScheduleId: v.id("routineSchedules"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
       throw new Error("This routine schedule does not belong to your Circle.");

@@ -106,7 +106,7 @@ export const addFamilyMember = mutation({
     photoStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(ctx, "manage_people");
     if (args.photoStorageId) {
       await assertValidStoredUpload(ctx, {
         storageId: args.photoStorageId,
@@ -148,9 +148,9 @@ export const addRoutine = mutation({
     aiInstructions: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership, familySpace } = await requireFamilySpaceMembership(
+    const { membership, familySpace } = await requireFamilySideCapability(
       ctx,
-      "family_side",
+      "manage_routines",
     );
 
     const title = normalizeOptionalText(args.routineName);
@@ -196,7 +196,10 @@ export const updateNotificationSettings = mutation({
     routineReminders: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_notifications",
+    );
 
     const existing = await ctx.db
       .query("notificationSettings")
@@ -274,6 +277,10 @@ export const createOrganiserProfile = mutation({
     if (existingMembership) {
       if (!isFamilySideRole(existingMembership.role)) {
         throw new Error("This account is already linked to a different experience.");
+      }
+
+      if (normalizeFamilySideMembershipRole(existingMembership.role) !== "organiser") {
+        throw new Error("This account does not have access to that Circle setting.");
       }
 
       await ctx.db.patch(existingMembership._id, {
@@ -377,7 +384,10 @@ export const patchOrganiserProfile = mutation({
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_admin",
+    );
     const organiserName = normalizeOptionalText(args.organiserName);
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
     const seniorMode =

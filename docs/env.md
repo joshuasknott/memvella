@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-11
 Owners: engineering
 Read when: setting up local dev, auth, AI, or deployment
 Depends on: docs/auth-and-identity.md
@@ -25,7 +25,7 @@ The local examples live at:
 | `NEXT_PUBLIC_CONVEX_URL` | yes | client and server | Convex React client and HTTP client | Convex deployment URL |
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | Better Auth and Convex Next.js bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
-| `MEMVELLA_AUTH_PEPPER` | recommended | server and Convex | extra hashing/pepper helpers | Secret value |
+| `MEMVELLA_AUTH_PEPPER` | recommended in general, required in production when `BETTER_AUTH_SECRET` is not present | server and Convex | extra hashing/pepper helpers | Secret value |
 | `TWILIO_ACCOUNT_SID` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS delivery | Transitional only while older independent rows still rely on phone recovery |
 | `TWILIO_AUTH_TOKEN` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS delivery | Secret value |
 | `TWILIO_SMS_FROM_NUMBER` | optional for legacy independent SMS compatibility | server and Convex | Twilio SMS sender | E.164 sender number |
@@ -45,3 +45,16 @@ If you are testing auth on a phone, tablet, or another machine, set the site URL
 If a variable is read inside Convex functions, configure it for the Convex runtime as well. A value existing only in the Next.js environment is not enough for server-side Convex code.
 
 For `apps/core`, prefer `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` in `.env.local`. Avoid also defining `CONVEX_SITE_URL` there, because the Convex CLI treats the site URL aliases as the same setting and will skip automatic updates when more than one is present.
+
+## Crypto Secret Rule
+
+Security-sensitive hashing and signing helpers in both Convex and Next.js server code resolve secrets in this order:
+
+1. `MEMVELLA_AUTH_PEPPER`
+2. `BETTER_AUTH_SECRET`
+3. local development fallback (non-production only)
+
+Production behavior is fail-closed:
+
+- if both `MEMVELLA_AUTH_PEPPER` and `BETTER_AUTH_SECRET` are missing, requests that need crypto helpers fail with a server error instead of silently using a weak default.
+- production detection includes `NODE_ENV=production` and Convex production deployments (for example `CONVEX_DEPLOYMENT=prod:...`).

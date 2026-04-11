@@ -21,7 +21,31 @@ export type FamilySideCapability =
   | "manage_circle_members"
   | "manage_invite_codes"
   | "manage_tablet_access"
-  | "manage_circle_notifications";
+  | "manage_circle_notifications"
+  | "manage_people"
+  | "manage_routines"
+  | "manage_circle_admin";
+
+function compareMembershipDeterministically(
+  left: Doc<"familySpaceMemberships">,
+  right: Doc<"familySpaceMemberships">,
+) {
+  if (left._creationTime !== right._creationTime) {
+    return left._creationTime - right._creationTime;
+  }
+
+  return String(left._id).localeCompare(String(right._id));
+}
+
+export function pickDeterministicMembership(
+  memberships: ReadonlyArray<Doc<"familySpaceMemberships">>,
+) {
+  if (memberships.length === 0) {
+    return null;
+  }
+
+  return [...memberships].sort(compareMembershipDeterministically)[0];
+}
 
 export function normalizeFamilySideMembershipRole(
   role: MembershipRole,
@@ -49,8 +73,27 @@ export function familySideRoleHasCapability(
     case "manage_invite_codes":
     case "manage_tablet_access":
     case "manage_circle_notifications":
+    case "manage_people":
+    case "manage_routines":
+    case "manage_circle_admin":
       return role === "organiser";
   }
+}
+
+export function assertFamilySideCapability(
+  role: MembershipRole,
+  capability: FamilySideCapability,
+) {
+  const familySideRole = normalizeFamilySideMembershipRole(role);
+  if (!familySideRole) {
+    throw new Error("This account does not have access to the family-side workspace.");
+  }
+
+  if (!familySideRoleHasCapability(familySideRole, capability)) {
+    throw new Error("This account does not have access to that Circle setting.");
+  }
+
+  return familySideRole;
 }
 
 function membershipMatchesRequirement(
@@ -89,28 +132,56 @@ export async function getMembershipByAuthIdentityToken(
   ctx: DbCtx,
   authIdentityToken: string,
 ) {
-  const circleMembership = await ctx.db
+  const circleMemberships = await ctx.db
     .query("circleMemberships")
     .withIndex("by_authIdentityToken", (query) =>
       query.eq("authIdentityToken", authIdentityToken),
     )
-    .unique();
+    .take(20);
 
-  if (circleMembership?.legacyFamilySpaceMembershipId) {
-    const legacyMembership = await ctx.db.get(
-      circleMembership.legacyFamilySpaceMembershipId,
-    );
-    if (legacyMembership) {
-      return legacyMembership;
-    }
+  const mappedCircleLegacyMemberships = (
+    await Promise.all(
+      circleMemberships
+        .map((membership) => membership.legacyFamilySpaceMembershipId)
+        .filter(
+          (
+            membershipId,
+          ): membershipId is Id<"familySpaceMemberships"> => membershipId !== null,
+        )
+        .map((membershipId) => ctx.db.get(membershipId)),
+    )
+  ).filter(
+    (membership): membership is Doc<"familySpaceMemberships"> =>
+      membership !== null,
+  );
+
+  const preferredCircleMembership = pickDeterministicMembership(
+    mappedCircleLegacyMemberships,
+  );
+  if (preferredCircleMembership) {
+    return preferredCircleMembership;
   }
 
-  return await ctx.db
+  const legacyMemberships = await listMembershipsByAuthIdentityToken(
+    ctx,
+    authIdentityToken,
+  );
+  return pickDeterministicMembership(legacyMemberships);
+}
+
+export async function listMembershipsByAuthIdentityToken(
+  ctx: DbCtx,
+  authIdentityToken: string,
+  limit = 20,
+) {
+  const memberships = await ctx.db
     .query("familySpaceMemberships")
     .withIndex("by_authIdentityToken", (query) =>
       query.eq("authIdentityToken", authIdentityToken),
     )
-    .unique();
+    .take(limit);
+
+  return [...memberships].sort(compareMembershipDeterministically);
 }
 
 export async function getOptionalFamilySpaceMembership(
@@ -183,16 +254,10 @@ export async function requireFamilySideCapability(
   capability: FamilySideCapability,
 ) {
   const familyContext = await requireFamilySideMembership(ctx);
-  const familySideRole = normalizeFamilySideMembershipRole(
+  const familySideRole = assertFamilySideCapability(
     familyContext.membership.role,
+    capability,
   );
-  if (!familySideRole) {
-    throw new Error("This account does not have access to the family-side workspace.");
-  }
-
-  if (!familySideRoleHasCapability(familySideRole, capability)) {
-    throw new Error("This account does not have access to that Circle setting.");
-  }
 
   return {
     ...familyContext,

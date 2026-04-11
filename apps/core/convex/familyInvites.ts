@@ -3,9 +3,10 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import {
-  getMembershipByAuthIdentityToken,
   isFamilySideRole,
+  listMembershipsByAuthIdentityToken,
   normalizeFamilySideMembershipRole,
+  pickDeterministicMembership,
   requireFamilySideCapability,
   requireFamilySideMembership,
 } from "./familySpaceAuth";
@@ -33,9 +34,31 @@ const INVITE_PREVIEW_BLOCK_MS = 10 * 60 * 1000;
 type InviteLookupState =
   | { state: "active"; invite: Doc<"familyInvites"> }
   | { state: "invalid_code" }
-  | { state: "expired" }
-  | { state: "revoked" }
-  | { state: "already_used" };
+  | { state: "expired"; invite: Doc<"familyInvites"> | null }
+  | { state: "revoked"; invite: Doc<"familyInvites"> | null }
+  | { state: "already_used"; invite: Doc<"familyInvites"> | null };
+
+type InviteTerminalLookupState = Exclude<InviteLookupState["state"], "active">;
+
+type RedeemMembershipEvaluation =
+  | { status: "eligible" }
+  | {
+      status: "already_joined";
+      membership: Doc<"familySpaceMemberships">;
+    }
+  | {
+      status: "role_collision";
+      message: string;
+    }
+  | {
+      status: "circle_conflict";
+      message: string;
+    };
+
+const ROLE_COLLISION_MESSAGE =
+  "This account is already linked to an independent profile. Use a different email to join a Circle.";
+const CIRCLE_CONFLICT_MESSAGE =
+  "This account is already linked to a different Circle. Use a different email to join this one.";
 
 type RedeemMemberInviteCodeResult =
   | {
@@ -55,7 +78,7 @@ type RedeemMemberInviteCodeResult =
       status: "already_joined";
       familySpaceId: Doc<"familyInvites">["familySpaceId"];
       membershipId: Doc<"familySpaceMemberships">["_id"];
-      role: Doc<"familySpaceMemberships">["role"];
+      role: "organiser" | "member";
     }
   | {
       status: "joined";
@@ -274,15 +297,27 @@ async function getInviteLookupByHash(
 
     const latestCircleInvite = circleInvites[0];
     if (latestCircleInvite.consumedAt !== null) {
-      return { state: "already_used" };
+      const legacyInvite = await ensureLegacyInviteForCircleInvite(
+        ctx,
+        latestCircleInvite,
+      );
+      return { state: "already_used", invite: legacyInvite };
     }
 
     if (latestCircleInvite.revokedAt !== null) {
-      return { state: "revoked" };
+      const legacyInvite = await ensureLegacyInviteForCircleInvite(
+        ctx,
+        latestCircleInvite,
+      );
+      return { state: "revoked", invite: legacyInvite };
     }
 
     if (latestCircleInvite.expiresAt <= now) {
-      return { state: "expired" };
+      const legacyInvite = await ensureLegacyInviteForCircleInvite(
+        ctx,
+        latestCircleInvite,
+      );
+      return { state: "expired", invite: legacyInvite };
     }
   }
 
@@ -306,15 +341,15 @@ async function getInviteLookupByHash(
 
   const latestInvite = invites[0];
   if (latestInvite.consumedAt !== null) {
-    return { state: "already_used" };
+    return { state: "already_used", invite: latestInvite };
   }
 
   if (latestInvite.revokedAt !== null) {
-    return { state: "revoked" };
+    return { state: "revoked", invite: latestInvite };
   }
 
   if (latestInvite.expiresAt <= now) {
-    return { state: "expired" };
+    return { state: "expired", invite: latestInvite };
   }
 
   return { state: "invalid_code" };
@@ -341,6 +376,97 @@ async function generateUniqueActiveInviteCode(ctx: MutationCtx) {
 function buildRateLimitMessage(retryAfterMs: number) {
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
   return `Too many invite attempts. Wait ${retryAfterSeconds} seconds before trying another code.`;
+}
+
+export function getInviteLookupMessage(
+  state: InviteTerminalLookupState,
+  context: "preview" | "redeem",
+) {
+  const previewMessages = {
+    invalid_code:
+      "We couldn't find that Circle. Please double-check the code and try again.",
+    expired: "This Circle code has expired. Ask for a new one.",
+    revoked: "This Circle code is no longer active. Ask for a new one.",
+    already_used: "This Circle code has already been used. Ask for a new one.",
+  } satisfies Record<InviteTerminalLookupState, string>;
+
+  const redeemMessages = {
+    invalid_code:
+      "We couldn't find that Circle. Please double-check the code and try again.",
+    expired: "This invite code has expired. Ask for a new one.",
+    revoked: "This invite code is no longer active. Ask for a new one.",
+    already_used: "This invite code has already been used. Ask for a new one.",
+  } satisfies Record<InviteTerminalLookupState, string>;
+
+  return context === "preview" ? previewMessages[state] : redeemMessages[state];
+}
+
+function getFamilySideRoleForResult(role: Doc<"familySpaceMemberships">["role"]) {
+  return normalizeFamilySideMembershipRole(role) ?? "member";
+}
+
+function buildAlreadyJoinedResult(
+  membership: Doc<"familySpaceMemberships">,
+): RedeemMemberInviteCodeResult {
+  return {
+    status: "already_joined",
+    familySpaceId: membership.familySpaceId,
+    membershipId: membership._id,
+    role: getFamilySideRoleForResult(membership.role),
+  };
+}
+
+export function evaluateRedeemMemberships(
+  memberships: ReadonlyArray<Doc<"familySpaceMemberships">>,
+  targetFamilySpaceId: Id<"familySpaces">,
+): RedeemMembershipEvaluation {
+  const familySideMemberships = memberships.filter((membership) =>
+    isFamilySideRole(membership.role),
+  );
+  const targetMembership = pickDeterministicMembership(
+    familySideMemberships.filter(
+      (membership) => membership.familySpaceId === targetFamilySpaceId,
+    ),
+  );
+  if (targetMembership) {
+    return {
+      status: "already_joined",
+      membership: targetMembership,
+    };
+  }
+
+  if (memberships.some((membership) => membership.role === "independent_senior")) {
+    return {
+      status: "role_collision",
+      message: ROLE_COLLISION_MESSAGE,
+    };
+  }
+
+  if (familySideMemberships.length > 0) {
+    return {
+      status: "circle_conflict",
+      message: CIRCLE_CONFLICT_MESSAGE,
+    };
+  }
+
+  return { status: "eligible" };
+}
+
+async function listMembershipsForInviteTarget(
+  ctx: MutationCtx,
+  familySpaceId: Id<"familySpaces">,
+  authIdentityToken: string,
+) {
+  const memberships = await ctx.db
+    .query("familySpaceMemberships")
+    .withIndex("by_familySpaceId_and_authIdentityToken", (query) =>
+      query
+        .eq("familySpaceId", familySpaceId)
+        .eq("authIdentityToken", authIdentityToken),
+    )
+    .take(20);
+
+  return pickDeterministicMembership([...memberships]);
 }
 
 function getFamilyRoleLabel(role: Doc<"familySpaceMemberships">["role"]) {
@@ -598,16 +724,9 @@ export const previewMemberInviteCode = mutation({
     const inviteCodeHash = await hashFamilyInviteCode(normalizedInviteCode);
     const lookup = await getInviteLookupByHash(ctx, inviteCodeHash);
     if (lookup.state !== "active") {
-      const messages = {
-        invalid_code: "We couldn't find that Circle. Please double-check the code and try again.",
-        expired: "This Circle code has expired. Ask for a new one.",
-        revoked: "This Circle code is no longer active. Ask for a new one.",
-        already_used: "This Circle code has already been used. Ask for a new one.",
-      } satisfies Record<Exclude<InviteLookupState["state"], "active">, string>;
-
       return {
         status: lookup.state,
-        message: messages[lookup.state],
+        message: getInviteLookupMessage(lookup.state, "preview"),
       };
     }
 
@@ -675,52 +794,55 @@ export const redeemMemberInviteCode = mutation({
 
     const lookup = await getInviteLookupByHash(ctx, inviteCodeHash);
     if (lookup.state !== "active") {
-      const messages = {
-        invalid_code: "We couldn't find that Circle. Please double-check the code and try again.",
-        expired: "This invite code has expired. Ask for a new one.",
-        revoked: "This invite code is no longer active. Ask for a new one.",
-        already_used: "This invite code has already been used. Ask for a new one.",
-      } satisfies Record<Exclude<InviteLookupState["state"], "active">, string>;
+      const lookupInvite = "invite" in lookup ? lookup.invite : null;
+      if (lookupInvite?.redeemedByAuthIdentityToken === identity.tokenIdentifier) {
+        const redeemedMembership =
+          lookupInvite.redeemedByMembershipId !== null
+            ? await ctx.db.get(lookupInvite.redeemedByMembershipId)
+            : null;
+        if (redeemedMembership) {
+          return buildAlreadyJoinedResult(redeemedMembership);
+        }
+
+        const fallbackMembership = await listMembershipsForInviteTarget(
+          ctx,
+          lookupInvite.familySpaceId,
+          identity.tokenIdentifier,
+        );
+        if (fallbackMembership) {
+          return buildAlreadyJoinedResult(fallbackMembership);
+        }
+      }
 
       return {
         status: lookup.state,
-        message: messages[lookup.state],
+        message: getInviteLookupMessage(lookup.state, "redeem"),
       };
     }
 
-    const existingMembership = await getMembershipByAuthIdentityToken(
+    const membershipsForIdentity = await listMembershipsByAuthIdentityToken(
       ctx,
       identity.tokenIdentifier,
     );
 
-    if (existingMembership) {
-      if (existingMembership.role === "independent_senior") {
-        return {
-          status: "role_collision" as const,
-          message:
-            "This account is already linked to an independent profile. Use a different email to join a Circle.",
-        };
-      }
-
-      if (existingMembership.familySpaceId === lookup.invite.familySpaceId) {
-        const familySideRole = normalizeFamilySideMembershipRole(
-          existingMembership.role,
-        );
-        return {
-          status: "already_joined" as const,
-          familySpaceId: existingMembership.familySpaceId,
-          membershipId: existingMembership._id,
-          role: familySideRole ?? "member",
-        };
-      }
-
-      if (isFamilySideRole(existingMembership.role)) {
-        return {
-          status: "circle_conflict" as const,
-          message:
-            "This account is already linked to a different Circle. Use a different email to join this one.",
-        };
-      }
+    const membershipEvaluation = evaluateRedeemMemberships(
+      membershipsForIdentity,
+      lookup.invite.familySpaceId,
+    );
+    if (membershipEvaluation.status === "already_joined") {
+      return buildAlreadyJoinedResult(membershipEvaluation.membership);
+    }
+    if (membershipEvaluation.status === "role_collision") {
+      return {
+        status: "role_collision",
+        message: membershipEvaluation.message,
+      };
+    }
+    if (membershipEvaluation.status === "circle_conflict") {
+      return {
+        status: "circle_conflict",
+        message: membershipEvaluation.message,
+      };
     }
 
     const displayName = normalizeOptionalText(identity.name) ?? MEMBER_LABEL;

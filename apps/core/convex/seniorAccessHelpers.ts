@@ -36,6 +36,115 @@ export type SeniorSessionValidationResult =
       reason: SeniorSessionInvalidReason;
     };
 
+type SeniorSessionRecordForValidation = Pick<
+  Doc<"seniorAccessSessions">,
+  | "_id"
+  | "sessionType"
+  | "revokedAt"
+  | "expiresAt"
+  | "idleExpiresAt"
+  | "deviceFingerprintHash"
+>;
+
+export function evaluateSeniorSessionRecord(
+  args: {
+    session: SeniorSessionRecordForValidation | null;
+    expectedSessionType?: SeniorSessionType;
+    now: number;
+    deviceFingerprintHash: string;
+  },
+): { status: "active" } | { status: "invalid"; reason: SeniorSessionInvalidReason; sessionId: Id<"seniorAccessSessions"> | null } {
+  if (!args.session) {
+    return { status: "invalid", reason: "not_found", sessionId: null };
+  }
+
+  if (
+    args.expectedSessionType &&
+    args.session.sessionType !== args.expectedSessionType
+  ) {
+    return {
+      status: "invalid",
+      reason: "wrong_experience",
+      sessionId: args.session._id,
+    };
+  }
+
+  if (args.session.revokedAt !== null) {
+    return { status: "invalid", reason: "revoked", sessionId: args.session._id };
+  }
+
+  if (args.now >= args.session.expiresAt) {
+    return { status: "invalid", reason: "expired", sessionId: args.session._id };
+  }
+
+  if (args.now >= args.session.idleExpiresAt) {
+    return {
+      status: "invalid",
+      reason: "idle_timeout",
+      sessionId: args.session._id,
+    };
+  }
+
+  if (args.session.deviceFingerprintHash !== args.deviceFingerprintHash) {
+    return {
+      status: "invalid",
+      reason: "device_mismatch",
+      sessionId: args.session._id,
+    };
+  }
+
+  return { status: "active" };
+}
+
+export function getInvalidSessionRevocationReason(
+  reason: SeniorSessionInvalidReason,
+  sessionId: Id<"seniorAccessSessions"> | null,
+) {
+  if (!sessionId) {
+    return null;
+  }
+
+  switch (reason) {
+    case "expired":
+      return "session_expired";
+    case "idle_timeout":
+      return "session_idle_timeout";
+    case "device_mismatch":
+      return "session_device_mismatch";
+    case "not_found":
+      return "session_context_missing";
+    case "revoked":
+    case "wrong_experience":
+      return null;
+  }
+}
+
+export async function revokeInvalidSeniorSessionIfNeeded(
+  ctx: MutationCtx,
+  args: {
+    reason: SeniorSessionInvalidReason;
+    sessionId: Id<"seniorAccessSessions"> | null;
+  },
+) {
+  const revokedReason = getInvalidSessionRevocationReason(
+    args.reason,
+    args.sessionId,
+  );
+  if (!revokedReason || !args.sessionId) {
+    return;
+  }
+
+  const session = await ctx.db.get(args.sessionId);
+  if (!session || session.revokedAt !== null) {
+    return;
+  }
+
+  await ctx.db.patch(args.sessionId, {
+    revokedAt: Date.now(),
+    revokedReason,
+  });
+}
+
 async function getActiveSessionByToken(
   ctx: SessionCtx,
   sessionToken: string,
@@ -58,33 +167,30 @@ export async function validateSeniorSession(
   },
 ): Promise<SeniorSessionValidationResult> {
   const session = await getActiveSessionByToken(ctx, args.sessionToken);
+  const now = Date.now();
+  const deviceFingerprintHash = await hashDeviceFingerprint(args.deviceFingerprint);
+  const evaluation = evaluateSeniorSessionRecord({
+    session,
+    expectedSessionType: args.expectedSessionType,
+    now,
+    deviceFingerprintHash,
+  });
+  if (evaluation.status === "invalid") {
+    if ("patch" in ctx.db) {
+      await revokeInvalidSeniorSessionIfNeeded(ctx as MutationCtx, {
+        reason: evaluation.reason,
+        sessionId: evaluation.sessionId,
+      });
+    }
+
+    return {
+      status: "invalid",
+      reason: evaluation.reason,
+    };
+  }
+
   if (!session) {
     return { status: "invalid", reason: "not_found" };
-  }
-
-  if (
-    args.expectedSessionType &&
-    session.sessionType !== args.expectedSessionType
-  ) {
-    return { status: "invalid", reason: "wrong_experience" };
-  }
-
-  if (session.revokedAt !== null) {
-    return { status: "invalid", reason: "revoked" };
-  }
-
-  const now = Date.now();
-  if (now >= session.expiresAt) {
-    return { status: "invalid", reason: "expired" };
-  }
-
-  if (now >= session.idleExpiresAt) {
-    return { status: "invalid", reason: "idle_timeout" };
-  }
-
-  const deviceFingerprintHash = await hashDeviceFingerprint(args.deviceFingerprint);
-  if (session.deviceFingerprintHash !== deviceFingerprintHash) {
-    return { status: "invalid", reason: "device_mismatch" };
   }
 
   const [familySpace, seniorProfile] = await Promise.all([
@@ -103,7 +209,10 @@ export async function validateSeniorSession(
   const expectedSeniorMode =
     session.sessionType === "assisted_device" ? "assisted" : "independent";
   if (seniorProfile.seniorMode !== expectedSeniorMode) {
-    return { status: "invalid", reason: "wrong_experience" };
+    return {
+      status: "invalid",
+      reason: "wrong_experience",
+    };
   }
 
   return {
