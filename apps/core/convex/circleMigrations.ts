@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, query } from "./_generated/server";
 import { normalizeFamilySideMembershipRole } from "./familySpaceAuth";
+import { ensureCircleMembershipForLegacyMembership } from "./circleCompat";
 
 const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 200;
@@ -125,6 +126,50 @@ export const backfillCircleMembershipsFromFamilySpaceMemberships = internalMutat
     return {
       processedCount,
       hasMore: processedCount === limit,
+    };
+  },
+});
+
+export const repairCircleMembershipLegacyLinks = internalMutation({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = clampBatchSize(args.limit);
+
+    const legacyMemberships = await ctx.db
+      .query("familySpaceMemberships")
+      .order("asc")
+      .take(limit * 3);
+
+    let repairedCount = 0;
+
+    for (const legacyMembership of legacyMemberships) {
+      const circleMembership = await ctx.db
+        .query("circleMemberships")
+        .withIndex("by_authIdentityToken", (query) =>
+          query.eq("authIdentityToken", legacyMembership.authIdentityToken),
+        )
+        .unique();
+
+      if (!circleMembership) {
+        await ensureCircleMembershipForLegacyMembership(ctx, legacyMembership._id);
+        repairedCount += 1;
+      } else if (circleMembership.legacyFamilySpaceMembershipId === null) {
+        await ctx.db.patch(circleMembership._id, {
+          legacyFamilySpaceMembershipId: legacyMembership._id,
+        });
+        repairedCount += 1;
+      }
+
+      if (repairedCount >= limit) {
+        break;
+      }
+    }
+
+    return {
+      repairedCount,
+      hasMore: repairedCount === limit,
     };
   },
 });
