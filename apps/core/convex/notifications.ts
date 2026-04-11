@@ -151,12 +151,20 @@ async function buildDailySummaryBody(
   familySpaceId: Id<"familySpaces">,
 ) {
   const [queuedInsights, nextRoutine, recentVoiceInteractions] = await Promise.all([
-    ctx.db
-      .query("supporterInsights")
-      .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-        query.eq("familySpaceId", familySpaceId).eq("status", "queued"),
-      )
-      .take(20),
+    Promise.all([
+      ctx.db
+        .query("insights")
+        .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
+          query.eq("familySpaceId", familySpaceId).eq("status", "queued"),
+        )
+        .take(20),
+      ctx.db
+        .query("alerts")
+        .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
+          query.eq("familySpaceId", familySpaceId).eq("status", "queued"),
+        )
+        .take(20),
+    ]),
     getNextRoutineEventForFamilySpace(ctx, familySpaceId),
     ctx.db
       .query("voiceInteractions")
@@ -172,12 +180,14 @@ async function buildDailySummaryBody(
     (interaction) => now - interaction.createdAt <= 24 * 60 * 60 * 1000,
   ).length;
 
-  if (queuedInsights.length > 0 && nextRoutine) {
-    return `${queuedInsights.length} insight${queuedInsights.length === 1 ? "" : "s"} are waiting, and the next routine is ${nextRoutine.title} at ${nextRoutine.time}.`;
+  const queuedCount = queuedInsights[0].length + queuedInsights[1].length;
+
+  if (queuedCount > 0 && nextRoutine) {
+    return `${queuedCount} insight${queuedCount === 1 ? "" : "s"} are waiting, and the next routine is ${nextRoutine.title} at ${nextRoutine.time}.`;
   }
 
-  if (queuedInsights.length > 0) {
-    return `${queuedInsights.length} insight${queuedInsights.length === 1 ? "" : "s"} are waiting for review in your Circle.`;
+  if (queuedCount > 0) {
+    return `${queuedCount} insight${queuedCount === 1 ? "" : "s"} are waiting for review in your Circle.`;
   }
 
   if (nextRoutine) {
@@ -517,10 +527,19 @@ export const getUrgentInsightDispatchPlan = internalQuery({
     insightId: v.id("supporterInsights"),
   },
   handler: async (ctx, args) => {
-    const insight = await ctx.db.get(args.insightId);
-    if (!insight) {
+    const legacyInsight = await ctx.db.get(args.insightId);
+    if (!legacyInsight) {
       return null;
     }
+
+    const alert = await ctx.db
+      .query("alerts")
+      .withIndex("by_legacySupporterInsightId", (query) =>
+        query.eq("legacySupporterInsightId", legacyInsight._id),
+      )
+      .unique();
+
+    const insight = alert ?? legacyInsight;
 
     const settings = await getNotificationSettingsRecord(ctx, insight.familySpaceId);
     if (!settings?.urgentAlerts) {
@@ -586,6 +605,8 @@ export const enqueueNotificationDelivery = internalMutation({
     payloadTag: v.union(v.string(), v.null()),
     routineOccurrenceId: v.optional(v.id("routineOccurrences")),
     supporterInsightId: v.optional(v.id("supporterInsights")),
+    alertId: v.optional(v.id("alerts")),
+    canonicalInsightId: v.optional(v.id("insights")),
     summaryDateKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -612,6 +633,8 @@ export const enqueueNotificationDelivery = internalMutation({
       payloadTag: args.payloadTag,
       routineOccurrenceId: args.routineOccurrenceId ?? null,
       supporterInsightId: args.supporterInsightId ?? null,
+      alertId: args.alertId ?? null,
+      canonicalInsightId: args.canonicalInsightId ?? null,
       summaryDateKey: args.summaryDateKey ?? null,
       status: "queued",
       createdAt: now,

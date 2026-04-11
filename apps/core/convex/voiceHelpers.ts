@@ -10,6 +10,9 @@ import {
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 import { listPeopleForFamilySpace } from "./peopleCompat";
+import {
+  mirrorCanonicalAlertToLegacy,
+} from "./insightsCompat";
 
 function voiceIntentValidator() {
   return v.union(
@@ -220,12 +223,12 @@ export const saveVoiceInteraction = internalMutation({
     const evidenceTranscript = buildTranscriptExcerpt(args.transcript);
 
     if (args.distressDetected) {
-      const distressInsightId = await ctx.db.insert("supporterInsights", {
+      const alertId = await ctx.db.insert("alerts", {
         familySpaceId: args.familySpaceId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
         sourceType: "safety_guardrail",
-        insightType: "distress_flag",
+        alertType: "distress_flag",
         priority: "high",
         title: `Check in with ${seniorName} soon`,
         summary: truncateInsightText(
@@ -238,22 +241,34 @@ export const saveVoiceInteraction = internalMutation({
         createdAt: now,
         reviewedAt: null,
         reviewedByMembershipId: null,
+        legacySupporterInsightId: null,
       });
+      await mirrorCanonicalAlertToLegacy(ctx, alertId);
+      const legacyAlert = await ctx.db
+        .query("supporterInsights")
+        .withIndex("by_sourceVoiceInteractionId", (query) =>
+          query.eq("sourceVoiceInteractionId", interactionId),
+        )
+        .order("desc")
+        .take(1);
+      const legacyAlertId = legacyAlert[0]?._id ?? null;
 
-      await ctx.scheduler.runAfter(
-        0,
-        internal.notificationsWorker.dispatchUrgentInsightNotification,
-        { insightId: distressInsightId },
-      );
+      if (legacyAlertId) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.notificationsWorker.dispatchUrgentInsightNotification,
+          { insightId: legacyAlertId, alertId },
+        );
+      }
     }
 
     if (args.medicalRejected) {
-      await ctx.db.insert("supporterInsights", {
+      const alertId = await ctx.db.insert("alerts", {
         familySpaceId: args.familySpaceId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
         sourceType: "safety_guardrail",
-        insightType: "medical_boundary",
+        alertType: "medical_boundary",
         priority: "normal",
         title: `Review a medical question from ${seniorName}`,
         summary: truncateInsightText(
@@ -266,7 +281,9 @@ export const saveVoiceInteraction = internalMutation({
         createdAt: now,
         reviewedAt: null,
         reviewedByMembershipId: null,
+        legacySupporterInsightId: null,
       });
+      await mirrorCanonicalAlertToLegacy(ctx, alertId);
     }
 
     await ctx.scheduler.runAfter(

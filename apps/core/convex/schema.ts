@@ -456,6 +456,8 @@ export default defineSchema({
     payloadTag: v.union(v.string(), v.null()),
     routineOccurrenceId: v.union(v.id("routineOccurrences"), v.null()),
     supporterInsightId: v.union(v.id("supporterInsights"), v.null()),
+    alertId: v.union(v.id("alerts"), v.null()),
+    canonicalInsightId: v.union(v.id("insights"), v.null()),
     summaryDateKey: v.union(v.string(), v.null()),
     status: v.union(
       v.literal("queued"),
@@ -589,6 +591,86 @@ export default defineSchema({
       "createdAt",
     ])
     .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"]),
+
+  insights: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    sourceVoiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
+    sourceType: v.union(
+      v.literal("safety_guardrail"),
+      v.literal("ai_pipeline"),
+    ),
+    insightType: v.union(
+      v.literal("memory_theme"),
+      v.literal("routine_follow_up"),
+      v.literal("connection_prompt"),
+      v.literal("wellness_pattern"),
+    ),
+    priority: v.union(v.literal("high"), v.literal("normal")),
+    title: v.string(),
+    summary: v.string(),
+    suggestedAction: v.string(),
+    evidenceTranscript: v.union(v.string(), v.null()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("reviewed"),
+      v.literal("dismissed"),
+    ),
+    createdAt: v.number(),
+    reviewedAt: v.union(v.number(), v.null()),
+    reviewedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    legacySupporterInsightId: v.union(v.id("supporterInsights"), v.null()),
+  })
+    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
+    .index("by_familySpaceId_and_status_and_createdAt", [
+      "familySpaceId",
+      "status",
+      "createdAt",
+    ])
+    .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"])
+    .index("by_legacySupporterInsightId", ["legacySupporterInsightId"]),
+
+  alerts: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
+    sourceVoiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
+    sourceType: v.union(
+      v.literal("safety_guardrail"),
+      v.literal("ai_pipeline"),
+    ),
+    alertType: v.union(
+      v.literal("distress_flag"),
+      v.literal("medical_boundary"),
+      v.literal("escalation"),
+    ),
+    priority: v.union(v.literal("high"), v.literal("normal")),
+    title: v.string(),
+    summary: v.string(),
+    suggestedAction: v.string(),
+    evidenceTranscript: v.union(v.string(), v.null()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("reviewed"),
+      v.literal("dismissed"),
+    ),
+    createdAt: v.number(),
+    reviewedAt: v.union(v.number(), v.null()),
+    reviewedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    legacySupporterInsightId: v.union(v.id("supporterInsights"), v.null()),
+  })
+    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
+    .index("by_familySpaceId_and_status_and_createdAt", [
+      "familySpaceId",
+      "status",
+      "createdAt",
+    ])
+    .index("by_alertType_and_status_and_createdAt", [
+      "alertType",
+      "status",
+      "createdAt",
+    ])
+    .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"])
+    .index("by_legacySupporterInsightId", ["legacySupporterInsightId"]),
 
   voiceLogs: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 });

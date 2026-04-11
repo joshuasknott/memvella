@@ -21,6 +21,7 @@ import type * as independentAccess from "../independentAccess.js";
 import type * as independentAuth from "../independentAuth.js";
 import type * as independentSeniorCredentials from "../independentSeniorCredentials.js";
 import type * as insights from "../insights.js";
+import type * as insightsCompat from "../insightsCompat.js";
 import type * as insightsEngine from "../insightsEngine.js";
 import type * as kiosk from "../kiosk.js";
 import type * as liveVoice from "../liveVoice.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   independentAuth: typeof independentAuth;
   independentSeniorCredentials: typeof independentSeniorCredentials;
   insights: typeof insights;
+  insightsCompat: typeof insightsCompat;
   insightsEngine: typeof insightsEngine;
   kiosk: typeof kiosk;
   liveVoice: typeof liveVoice;
