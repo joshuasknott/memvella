@@ -15,7 +15,7 @@ export function OriginStory() {
         {/* Pull-quote headline */}
         <FadeIn delay={100}>
           <h2 className="mt-8 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-5xl lg:text-6xl text-balance leading-[1.05]">
-            &ldquo;I just wanted my mum to be a daughter again.&rdquo;
+            No family should have to choose between caregiving and living.
           </h2>
         </FadeIn>
 
@@ -23,10 +23,13 @@ export function OriginStory() {
         <FadeIn delay={200}>
           <div className="mt-12 space-y-6 text-left">
             <p className="text-xl leading-relaxed text-slate-700">
-              When my grandmother was diagnosed with dementia, my mother became her full-time caregiver. Not because she chose to — but because professional care was out of reach. I watched the logistics slowly consume her: the same questions answered on a loop, medications managed around the clock, the quiet exhaustion that never let up.
+              When my grandmother was diagnosed with dementia, my mother became her full-time caregiver—answering the same questions on a loop, managing medications, carrying a weight that never let up. She wasn&apos;t just tired; she was drowning in logistics.
             </p>
             <p className="text-xl leading-relaxed text-slate-700">
-              She wasn&apos;t just tired. She was a daughter who couldn&apos;t find room to grieve because she was too busy managing. I built Memvella to carry that repetitive weight — a companion with infinite patience for my grandmother, so my mother could put down the clipboard and just be her daughter again.
+              And then there was the rest of the family. Siblings needed constant updates. Group chats ran endlessly. Every day she became the liaison—relaying what the doctor said, what Nan ate, how the night went—on top of everything else she was already doing.
+            </p>
+            <p className="text-xl leading-relaxed text-slate-700">
+              I built Memvella to carry that repetitive weight, and Circles to solve the communication overhead—automatically keeping the whole family on the same page so no one has to be the go-between.
             </p>
           </div>
         </FadeIn>

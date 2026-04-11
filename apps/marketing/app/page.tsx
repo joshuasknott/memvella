@@ -15,7 +15,6 @@ export default function MarketingHomePage() {
         <Hero />
         <HowItWorks />
         <FeatureGlimpse />
-        <WaitlistCTA />
         <NoHardwareFlex />
         <OriginStory />
         <WaitlistCTA />

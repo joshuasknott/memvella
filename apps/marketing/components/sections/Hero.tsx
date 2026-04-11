@@ -39,10 +39,9 @@ export function Hero() {
             </FadeIn>
           </div>
 
-          {/* Right column — asset placeholder */}
           <FadeIn delay={150} className="w-full">
             <div
-              className="aspect-[4/3] w-full rounded-3xl bg-slate-100"
+              className="w-full aspect-[4/3] bg-slate-100 rounded-2xl border border-slate-200/50 shadow-inner"
               aria-hidden="true"
             />
           </FadeIn>

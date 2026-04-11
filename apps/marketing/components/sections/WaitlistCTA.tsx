@@ -16,10 +16,6 @@ export function WaitlistCTA() {
         </div>
 
         <p className="mt-4 text-sm text-slate-400 text-center">
-          We are currently rolling out private Alpha access to ensure the highest quality experience. We will email you the moment a spot opens for your family.
-        </p>
-
-        <p className="mt-4 text-sm text-slate-500 text-center">
           Memvella is a digital wellness companion. It is not a medical device, not a diagnostic tool, and not a replacement for professional care.
         </p>
       </div>
