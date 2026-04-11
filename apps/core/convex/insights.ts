@@ -14,9 +14,6 @@ import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 import {
   listCanonicalAlertsForFamilySpace,
   listCanonicalInsightsForFamilySpace,
-  mirrorCanonicalAlertToLegacy,
-  mirrorCanonicalInsightToLegacy,
-  mirrorLegacySupporterInsightToCanonical,
 } from "./insightsCompat";
 
 function aiInsightTypeValidator() {
@@ -40,12 +37,9 @@ function truncateValue(value: string, maxLength = 280) {
   return `${value.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
-type LegacyOrCanonicalInsight =
-  | Doc<"supporterInsights">
-  | Doc<"insights">
-  | Doc<"alerts">;
+type CanonicalAwarenessRecord = Doc<"insights"> | Doc<"alerts">;
 
-function resolveInsightType(insight: LegacyOrCanonicalInsight) {
+function resolveInsightType(insight: CanonicalAwarenessRecord) {
   if ("insightType" in insight) {
     return insight.insightType;
   }
@@ -53,7 +47,10 @@ function resolveInsightType(insight: LegacyOrCanonicalInsight) {
   return insight.alertType;
 }
 
-async function enrichInsights(ctx: QueryCtx, insights: LegacyOrCanonicalInsight[]) {
+async function enrichInsights(
+  ctx: QueryCtx,
+  insights: CanonicalAwarenessRecord[],
+) {
   const seniorProfiles = await Promise.all(
     insights.map((insight) => ctx.db.get(insight.seniorProfileId)),
   );
@@ -135,34 +132,6 @@ export const listOrganiserInsights = query({
       .sort((left, right) => right.createdAt - left.createdAt)
       .slice(0, 20);
 
-    if (queued.length === 0 && reviewed.length === 0) {
-      const [legacyQueued, legacyReviewed] = await Promise.all([
-        ctx.db
-          .query("supporterInsights")
-          .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-            query
-              .eq("familySpaceId", membership.familySpaceId)
-              .eq("status", "queued"),
-          )
-          .order("desc")
-          .take(30),
-        ctx.db
-          .query("supporterInsights")
-          .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-            query
-              .eq("familySpaceId", membership.familySpaceId)
-              .eq("status", "reviewed"),
-          )
-          .order("desc")
-          .take(20),
-      ]);
-
-      return {
-        queued: await enrichInsights(ctx, legacyQueued),
-        reviewed: await enrichInsights(ctx, legacyReviewed),
-      };
-    }
-
     return {
       queued: await enrichInsights(ctx, queued),
       reviewed: await enrichInsights(ctx, reviewed),
@@ -197,25 +166,13 @@ export const getQueuedOrganiserInsightCount = query({
       ),
     ]);
 
-    const canonicalCount = queuedInsights.length + queuedAlerts.length;
-    if (canonicalCount > 0) {
-      return canonicalCount;
-    }
-
-    const legacyQueued = await ctx.db
-      .query("supporterInsights")
-      .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-        query.eq("familySpaceId", membership.familySpaceId).eq("status", "queued"),
-      )
-      .take(100);
-
-    return legacyQueued.length;
+    return queuedInsights.length + queuedAlerts.length;
   },
 });
 
 export const reviewOrganiserInsight = mutation({
   args: {
-    insightId: v.union(v.id("supporterInsights"), v.id("insights"), v.id("alerts")),
+    insightId: v.union(v.id("insights"), v.id("alerts")),
     status: v.union(v.literal("reviewed"), v.literal("dismissed")),
   },
   handler: async (ctx, args) => {
@@ -231,7 +188,6 @@ export const reviewOrganiserInsight = mutation({
         reviewedAt: now,
         reviewedByMembershipId: membership._id,
       });
-      await mirrorCanonicalInsightToLegacy(ctx, canonicalInsight._id);
       return canonicalInsight._id;
     }
 
@@ -242,24 +198,10 @@ export const reviewOrganiserInsight = mutation({
         reviewedAt: now,
         reviewedByMembershipId: membership._id,
       });
-      await mirrorCanonicalAlertToLegacy(ctx, canonicalAlert._id);
       return canonicalAlert._id;
     }
 
-    const insight = await ctx.db.get(args.insightId as Id<"supporterInsights">);
-    if (!insight || insight.familySpaceId !== membership.familySpaceId) {
-      throw new Error("This insight is not available in your Circle.");
-    }
-
-    await ctx.db.patch(insight._id, {
-      status: args.status,
-      reviewedAt: now,
-      reviewedByMembershipId: membership._id,
-    });
-
-    await mirrorLegacySupporterInsightToCanonical(ctx, insight._id);
-
-    return insight._id;
+    throw new Error("This insight is not available in your Circle.");
   },
 });
 
@@ -284,7 +226,7 @@ export const storeAiInsightsBatch = internalMutation({
     const createdAt = Date.now();
 
     for (const insight of args.insights) {
-      const canonicalInsightId = await ctx.db.insert("insights", {
+      await ctx.db.insert("insights", {
         familySpaceId: args.familySpaceId,
         seniorProfileId: insight.seniorProfileId,
         sourceVoiceInteractionId: insight.sourceVoiceInteractionId,
@@ -303,8 +245,6 @@ export const storeAiInsightsBatch = internalMutation({
         reviewedByMembershipId: null,
         legacySupporterInsightId: null,
       });
-
-      await mirrorCanonicalInsightToLegacy(ctx, canonicalInsightId);
     }
 
     for (const interactionId of args.processedInteractionIds) {

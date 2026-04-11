@@ -265,14 +265,12 @@ export const sweepDailySummaryNotifications = internalAction({
 
 export const dispatchUrgentInsightNotification = internalAction({
   args: {
-    insightId: v.id("supporterInsights"),
-    alertId: v.optional(v.id("alerts")),
+    alertId: v.id("alerts"),
   },
   handler: async (ctx, args) => {
-    const dedupeInsightId = args.alertId ?? args.insightId;
     const plan = await ctx.runQuery(
       internal.notifications.getUrgentInsightDispatchPlan,
-      { insightId: args.insightId },
+      { alertId: args.alertId },
     );
 
     if (!plan) {
@@ -288,13 +286,12 @@ export const dispatchUrgentInsightNotification = internalAction({
           membershipId: subscription.membershipId,
           pushSubscriptionId: subscription.pushSubscriptionId,
           notificationType: "urgent_alert",
-          dedupeKey: `${subscription.pushSubscriptionId}:urgent:${dedupeInsightId}`,
+          dedupeKey: `${subscription.pushSubscriptionId}:urgent:${args.alertId}`,
           title: plan.title,
           body: plan.body,
           deepLink: plan.deepLink,
           scheduledFor: Date.now(),
           payloadTag: plan.payloadTag,
-          supporterInsightId: args.insightId,
           alertId: args.alertId,
         },
       );

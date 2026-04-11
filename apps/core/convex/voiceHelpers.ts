@@ -10,9 +10,6 @@ import {
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 import { listPeopleForFamilySpace } from "./peopleCompat";
-import {
-  mirrorCanonicalAlertToLegacy,
-} from "./insightsCompat";
 
 function voiceIntentValidator() {
   return v.union(
@@ -243,27 +240,15 @@ export const saveVoiceInteraction = internalMutation({
         reviewedByMembershipId: null,
         legacySupporterInsightId: null,
       });
-      await mirrorCanonicalAlertToLegacy(ctx, alertId);
-      const legacyAlert = await ctx.db
-        .query("supporterInsights")
-        .withIndex("by_sourceVoiceInteractionId", (query) =>
-          query.eq("sourceVoiceInteractionId", interactionId),
-        )
-        .order("desc")
-        .take(1);
-      const legacyAlertId = legacyAlert[0]?._id ?? null;
-
-      if (legacyAlertId) {
-        await ctx.scheduler.runAfter(
-          0,
-          internal.notificationsWorker.dispatchUrgentInsightNotification,
-          { insightId: legacyAlertId, alertId },
-        );
-      }
+      await ctx.scheduler.runAfter(
+        0,
+        internal.notificationsWorker.dispatchUrgentInsightNotification,
+        { alertId },
+      );
     }
 
     if (args.medicalRejected) {
-      const alertId = await ctx.db.insert("alerts", {
+      await ctx.db.insert("alerts", {
         familySpaceId: args.familySpaceId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
@@ -283,7 +268,6 @@ export const saveVoiceInteraction = internalMutation({
         reviewedByMembershipId: null,
         legacySupporterInsightId: null,
       });
-      await mirrorCanonicalAlertToLegacy(ctx, alertId);
     }
 
     await ctx.scheduler.runAfter(

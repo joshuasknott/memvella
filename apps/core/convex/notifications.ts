@@ -524,40 +524,31 @@ export const getDailySummaryDigestPayload = internalQuery({
 
 export const getUrgentInsightDispatchPlan = internalQuery({
   args: {
-    insightId: v.id("supporterInsights"),
+    alertId: v.id("alerts"),
   },
   handler: async (ctx, args) => {
-    const legacyInsight = await ctx.db.get(args.insightId);
-    if (!legacyInsight) {
+    const alert = await ctx.db.get(args.alertId);
+    if (!alert) {
       return null;
     }
 
-    const alert = await ctx.db
-      .query("alerts")
-      .withIndex("by_legacySupporterInsightId", (query) =>
-        query.eq("legacySupporterInsightId", legacyInsight._id),
-      )
-      .unique();
-
-    const insight = alert ?? legacyInsight;
-
-    const settings = await getNotificationSettingsRecord(ctx, insight.familySpaceId);
+    const settings = await getNotificationSettingsRecord(ctx, alert.familySpaceId);
     if (!settings?.urgentAlerts) {
       return null;
     }
 
     const activeSubscriptions = await listActivePushSubscriptionsForFamilySpace(
       ctx,
-      insight.familySpaceId,
+      alert.familySpaceId,
     );
     if (activeSubscriptions.length === 0) {
       return null;
     }
 
     return {
-      familySpaceId: insight.familySpaceId,
-      title: insight.title,
-      body: insight.summary,
+      familySpaceId: alert.familySpaceId,
+      title: alert.title,
+      body: alert.summary,
       deepLink: "/circle/insights",
       payloadTag: "urgent-alert",
       subscriptions: activeSubscriptions.map((subscription) => ({
@@ -604,7 +595,6 @@ export const enqueueNotificationDelivery = internalMutation({
     scheduledFor: v.number(),
     payloadTag: v.union(v.string(), v.null()),
     routineOccurrenceId: v.optional(v.id("routineOccurrences")),
-    supporterInsightId: v.optional(v.id("supporterInsights")),
     alertId: v.optional(v.id("alerts")),
     canonicalInsightId: v.optional(v.id("insights")),
     summaryDateKey: v.optional(v.string()),
@@ -632,7 +622,7 @@ export const enqueueNotificationDelivery = internalMutation({
       scheduledFor: args.scheduledFor,
       payloadTag: args.payloadTag,
       routineOccurrenceId: args.routineOccurrenceId ?? null,
-      supporterInsightId: args.supporterInsightId ?? null,
+      supporterInsightId: null,
       alertId: args.alertId ?? null,
       canonicalInsightId: args.canonicalInsightId ?? null,
       summaryDateKey: args.summaryDateKey ?? null,

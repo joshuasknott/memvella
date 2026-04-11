@@ -22,7 +22,7 @@ export default function OrganiserInsightsPage() {
   const { toast } = useToast();
 
   const updateInsightStatus = async (
-    insightId: Id<"supporterInsights"> | Id<"insights"> | Id<"alerts">,
+    insightId: Id<"insights"> | Id<"alerts">,
     status: "reviewed" | "dismissed",
   ) => {
     try {
