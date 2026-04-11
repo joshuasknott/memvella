@@ -242,6 +242,24 @@ export default defineSchema({
   // can coexist while new writes are anchored to FamilySpace ids.
   familyMembers: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
+  people: defineTable({
+    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
+    legacyFamilyMemberId: v.union(v.id("familyMembers"), v.null()),
+    name: v.string(),
+    relationship: v.string(),
+    isLiving: v.boolean(),
+    aiContext: v.string(),
+    photoStorageId: v.optional(v.id("_storage")),
+    createdByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    updatedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    lastEditedAt: v.number(),
+  })
+    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_seniorProfileId", ["seniorProfileId"])
+    .index("by_legacyFamilyMemberId", ["legacyFamilyMemberId"])
+    .index("by_familySpaceId_and_lastEditedAt", ["familySpaceId", "lastEditedAt"]),
+
   routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
   routineSchedules: defineTable({

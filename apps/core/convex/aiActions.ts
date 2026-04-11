@@ -8,6 +8,7 @@ import {
 import { normalizeOptionalText } from "./security";
 import { buildCircleName } from "./terminology";
 import { patchCircleFromFamilySpace } from "./circleCompat";
+import { mirrorPersonToLegacyFamilyMember } from "./peopleCompat";
 
 export const processOnboardingAction = internalMutation({
   args: {
@@ -89,12 +90,27 @@ export const processOnboardingAction = internalMutation({
           );
         }
 
-        await ctx.db.insert("familyMembers", {
+        const now = Date.now();
+        const legacyFamilyMemberId = await mirrorPersonToLegacyFamilyMember(ctx, {
           familySpaceId: membership.familySpaceId,
           name,
           relationship,
           isLiving: true,
           aiContext,
+          photoStorageId: undefined,
+        });
+
+        await ctx.db.insert("people", {
+          familySpaceId: membership.familySpaceId,
+          seniorProfileId: membership.seniorProfileId,
+          legacyFamilyMemberId,
+          name,
+          relationship,
+          isLiving: true,
+          aiContext,
+          createdByMembershipId: membership._id,
+          updatedByMembershipId: membership._id,
+          lastEditedAt: now,
         });
 
         return { success: true, action };

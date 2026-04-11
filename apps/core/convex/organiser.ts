@@ -40,6 +40,10 @@ import {
   ensureCircleMembershipForLegacyMembership,
   patchCircleFromFamilySpace,
 } from "./circleCompat";
+import {
+  listPeopleForFamilySpace,
+  mirrorPersonToLegacyFamilyMember,
+} from "./peopleCompat";
 
 const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
 
@@ -110,13 +114,28 @@ export const addFamilyMember = mutation({
       });
     }
 
-    return await ctx.db.insert("familyMembers", {
+    const now = Date.now();
+    const legacyFamilyMemberId = await mirrorPersonToLegacyFamilyMember(ctx, {
       familySpaceId: membership.familySpaceId,
       name: args.name,
       relationship: args.relationship,
       isLiving: args.isLiving,
       aiContext: args.aiContext,
       photoStorageId: args.photoStorageId,
+    });
+
+    return await ctx.db.insert("people", {
+      familySpaceId: membership.familySpaceId,
+      seniorProfileId: membership.seniorProfileId,
+      legacyFamilyMemberId,
+      name: args.name,
+      relationship: args.relationship,
+      isLiving: args.isLiving,
+      aiContext: args.aiContext,
+      photoStorageId: args.photoStorageId,
+      createdByMembershipId: membership._id,
+      updatedByMembershipId: membership._id,
+      lastEditedAt: now,
     });
   },
 });
@@ -418,12 +437,11 @@ export const getFamilyDirectory = query({
       return [];
     }
 
-    const members = await ctx.db
-      .query("familyMembers")
-      .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", familyContext.membership.familySpaceId),
-      )
-      .take(100);
+    const members = await listPeopleForFamilySpace(
+      ctx,
+      familyContext.membership.familySpaceId,
+      100,
+    );
 
     return await Promise.all(
       members.map(async (member) => ({
@@ -470,12 +488,7 @@ export const getOrganiserDashboardSummary = query({
     }
 
     const [members, routines, nextRoutine] = await Promise.all([
-      ctx.db
-        .query("familyMembers")
-        .withIndex("by_familySpaceId", (query) =>
-          query.eq("familySpaceId", familyContext.membership.familySpaceId),
-        )
-        .take(200),
+      listPeopleForFamilySpace(ctx, familyContext.membership.familySpaceId, 200),
       ctx.db
         .query("routineSchedules")
         .withIndex("by_familySpaceId", (query) =>

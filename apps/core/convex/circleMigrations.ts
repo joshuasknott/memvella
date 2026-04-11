@@ -342,3 +342,105 @@ export const verifyCircleTableBackfill = query({
     };
   },
 });
+
+export const backfillPeopleFromFamilyMembers = internalMutation({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = clampBatchSize(args.limit);
+
+    const legacyMembers = await ctx.db
+      .query("familyMembers")
+      .order("asc")
+      .take(limit * 2);
+
+    let processedCount = 0;
+
+    for (const legacyMember of legacyMembers) {
+      const existingPerson = await ctx.db
+        .query("people")
+        .withIndex("by_legacyFamilyMemberId", (query) =>
+          query.eq("legacyFamilyMemberId", legacyMember._id),
+        )
+        .unique();
+
+      if (existingPerson) {
+        continue;
+      }
+
+      const assistedSenior = await ctx.db
+        .query("seniorProfiles")
+        .withIndex("by_familySpaceId_and_seniorMode", (query) =>
+          query
+            .eq("familySpaceId", legacyMember.familySpaceId)
+            .eq("seniorMode", "assisted"),
+        )
+        .unique();
+      const independentSenior =
+        assistedSenior ??
+        (await ctx.db
+          .query("seniorProfiles")
+          .withIndex("by_familySpaceId_and_seniorMode", (query) =>
+            query
+              .eq("familySpaceId", legacyMember.familySpaceId)
+              .eq("seniorMode", "independent"),
+          )
+          .unique());
+
+      await ctx.db.insert("people", {
+        familySpaceId: legacyMember.familySpaceId,
+        seniorProfileId: independentSenior?._id ?? null,
+        legacyFamilyMemberId: legacyMember._id,
+        name: legacyMember.name,
+        relationship: legacyMember.relationship,
+        isLiving: legacyMember.isLiving,
+        aiContext: legacyMember.aiContext,
+        photoStorageId: legacyMember.photoStorageId,
+        createdByMembershipId: null,
+        updatedByMembershipId: null,
+        lastEditedAt: Date.now(),
+      });
+
+      processedCount += 1;
+      if (processedCount >= limit) {
+        break;
+      }
+    }
+
+    return {
+      processedCount,
+      hasMore: processedCount === limit,
+    };
+  },
+});
+
+export const verifyPeopleBackfill = query({
+  args: {},
+  handler: async (ctx) => {
+    let missingPeopleCount = 0;
+    const missingLegacyFamilyMemberIds: Id<"familyMembers">[] = [];
+
+    for await (const legacyMember of ctx.db.query("familyMembers")) {
+      const person = await ctx.db
+        .query("people")
+        .withIndex("by_legacyFamilyMemberId", (query) =>
+          query.eq("legacyFamilyMemberId", legacyMember._id),
+        )
+        .unique();
+
+      if (!person) {
+        missingPeopleCount += 1;
+        if (missingLegacyFamilyMemberIds.length < 10) {
+          missingLegacyFamilyMemberIds.push(legacyMember._id);
+        }
+      }
+    }
+
+    return {
+      complete: missingPeopleCount === 0,
+      missingPeopleCount,
+      missingLegacyFamilyMemberIds,
+    };
+  },
+});

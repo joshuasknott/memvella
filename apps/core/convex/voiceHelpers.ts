@@ -9,6 +9,7 @@ import {
 } from "./routineHelpers";
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
+import { listPeopleForFamilySpace } from "./peopleCompat";
 
 function voiceIntentValidator() {
   return v.union(
@@ -75,12 +76,7 @@ export const gatherSeniorContext = internalQuery({
     const [routines, familyMembers, recentMemories, recentVoiceInteractions, timeZone, familySpace, seniorProfile] =
       await Promise.all([
         listRoutineSchedulesForFamilySpace(ctx, args.familySpaceId, 6),
-        ctx.db
-          .query("familyMembers")
-          .withIndex("by_familySpaceId", (query) =>
-            query.eq("familySpaceId", args.familySpaceId),
-          )
-          .take(8),
+        listPeopleForFamilySpace(ctx, args.familySpaceId, 8),
         ctx.db
           .query("memoryRecords")
           .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
