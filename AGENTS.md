@@ -15,9 +15,10 @@ Before making non-trivial changes, read the relevant canonical docs in this orde
 4. `docs/architecture.md`
 5. `docs/auth-and-identity.md`
 6. `docs/data-model.md`
-7. `docs/env.md`
-8. `docs/testing.md`
-9. `apps/core/design.md` or `apps/marketing/design.md`
+7. `docs/legacy-removal.md`
+8. `docs/env.md`
+9. `docs/testing.md`
+10. `apps/core/design.md` or `apps/marketing/design.md`
 
 ## Canonical Sources
 

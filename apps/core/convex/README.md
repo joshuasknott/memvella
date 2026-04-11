@@ -7,6 +7,7 @@ This directory contains the Convex backend for `apps/core`.
 1. Read `apps/core/convex/_generated/ai/guidelines.md`.
 2. Read `docs/auth-and-identity.md` if you are touching auth, onboarding, passkeys, or senior sessions.
 3. Read `docs/data-model.md` if you are touching schema, tables, or migrations.
+4. Read `docs/legacy-removal.md` if you are renaming routes, modules, tables, or compatibility surfaces.
 
 ## What Lives Here
 
@@ -20,6 +21,7 @@ This directory contains the Convex backend for `apps/core`.
 ## Data Model Guidance
 
 - Prefer the target `circle`-based model for new work.
+- Follow `docs/legacy-removal.md` for the approved rename map and rollout order when removing compatibility surfaces.
 - Do not build new features on legacy compatibility tables unless the task is explicitly a migration.
 - When schema changes affect existing data, document the migration plan in `docs/data-model.md` and use a safe rollout pattern.
 

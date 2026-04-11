@@ -49,9 +49,10 @@ Read these files in order when you need product or implementation context:
 3. `docs/architecture.md`
 4. `docs/auth-and-identity.md`
 5. `docs/data-model.md`
-6. `docs/env.md`
-7. `docs/testing.md`
-8. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
+6. `docs/legacy-removal.md` when working on renames, migrations, or compatibility cleanup
+7. `docs/env.md`
+8. `docs/testing.md`
+9. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
 
 The root `docs/` files describe the target product and architecture contracts. During migrations, implementation may temporarily lag those contracts, but new work should move toward them rather than preserving legacy names or structures.
 

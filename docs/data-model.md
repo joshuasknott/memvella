@@ -11,6 +11,8 @@ Depends on: docs/architecture.md, docs/auth-and-identity.md
 
 New work should be built on the `circle` model, not the retired `familySpace` model.
 
+For the concrete rename map and rollout order that gets the codebase there, read `docs/legacy-removal.md`.
+
 Primary entities:
 
 - `circles`: top-level shared workspace for family-side coordination
