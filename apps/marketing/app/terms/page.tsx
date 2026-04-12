@@ -14,25 +14,25 @@ export default function TermsOfServicePage() {
 
       <p>
         These are the simple ground rules for using the Memvella website and
-        joining our waitlist. We've kept them short and honest.
+        joining our waitlist. We&apos;ve kept them short and honest.
       </p>
 
-      <h2>What you're agreeing to</h2>
+      <h2>What you&apos;re agreeing to</h2>
       <p>
         By using this website or signing up for our waitlist, you agree to these
-        terms. If something doesn't sit right with you, please reach out — we're
+        terms. If something doesn&apos;t sit right with you, please reach out — we&apos;re
         happy to chat.
       </p>
 
       <h2>The waitlist</h2>
       <p>
-        Joining the Memvella waitlist means you'd like to be notified when we're
+        Joining the Memvella waitlist means you&apos;d like to be notified when we&apos;re
         ready to invite early users. A few things to know:
       </p>
       <ul>
         <li>
-          <strong>No guarantee of access.</strong> Being on the waitlist doesn't
-          mean you'll automatically get in. We'll be rolling out access gradually
+          <strong>No guarantee of access.</strong> Being on the waitlist doesn&apos;t
+          mean you&apos;ll automatically get in. We&apos;ll be rolling out access gradually
           to make sure the experience is right.
         </li>
         <li>
@@ -41,13 +41,13 @@ export default function TermsOfServicePage() {
         </li>
         <li>
           <strong>You can leave any time.</strong> Just click unsubscribe in any
-          email, or contact us and we'll remove you immediately.
+          email, or contact us and we&apos;ll remove you immediately.
         </li>
       </ul>
 
-      <h2>What Memvella is (and isn't)</h2>
+      <h2>What Memvella is (and isn&apos;t)</h2>
       <p>
-        We'll say it as many times as it takes: Memvella is a{" "}
+        We&apos;ll say it as many times as it takes: Memvella is a{" "}
         <strong>digital wellness companion</strong>. It is{" "}
         <strong>not a medical device</strong>, not a diagnostic tool, and not a
         replacement for professional medical care. Nothing on this website
@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
       <h2>Your content</h2>
       <p>
         Right now, the only content you provide is your email address. It
-        belongs to you. We don't claim any rights over it beyond using it to
+        belongs to you. We don&apos;t claim any rights over it beyond using it to
         contact you about Memvella updates, as described in our{" "}
         <a href="/privacy">Privacy Policy</a>.
       </p>
@@ -65,21 +65,21 @@ export default function TermsOfServicePage() {
       <h2>Our content</h2>
       <p>
         Everything on this website — the text, design, illustrations, and brand
-        — belongs to Memvella. Please don't copy or redistribute it without
+        — belongs to Memvella. Please don&apos;t copy or redistribute it without
         asking.
       </p>
 
       <h2>Availability</h2>
       <p>
-        We do our best to keep this website running, but we can't guarantee
-        100% uptime. Occasionally things break. We won't be liable for
+        We do our best to keep this website running, but we can&apos;t guarantee
+        100% uptime. Occasionally things break. We won&apos;t be liable for
         temporary outages.
       </p>
 
       <h2>Changes to these terms</h2>
       <p>
-        If we make meaningful changes, we'll update this page and, where
-        appropriate, let you know by email. We won't sneak anything past you.
+        If we make meaningful changes, we&apos;ll update this page and, where
+        appropriate, let you know by email. We won&apos;t sneak anything past you.
       </p>
 
       <h2>Got questions?</h2>

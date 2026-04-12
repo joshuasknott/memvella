@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-12
 Owners: engineering
 Read when: changing onboarding, auth, permissions, senior sessions, transitions, or marketing conversion flows
 Depends on: docs/auth-and-identity.md, docs/env.md
@@ -23,6 +23,10 @@ Before testing auth-sensitive or backend-sensitive changes:
 - `pnpm test`
 - `pnpm build`
 - `pnpm verify` to run the full loop in sequence
+
+Current gate:
+
+- GitHub Actions runs `pnpm verify` on pushes to `main` and on pull requests.
 
 ## Release Principle
 
@@ -115,5 +119,6 @@ The codebase should grow deterministic coverage around:
 ## Current Testing Gaps
 
 - There is not yet an end-to-end browser test suite for the full onboarding and permissions matrix.
-- Core product coverage is still materially below the confidence bar required for early users.
+- There is not yet a `convex-test` transaction-level suite that seeds auth identities and exercises public Convex functions end-to-end.
+- Manual smoke coverage is still required for origin-sensitive auth, cross-device pairing, and real push-delivery integrations.
 - Marketing automation is intentionally lower priority until the core product is stable.

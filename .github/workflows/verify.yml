@@ -1,0 +1,55 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SITE_URL: https://memvella.example
+      BETTER_AUTH_URL: https://memvella.example
+      BETTER_AUTH_TRUSTED_ORIGINS: https://memvella.example
+      SITE_URL: https://memvella.example
+      CONVEX_DEPLOYMENT: dev:ci
+      NEXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
+      NEXT_PUBLIC_CONVEX_SITE_URL: https://memvella.example
+      BETTER_AUTH_SECRET: ci-better-auth-secret
+      MEMVELLA_AUTH_PEPPER: ci-auth-pepper
+      TWILIO_ACCOUNT_SID: ci-twilio-sid
+      TWILIO_AUTH_TOKEN: ci-twilio-token
+      TWILIO_SMS_FROM_NUMBER: +15555550123
+      GEMINI_API_KEY: ci-gemini-key
+      GEMINI_LIVE_MODEL: gemini-live-ci
+      NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY: ci-web-push-public-key
+      MEMVELLA_WEB_PUSH_PRIVATE_KEY: ci-web-push-private-key
+      MEMVELLA_WEB_PUSH_SUBJECT: mailto:ci@example.com
+      CONVEX_URL: https://example.convex.cloud
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run verify
+        run: pnpm verify

@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-12
 Owners: engineering
 Read when: touching routes, schema names, migrations, compatibility code, or role naming
 Depends on: docs/product.md, docs/terminology.md, docs/architecture.md, docs/auth-and-identity.md, docs/data-model.md
@@ -19,6 +19,15 @@ Use it when changing:
 - field names
 - compatibility tables and migration helpers
 
+## Current Migration Status
+
+- Batch 1 route cleanup: largely complete. `app/supporter` runtime routes are gone, `/circle` owns the active family-side workspace, and `next.config.ts` no longer redirects `/supporter*` or `/admin*`.
+- Batch 2 role cleanup: complete on active auth paths. Organiser and Member are the only family-side roles used by current authorization logic.
+- Batch 3 circle table introduction: in progress but canonical-first in hot paths. Runtime auth, invites, and notification/voice helper resolution now prefer `circles`, `circleMemberships`, and `circleInviteCodes`, while legacy tables remain for compatibility and migration proof.
+- Batch 4 people and awareness split: canonical writes now land on `people`, `alerts`, and `insights`; canonical-to-legacy reverse writes are disabled by default.
+- Batch 5 canonical field/helper rename cleanup: in progress. Runtime helpers are moving toward `circle` naming, but persisted field names such as `familySpaceId` still exist widely.
+- Batch 6 retirement of compatibility surfaces: not ready. Legacy tables and compatibility fields remain until verification shows they are fully unused.
+
 ## Non-Negotiables
 
 - No new work may be built on retired names.
@@ -31,17 +40,15 @@ Use it when changing:
 
 ### Routes And File Structure
 
-- `apps/core/app/supporter/**/*` still contains the real family-side implementation.
-- `apps/core/app/circle/**/*` currently re-exports many `supporter` routes instead of owning the implementation.
-- `apps/core/next.config.ts` still redirects `/admin*` and `/supporter*` routes.
-- `apps/core/app/onboarding/supporter/page.tsx` still exists as a legacy alias surface.
+- `apps/core/app/supporter/**/*` has already been removed from the runtime route tree.
+- `apps/core/app/circle/**/*` owns the active family-side workspace routes.
+- `apps/core/next.config.ts` no longer redirects `/admin*` or `/supporter*` routes.
+- `apps/core/app/onboarding/supporter/page.tsx` has already been removed.
 
 ### Shared Family-Side Components And Helpers
 
-- `apps/core/lib/use-family-space-profile.ts`
-- `apps/core/components/OrganiserHeader.tsx`
-- `apps/core/components/OrganiserBottomNav.tsx`
-- `apps/core/components/organiser/OrganiserProfileBootstrap.tsx`
+- The legacy route and shared hook renames for this batch have already landed.
+- Use canonical surfaces such as `apps/core/lib/use-circle-profile.ts` for new work.
 
 ### Backend Modules
 
@@ -77,6 +84,10 @@ Legacy or retired tables and fields still present in `apps/core/convex/schema.ts
 - `SITE_URL` still exists as a fallback in auth helpers.
 - Twilio variables still exist for legacy independent SMS compatibility.
 - `independentSeniorCredentials` still reflects the transitional phone-based independent path.
+
+### Tooling And Rewrite Safety
+
+- `apps/core/replace-terms.js` is quarantined. Blind global terminology rewrites are not an approved migration mechanism.
 
 ## Approved Target Names
 

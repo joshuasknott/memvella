@@ -608,7 +608,8 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
       }
     }
 
-    for await (const _legacyInvite of ctx.db.query("familyInvites")) {
+    for await (const legacyInvite of ctx.db.query("familyInvites")) {
+      void legacyInvite;
       legacyInviteCodesCount += 1;
     }
 

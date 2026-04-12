@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-12
 Owners: product, engineering
 Read when: touching UI copy, docs, routes, schema names, onboarding, or marketing
 Depends on: docs/product.md
@@ -34,6 +34,7 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 - Use `organiser` instead of `supporter` or `admin`.
 - Use `people` for senior-grounding people.
 - Use `alerts`, `insights`, and `activity` as separate concepts.
+- Do not use blind bulk-rewrite scripts to rename terms across the codebase. Terminology changes must be scoped, reviewed, and tied to a migration step.
 
 ## Retired Terms
 

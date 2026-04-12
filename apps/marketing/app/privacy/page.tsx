@@ -19,11 +19,11 @@ export default function PrivacyPolicyPage() {
         for someone they love.
       </p>
 
-      <h2>What Memvella is (and isn't)</h2>
+      <h2>What Memvella is (and isn&apos;t)</h2>
       <p>
         Memvella is a <strong>digital wellness companion</strong>. It is not a
         medical device, not a diagnostic tool, and not a substitute for
-        professional healthcare. We don't collect medical data, and we never
+        professional healthcare. We don&apos;t collect medical data, and we never
         will.
       </p>
 
@@ -32,12 +32,12 @@ export default function PrivacyPolicyPage() {
         Today, Memvella is in a <strong>waitlist-only</strong> phase. The only
         piece of personal information we collect is your{" "}
         <strong>email address</strong> — so we can let you know when Memvella is
-        ready for you. That's it.
+        ready for you. That&apos;s it.
       </p>
       <ul>
-        <li>We don't use tracking pixels or third-party analytics.</li>
-        <li>We don't sell, share, or rent your email to anyone.</li>
-        <li>We don't send spam. You'll only hear from us with meaningful updates.</li>
+        <li>We don&apos;t use tracking pixels or third-party analytics.</li>
+        <li>We don&apos;t sell, share, or rent your email to anyone.</li>
+        <li>We don&apos;t send spam. You&apos;ll only hear from us with meaningful updates.</li>
       </ul>
 
       <h2>Cookies</h2>
@@ -56,11 +56,11 @@ export default function PrivacyPolicyPage() {
       <p>You can ask us to:</p>
       <ul>
         <li>
-          <strong>Delete your data</strong> — email us and we'll remove your
+          <strong>Delete your data</strong> — email us and we&apos;ll remove your
           information completely.
         </li>
         <li>
-          <strong>See what we have</strong> — we're happy to share. It's just
+          <strong>See what we have</strong> — we&apos;re happy to share. It&apos;s just
           your email.
         </li>
         <li>
@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
       <h2>When Memvella becomes a full product</h2>
       <p>
         When we move beyond the waitlist, this policy will be updated to reflect
-        exactly what data the product collects, how it's used, and what controls
+        exactly what data the product collects, how it&apos;s used, and what controls
         you have. We will always notify you before any changes take effect, and
         we will always err on the side of collecting less.
       </p>
