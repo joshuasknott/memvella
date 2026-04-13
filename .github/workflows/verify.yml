@@ -24,9 +24,6 @@ jobs:
       NEXT_PUBLIC_CONVEX_SITE_URL: https://memvella.example
       BETTER_AUTH_SECRET: ci-better-auth-secret
       MEMVELLA_AUTH_PEPPER: ci-auth-pepper
-      TWILIO_ACCOUNT_SID: ci-twilio-sid
-      TWILIO_AUTH_TOKEN: ci-twilio-token
-      TWILIO_SMS_FROM_NUMBER: +15555550123
       GEMINI_API_KEY: ci-gemini-key
       GEMINI_LIVE_MODEL: gemini-live-ci
       NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY: ci-web-push-public-key

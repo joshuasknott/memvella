@@ -69,12 +69,9 @@ Legacy or retired tables and fields still present in `apps/core/convex/schema.ts
 - `familySpaceMemberships`
 - `familyInvites`
 - `familyMembers`
-- `supporterProfiles`
 - `supporterInsights`
-- `assistedDevices`
 - legacy `memories`
 - legacy `routines`
-- `voiceLogs`
 - `primarySupporterAuthUserId`
 - `role: "supporter"`
 - widespread `familySpaceId` and `...MembershipId` naming
@@ -82,12 +79,10 @@ Legacy or retired tables and fields still present in `apps/core/convex/schema.ts
 ### Auth And Environment Compatibility
 
 - `SITE_URL` still exists as a fallback in auth helpers.
-- Twilio variables still exist for legacy independent SMS compatibility.
-- `independentSeniorCredentials` still reflects the transitional phone-based independent path.
 
 ### Tooling And Rewrite Safety
 
-- `apps/core/replace-terms.js` is quarantined. Blind global terminology rewrites are not an approved migration mechanism.
+- The legacy bulk terminology rewrite script has been removed. Blind global terminology rewrites are not an approved migration mechanism.
 
 ## Approved Target Names
 
@@ -224,13 +219,10 @@ This batch should be done only after the table migrations are stable, otherwise 
 
 Remove once the canonical replacements are fully live:
 
-- `supporterProfiles`
-- `assistedDevices`
 - `familyMembers`
 - `supporterInsights`
 - legacy `memories`
 - legacy `routines`
-- `voiceLogs`
 - `primarySupporterAuthUserId`
 - any read path that still depends on `familySpace*` names
 
@@ -266,20 +258,6 @@ Do not narrow or delete a legacy surface until all of the following are true:
 - migration status shows no remaining unmigrated rows
 - there is a verification query or equivalent proof for the relevant table or field
 - the app can complete the relevant auth or product smoke flow without touching the old path
-
-## Deferred Decision: Independent SMS Fallback
-
-The independent experience may keep a narrow SMS fallback if later implementation proves it is necessary for accessibility.
-
-Rules until that decision is finalized:
-
-- do not expand the current SMS compatibility surface
-- do not build new product behavior on Twilio-based auth
-- treat `independentSeniorCredentials` as transitional
-
-If SMS fallback survives the independent-auth phase, rename it to a non-legacy name such as `independentFallbackCredentials` and keep it explicitly secondary to passkeys and recovery codes.
-
-If SMS fallback does not survive, remove the table and Twilio environment contract entirely.
 
 ## Implementation Note
 

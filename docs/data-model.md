@@ -115,12 +115,10 @@ These are legacy and should be migrated away from rather than extended:
 
 - `familySpaces`
 - `familySpaceMemberships`
-- `supporterProfiles`
 - `familyMembers`
 - `supporterInsights`
 - legacy `memories`
 - legacy `routines`
-- `voiceLogs`
 - any `supporter` or `admin` compatibility field that only exists for old naming
 
 Rules:

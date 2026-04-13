@@ -8,7 +8,6 @@ import {
   isFamilySideRole,
   normalizeFamilySideMembershipRole,
   requireFamilySideCapability,
-  requireFamilySpaceMembership,
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
 } from "./familySpaceAuth";
@@ -18,14 +17,9 @@ import {
 } from "./security";
 import { revokeSeniorSessionsForProfile } from "./seniorAccessHelpers";
 import {
-  formatTimeLabel,
   getNextRoutineEventForFamilySpace,
   listTodayTimelineForFamilySpace,
-  normalizeDaysOfWeek,
-  parseTimeInputToMinutes,
-  replaceRoutineOccurrences,
 } from "./routineHelpers";
-import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
 import { assertValidStoredUpload } from "./uploadValidation";
 import {
   buildCircleName,
@@ -45,8 +39,6 @@ import {
   mirrorPersonToLegacyFamilyMember,
 } from "./peopleCompat";
 
-const DEFAULT_DAILY_SUMMARY_TIME_MINUTES = 19 * 60;
-
 const organiserProfileRoleValidator = v.optional(
   v.union(
     v.literal("organiser"),
@@ -65,36 +57,6 @@ async function getPreferredSeniorProfile(
   }
 
   return await getSeniorProfileByMode(ctx, familySpaceId, "independent");
-}
-
-function legacyFrequencyToDaysOfWeek(frequency: string[]) {
-  if (frequency.includes("Daily")) {
-    return [0, 1, 2, 3, 4, 5, 6];
-  }
-
-  if (frequency.includes("Weekends")) {
-    return [0, 6];
-  }
-
-  if (frequency.includes("Weekly")) {
-    return [1];
-  }
-
-  const dayNameToIndex = new Map([
-    ["Sun", 0],
-    ["Mon", 1],
-    ["Tue", 2],
-    ["Wed", 3],
-    ["Thu", 4],
-    ["Fri", 5],
-    ["Sat", 6],
-  ]);
-
-  return normalizeDaysOfWeek(
-    frequency
-      .map((value) => dayNameToIndex.get(value))
-      .filter((value): value is number => value !== undefined),
-  );
 }
 
 export const addFamilyMember = mutation({
@@ -136,114 +98,6 @@ export const addFamilyMember = mutation({
       createdByMembershipId: membership._id,
       updatedByMembershipId: membership._id,
       lastEditedAt: now,
-    });
-  },
-});
-
-export const addRoutine = mutation({
-  args: {
-    routineName: v.string(),
-    time: v.string(),
-    frequency: v.array(v.string()),
-    aiInstructions: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { membership, familySpace } = await requireFamilySideCapability(
-      ctx,
-      "manage_routines",
-    );
-
-    const title = normalizeOptionalText(args.routineName);
-    if (!title) {
-      throw new Error("A routine title is required.");
-    }
-
-    const daysOfWeek =
-      legacyFrequencyToDaysOfWeek(args.frequency).length > 0
-        ? legacyFrequencyToDaysOfWeek(args.frequency)
-        : [0, 1, 2, 3, 4, 5, 6];
-    const startTimeMinutes = parseTimeInputToMinutes(args.time);
-    const routineScheduleId = await ctx.db.insert("routineSchedules", {
-      familySpaceId: membership.familySpaceId,
-      title,
-      aiInstructions: normalizeOptionalText(args.aiInstructions) ?? null,
-      daysOfWeek,
-      startTimeMinutes,
-      timeLabel: formatTimeLabel(startTimeMinutes),
-      durationMinutes: null,
-      timezone: familySpace.timezone ?? "UTC",
-      status: "active",
-      createdByMembershipId: membership._id,
-      updatedByMembershipId: membership._id,
-      lastEditedAt: Date.now(),
-    });
-
-    const schedule = await ctx.db.get(routineScheduleId);
-    if (!schedule) {
-      throw new Error("Unable to save this routine.");
-    }
-
-    const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
-    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
-    return routineScheduleId;
-  },
-});
-
-export const updateNotificationSettings = mutation({
-  args: {
-    dailySummary: v.boolean(),
-    urgentAlerts: v.boolean(),
-    routineReminders: v.boolean(),
-  },
-  handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(
-      ctx,
-      "manage_circle_notifications",
-    );
-
-    const existing = await ctx.db
-      .query("notificationSettings")
-      .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", membership.familySpaceId),
-      )
-      .unique();
-    const updatedAt = Date.now();
-    const payload = {
-      dailySummary: args.dailySummary,
-      urgentAlerts: args.urgentAlerts,
-      routineReminders: args.routineReminders,
-      dailySummaryTimeMinutes:
-        existing?.dailySummaryTimeMinutes ?? DEFAULT_DAILY_SUMMARY_TIME_MINUTES,
-      updatedByMembershipId: membership._id,
-      updatedAt,
-    };
-
-    if (existing) {
-      await ctx.db.patch(existing._id, payload);
-      return existing._id;
-    }
-
-    return await ctx.db.insert("notificationSettings", {
-      familySpaceId: membership.familySpaceId,
-      ...payload,
-    });
-  },
-});
-
-export const saveVoiceSessionLog = mutation({
-  args: {
-    seniorName: v.string(),
-    transcript: v.string(),
-    durationSeconds: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-
-    return await ctx.db.insert("voiceLogs", {
-      familySpaceId: membership.familySpaceId,
-      seniorName: args.seniorName,
-      transcript: args.transcript,
-      durationSeconds: args.durationSeconds,
     });
   },
 });
@@ -436,38 +290,6 @@ export const patchOrganiserProfile = mutation({
   },
 });
 
-export const getFamilyDirectory = query({
-  args: {},
-  handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
-      ctx,
-      "family_side",
-    );
-    if (!familyContext) {
-      return [];
-    }
-
-    const members = await listPeopleForFamilySpace(
-      ctx,
-      familyContext.membership.familySpaceId,
-      100,
-    );
-
-    return await Promise.all(
-      members.map(async (member) => ({
-        id: member._id,
-        name: member.name,
-        relationship: member.relationship,
-        isLiving: member.isLiving,
-        aiContext: member.aiContext,
-        photoUrl: member.photoStorageId
-          ? await ctx.storage.getUrl(member.photoStorageId)
-          : null,
-      })),
-    );
-  },
-});
-
 export const getTodayTimeline = query({
   args: {},
   handler: async (ctx) => {
@@ -518,39 +340,6 @@ export const getOrganiserDashboardSummary = query({
         ? `${nextRoutine.title} is next at ${nextRoutine.time}.`
         : `Your ${CIRCLE_LABEL} is ready for today.`,
     };
-  },
-});
-
-export const getNotificationSettings = query({
-  args: {},
-  handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
-      ctx,
-      "family_side",
-    );
-    if (!familyContext) {
-      return {
-        dailySummary: false,
-        urgentAlerts: false,
-        routineReminders: false,
-      };
-    }
-
-    const settings = await ctx.db
-      .query("notificationSettings")
-      .withIndex("by_familySpaceId", (query) =>
-        query.eq("familySpaceId", familyContext.membership.familySpaceId),
-      )
-      .unique();
-
-    return (
-      settings ?? {
-        dailySummary: true,
-        urgentAlerts: true,
-        routineReminders: false,
-        dailySummaryTimeMinutes: DEFAULT_DAILY_SUMMARY_TIME_MINUTES,
-      }
-    );
   },
 });
 
@@ -712,14 +501,3 @@ export const getOrganiserProfile = query({
   },
 });
 
-export const getFamilySpaceId = query({
-  args: {},
-  handler: async (ctx): Promise<Id<"familySpaces"> | null> => {
-    const familyContext = await getOptionalFamilySpaceMembership(
-      ctx,
-      "family_side",
-    );
-
-    return familyContext?.membership.familySpaceId ?? null;
-  },
-});

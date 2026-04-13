@@ -21,7 +21,7 @@ Memvella uses two identity families:
 | `Organiser` | `/onboarding/organiser` | Better Auth account auth | standard family-side account recovery | `/circle` |
 | `Member` | `/onboarding/member` | Circle invite code, then Better Auth account auth | standard family-side account recovery | `/circle` |
 | `Tablet User` | `/assisted/login` | pairing code | re-pair or explicit organiser-side recovery | `/assisted` |
-| `Independent User` | `/onboarding/independent` | passkey-first standalone setup | recovery codes, plus a narrow fallback path only when accessibility requires it | `/independent` |
+| `Independent User` | `/onboarding/independent` | passkey-first standalone setup | recovery codes | `/independent` |
 
 ## Circle Participant Auth
 
@@ -62,7 +62,6 @@ Rules:
 - Independent auth is standalone and must not require a Circle.
 - Passkeys are the default sign-in mechanism.
 - Recovery codes are the primary recovery mechanism.
-- A fallback path may exist when accessibility requires it, but it must stay narrow and must not become the main auth model.
 - Independent users must not silently inherit family-side account state.
 - Any trusted-helper recovery or transition flow must be explicit and auditable.
 

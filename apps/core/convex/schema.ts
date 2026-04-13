@@ -82,25 +82,12 @@ export default defineSchema({
       v.literal("recovery_required"),
       v.literal("revoked"),
     ),
-    // Temporary widen during the migration away from independent-only auth
-    // fields living on shared senior profile records.
-    recoveryEmail: v.optional(v.union(v.string(), v.null())),
-    recoveryPhoneNumber: v.optional(v.union(v.string(), v.null())),
     timezone: v.union(v.string(), v.null()),
     locale: v.union(v.string(), v.null()),
     lastSessionAt: v.optional(v.number()),
   })
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"]),
-
-  independentSeniorCredentials: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    seniorProfileId: v.id("seniorProfiles"),
-    phoneNumber: v.string(),
-    verifiedAt: v.number(),
-  })
-    .index("by_seniorProfileId", ["seniorProfileId"])
-    .index("by_phoneNumber", ["phoneNumber"]),
 
   independentOnboardingSessions: defineTable({
     familySpaceId: v.id("familySpaces"),
@@ -113,11 +100,6 @@ export default defineSchema({
   })
     .index("by_tokenHash", ["tokenHash"])
     .index("by_seniorProfileId", ["seniorProfileId"]),
-
-  // Compatibility table kept permissive while legacy rows are migrated forward.
-  supporterProfiles: defineTable(v.any())
-    .index("by_authUserId", ["authUserId"])
-    .index("by_familySpaceId", ["familySpaceId"]),
 
   assistedDevicePins: defineTable({
     familySpaceId: v.id("familySpaces"),
@@ -232,11 +214,6 @@ export default defineSchema({
   })
     .index("by_challenge", ["challenge"])
     .index("by_seniorProfileId_and_purpose", ["seniorProfileId", "purpose"]),
-
-  // Compatibility table kept permissive while legacy rows are migrated forward.
-  assistedDevices: defineTable(v.any())
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_pinCode", ["pinCode"]),
 
   // Legacy content tables stay permissive during the widen phase so older rows
   // can coexist while new writes are anchored to FamilySpace ids.
@@ -671,6 +648,4 @@ export default defineSchema({
     ])
     .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"])
     .index("by_legacySupporterInsightId", ["legacySupporterInsightId"]),
-
-  voiceLogs: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 });
