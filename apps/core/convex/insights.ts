@@ -11,10 +11,6 @@ import {
   requireFamilySpaceMembership,
 } from "./familySpaceAuth";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
-import {
-  listCanonicalAlertsForFamilySpace,
-  listCanonicalInsightsForFamilySpace,
-} from "./insightsCompat";
 
 function aiInsightTypeValidator() {
   return v.union(
@@ -115,6 +111,36 @@ async function enrichInsights(
   }));
 }
 
+async function listInsightsForFamilySpace(
+  ctx: QueryCtx,
+  familySpaceId: Id<"familySpaces">,
+  status: Doc<"insights">["status"],
+  limit: number,
+) {
+  return await ctx.db
+    .query("insights")
+    .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
+      query.eq("familySpaceId", familySpaceId).eq("status", status),
+    )
+    .order("desc")
+    .take(limit);
+}
+
+async function listAlertsForFamilySpace(
+  ctx: QueryCtx,
+  familySpaceId: Id<"familySpaces">,
+  status: Doc<"alerts">["status"],
+  limit: number,
+) {
+  return await ctx.db
+    .query("alerts")
+    .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
+      query.eq("familySpaceId", familySpaceId).eq("status", status),
+    )
+    .order("desc")
+    .take(limit);
+}
+
 export const listOrganiserInsights = query({
   args: {},
   handler: async (ctx) => {
@@ -132,25 +158,25 @@ export const listOrganiserInsights = query({
     const { membership } = familyContext;
     const [queuedInsights, queuedAlerts, reviewedInsights, reviewedAlerts] =
       await Promise.all([
-        listCanonicalInsightsForFamilySpace(
+        listInsightsForFamilySpace(
           ctx,
           membership.familySpaceId,
           "queued",
           30,
         ),
-        listCanonicalAlertsForFamilySpace(
+        listAlertsForFamilySpace(
           ctx,
           membership.familySpaceId,
           "queued",
           30,
         ),
-        listCanonicalInsightsForFamilySpace(
+        listInsightsForFamilySpace(
           ctx,
           membership.familySpaceId,
           "reviewed",
           20,
         ),
-        listCanonicalAlertsForFamilySpace(
+        listAlertsForFamilySpace(
           ctx,
           membership.familySpaceId,
           "reviewed",
@@ -185,13 +211,13 @@ export const getQueuedOrganiserInsightCount = query({
 
     const { membership } = familyContext;
     const [queuedInsights, queuedAlerts] = await Promise.all([
-      listCanonicalInsightsForFamilySpace(
+      listInsightsForFamilySpace(
         ctx,
         membership.familySpaceId,
         "queued",
         100,
       ),
-      listCanonicalAlertsForFamilySpace(
+      listAlertsForFamilySpace(
         ctx,
         membership.familySpaceId,
         "queued",
@@ -272,7 +298,6 @@ export const storeAiInsightsBatch = internalMutation({
         createdAt,
         reviewedAt: null,
         reviewedByMembershipId: null,
-        legacySupporterInsightId: null,
       });
     }
 

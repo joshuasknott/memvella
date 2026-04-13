@@ -116,7 +116,6 @@ These are legacy and should be migrated away from rather than extended:
 - `familySpaces`
 - `familySpaceMemberships`
 - `familyMembers`
-- `supporterInsights`
 - legacy `memories`
 - legacy `routines`
 - any `supporter` or `admin` compatibility field that only exists for old naming

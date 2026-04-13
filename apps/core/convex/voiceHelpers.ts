@@ -244,11 +244,10 @@ export const saveVoiceInteraction = internalMutation({
         createdAt: now,
         reviewedAt: null,
         reviewedByMembershipId: null,
-        legacySupporterInsightId: null,
       });
       await ctx.scheduler.runAfter(
         0,
-        internal.notificationsWorker.dispatchUrgentInsightNotification,
+        internal.notificationsWorker.dispatchUrgentAlertNotification,
         { alertId },
       );
     }
@@ -272,7 +271,6 @@ export const saveVoiceInteraction = internalMutation({
         createdAt: now,
         reviewedAt: null,
         reviewedByMembershipId: null,
-        legacySupporterInsightId: null,
       });
     }
 

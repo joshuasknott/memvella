@@ -4,7 +4,6 @@ import { internalMutation, query } from "./_generated/server";
 import { normalizeFamilySideMembershipRole } from "./familySpaceAuth";
 import { ensureCircleMembershipForLegacyMembership } from "./circleCompat";
 import { shouldWriteLegacyInviteForCanonicalInviteGeneration } from "./familyInvites";
-import { shouldMirrorCanonicalInsightsToLegacy } from "./insightsCompat";
 import { shouldMirrorCanonicalPeopleToLegacy } from "./peopleCompat";
 
 const DEFAULT_BATCH_SIZE = 50;
@@ -448,139 +447,6 @@ export const verifyPeopleBackfill = query({
   },
 });
 
-export const backfillCanonicalInsightsFromSupporterInsights = internalMutation({
-  args: {
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const limit = clampBatchSize(args.limit);
-
-    const legacyInsights = await ctx.db
-      .query("supporterInsights")
-      .order("asc")
-      .take(limit * 2);
-
-    let processedCount = 0;
-
-    for (const legacyInsight of legacyInsights) {
-      const existingInsight = await ctx.db
-        .query("insights")
-        .withIndex("by_legacySupporterInsightId", (query) =>
-          query.eq("legacySupporterInsightId", legacyInsight._id),
-        )
-        .unique();
-      const existingAlert = await ctx.db
-        .query("alerts")
-        .withIndex("by_legacySupporterInsightId", (query) =>
-          query.eq("legacySupporterInsightId", legacyInsight._id),
-        )
-        .unique();
-
-      if (existingInsight || existingAlert) {
-        continue;
-      }
-
-      const isAlertType =
-        legacyInsight.insightType === "distress_flag" ||
-        legacyInsight.insightType === "medical_boundary";
-
-      if (isAlertType) {
-        await ctx.db.insert("alerts", {
-          familySpaceId: legacyInsight.familySpaceId,
-          seniorProfileId: legacyInsight.seniorProfileId,
-          sourceVoiceInteractionId: legacyInsight.sourceVoiceInteractionId,
-          sourceType: legacyInsight.sourceType,
-          alertType:
-            legacyInsight.insightType === "distress_flag"
-              ? "distress_flag"
-              : "medical_boundary",
-          priority: legacyInsight.priority,
-          title: legacyInsight.title,
-          summary: legacyInsight.summary,
-          suggestedAction: legacyInsight.suggestedAction,
-          evidenceTranscript: legacyInsight.evidenceTranscript,
-          status: legacyInsight.status,
-          createdAt: legacyInsight.createdAt,
-          reviewedAt: legacyInsight.reviewedAt,
-          reviewedByMembershipId: legacyInsight.reviewedByMembershipId,
-          legacySupporterInsightId: legacyInsight._id,
-        });
-      } else {
-        await ctx.db.insert("insights", {
-          familySpaceId: legacyInsight.familySpaceId,
-          seniorProfileId: legacyInsight.seniorProfileId,
-          sourceVoiceInteractionId: legacyInsight.sourceVoiceInteractionId,
-          sourceType: legacyInsight.sourceType,
-          insightType:
-            legacyInsight.insightType === "memory_theme"
-              ? "memory_theme"
-              : legacyInsight.insightType === "routine_follow_up"
-                ? "routine_follow_up"
-                : legacyInsight.insightType === "connection_prompt"
-                  ? "connection_prompt"
-                  : "wellness_pattern",
-          priority: legacyInsight.priority,
-          title: legacyInsight.title,
-          summary: legacyInsight.summary,
-          suggestedAction: legacyInsight.suggestedAction,
-          evidenceTranscript: legacyInsight.evidenceTranscript,
-          status: legacyInsight.status,
-          createdAt: legacyInsight.createdAt,
-          reviewedAt: legacyInsight.reviewedAt,
-          reviewedByMembershipId: legacyInsight.reviewedByMembershipId,
-          legacySupporterInsightId: legacyInsight._id,
-        });
-      }
-
-      processedCount += 1;
-      if (processedCount >= limit) {
-        break;
-      }
-    }
-
-    return {
-      processedCount,
-      hasMore: processedCount === limit,
-    };
-  },
-});
-
-export const verifyCanonicalInsightsBackfill = query({
-  args: {},
-  handler: async (ctx) => {
-    let missingCount = 0;
-    const missingLegacyInsightIds: Id<"supporterInsights">[] = [];
-
-    for await (const legacyInsight of ctx.db.query("supporterInsights")) {
-      const canonicalInsight = await ctx.db
-        .query("insights")
-        .withIndex("by_legacySupporterInsightId", (query) =>
-          query.eq("legacySupporterInsightId", legacyInsight._id),
-        )
-        .unique();
-      const canonicalAlert = await ctx.db
-        .query("alerts")
-        .withIndex("by_legacySupporterInsightId", (query) =>
-          query.eq("legacySupporterInsightId", legacyInsight._id),
-        )
-        .unique();
-
-      if (!canonicalInsight && !canonicalAlert) {
-        missingCount += 1;
-        if (missingLegacyInsightIds.length < 10) {
-          missingLegacyInsightIds.push(legacyInsight._id);
-        }
-      }
-    }
-
-    return {
-      complete: missingCount === 0,
-      missingCount,
-      missingLegacyInsightIds,
-    };
-  },
-});
-
 export const verifyNoCanonicalToLegacyBackfillDependencies = query({
   args: {},
   handler: async (ctx) => {
@@ -591,12 +457,6 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
     let canonicalPeopleCount = 0;
     let peopleWithoutLegacyLinkCount = 0;
     const samplePersonIdsMissingLegacyLink: Id<"people">[] = [];
-    let canonicalInsightsCount = 0;
-    let insightsWithoutLegacyLinkCount = 0;
-    const sampleInsightIdsMissingLegacyLink: Id<"insights">[] = [];
-    let canonicalAlertsCount = 0;
-    let alertsWithoutLegacyLinkCount = 0;
-    const sampleAlertIdsMissingLegacyLink: Id<"alerts">[] = [];
 
     for await (const circleInvite of ctx.db.query("circleInviteCodes")) {
       canonicalInviteCodesCount += 1;
@@ -623,31 +483,10 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
       }
     }
 
-    for await (const insight of ctx.db.query("insights")) {
-      canonicalInsightsCount += 1;
-      if (insight.legacySupporterInsightId === null) {
-        insightsWithoutLegacyLinkCount += 1;
-        if (sampleInsightIdsMissingLegacyLink.length < 10) {
-          sampleInsightIdsMissingLegacyLink.push(insight._id);
-        }
-      }
-    }
-
-    for await (const alert of ctx.db.query("alerts")) {
-      canonicalAlertsCount += 1;
-      if (alert.legacySupporterInsightId === null) {
-        alertsWithoutLegacyLinkCount += 1;
-        if (sampleAlertIdsMissingLegacyLink.length < 10) {
-          sampleAlertIdsMissingLegacyLink.push(alert._id);
-        }
-      }
-    }
-
     return {
       canonicalFirstGates: {
         inviteGenerationWritesLegacy: shouldWriteLegacyInviteForCanonicalInviteGeneration(),
         peopleWritesLegacy: shouldMirrorCanonicalPeopleToLegacy(),
-        insightsWriteLegacy: shouldMirrorCanonicalInsightsToLegacy(),
       },
       canonicalInviteCodesCount,
       legacyInviteCodesCount,
@@ -656,12 +495,6 @@ export const verifyNoCanonicalToLegacyBackfillDependencies = query({
       canonicalPeopleCount,
       peopleWithoutLegacyLinkCount,
       samplePersonIdsMissingLegacyLink,
-      canonicalInsightsCount,
-      insightsWithoutLegacyLinkCount,
-      sampleInsightIdsMissingLegacyLink,
-      canonicalAlertsCount,
-      alertsWithoutLegacyLinkCount,
-      sampleAlertIdsMissingLegacyLink,
       note:
         "missing legacy links are now expected for canonical-first writes and should not block rollouts while legacy read fallback remains in place.",
     };

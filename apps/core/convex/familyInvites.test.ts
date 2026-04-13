@@ -6,7 +6,6 @@ import {
   shouldWriteLegacyInviteForCanonicalInviteGeneration,
 } from "./familyInvites";
 import { shouldMirrorCanonicalPeopleToLegacy } from "./peopleCompat";
-import { shouldMirrorCanonicalInsightsToLegacy } from "./insightsCompat";
 
 let membershipCounter = 0;
 
@@ -61,7 +60,6 @@ describe("family invite messaging", () => {
 
   it("keeps canonical-first compatibility gates disabled", () => {
     expect(shouldMirrorCanonicalPeopleToLegacy()).toBe(false);
-    expect(shouldMirrorCanonicalInsightsToLegacy()).toBe(false);
     expect(shouldWriteLegacyInviteForCanonicalInviteGeneration()).toBe(false);
   });
 });

@@ -618,7 +618,7 @@ export const getDailySummaryDigestPayload = internalQuery({
   },
 });
 
-export const getUrgentInsightDispatchPlan = internalQuery({
+export const getUrgentAlertDispatchPlan = internalQuery({
   args: {
     alertId: v.id("alerts"),
   },
@@ -725,7 +725,6 @@ export const enqueueNotificationDelivery = internalMutation({
       scheduledFor: args.scheduledFor,
       payloadTag: args.payloadTag,
       routineOccurrenceId: args.routineOccurrenceId ?? null,
-      supporterInsightId: null,
       alertId: args.alertId ?? null,
       canonicalInsightId: args.canonicalInsightId ?? null,
       summaryDateKey: args.summaryDateKey ?? null,

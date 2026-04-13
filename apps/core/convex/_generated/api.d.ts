@@ -19,7 +19,6 @@ import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
 import type * as independentAccess from "../independentAccess.js";
 import type * as insights from "../insights.js";
-import type * as insightsCompat from "../insightsCompat.js";
 import type * as insightsEngine from "../insightsEngine.js";
 import type * as kiosk from "../kiosk.js";
 import type * as liveVoice from "../liveVoice.js";
@@ -63,7 +62,6 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   independentAccess: typeof independentAccess;
   insights: typeof insights;
-  insightsCompat: typeof insightsCompat;
   insightsEngine: typeof insightsEngine;
   kiosk: typeof kiosk;
   liveVoice: typeof liveVoice;

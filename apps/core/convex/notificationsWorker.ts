@@ -270,13 +270,13 @@ export const sweepDailySummaryNotifications = internalAction({
   },
 });
 
-export const dispatchUrgentInsightNotification = internalAction({
+export const dispatchUrgentAlertNotification = internalAction({
   args: {
     alertId: v.id("alerts"),
   },
   handler: async (ctx, args) => {
     const plan = await ctx.runQuery(
-      internal.notifications.getUrgentInsightDispatchPlan,
+      internal.notifications.getUrgentAlertDispatchPlan,
       { alertId: args.alertId },
     );
 
