@@ -5,10 +5,10 @@ import {
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
 } from "./familySpaceAuth";
+import { createPersonRecord } from "./people";
 import { normalizeOptionalText } from "./security";
 import { buildCircleName } from "./terminology";
 import { patchCircleFromFamilySpace } from "./circleCompat";
-import { mirrorPersonToLegacyFamilyMember } from "./peopleCompat";
 
 export const processOnboardingAction = internalMutation({
   args: {
@@ -90,27 +90,15 @@ export const processOnboardingAction = internalMutation({
           );
         }
 
-        const now = Date.now();
-        const legacyFamilyMemberId = await mirrorPersonToLegacyFamilyMember(ctx, {
+        await createPersonRecord(ctx, {
           familySpaceId: membership.familySpaceId,
+          seniorProfileId: membership.seniorProfileId,
+          membershipId: membership._id,
           name,
           relationship,
           isLiving: true,
           aiContext,
           photoStorageId: undefined,
-        });
-
-        await ctx.db.insert("people", {
-          familySpaceId: membership.familySpaceId,
-          seniorProfileId: membership.seniorProfileId,
-          legacyFamilyMemberId: legacyFamilyMemberId ?? null,
-          name,
-          relationship,
-          isLiving: true,
-          aiContext,
-          createdByMembershipId: membership._id,
-          updatedByMembershipId: membership._id,
-          lastEditedAt: now,
         });
 
         return { success: true, action };

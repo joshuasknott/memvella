@@ -18,7 +18,7 @@ export default function AddPersonPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { seniorDisplayName } = useCircleProfile();
-  const addFamilyMember = useMutation(api.organiser.addFamilyMember);
+  const addPerson = useMutation(api.people.addPerson);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
   const [name, setName] = useState("");
@@ -69,7 +69,7 @@ export default function AddPersonPage() {
         );
       }
 
-      await addFamilyMember({
+      await addPerson({
         name: name.trim(),
         relationship,
         isLiving,
@@ -79,7 +79,7 @@ export default function AddPersonPage() {
 
       toast({
         tone: "success",
-        title: "Connection saved",
+        title: "Person saved",
         description: `${name.trim()} is now available in this Circle.`,
       });
       router.push("/circle/memories");
@@ -92,7 +92,7 @@ export default function AddPersonPage() {
       setError(message);
       toast({
         tone: "error",
-        title: "Connection did not save",
+        title: "Person did not save",
         description: message,
       });
     } finally {
@@ -257,7 +257,7 @@ export default function AddPersonPage() {
             </button>
           </div>
           <p className="px-1 text-sm text-outline">
-            This helps Memvella speak about this connection with the right context.
+            This helps Memvella speak about this person with the right context.
           </p>
         </div>
 
@@ -289,7 +289,7 @@ export default function AddPersonPage() {
           </div>
           <div>
             <h4 className="font-headline font-bold text-on-primary-fixed">
-              Family Connections
+              People Context
             </h4>
             <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
               Adding context helps Memvella bring up the right memories during {seniorDisplayName}&apos;s wellness check-in.
@@ -313,7 +313,7 @@ export default function AddPersonPage() {
             Saving...
           </>
         ) : (
-          "Save Connection"
+          "Save Person"
         )}
       </button>
     </div>

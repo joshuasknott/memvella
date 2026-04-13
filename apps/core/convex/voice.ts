@@ -25,7 +25,7 @@ type SeniorAiContext = {
     startDate: string | null;
     endDate: string | null;
   }>;
-  familyMembers: Array<{
+  people: Array<{
     name: string;
     relationship: string;
     isLiving: boolean;
@@ -179,13 +179,13 @@ function buildAssistedSystemPrompt(
     );
   }
 
-  if (context.familyMembers.length > 0) {
+  if (context.people.length > 0) {
     sections.push(
-      `Connections: ${context.familyMembers
-        .map((member) =>
-          member.isLiving
-            ? `${member.name} is ${member.relationship}${member.aiContext ? `: ${member.aiContext}` : ""}`
-            : `${member.name} was ${member.relationship}. Speak about past memories only${member.aiContext ? `: ${member.aiContext}` : ""}`,
+      `People: ${context.people
+        .map((person) =>
+          person.isLiving
+            ? `${person.name} is ${person.relationship}${person.aiContext ? `: ${person.aiContext}` : ""}`
+            : `${person.name} was ${person.relationship}. Speak about past memories only${person.aiContext ? `: ${person.aiContext}` : ""}`,
         )
         .join("; ")}`,
     );

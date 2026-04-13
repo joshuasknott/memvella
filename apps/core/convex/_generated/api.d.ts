@@ -28,7 +28,7 @@ import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as notificationsWorker from "../notificationsWorker.js";
 import type * as organiser from "../organiser.js";
-import type * as peopleCompat from "../peopleCompat.js";
+import type * as people from "../people.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as routineHelpers from "../routineHelpers.js";
 import type * as routineRetreatScheduler from "../routineRetreatScheduler.js";
@@ -71,7 +71,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   notificationsWorker: typeof notificationsWorker;
   organiser: typeof organiser;
-  peopleCompat: typeof peopleCompat;
+  people: typeof people;
   rateLimits: typeof rateLimits;
   routineHelpers: typeof routineHelpers;
   routineRetreatScheduler: typeof routineRetreatScheduler;

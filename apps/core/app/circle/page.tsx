@@ -95,7 +95,7 @@ export default function OrganiserDashboard() {
               <UserPlus className="h-6 w-6 text-on-secondary-fixed-variant" />
             </div>
             <span className="text-center text-base font-bold text-on-surface">
-              Add Profile
+              Add Person
             </span>
           </Link>
 
@@ -222,8 +222,8 @@ export default function OrganiserDashboard() {
               </div>
               <p className="text-lg font-medium text-on-surface">
                 {summary
-                  ? `${summary.totalFamilyMembers} connection${summary.totalFamilyMembers !== 1 ? "s" : ""} and ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? "s" : ""} set up.`
-                  : "Loading connections summary..."}
+                  ? `${summary.totalPeople} person${summary.totalPeople !== 1 ? "s" : ""} and ${summary.totalRoutines} routine${summary.totalRoutines !== 1 ? "s" : ""} set up.`
+                  : "Loading people summary..."}
               </p>
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-gray-400 transition-colors group-hover:text-primary" />

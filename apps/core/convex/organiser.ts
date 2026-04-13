@@ -20,7 +20,6 @@ import {
   getNextRoutineEventForFamilySpace,
   listTodayTimelineForFamilySpace,
 } from "./routineHelpers";
-import { assertValidStoredUpload } from "./uploadValidation";
 import {
   buildCircleName,
   CIRCLE_LABEL,
@@ -34,10 +33,7 @@ import {
   ensureCircleMembershipForLegacyMembership,
   patchCircleFromFamilySpace,
 } from "./circleCompat";
-import {
-  listPeopleForFamilySpace,
-  mirrorPersonToLegacyFamilyMember,
-} from "./peopleCompat";
+import { listPeopleForFamilySpace } from "./people";
 
 const organiserProfileRoleValidator = v.optional(
   v.union(
@@ -58,49 +54,6 @@ async function getPreferredSeniorProfile(
 
   return await getSeniorProfileByMode(ctx, familySpaceId, "independent");
 }
-
-export const addFamilyMember = mutation({
-  args: {
-    name: v.string(),
-    relationship: v.string(),
-    isLiving: v.boolean(),
-    aiContext: v.string(),
-    photoStorageId: v.optional(v.id("_storage")),
-  },
-  handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_people");
-    if (args.photoStorageId) {
-      await assertValidStoredUpload(ctx, {
-        storageId: args.photoStorageId,
-        kind: "image",
-      });
-    }
-
-    const now = Date.now();
-    const legacyFamilyMemberId = await mirrorPersonToLegacyFamilyMember(ctx, {
-      familySpaceId: membership.familySpaceId,
-      name: args.name,
-      relationship: args.relationship,
-      isLiving: args.isLiving,
-      aiContext: args.aiContext,
-      photoStorageId: args.photoStorageId,
-    });
-
-    return await ctx.db.insert("people", {
-      familySpaceId: membership.familySpaceId,
-      seniorProfileId: membership.seniorProfileId,
-      legacyFamilyMemberId: legacyFamilyMemberId ?? null,
-      name: args.name,
-      relationship: args.relationship,
-      isLiving: args.isLiving,
-      aiContext: args.aiContext,
-      photoStorageId: args.photoStorageId,
-      createdByMembershipId: membership._id,
-      updatedByMembershipId: membership._id,
-      lastEditedAt: now,
-    });
-  },
-});
 
 export const createOrganiserProfile = mutation({
   args: {
@@ -316,7 +269,7 @@ export const getOrganiserDashboardSummary = query({
       "family_side",
     );
     if (!familyContext) {
-      return { totalFamilyMembers: 0, totalRoutines: 0, statusSummary: "" };
+      return { totalPeople: 0, totalRoutines: 0, statusSummary: "" };
     }
 
     const [members, routines, nextRoutine] = await Promise.all([
@@ -334,7 +287,7 @@ export const getOrganiserDashboardSummary = query({
     ]);
 
     return {
-      totalFamilyMembers: members.length,
+      totalPeople: members.length,
       totalRoutines: routines.length,
       statusSummary: nextRoutine
         ? `${nextRoutine.title} is next at ${nextRoutine.time}.`

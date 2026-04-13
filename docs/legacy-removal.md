@@ -24,7 +24,7 @@ Use it when changing:
 - Batch 1 route cleanup: largely complete. `app/supporter` runtime routes are gone, `/circle` owns the active family-side workspace, and `next.config.ts` no longer redirects `/supporter*` or `/admin*`.
 - Batch 2 role cleanup: complete on active auth paths. Organiser and Member are the only family-side roles used by current authorization logic.
 - Batch 3 circle table introduction: in progress but canonical-first in hot paths. Runtime auth, invites, and notification/voice helper resolution now prefer `circles`, `circleMemberships`, and `circleInviteCodes`, while legacy tables remain for compatibility and migration proof.
-- Batch 4 people and awareness split: organiser review now runs on canonical `alerts` and `insights`, and the `supporterInsights` compatibility surface has been removed.
+- Batch 4 people and awareness split: `people`, `alerts`, and `insights` now run on canonical tables only.
 - Batch 5 canonical field/helper rename cleanup: in progress. Runtime helpers are moving toward `circle` naming, but persisted field names such as `familySpaceId` still exist widely.
 - Batch 6 retirement of compatibility surfaces: not ready. Legacy tables and compatibility fields remain until verification shows they are fully unused.
 
@@ -68,7 +68,6 @@ Legacy or retired tables and fields still present in `apps/core/convex/schema.ts
 - `familySpaces`
 - `familySpaceMemberships`
 - `familyInvites`
-- `familyMembers`
 - legacy `memories`
 - legacy `routines`
 - `primarySupporterAuthUserId`
@@ -218,7 +217,6 @@ This batch should be done only after the table migrations are stable, otherwise 
 
 Remove once the canonical replacements are fully live:
 
-- `familyMembers`
 - legacy `memories`
 - legacy `routines`
 - `primarySupporterAuthUserId`

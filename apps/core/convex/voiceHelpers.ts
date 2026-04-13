@@ -9,7 +9,7 @@ import {
 } from "./routineHelpers";
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
-import { listPeopleForFamilySpace } from "./peopleCompat";
+import { listPeopleForFamilySpace } from "./people";
 
 function voiceIntentValidator() {
   return v.union(
@@ -123,12 +123,6 @@ export const gatherSeniorContext = internalQuery({
         relationship: person.relationship,
         isLiving: person.isLiving,
         aiContext: truncatePromptField(person.aiContext, 96) ?? "",
-      })),
-      familyMembers: people.map((member) => ({
-        name: member.name,
-        relationship: member.relationship,
-        isLiving: member.isLiving,
-        aiContext: truncatePromptField(member.aiContext, 96) ?? "",
       })),
       recentMemories: recentMemories.map((record) => ({
         title: record.title,

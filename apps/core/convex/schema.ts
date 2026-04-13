@@ -217,12 +217,9 @@ export default defineSchema({
 
   // Legacy content tables stay permissive during the widen phase so older rows
   // can coexist while new writes are anchored to FamilySpace ids.
-  familyMembers: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
-
   people: defineTable({
     familySpaceId: v.id("familySpaces"),
     seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
-    legacyFamilyMemberId: v.union(v.id("familyMembers"), v.null()),
     name: v.string(),
     relationship: v.string(),
     isLiving: v.boolean(),
@@ -234,7 +231,6 @@ export default defineSchema({
   })
     .index("by_familySpaceId", ["familySpaceId"])
     .index("by_seniorProfileId", ["seniorProfileId"])
-    .index("by_legacyFamilyMemberId", ["legacyFamilyMemberId"])
     .index("by_familySpaceId_and_lastEditedAt", ["familySpaceId", "lastEditedAt"]),
 
   routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
