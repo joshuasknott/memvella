@@ -5,7 +5,7 @@ import { mutation, query } from "./_generated/server";
 import { buildTranscriptExcerpt, scanVoiceSafety } from "./voiceSafety";
 
 type SeniorAiContext = {
-  familySpaceName: string;
+  circleName: string;
   timeZone: string;
   locale: string;
   routines: Array<{
@@ -42,13 +42,13 @@ type SeniorAiContext = {
 };
 
 type ResolvedSeniorSession = {
-  familySpaceId: Id<"familySpaces">;
+  circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
   seniorName: string;
   seniorMode: "assisted" | "independent";
   sessionType: "assisted_device" | "independent_web";
   sessionId: Id<"seniorAccessSessions">;
-  sourceMembershipId: Id<"familySpaceMemberships"> | null;
+  sourceCircleMembershipId: Id<"circleMemberships"> | null;
 };
 
 function buildAssistedSystemPrompt(
@@ -63,7 +63,7 @@ function buildAssistedSystemPrompt(
     "Never give medical, dosage, diagnosis, or treatment advice.",
     "If the speaker seems confused or repeats themself, use recent voice history plus familiar routines, memories, and connections to gently reorient them.",
     "Keep the tone warm and direct.",
-    `Circle: ${context.familySpaceName}`,
+    `Circle: ${context.circleName}`,
   ];
 
   if (context.routines.length > 0) {
@@ -137,13 +137,12 @@ export const getAssistedLiveBootstrap = query({
     );
 
     const context = (await ctx.runQuery(internal.voiceHelpers.gatherSeniorContext, {
-      familySpaceId: session.familySpaceId,
       seniorProfileId: session.seniorProfileId,
       recentInteractionLimit: 5,
     })) as SeniorAiContext;
 
     return {
-      familySpaceId: session.familySpaceId,
+      circleId: session.circleId,
       seniorProfileId: session.seniorProfileId,
       seniorName: session.seniorName,
       sessionType: session.sessionType,
@@ -187,7 +186,7 @@ export const logAssistedLiveTurn = mutation({
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
       internal.voiceHelpers.saveVoiceInteraction,
       {
-        familySpaceId: session.familySpaceId,
+        circleId: session.circleId,
         seniorProfileId: session.seniorProfileId,
         sessionType: session.sessionType,
         channel: args.channel ?? "assisted_voice_loop",

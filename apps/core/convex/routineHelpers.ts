@@ -1,6 +1,5 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { getCircleByLegacyFamilySpaceId } from "./circleCompat";
 import { normalizeUserFacingText } from "./terminology";
 
 type DbCtx = MutationCtx | QueryCtx;
@@ -24,7 +23,7 @@ type RoutineTimelineItem = {
 
 export type ScheduledRoutineOccurrence = {
   occurrenceId: Id<"routineOccurrences">;
-  familySpaceId: Id<"familySpaces">;
+  seniorProfileId: Id<"seniorProfiles">;
   routineScheduleId: Id<"routineSchedules">;
   occurrenceDateKey: string;
   startTimeMinutes: number;
@@ -39,11 +38,32 @@ type TimeZoneClock = {
 
 export type CircleRuntimeDetails = {
   circle: Doc<"circles"> | null;
-  familySpace: Doc<"familySpaces"> | null;
   circleName: string;
   timeZone: string;
   locale: string;
 };
+
+async function getPrimarySeniorProfileForCircle(
+  ctx: DbCtx,
+  circleId: Id<"circles">,
+) {
+  const assistedSenior = await ctx.db
+    .query("seniorProfiles")
+    .withIndex("by_circleId_and_seniorMode", (query) =>
+      query.eq("circleId", circleId).eq("seniorMode", "assisted"),
+    )
+    .first();
+  if (assistedSenior) {
+    return assistedSenior;
+  }
+
+  return await ctx.db
+    .query("seniorProfiles")
+    .withIndex("by_circleId_and_seniorMode", (query) =>
+      query.eq("circleId", circleId).eq("seniorMode", "independent"),
+    )
+    .first();
+}
 
 function getFormatter(timeZone: string) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -206,48 +226,66 @@ function buildStructuredTimelineItem(
 
 export async function resolveCircleRuntimeDetails(
   ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles"> | null,
 ) {
-  const [circle, familySpace] = await Promise.all([
-    getCircleByLegacyFamilySpaceId(ctx, familySpaceId),
-    ctx.db.get(familySpaceId),
-  ]);
+  if (!circleId) {
+    return {
+      circle: null,
+      circleName: "Circle",
+      timeZone: "UTC",
+      locale: "en-US",
+    } satisfies CircleRuntimeDetails;
+  }
 
-  if (circle?.timezone || familySpace?.timezone) {
+  const circle = await ctx.db.get(circleId);
+  if (!circle) {
+    return {
+      circle: null,
+      circleName: "Circle",
+      timeZone: "UTC",
+      locale: "en-US",
+    } satisfies CircleRuntimeDetails;
+  }
+
+  if (circle.timezone) {
     return {
       circle,
-      familySpace,
-      circleName:
-        normalizeUserFacingText(circle?.displayName ?? familySpace?.displayName) ??
-        "Circle",
-      timeZone: circle?.timezone ?? familySpace?.timezone ?? "UTC",
-      locale: circle?.locale ?? familySpace?.locale ?? "en-US",
+      circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
+      timeZone: circle.timezone,
+      locale: circle.locale ?? "en-US",
+    } satisfies CircleRuntimeDetails;
+  }
+
+  const primarySenior = await getPrimarySeniorProfileForCircle(ctx, circle._id);
+  if (!primarySenior) {
+    return {
+      circle,
+      circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
+      timeZone: "UTC",
+      locale: circle.locale ?? "en-US",
     } satisfies CircleRuntimeDetails;
   }
 
   const activeSchedule = await ctx.db
     .query("routineSchedules")
-    .withIndex("by_familySpaceId_and_status", (query) =>
-      query.eq("familySpaceId", familySpaceId).eq("status", "active"),
+    .withIndex("by_seniorProfileId_and_status", (query) =>
+      query.eq("seniorProfileId", primarySenior._id).eq("status", "active"),
     )
     .first();
 
   return {
     circle,
-    familySpace,
-    circleName:
-      normalizeUserFacingText(circle?.displayName ?? familySpace?.displayName) ??
-      "Circle",
+    circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
     timeZone: activeSchedule?.timezone ?? "UTC",
-    locale: circle?.locale ?? familySpace?.locale ?? "en-US",
+    locale: circle.locale ?? "en-US",
   } satisfies CircleRuntimeDetails;
 }
 
 export async function resolveCircleTimeZone(
   ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles"> | null,
 ) {
-  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
+  const details = await resolveCircleRuntimeDetails(ctx, circleId);
   return details.timeZone;
 }
 
@@ -291,7 +329,7 @@ export async function replaceRoutineOccurrences(
     }
 
     const occurrenceId = await ctx.db.insert("routineOccurrences", {
-      familySpaceId: schedule.familySpaceId,
+      seniorProfileId: schedule.seniorProfileId,
       routineScheduleId: schedule._id,
       occurrenceDateKey,
       startTimeMinutes: schedule.startTimeMinutes,
@@ -302,7 +340,7 @@ export async function replaceRoutineOccurrences(
 
     createdOccurrences.push({
       occurrenceId,
-      familySpaceId: schedule.familySpaceId,
+      seniorProfileId: schedule.seniorProfileId,
       routineScheduleId: schedule._id,
       occurrenceDateKey,
       startTimeMinutes: schedule.startTimeMinutes,
@@ -322,10 +360,13 @@ export async function replaceRoutineOccurrences(
 
 export async function listTodayTimelineForCircle(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
 ) {
-  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
-  if (!details.familySpace && !details.circle) {
+  const [details, seniorProfile] = await Promise.all([
+    resolveCircleRuntimeDetails(ctx, circleId),
+    getPrimarySeniorProfileForCircle(ctx, circleId),
+  ]);
+  if (!details.circle || !seniorProfile) {
     return [] as RoutineTimelineItem[];
   }
 
@@ -333,13 +374,54 @@ export async function listTodayTimelineForCircle(
   const { dateKey } = getTimeZoneClock(new Date(), timeZone);
   const occurrences = await ctx.db
     .query("routineOccurrences")
-    .withIndex(
-      "by_familySpaceId_status_occurrenceDateKey_startTimeMinutes",
-      (query) =>
-        query
-          .eq("familySpaceId", familySpaceId)
-          .eq("status", "scheduled")
-          .eq("occurrenceDateKey", dateKey),
+    .withIndex("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", (query) =>
+      query
+        .eq("seniorProfileId", seniorProfile._id)
+        .eq("status", "scheduled")
+        .eq("occurrenceDateKey", dateKey),
+    )
+    .take(64);
+
+  if (occurrences.length === 0) {
+    return [] as RoutineTimelineItem[];
+  }
+
+  const schedules = await Promise.all(
+    occurrences.map((occurrence) => ctx.db.get(occurrence.routineScheduleId)),
+  );
+  const scheduleById = new Map(
+    schedules
+      .filter((schedule): schedule is NonNullable<typeof schedule> => schedule !== null)
+      .map((schedule) => [schedule._id, schedule]),
+  );
+
+  return occurrences
+    .map((occurrence) => {
+      const schedule = scheduleById.get(occurrence.routineScheduleId);
+      return schedule ? buildStructuredTimelineItem(occurrence, schedule) : null;
+    })
+    .filter((item): item is RoutineTimelineItem => item !== null);
+}
+
+export async function listTodayTimelineForSenior(
+  ctx: QueryCtx,
+  seniorProfileId: Id<"seniorProfiles">,
+) {
+  const seniorProfile = await ctx.db.get(seniorProfileId);
+  if (!seniorProfile) {
+    return [] as RoutineTimelineItem[];
+  }
+
+  const details = await resolveCircleRuntimeDetails(ctx, seniorProfile.circleId);
+  const timeZone = seniorProfile.timezone ?? details.timeZone;
+  const { dateKey } = getTimeZoneClock(new Date(), timeZone);
+  const occurrences = await ctx.db
+    .query("routineOccurrences")
+    .withIndex("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", (query) =>
+      query
+        .eq("seniorProfileId", seniorProfile._id)
+        .eq("status", "scheduled")
+        .eq("occurrenceDateKey", dateKey),
     )
     .take(64);
 
@@ -366,10 +448,13 @@ export async function listTodayTimelineForCircle(
 
 export async function getNextRoutineEventForCircle(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
 ) {
-  const details = await resolveCircleRuntimeDetails(ctx, familySpaceId);
-  if (!details.familySpace && !details.circle) {
+  const [details, seniorProfile] = await Promise.all([
+    resolveCircleRuntimeDetails(ctx, circleId),
+    getPrimarySeniorProfileForCircle(ctx, circleId),
+  ]);
+  if (!details.circle || !seniorProfile) {
     return null;
   }
 
@@ -377,13 +462,11 @@ export async function getNextRoutineEventForCircle(
   const clock = getTimeZoneClock(new Date(), timeZone);
   const occurrences = await ctx.db
     .query("routineOccurrences")
-    .withIndex(
-      "by_familySpaceId_status_occurrenceDateKey_startTimeMinutes",
-      (query) =>
-        query
-          .eq("familySpaceId", familySpaceId)
-          .eq("status", "scheduled")
-          .gte("occurrenceDateKey", clock.dateKey),
+    .withIndex("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", (query) =>
+      query
+        .eq("seniorProfileId", seniorProfile._id)
+        .eq("status", "scheduled")
+        .gte("occurrenceDateKey", clock.dateKey),
     )
     .take(120);
 
@@ -417,15 +500,67 @@ export async function getNextRoutineEventForCircle(
   return null;
 }
 
-export async function listRoutineSchedulesForCircle(
+export async function getNextRoutineEventForSenior(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  seniorProfileId: Id<"seniorProfiles">,
+) {
+  const seniorProfile = await ctx.db.get(seniorProfileId);
+  if (!seniorProfile) {
+    return null;
+  }
+
+  const details = await resolveCircleRuntimeDetails(ctx, seniorProfile.circleId);
+  const timeZone = seniorProfile.timezone ?? details.timeZone;
+  const clock = getTimeZoneClock(new Date(), timeZone);
+  const occurrences = await ctx.db
+    .query("routineOccurrences")
+    .withIndex("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", (query) =>
+      query
+        .eq("seniorProfileId", seniorProfile._id)
+        .eq("status", "scheduled")
+        .gte("occurrenceDateKey", clock.dateKey),
+    )
+    .take(120);
+
+  if (occurrences.length > 0) {
+    const schedules = await Promise.all(
+      occurrences.map((occurrence) => ctx.db.get(occurrence.routineScheduleId)),
+    );
+    const scheduleById = new Map(
+      schedules
+        .filter((schedule): schedule is NonNullable<typeof schedule> => schedule !== null)
+        .map((schedule) => [schedule._id, schedule]),
+    );
+
+    for (const occurrence of occurrences) {
+      if (
+        occurrence.occurrenceDateKey === clock.dateKey &&
+        occurrence.startTimeMinutes < clock.currentMinutes
+      ) {
+        continue;
+      }
+
+      const schedule = scheduleById.get(occurrence.routineScheduleId);
+      if (!schedule) {
+        continue;
+      }
+
+      return buildStructuredTimelineItem(occurrence, schedule);
+    }
+  }
+
+  return null;
+}
+
+export async function listRoutineSchedulesForSenior(
+  ctx: QueryCtx,
+  seniorProfileId: Id<"seniorProfiles">,
   limit = 100,
 ) {
   const schedules = await ctx.db
     .query("routineSchedules")
-    .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
-      query.eq("familySpaceId", familySpaceId),
+    .withIndex("by_seniorProfileId_and_lastEditedAt", (query) =>
+      query.eq("seniorProfileId", seniorProfileId),
     )
     .order("desc")
     .take(limit);
@@ -444,4 +579,17 @@ export async function listRoutineSchedulesForCircle(
     endDate: schedule.endDate ?? null,
     lastEditedAt: schedule.lastEditedAt,
   }));
+}
+
+export async function listRoutineSchedulesForCircle(
+  ctx: QueryCtx,
+  circleId: Id<"circles">,
+  limit = 100,
+) {
+  const seniorProfile = await getPrimarySeniorProfileForCircle(ctx, circleId);
+  if (!seniorProfile) {
+    return [];
+  }
+
+  return await listRoutineSchedulesForSenior(ctx, seniorProfile._id, limit);
 }

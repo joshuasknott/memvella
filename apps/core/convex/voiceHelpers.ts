@@ -4,12 +4,29 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { summarizeMemory } from "./memoryHelpers";
 import {
-  listRoutineSchedulesForCircle,
+  listRoutineSchedulesForSenior,
   resolveCircleRuntimeDetails,
 } from "./routineHelpers";
 import { buildTranscriptExcerpt } from "./voiceSafety";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
-import { listPeopleForFamilySpace } from "./people";
+import { listPeopleForSeniorProfile } from "./people";
+
+async function resolveSeniorCircleContext(
+  ctx: Parameters<typeof resolveCircleRuntimeDetails>[0],
+  seniorProfileId: Id<"seniorProfiles">,
+) {
+  const seniorProfile = await ctx.db.get(seniorProfileId);
+  if (!seniorProfile) {
+    throw new Error("This senior profile is no longer available.");
+  }
+
+  const circleDetails = await resolveCircleRuntimeDetails(ctx, seniorProfile.circleId);
+
+  return {
+    seniorProfile,
+    circleDetails,
+  };
+}
 
 function voiceIntentValidator() {
   return v.union(
@@ -64,7 +81,6 @@ function truncatePromptField(value: string | null | undefined, maxLength: number
 
 export const gatherSeniorContext = internalQuery({
   args: {
-    familySpaceId: v.id("familySpaces"),
     seniorProfileId: v.id("seniorProfiles"),
     recentInteractionLimit: v.optional(v.number()),
   },
@@ -73,14 +89,14 @@ export const gatherSeniorContext = internalQuery({
       Math.max(args.recentInteractionLimit ?? 5, 3),
       5,
     );
-    const [routines, people, recentMemories, recentVoiceInteractions, circleDetails, seniorProfile] =
+    const [{ seniorProfile, circleDetails }, routines, recentMemories, recentVoiceInteractions] =
       await Promise.all([
-        listRoutineSchedulesForCircle(ctx, args.familySpaceId, 6),
-        listPeopleForFamilySpace(ctx, args.familySpaceId, 8),
+        resolveSeniorCircleContext(ctx, args.seniorProfileId),
+        listRoutineSchedulesForSenior(ctx, args.seniorProfileId, 6),
         ctx.db
           .query("memoryRecords")
-          .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
-            query.eq("familySpaceId", args.familySpaceId),
+          .withIndex("by_seniorProfileId_and_lastEditedAt", (query) =>
+            query.eq("seniorProfileId", args.seniorProfileId),
           )
           .order("desc")
           .take(4),
@@ -91,23 +107,16 @@ export const gatherSeniorContext = internalQuery({
           )
           .order("desc")
           .take(recentInteractionLimit),
-        resolveCircleRuntimeDetails(ctx, args.familySpaceId),
-        ctx.db.get(args.seniorProfileId),
       ]);
 
-    if (
-      !seniorProfile ||
-      seniorProfile.familySpaceId !== args.familySpaceId ||
-      seniorProfile.seniorMode !== "assisted"
-    ) {
+    if (seniorProfile.seniorMode !== "assisted") {
       throw new Error("The assisted voice context is not linked to this Circle.");
     }
 
+    const people = await listPeopleForSeniorProfile(ctx, seniorProfile._id, 8);
+
     return {
       circleName: circleDetails.circleName,
-      familySpaceName:
-        normalizeUserFacingText(circleDetails.familySpace?.displayName) ??
-        circleDetails.circleName,
       timeZone: circleDetails.timeZone,
       locale: circleDetails.locale,
       routines: routines.map((routine) => ({
@@ -148,16 +157,16 @@ export const gatherSeniorContext = internalQuery({
 
 export const getSeniorLocaleContext = internalQuery({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
   },
   handler: async (ctx, args) => {
-    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.familySpaceId);
+    const { circleDetails } = await resolveSeniorCircleContext(
+      ctx,
+      args.seniorProfileId,
+    );
 
     return {
       circleName: circleDetails.circleName,
-      familySpaceName:
-        normalizeUserFacingText(circleDetails.familySpace?.displayName) ??
-        circleDetails.circleName,
       timeZone: circleDetails.timeZone,
       locale: circleDetails.locale,
     };
@@ -166,7 +175,7 @@ export const getSeniorLocaleContext = internalQuery({
 
 export const saveVoiceInteraction = internalMutation({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     sessionType: sessionTypeValidator(),
     channel: channelValidator(),
@@ -188,7 +197,7 @@ export const saveVoiceInteraction = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const interactionId = await ctx.db.insert("voiceInteractions", {
-      familySpaceId: args.familySpaceId,
+      circleId: args.circleId,
       seniorProfileId: args.seniorProfileId,
       sessionType: args.sessionType,
       channel: args.channel,
@@ -221,7 +230,7 @@ export const saveVoiceInteraction = internalMutation({
 
     if (args.distressDetected) {
       const alertId = await ctx.db.insert("alerts", {
-        familySpaceId: args.familySpaceId,
+        circleId: args.circleId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
         sourceType: "safety_guardrail",
@@ -237,7 +246,7 @@ export const saveVoiceInteraction = internalMutation({
         status: "queued",
         createdAt: now,
         reviewedAt: null,
-        reviewedByMembershipId: null,
+        reviewedByCircleMembershipId: null,
       });
       await ctx.scheduler.runAfter(
         0,
@@ -248,7 +257,7 @@ export const saveVoiceInteraction = internalMutation({
 
     if (args.medicalRejected) {
       await ctx.db.insert("alerts", {
-        familySpaceId: args.familySpaceId,
+        circleId: args.circleId,
         seniorProfileId: args.seniorProfileId,
         sourceVoiceInteractionId: interactionId,
         sourceType: "safety_guardrail",
@@ -264,14 +273,14 @@ export const saveVoiceInteraction = internalMutation({
         status: "queued",
         createdAt: now,
         reviewedAt: null,
-        reviewedByMembershipId: null,
+        reviewedByCircleMembershipId: null,
       });
     }
 
     await ctx.scheduler.runAfter(
       0,
       internal.insightsEngine.processPendingInsights,
-      { familySpaceId: args.familySpaceId },
+      args.circleId ? { circleId: args.circleId } : {},
     );
 
     return interactionId;
@@ -302,18 +311,18 @@ export const markVoiceDraftOutcome = internalMutation({
 
 export const listPendingVoiceInteractionsForInsights = internalQuery({
   args: {
-    familySpaceId: v.optional(v.id("familySpaces")),
+    circleId: v.optional(v.id("circles")),
   },
   handler: async (ctx, args) => {
-    const familySpaceId = args.familySpaceId;
-    const interactions = familySpaceId
+    const circleId = args.circleId;
+    const interactions = circleId
       ? await ctx.db
           .query("voiceInteractions")
           .withIndex(
-            "by_familySpaceId_and_aiInsightStatus_and_createdAt",
+            "by_circleId_and_aiInsightStatus_and_createdAt",
             (query) =>
               query
-                .eq("familySpaceId", familySpaceId)
+                .eq("circleId", circleId)
                 .eq("aiInsightStatus", "pending"),
           )
           .take(16)
@@ -341,7 +350,7 @@ export const listPendingVoiceInteractionsForInsights = internalQuery({
 
     return interactions.map((interaction) => ({
       interactionId: interaction._id,
-      familySpaceId: interaction.familySpaceId,
+      circleId: interaction.circleId,
       seniorProfileId: interaction.seniorProfileId,
       seniorName:
         seniorNameById.get(interaction.seniorProfileId) ?? MEMBER_LABEL,
@@ -400,16 +409,16 @@ export const getRecentVoiceInteractionsForSenior = internalQuery({
   },
 });
 
-export const getFamilySpaceInsightTargets = internalQuery({
+export const getCircleInsightTargets = internalQuery({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.id("circles"),
   },
   handler: async (ctx, args): Promise<Array<Id<"voiceInteractions">>> => {
     const interactions = await ctx.db
       .query("voiceInteractions")
-      .withIndex("by_familySpaceId_and_aiInsightStatus_and_createdAt", (query) =>
+      .withIndex("by_circleId_and_aiInsightStatus_and_createdAt", (query) =>
         query
-          .eq("familySpaceId", args.familySpaceId)
+          .eq("circleId", args.circleId)
           .eq("aiInsightStatus", "pending"),
       )
       .take(16);

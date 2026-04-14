@@ -27,7 +27,7 @@ export const getSeniorDashboard = query({
 
     const dashboard = await buildSeniorDashboard(
       ctx,
-      validation.familySpace._id,
+      validation.seniorProfile._id,
     );
 
     return {
@@ -64,7 +64,7 @@ export const resolveSeniorSession = internalQuery({
     }
 
     return {
-      familySpaceId: validation.familySpace._id,
+      circleId: validation.circle?._id ?? null,
       seniorProfileId: validation.seniorProfile._id,
       seniorName:
         normalizeUserFacingText(validation.seniorProfile.displayName) ??
@@ -72,7 +72,7 @@ export const resolveSeniorSession = internalQuery({
       seniorMode: validation.seniorProfile.seniorMode,
       sessionType: validation.session.sessionType,
       sessionId: validation.session._id,
-      sourceMembershipId: validation.session.sourceMembershipId,
+      sourceCircleMembershipId: validation.session.sourceCircleMembershipId,
     };
   },
 });

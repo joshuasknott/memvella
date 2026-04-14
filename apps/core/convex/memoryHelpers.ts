@@ -1,5 +1,6 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { getSeniorProfileByMode } from "./circleAuth";
 
 type DbCtx = MutationCtx | QueryCtx;
 
@@ -88,8 +89,8 @@ async function resolveAssets(
 export async function createMemoryRecord(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
-    membershipId: Id<"familySpaceMemberships">;
+    seniorProfileId: Id<"seniorProfiles">;
+    circleMembershipId: Id<"circleMemberships"> | null;
     recordType: Doc<"memoryRecords">["recordType"];
     title: string;
     story?: string | null;
@@ -101,22 +102,22 @@ export async function createMemoryRecord(
 ) {
   const now = Date.now();
   const memoryRecordId = await ctx.db.insert("memoryRecords", {
-    familySpaceId: args.familySpaceId,
+    seniorProfileId: args.seniorProfileId,
     recordType: args.recordType,
     title: args.title,
     story: args.story ?? null,
     transcript: args.transcript ?? null,
     memoryDate: args.memoryDate ?? null,
     externalUrl: args.externalUrl ?? null,
-    createdByMembershipId: args.membershipId,
-    updatedByMembershipId: args.membershipId,
+    createdByCircleMembershipId: args.circleMembershipId,
+    updatedByCircleMembershipId: args.circleMembershipId,
     lastEditedAt: now,
   });
 
   const assets = uniqueAssets(args.assets ?? []);
   for (const [sortOrder, asset] of assets.entries()) {
     await ctx.db.insert("memoryAssets", {
-      familySpaceId: args.familySpaceId,
+      seniorProfileId: args.seniorProfileId,
       memoryRecordId,
       assetType: asset.assetType,
       storageId: asset.storageId ?? null,
@@ -133,7 +134,7 @@ export async function createMemoryRecord(
 export async function replaceMemoryAssets(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    seniorProfileId: Id<"seniorProfiles">;
     memoryRecordId: Id<"memoryRecords">;
     assets: MemoryAssetInput[];
   },
@@ -155,7 +156,7 @@ export async function replaceMemoryAssets(
   const nextAssets = uniqueAssets(args.assets);
   for (const [sortOrder, asset] of nextAssets.entries()) {
     await ctx.db.insert("memoryAssets", {
-      familySpaceId: args.familySpaceId,
+      seniorProfileId: args.seniorProfileId,
       memoryRecordId: args.memoryRecordId,
       assetType: asset.assetType,
       storageId: asset.storageId ?? null,
@@ -188,17 +189,18 @@ export async function deleteMemoryRecordCascade(
   await ctx.db.delete(memoryRecordId);
 }
 
-export async function listMemoryCardsForFamilySpace(
+export async function listMemoryCardsForSenior(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  seniorProfileId: Id<"seniorProfiles">,
+  limit = 100,
 ) {
   const records = await ctx.db
     .query("memoryRecords")
-    .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
-      query.eq("familySpaceId", familySpaceId),
+    .withIndex("by_seniorProfileId_and_lastEditedAt", (query) =>
+      query.eq("seniorProfileId", seniorProfileId),
     )
     .order("desc")
-    .take(100);
+    .take(limit);
 
   return await Promise.all(
     records.map(async (record) => {
@@ -222,15 +224,15 @@ export async function listMemoryCardsForFamilySpace(
   );
 }
 
-export async function getMemoryDetailForFamilySpace(
+export async function getMemoryDetailForSenior(
   ctx: QueryCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    seniorProfileId: Id<"seniorProfiles">;
     memoryRecordId: Id<"memoryRecords">;
   },
 ) {
   const record = await ctx.db.get(args.memoryRecordId);
-  if (!record || record.familySpaceId !== args.familySpaceId) {
+  if (!record || record.seniorProfileId !== args.seniorProfileId) {
     return null;
   }
 
@@ -249,4 +251,38 @@ export async function getMemoryDetailForFamilySpace(
     lastEditedAt: record.lastEditedAt,
     assets,
   };
+}
+
+export async function listMemoryCardsForCircle(
+  ctx: QueryCtx,
+  circleId: Id<"circles">,
+) {
+  const seniorProfile =
+    (await getSeniorProfileByMode(ctx, circleId, "assisted")) ??
+    (await getSeniorProfileByMode(ctx, circleId, "independent"));
+  if (!seniorProfile) {
+    return [];
+  }
+
+  return await listMemoryCardsForSenior(ctx, seniorProfile._id, 100);
+}
+
+export async function getMemoryDetailForCircle(
+  ctx: QueryCtx,
+  args: {
+    circleId: Id<"circles">;
+    memoryRecordId: Id<"memoryRecords">;
+  },
+) {
+  const seniorProfile =
+    (await getSeniorProfileByMode(ctx, args.circleId, "assisted")) ??
+    (await getSeniorProfileByMode(ctx, args.circleId, "independent"));
+  if (!seniorProfile) {
+    return null;
+  }
+
+  return await getMemoryDetailForSenior(ctx, {
+    seniorProfileId: seniorProfile._id,
+    memoryRecordId: args.memoryRecordId,
+  });
 }

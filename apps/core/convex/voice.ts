@@ -14,7 +14,7 @@ import {
 } from "./voiceSafety";
 
 type SeniorAiContext = {
-  familySpaceName: string;
+  circleName: string;
   timeZone: string;
   locale: string;
   routines: Array<{
@@ -52,17 +52,17 @@ type SeniorAiContext = {
 
 type SeniorLocaleContext = Pick<
   SeniorAiContext,
-  "familySpaceName" | "timeZone" | "locale"
+  "circleName" | "timeZone" | "locale"
 >;
 
 type ResolvedSeniorSession = {
-  familySpaceId: Id<"familySpaces">;
+  circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
   seniorName: string;
   seniorMode: "assisted" | "independent";
   sessionType: "assisted_device" | "independent_web";
   sessionId: Id<"seniorAccessSessions">;
-  sourceMembershipId: Id<"familySpaceMemberships"> | null;
+  sourceCircleMembershipId: Id<"circleMemberships"> | null;
 };
 
 type IndependentDraft = {
@@ -161,7 +161,7 @@ function buildAssistedSystemPrompt(
     distressDetected
       ? "If the transcript suggests distress, begin with reassurance and one clear next step."
       : "Keep the tone warm and direct.",
-    `Circle: ${context.familySpaceName}`,
+    `Circle: ${context.circleName}`,
   ];
 
   if (context.routines.length > 0) {
@@ -392,7 +392,6 @@ export const handleAssistedVoiceTurn = action({
             const context = (await ctx.runQuery(
               internal.voiceHelpers.gatherSeniorContext,
               {
-                familySpaceId: session.familySpaceId,
                 seniorProfileId: session.seniorProfileId,
                 recentInteractionLimit: 5,
               },
@@ -420,7 +419,7 @@ export const handleAssistedVoiceTurn = action({
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
       internal.voiceHelpers.saveVoiceInteraction,
       {
-        familySpaceId: session.familySpaceId,
+        circleId: session.circleId,
         seniorProfileId: session.seniorProfileId,
         sessionType: session.sessionType,
         channel: "assisted_voice_loop",
@@ -484,7 +483,7 @@ export const parseIndependentVoiceIntent = action({
       const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
         internal.voiceHelpers.saveVoiceInteraction,
         {
-          familySpaceId: session.familySpaceId,
+          circleId: session.circleId,
           seniorProfileId: session.seniorProfileId,
           sessionType: session.sessionType,
           channel: "independent_voice_loop",
@@ -516,7 +515,7 @@ export const parseIndependentVoiceIntent = action({
 
     const context = (await ctx.runQuery(
       internal.voiceHelpers.getSeniorLocaleContext,
-      { familySpaceId: session.familySpaceId },
+      { seniorProfileId: session.seniorProfileId },
     )) as SeniorLocaleContext;
     const response = await getAiClient().models.generateContent({
       model: FAST_VOICE_MODEL,
@@ -547,7 +546,7 @@ export const parseIndependentVoiceIntent = action({
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
       internal.voiceHelpers.saveVoiceInteraction,
       {
-        familySpaceId: session.familySpaceId,
+        circleId: session.circleId,
         seniorProfileId: session.seniorProfileId,
         sessionType: session.sessionType,
         channel: "independent_voice_loop",

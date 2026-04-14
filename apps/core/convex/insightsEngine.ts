@@ -9,7 +9,7 @@ import { buildTranscriptExcerpt } from "./voiceSafety";
 
 type PendingInteraction = {
   interactionId: Id<"voiceInteractions">;
-  familySpaceId: Id<"familySpaces">;
+  circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
   seniorName: string;
   sessionType: "assisted_device" | "independent_web";
@@ -187,7 +187,7 @@ function parseInsightCandidates(
   return normalized.slice(0, 3);
 }
 
-async function generateInsightsForFamilySpace(
+async function generateInsightsForCircle(
   ai: GoogleGenAI,
   interactions: PendingInteraction[],
 ) {
@@ -245,53 +245,57 @@ async function generateInsightsForFamilySpace(
 
 export const processPendingInsights = internalAction({
   args: {
-    familySpaceId: v.optional(v.id("familySpaces")),
+    circleId: v.optional(v.id("circles")),
   },
   handler: async (ctx, args) => {
     const pending = (await ctx.runQuery(
       internal.voiceHelpers.listPendingVoiceInteractionsForInsights,
-      { familySpaceId: args.familySpaceId },
+      { circleId: args.circleId },
     )) as PendingInteraction[];
 
     if (pending.length === 0) {
       return {
-        familySpacesProcessed: 0,
+        circlesProcessed: 0,
         interactionsProcessed: 0,
         insightsCreated: 0,
       };
     }
 
-    const grouped = new Map<Id<"familySpaces">, PendingInteraction[]>();
+    const grouped = new Map<string, { circleId: Id<"circles"> | null; interactions: PendingInteraction[] }>();
     for (const interaction of pending) {
-      const bucket = grouped.get(interaction.familySpaceId) ?? [];
-      if (bucket.length < 8) {
-        bucket.push(interaction);
+      const key = interaction.circleId ?? "null";
+      const existing = grouped.get(key) ?? {
+        circleId: interaction.circleId,
+        interactions: [],
+      };
+      if (existing.interactions.length < 8) {
+        existing.interactions.push(interaction);
       }
-      grouped.set(interaction.familySpaceId, bucket);
+      grouped.set(key, existing);
     }
 
     const ai = getAiClient();
-    let familySpacesProcessed = 0;
+    let circlesProcessed = 0;
     let interactionsProcessed = 0;
     let insightsCreated = 0;
 
-    for (const [familySpaceId, interactions] of grouped) {
-      const insights = await generateInsightsForFamilySpace(ai, interactions);
+    for (const { circleId, interactions } of grouped.values()) {
+      const insights = await generateInsightsForCircle(ai, interactions);
       await ctx.runMutation(internal.insights.storeAiInsightsBatch, {
-        familySpaceId,
+        circleId,
         processedInteractionIds: interactions.map(
           (interaction) => interaction.interactionId,
         ),
         insights,
       });
 
-      familySpacesProcessed += 1;
+      circlesProcessed += 1;
       interactionsProcessed += interactions.length;
       insightsCreated += insights.length;
     }
 
     return {
-      familySpacesProcessed,
+      circlesProcessed,
       interactionsProcessed,
       insightsCreated,
     };

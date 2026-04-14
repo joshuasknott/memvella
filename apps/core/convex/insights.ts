@@ -7,9 +7,9 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import {
-  getOptionalFamilySpaceMembership,
-  requireFamilySpaceMembership,
-} from "./familySpaceAuth";
+  getOptionalCircleMembership,
+  requireCircleMembership,
+} from "./circleAuth";
 import { MEMBER_LABEL, normalizeUserFacingText } from "./terminology";
 
 function aiInsightTypeValidator() {
@@ -36,20 +36,20 @@ function truncateValue(value: string, maxLength = 280) {
 type CanonicalAwarenessRecord = Doc<"insights"> | Doc<"alerts">;
 
 export function resolveReviewableInsightTarget(args: {
-  membershipId: Id<"familySpaceMemberships">;
-  membershipFamilySpaceId: Id<"familySpaces">;
+  membershipId: Id<"circleMemberships">;
+  membershipCircleId: Id<"circles">;
   status: "reviewed" | "dismissed";
   now: number;
-  insight: Pick<Doc<"insights">, "_id" | "familySpaceId"> | null;
-  alert: Pick<Doc<"alerts">, "_id" | "familySpaceId"> | null;
+  insight: Pick<Doc<"insights">, "_id" | "circleId"> | null;
+  alert: Pick<Doc<"alerts">, "_id" | "circleId"> | null;
 }) {
   const patch = {
     status: args.status,
     reviewedAt: args.now,
-    reviewedByMembershipId: args.membershipId,
+    reviewedByCircleMembershipId: args.membershipId,
   };
 
-  if (args.insight && args.insight.familySpaceId === args.membershipFamilySpaceId) {
+  if (args.insight && args.insight.circleId === args.membershipCircleId) {
     return {
       table: "insights" as const,
       id: args.insight._id,
@@ -57,7 +57,7 @@ export function resolveReviewableInsightTarget(args: {
     };
   }
 
-  if (args.alert && args.alert.familySpaceId === args.membershipFamilySpaceId) {
+  if (args.alert && args.alert.circleId === args.membershipCircleId) {
     return {
       table: "alerts" as const,
       id: args.alert._id,
@@ -111,31 +111,31 @@ async function enrichInsights(
   }));
 }
 
-async function listInsightsForFamilySpace(
+async function listInsightsForCircle(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
   status: Doc<"insights">["status"],
   limit: number,
 ) {
   return await ctx.db
     .query("insights")
-    .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-      query.eq("familySpaceId", familySpaceId).eq("status", status),
+    .withIndex("by_circleId_and_status_and_createdAt", (query) =>
+      query.eq("circleId", circleId).eq("status", status),
     )
     .order("desc")
     .take(limit);
 }
 
-async function listAlertsForFamilySpace(
+async function listAlertsForCircle(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
   status: Doc<"alerts">["status"],
   limit: number,
 ) {
   return await ctx.db
     .query("alerts")
-    .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-      query.eq("familySpaceId", familySpaceId).eq("status", status),
+    .withIndex("by_circleId_and_status_and_createdAt", (query) =>
+      query.eq("circleId", circleId).eq("status", status),
     )
     .order("desc")
     .take(limit);
@@ -144,41 +144,48 @@ async function listAlertsForFamilySpace(
 export const listOrganiserInsights = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const circleContext = await getOptionalCircleMembership(
       ctx,
       "family_side",
     );
-    if (!familyContext) {
+    if (!circleContext) {
       return {
         queued: [] as Awaited<ReturnType<typeof enrichInsights>>,
         reviewed: [] as Awaited<ReturnType<typeof enrichInsights>>,
       };
     }
 
-    const { membership } = familyContext;
+    const circleId = circleContext.circle?._id ?? circleContext.circleMembership?.circleId;
+    if (!circleId) {
+      return {
+        queued: [] as Awaited<ReturnType<typeof enrichInsights>>,
+        reviewed: [] as Awaited<ReturnType<typeof enrichInsights>>,
+      };
+    }
+
     const [queuedInsights, queuedAlerts, reviewedInsights, reviewedAlerts] =
       await Promise.all([
-        listInsightsForFamilySpace(
+        listInsightsForCircle(
           ctx,
-          membership.familySpaceId,
+          circleId,
           "queued",
           30,
         ),
-        listAlertsForFamilySpace(
+        listAlertsForCircle(
           ctx,
-          membership.familySpaceId,
+          circleId,
           "queued",
           30,
         ),
-        listInsightsForFamilySpace(
+        listInsightsForCircle(
           ctx,
-          membership.familySpaceId,
+          circleId,
           "reviewed",
           20,
         ),
-        listAlertsForFamilySpace(
+        listAlertsForCircle(
           ctx,
-          membership.familySpaceId,
+          circleId,
           "reviewed",
           20,
         ),
@@ -201,25 +208,29 @@ export const listOrganiserInsights = query({
 export const getQueuedOrganiserInsightCount = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const circleContext = await getOptionalCircleMembership(
       ctx,
       "family_side",
     );
-    if (!familyContext) {
+    if (!circleContext) {
       return 0;
     }
 
-    const { membership } = familyContext;
+    const circleId = circleContext.circle?._id ?? circleContext.circleMembership?.circleId;
+    if (!circleId) {
+      return 0;
+    }
+
     const [queuedInsights, queuedAlerts] = await Promise.all([
-      listInsightsForFamilySpace(
+      listInsightsForCircle(
         ctx,
-        membership.familySpaceId,
+        circleId,
         "queued",
         100,
       ),
-      listAlertsForFamilySpace(
+      listAlertsForCircle(
         ctx,
-        membership.familySpaceId,
+        circleId,
         "queued",
         100,
       ),
@@ -235,7 +246,16 @@ export const reviewOrganiserInsight = mutation({
     status: v.union(v.literal("reviewed"), v.literal("dismissed")),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { circleMembership, circle } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const membershipId = circleMembership?._id;
+    const membershipCircleId = circleMembership?.circleId ?? circle?._id;
+    if (!membershipId || !membershipCircleId) {
+      throw new Error("This insight is not available in your Circle.");
+    }
+
     const now = Date.now();
 
     const canonicalInsight = await ctx.db.get(
@@ -243,8 +263,8 @@ export const reviewOrganiserInsight = mutation({
     );
     const canonicalAlert = await ctx.db.get(args.insightId as Id<"alerts">);
     const reviewTarget = resolveReviewableInsightTarget({
-      membershipId: membership._id,
-      membershipFamilySpaceId: membership.familySpaceId,
+      membershipId,
+      membershipCircleId,
       status: args.status,
       now,
       insight: canonicalInsight,
@@ -262,7 +282,7 @@ export const reviewOrganiserInsight = mutation({
 
 export const storeAiInsightsBatch = internalMutation({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     processedInteractionIds: v.array(v.id("voiceInteractions")),
     insights: v.array(
       v.object({
@@ -282,7 +302,7 @@ export const storeAiInsightsBatch = internalMutation({
 
     for (const insight of args.insights) {
       await ctx.db.insert("insights", {
-        familySpaceId: args.familySpaceId,
+        circleId: args.circleId,
         seniorProfileId: insight.seniorProfileId,
         sourceVoiceInteractionId: insight.sourceVoiceInteractionId,
         sourceType: "ai_pipeline",
@@ -297,7 +317,7 @@ export const storeAiInsightsBatch = internalMutation({
         status: "queued",
         createdAt,
         reviewedAt: null,
-        reviewedByMembershipId: null,
+        reviewedByCircleMembershipId: null,
       });
     }
 

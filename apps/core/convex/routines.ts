@@ -3,8 +3,8 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
-  requireFamilySpaceMembership,
-} from "./familySpaceAuth";
+  requireCircleMembership,
+} from "./circleAuth";
 import {
   describeRoutineDays,
   formatTimeLabel,
@@ -17,7 +17,18 @@ import {
 import { scheduleRoutineCheckIns } from "./routineCheckInScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
-import { patchCircleFromFamilySpace } from "./circleCompat";
+
+async function getPrimarySeniorProfileForCircleContext(
+  ctx: Parameters<typeof getSeniorProfileByMode>[0],
+  circleId: Parameters<typeof getSeniorProfileByMode>[1],
+) {
+  const assistedSenior = await getSeniorProfileByMode(ctx, circleId, "assisted");
+  if (assistedSenior) {
+    return assistedSenior;
+  }
+
+  return await getSeniorProfileByMode(ctx, circleId, "independent");
+}
 
 export const createRoutineSchedule = mutation({
   args: {
@@ -31,9 +42,19 @@ export const createRoutineSchedule = mutation({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
+    const { membership, circleMembership } = await requireFamilySideCapability(
+      ctx,
+      "manage_routines",
+    );
     const title = normalizeOptionalText(args.title);
     const normalizedDaysOfWeek = normalizeDaysOfWeek(args.daysOfWeek);
+    const seniorProfile = await getPrimarySeniorProfileForCircleContext(
+      ctx,
+      membership.circleId,
+    );
+    if (!seniorProfile) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
 
     if (!title) {
       throw new Error("A routine title is required.");
@@ -45,7 +66,7 @@ export const createRoutineSchedule = mutation({
 
     const startTimeMinutes = parseTimeInputToMinutes(args.startTime);
     const routineScheduleId = await ctx.db.insert("routineSchedules", {
-      familySpaceId: membership.familySpaceId,
+      seniorProfileId: seniorProfile._id,
       title,
       aiInstructions: normalizeOptionalText(args.aiInstructions) ?? null,
       daysOfWeek: normalizedDaysOfWeek,
@@ -56,15 +77,12 @@ export const createRoutineSchedule = mutation({
       startDate: normalizeDateKey(args.startDate) ?? undefined,
       endDate: normalizeDateKey(args.endDate) ?? undefined,
       status: "active",
-      createdByMembershipId: membership._id,
-      updatedByMembershipId: membership._id,
+      createdByCircleMembershipId: circleMembership?._id ?? null,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
-    await ctx.db.patch(membership.familySpaceId, {
-      timezone: args.timezone,
-    });
-    await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
+    await ctx.db.patch(membership.circleId, {
       timezone: args.timezone,
     });
 
@@ -82,8 +100,12 @@ export const createRoutineSchedule = mutation({
 export const listRoutineSchedules = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    return await listRoutineSchedulesForCircle(ctx, membership.familySpaceId);
+    const { circleMembership } = await requireCircleMembership(ctx, "family_side");
+    if (!circleMembership) {
+      return [];
+    }
+
+    return await listRoutineSchedulesForCircle(ctx, circleMembership.circleId);
   },
 });
 
@@ -92,10 +114,18 @@ export const getRoutineSchedule = query({
     routineScheduleId: v.id("routineSchedules"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireCircleMembership(ctx, "family_side");
+    const seniorProfile = await getPrimarySeniorProfileForCircleContext(
+      ctx,
+      membership.circleId,
+    );
+    if (!seniorProfile) {
+      return null;
+    }
+
     const schedule = await ctx.db.get(args.routineScheduleId);
 
-    if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
+    if (!schedule || schedule.seniorProfileId !== seniorProfile._id) {
       return null;
     }
 
@@ -130,9 +160,20 @@ export const updateRoutineSchedule = mutation({
     status: v.optional(v.union(v.literal("active"), v.literal("paused"))),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
+    const { membership, circleMembership } = await requireFamilySideCapability(
+      ctx,
+      "manage_routines",
+    );
+    const seniorProfile = await getPrimarySeniorProfileForCircleContext(
+      ctx,
+      membership.circleId,
+    );
+    if (!seniorProfile) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     const schedule = await ctx.db.get(args.routineScheduleId);
-    if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
+    if (!schedule || schedule.seniorProfileId !== seniorProfile._id) {
       throw new Error("This routine schedule does not belong to your Circle.");
     }
 
@@ -158,14 +199,11 @@ export const updateRoutineSchedule = mutation({
       startDate: normalizeDateKey(args.startDate) ?? undefined,
       endDate: normalizeDateKey(args.endDate) ?? undefined,
       status: args.status ?? schedule.status,
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
-    await ctx.db.patch(membership.familySpaceId, {
-      timezone: args.timezone,
-    });
-    await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
+    await ctx.db.patch(membership.circleId, {
       timezone: args.timezone,
     });
 
@@ -186,8 +224,16 @@ export const deleteRoutineSchedule = mutation({
   },
   handler: async (ctx, args) => {
     const { membership } = await requireFamilySideCapability(ctx, "manage_routines");
+    const seniorProfile = await getPrimarySeniorProfileForCircleContext(
+      ctx,
+      membership.circleId,
+    );
+    if (!seniorProfile) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     const schedule = await ctx.db.get(args.routineScheduleId);
-    if (!schedule || schedule.familySpaceId !== membership.familySpaceId) {
+    if (!schedule || schedule.seniorProfileId !== seniorProfile._id) {
       throw new Error("This routine schedule does not belong to your Circle.");
     }
 
@@ -217,12 +263,17 @@ export const queueRoutineCheckIn = internalMutation({
       return { queued: false as const, reason: "routine_not_pending" as const };
     }
 
-    const [schedule, assistedSenior] = await Promise.all([
+    const [schedule, seniorProfile] = await Promise.all([
       ctx.db.get(occurrence.routineScheduleId),
-      getSeniorProfileByMode(ctx, occurrence.familySpaceId, "assisted"),
+      ctx.db.get(occurrence.seniorProfileId),
     ]);
 
-    if (!schedule || !assistedSenior) {
+    if (
+      !schedule ||
+      !seniorProfile ||
+      seniorProfile.seniorMode !== "assisted" ||
+      schedule.seniorProfileId !== occurrence.seniorProfileId
+    ) {
       return { queued: false as const, reason: "context_missing" as const };
     }
 
@@ -254,8 +305,7 @@ export const queueRoutineCheckIn = internalMutation({
     }
 
     const checkInId = await ctx.db.insert("routineCheckIns", {
-      familySpaceId: occurrence.familySpaceId,
-      seniorProfileId: assistedSenior._id,
+      seniorProfileId: seniorProfile._id,
       routineOccurrenceId: occurrence._id,
       routineScheduleId: occurrence.routineScheduleId,
       status: "live_prompt_ready",

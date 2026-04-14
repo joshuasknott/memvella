@@ -7,16 +7,16 @@ import {
   pickDeterministicCircleMembership,
   pickDeterministicMembership,
   normalizeFamilySideMembershipRole,
-} from "./familySpaceAuth";
+} from "./circleAuth";
 
 function makeMembership(
   id: string,
   creationTime: number,
-): Doc<"familySpaceMemberships"> {
+): Doc<"circleMemberships"> {
   return {
-    _id: id as Id<"familySpaceMemberships">,
+    _id: id as Id<"circleMemberships">,
     _creationTime: creationTime,
-    familySpaceId: "family-1" as Id<"familySpaces">,
+    circleId: "circle-1" as Id<"circles">,
     authIdentityToken: "token",
     authEmail: null,
     displayName: id,
@@ -35,7 +35,6 @@ function makeCircleMembership(
     _id: id as Id<"circleMemberships">,
     _creationTime: creationTime,
     circleId: "circle-1" as Id<"circles">,
-    legacyFamilySpaceMembershipId: "membership-1" as Id<"familySpaceMemberships">,
     authIdentityToken: "token",
     authEmail: null,
     displayName: id,
@@ -50,13 +49,11 @@ describe("family-side capabilities", () => {
   it("normalizes family-side roles", () => {
     expect(normalizeFamilySideMembershipRole("organiser")).toBe("organiser");
     expect(normalizeFamilySideMembershipRole("member")).toBe("member");
-    expect(normalizeFamilySideMembershipRole("independent_senior")).toBe(null);
   });
 
   it("recognizes organiser/member as family-side accounts", () => {
     expect(isFamilySideRole("organiser")).toBe(true);
     expect(isFamilySideRole("member")).toBe(true);
-    expect(isFamilySideRole("independent_senior")).toBe(false);
   });
 
   it("reserves invite and tablet management for organiser roles", () => {
@@ -89,9 +86,6 @@ describe("family-side capabilities", () => {
     expect(() => assertFamilySideCapability("member", "manage_routines")).toThrow(
       "This account does not have access to that Circle setting.",
     );
-    expect(() =>
-      assertFamilySideCapability("independent_senior", "manage_routines"),
-    ).toThrow("This account does not have access to the family-side workspace.");
     expect(assertFamilySideCapability("organiser", "manage_routines")).toBe(
       "organiser",
     );

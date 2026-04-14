@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import {
-  getOptionalFamilySpaceMembership,
+  getOptionalCircleMembership,
   getMembershipByAuthIdentityToken,
   getSeniorProfileByMode,
   isFamilySideRole,
@@ -10,7 +10,7 @@ import {
   requireFamilySideCapability,
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
-} from "./familySpaceAuth";
+} from "./circleAuth";
 import {
   normalizeOptionalEmail,
   normalizeOptionalText,
@@ -28,31 +28,22 @@ import {
   ORGANISER_LABEL,
   TABLET_PROFILE_LABEL,
 } from "./terminology";
-import {
-  ensureCircleForFamilySpace,
-  ensureCircleMembershipForLegacyMembership,
-  patchCircleFromFamilySpace,
-} from "./circleCompat";
-import { listPeopleForFamilySpace } from "./people";
+import { listPeopleForCircle } from "./people";
 
 const organiserProfileRoleValidator = v.optional(
-  v.union(
-    v.literal("organiser"),
-    v.literal("assisted_senior"),
-    v.literal("independent_senior"),
-  ),
+  v.union(v.literal("organiser"), v.literal("assisted_senior"), v.literal("independent")),
 );
 
 async function getPreferredSeniorProfile(
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
   ctx: QueryCtx,
 ) {
-  const assistedSenior = await getSeniorProfileByMode(ctx, familySpaceId, "assisted");
+  const assistedSenior = await getSeniorProfileByMode(ctx, circleId, "assisted");
   if (assistedSenior) {
     return assistedSenior;
   }
 
-  return await getSeniorProfileByMode(ctx, familySpaceId, "independent");
+  return await getSeniorProfileByMode(ctx, circleId, "independent");
 }
 
 export const createOrganiserProfile = mutation({
@@ -78,8 +69,7 @@ export const createOrganiserProfile = mutation({
 
     const organiserName = normalizeOptionalText(args.organiserName) ?? ORGANISER_LABEL;
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
-    const seniorMode =
-      args.role === "independent_senior" ? "independent" : "assisted";
+    const seniorMode = args.role === "independent" ? "independent" : "assisted";
 
     if (existingMembership) {
       if (!isFamilySideRole(existingMembership.role)) {
@@ -90,18 +80,22 @@ export const createOrganiserProfile = mutation({
         throw new Error("This account does not have access to that Circle setting.");
       }
 
+      const circle = await ctx.db.get(existingMembership.circleId);
+      if (!circle) {
+        throw new Error("The linked Circle could not be found.");
+      }
+
       await ctx.db.patch(existingMembership._id, {
         displayName: organiserName,
         authEmail,
         onboardingStep: args.onboardingStep,
         lastSeenAt: Date.now(),
       });
-      await ensureCircleMembershipForLegacyMembership(ctx, existingMembership._id);
 
       if (seniorDisplayName) {
         if (seniorMode === "independent") {
           const independentSenior = await upsertIndependentSeniorProfile(ctx, {
-            familySpaceId: existingMembership.familySpaceId,
+            circleId: existingMembership.circleId,
             displayName: seniorDisplayName,
           });
 
@@ -110,7 +104,7 @@ export const createOrganiserProfile = mutation({
           });
         } else {
           const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
-            familySpaceId: existingMembership.familySpaceId,
+            circleId: existingMembership.circleId,
             displayName: seniorDisplayName,
           });
 
@@ -119,10 +113,7 @@ export const createOrganiserProfile = mutation({
           });
         }
 
-        await ctx.db.patch(existingMembership.familySpaceId, {
-          displayName: buildCircleName(seniorDisplayName),
-        });
-        await patchCircleFromFamilySpace(ctx, existingMembership.familySpaceId, {
+        await ctx.db.patch(circle._id, {
           displayName: buildCircleName(seniorDisplayName),
         });
       }
@@ -130,7 +121,7 @@ export const createOrganiserProfile = mutation({
       return existingMembership._id;
     }
 
-    const familySpaceId = await ctx.db.insert("familySpaces", {
+    const circleId = await ctx.db.insert("circles", {
       displayName: seniorDisplayName
         ? buildCircleName(seniorDisplayName)
         : buildCircleName(organiserName),
@@ -138,26 +129,24 @@ export const createOrganiserProfile = mutation({
       locale: undefined,
     });
 
-    const circle = await ensureCircleForFamilySpace(ctx, familySpaceId);
-
     let linkedSeniorProfileId: Id<"seniorProfiles"> | null = null;
     if (seniorDisplayName) {
       const seniorProfile =
         seniorMode === "independent"
           ? await upsertIndependentSeniorProfile(ctx, {
-              familySpaceId,
+              circleId,
               displayName: seniorDisplayName,
             })
           : await upsertAssistedSeniorProfile(ctx, {
-              familySpaceId,
+              circleId,
               displayName: seniorDisplayName,
             });
 
       linkedSeniorProfileId = seniorProfile?._id ?? null;
     }
 
-    const legacyMembershipId = await ctx.db.insert("familySpaceMemberships", {
-      familySpaceId,
+    const membershipId = await ctx.db.insert("circleMemberships", {
+      circleId,
       authIdentityToken,
       authEmail,
       displayName: organiserName,
@@ -167,19 +156,7 @@ export const createOrganiserProfile = mutation({
       lastSeenAt: Date.now(),
     });
 
-    await ctx.db.insert("circleMemberships", {
-      circleId: circle._id,
-      legacyFamilySpaceMembershipId: legacyMembershipId,
-      authIdentityToken,
-      authEmail,
-      displayName: organiserName,
-      role: "organiser",
-      seniorProfileId: linkedSeniorProfileId,
-      onboardingStep: args.onboardingStep,
-      lastSeenAt: Date.now(),
-    });
-
-    return legacyMembershipId;
+    return membershipId;
   },
 });
 
@@ -197,8 +174,7 @@ export const patchOrganiserProfile = mutation({
     );
     const organiserName = normalizeOptionalText(args.organiserName);
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
-    const seniorMode =
-      args.role === "independent_senior" ? "independent" : "assisted";
+    const seniorMode = args.role === "independent" ? "independent" : "assisted";
 
     if (organiserName || args.onboardingStep !== undefined) {
       await ctx.db.patch(membership._id, {
@@ -213,7 +189,7 @@ export const patchOrganiserProfile = mutation({
     if (seniorDisplayName) {
       if (seniorMode === "independent") {
         const independentSenior = await upsertIndependentSeniorProfile(ctx, {
-          familySpaceId: membership.familySpaceId,
+          circleId: membership.circleId,
           displayName: seniorDisplayName,
         });
 
@@ -222,7 +198,7 @@ export const patchOrganiserProfile = mutation({
         });
       } else {
         const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
-          familySpaceId: membership.familySpaceId,
+          circleId: membership.circleId,
           displayName: seniorDisplayName,
         });
 
@@ -231,10 +207,7 @@ export const patchOrganiserProfile = mutation({
         });
       }
 
-      await ctx.db.patch(membership.familySpaceId, {
-        displayName: buildCircleName(seniorDisplayName),
-      });
-      await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
+      await ctx.db.patch(membership.circleId, {
         displayName: buildCircleName(seniorDisplayName),
       });
     }
@@ -246,17 +219,22 @@ export const patchOrganiserProfile = mutation({
 export const getTodayTimeline = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const circleContext = await getOptionalCircleMembership(
       ctx,
       "family_side",
     );
-    if (!familyContext) {
+    if (!circleContext) {
+      return [];
+    }
+
+    const circleId = circleContext.circleMembership?.circleId ?? circleContext.circle?._id;
+    if (!circleId) {
       return [];
     }
 
     return await listTodayTimelineForCircle(
       ctx,
-      familyContext.membership.familySpaceId,
+      circleId,
     );
   },
 });
@@ -264,25 +242,44 @@ export const getTodayTimeline = query({
 export const getOrganiserDashboardSummary = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const circleContext = await getOptionalCircleMembership(
       ctx,
       "family_side",
     );
-    if (!familyContext) {
+    if (!circleContext) {
       return { totalPeople: 0, totalRoutines: 0, statusSummary: "" };
     }
 
+    const circleId = circleContext.circleMembership?.circleId ?? circleContext.circle?._id;
+    if (!circleId) {
+      return { totalPeople: 0, totalRoutines: 0, statusSummary: "" };
+    }
+
+    const seniorProfile =
+      (circleContext.membership.seniorProfileId
+        ? await ctx.db.get(circleContext.membership.seniorProfileId)
+        : null) ??
+      (await getSeniorProfileByMode(ctx, circleContext.membership.circleId, "assisted")) ??
+      (await getSeniorProfileByMode(ctx, circleContext.membership.circleId, "independent"));
+    if (!seniorProfile) {
+      return {
+        totalPeople: 0,
+        totalRoutines: 0,
+        statusSummary: `Your ${CIRCLE_LABEL} is ready for today.`,
+      };
+    }
+
     const [members, routines, nextRoutine] = await Promise.all([
-      listPeopleForFamilySpace(ctx, familyContext.membership.familySpaceId, 200),
+      listPeopleForCircle(ctx, circleContext.membership.circleId, 200),
       ctx.db
         .query("routineSchedules")
-        .withIndex("by_familySpaceId", (query) =>
-          query.eq("familySpaceId", familyContext.membership.familySpaceId),
+        .withIndex("by_seniorProfileId", (query) =>
+          query.eq("seniorProfileId", seniorProfile._id),
         )
         .take(200),
       getNextRoutineEventForCircle(
         ctx,
-        familyContext.membership.familySpaceId,
+        circleId,
       ),
     ]);
 
@@ -305,7 +302,7 @@ export const listAssistedDeviceSessions = query({
     );
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "assisted",
     );
 
@@ -352,15 +349,16 @@ export const revokeAssistedDeviceSession = mutation({
     sessionId: v.id("seniorAccessSessions"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(
+    const { circleMembership, circle } = await requireFamilySideCapability(
       ctx,
       "manage_tablet_access",
     );
     const session = await ctx.db.get(args.sessionId);
+    const membershipCircleId = circleMembership?.circleId ?? circle?._id ?? null;
 
     if (
       !session ||
-      session.familySpaceId !== membership.familySpaceId ||
+      session.circleId !== membershipCircleId ||
       session.sessionType !== "assisted_device"
     ) {
       throw new Error(`This ${TABLET_PROFILE_LABEL} session is not available.`);
@@ -388,7 +386,7 @@ export const revokeAllAssistedDeviceSessions = mutation({
     );
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "assisted",
     );
 
@@ -419,38 +417,37 @@ export const revokeAllAssistedDeviceSessions = mutation({
 export const getOrganiserProfile = query({
   args: {},
   handler: async (ctx) => {
-    const familyContext = await getOptionalFamilySpaceMembership(
+    const circleContext = await getOptionalCircleMembership(
       ctx,
       "family_side",
     );
-    if (!familyContext) {
+    if (!circleContext) {
       return null;
     }
 
     const seniorProfile =
-      familyContext.membership.seniorProfileId !== null
-        ? await ctx.db.get(familyContext.membership.seniorProfileId)
+      circleContext.membership.seniorProfileId !== null
+        ? await ctx.db.get(circleContext.membership.seniorProfileId)
         : await getPreferredSeniorProfile(
-            familyContext.membership.familySpaceId,
+            circleContext.membership.circleId,
             ctx,
           );
 
     return {
-      _id: familyContext.membership._id,
-      familySpaceId: familyContext.membership.familySpaceId,
+      _id: circleContext.membership._id,
+      circleId: circleContext.membership.circleId,
       organiserName:
-        normalizeUserFacingText(familyContext.membership.displayName) ??
+        normalizeUserFacingText(circleContext.membership.displayName) ??
         ORGANISER_LABEL,
       seniorDisplayName:
         normalizeUserFacingText(seniorProfile?.displayName) ?? MEMBER_LABEL,
       role:
-        normalizeFamilySideMembershipRole(familyContext.membership.role) ??
+        normalizeFamilySideMembershipRole(circleContext.membership.role) ??
         "organiser",
-      onboardingStep: familyContext.membership.onboardingStep,
+      onboardingStep: circleContext.membership.onboardingStep,
       seniorProfileId: seniorProfile?._id ?? null,
       seniorMode: seniorProfile?.seniorMode ?? null,
-      authEmail: familyContext.membership.authEmail,
+      authEmail: circleContext.membership.authEmail,
     };
   },
 });
-

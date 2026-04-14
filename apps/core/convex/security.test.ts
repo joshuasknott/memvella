@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { hashFamilyInviteCode } from "./security";
+import { hashCircleInviteCode } from "./security";
 
 const env = process.env as Record<string, string | undefined>;
 const originalNodeEnv = process.env.NODE_ENV;
@@ -36,7 +36,7 @@ describe("convex security secret behavior", () => {
     delete process.env.MEMVELLA_AUTH_PEPPER;
     delete process.env.BETTER_AUTH_SECRET;
 
-    const hashed = await hashFamilyInviteCode("123456");
+    const hashed = await hashCircleInviteCode("123456");
     expect(hashed.length).toBeGreaterThan(20);
   });
 
@@ -46,7 +46,7 @@ describe("convex security secret behavior", () => {
     delete process.env.MEMVELLA_AUTH_PEPPER;
     delete process.env.BETTER_AUTH_SECRET;
 
-    await expect(hashFamilyInviteCode("123456")).rejects.toThrow(
+    await expect(hashCircleInviteCode("123456")).rejects.toThrow(
       "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
     );
   });
@@ -57,7 +57,7 @@ describe("convex security secret behavior", () => {
     delete process.env.MEMVELLA_AUTH_PEPPER;
     delete process.env.BETTER_AUTH_SECRET;
 
-    await expect(hashFamilyInviteCode("123456")).rejects.toThrow(
+    await expect(hashCircleInviteCode("123456")).rejects.toThrow(
       "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
     );
   });

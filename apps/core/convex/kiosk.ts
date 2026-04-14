@@ -7,7 +7,7 @@ import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
   upsertAssistedSeniorProfile,
-} from "./familySpaceAuth";
+} from "./circleAuth";
 import {
   generateNumericCode,
   hashAssistedPin,
@@ -145,7 +145,7 @@ export const pairTabletSession = mutation({
     }
 
     if (
-      seniorProfile.familySpaceId !== activePin.familySpaceId ||
+      seniorProfile.circleId !== activePin.circleId ||
       seniorProfile.seniorMode !== "assisted"
     ) {
       await ctx.db.patch(activePin._id, {
@@ -170,12 +170,12 @@ export const pairTabletSession = mutation({
     });
 
     const session = await issueSeniorAccessSession(ctx, {
-      familySpaceId: activePin.familySpaceId,
+      circleId: activePin.circleId,
       seniorProfileId: seniorProfile._id,
       sessionType: "assisted_device",
       deviceFingerprint: args.deviceFingerprint,
       sourcePinId: activePin._id,
-      sourceMembershipId: activePin.createdByMembershipId,
+      sourceCircleMembershipId: activePin.createdByCircleMembershipId,
       sourcePasskeyId: null,
     });
 
@@ -194,21 +194,25 @@ export const generateKioskPin = mutation({
     seniorName: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(
+    const { membership, circle, circleMembership } = await requireFamilySideCapability(
       ctx,
       "manage_tablet_access",
     );
+    if (!circle || !circleMembership) {
+      throw new Error("The linked Circle could not be found.");
+    }
+
     const organiserSeniorName =
       normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
 
     const assistedSenior =
       (await getSeniorProfileByMode(
         ctx,
-        membership.familySpaceId,
+        membership.circleId,
         "assisted",
       )) ??
       (await upsertAssistedSeniorProfile(ctx, {
-        familySpaceId: membership.familySpaceId,
+        circleId: membership.circleId,
         displayName: organiserSeniorName,
       }));
 
@@ -238,9 +242,9 @@ export const generateKioskPin = mutation({
     }
 
     await ctx.db.insert("assistedDevicePins", {
-      familySpaceId: membership.familySpaceId,
+      circleId: circle._id,
       seniorProfileId: assistedSenior._id,
-      createdByMembershipId: membership._id,
+      createdByCircleMembershipId: circleMembership._id,
       pinHash,
       expiresAt: now + 10 * 60 * 1000,
       consumedAt: null,
@@ -266,7 +270,7 @@ export const deactivateKioskDevice = mutation({
     );
     const assistedSenior = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "assisted",
     );
 

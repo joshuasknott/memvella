@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const binding = getOrCreateDeviceBindingSeed(request);
     const convex = createConvexHttpClient();
-    const result = await convex.mutation(api.familyInvites.previewMemberInviteCode, {
+    const result = await convex.mutation(api.circleInvites.previewMemberInviteCode, {
       inviteCode,
       previewScopeKey: buildRequestThrottleFingerprint(
         binding.seed,

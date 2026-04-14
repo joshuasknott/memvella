@@ -31,14 +31,14 @@ export default function InviteMemberPage() {
   const { toast } = useToast();
   const { isOrganiser } = useCircleProfile();
   const activeInvites = useQuery(
-    api.familyInvites.listActiveMemberInvites,
+    api.circleInvites.listActiveMemberInvites,
     isOrganiser ? undefined : "skip",
   );
   const generateMemberInviteCode = useMutation(
-    api.familyInvites.generateMemberInviteCode,
+    api.circleInvites.generateMemberInviteCode,
   );
   const revokeActiveMemberInvites = useMutation(
-    api.familyInvites.revokeActiveMemberInvites,
+    api.circleInvites.revokeActiveMemberInvites,
   );
 
   const [inviteCode, setInviteCode] = useState<string | null>(null);

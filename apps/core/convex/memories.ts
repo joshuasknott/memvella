@@ -1,12 +1,12 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx } from "./_generated/server";
-import { requireFamilySpaceMembership } from "./familySpaceAuth";
+import { requireCircleMembership } from "./circleAuth";
 import {
   createMemoryRecord,
   deleteMemoryRecordCascade,
-  getMemoryDetailForFamilySpace,
-  listMemoryCardsForFamilySpace,
+  getMemoryDetailForSenior,
+  listMemoryCardsForSenior,
   type MemoryAssetInput,
   replaceMemoryAssets,
 } from "./memoryHelpers";
@@ -66,8 +66,13 @@ async function buildValidatedStorageAsset(
 export const listMemoryRecords = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    return await listMemoryCardsForFamilySpace(ctx, membership.familySpaceId);
+    const { membership } = await requireCircleMembership(ctx, "family_side");
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      return [];
+    }
+
+    return await listMemoryCardsForSenior(ctx, seniorProfileId);
   },
 });
 
@@ -76,9 +81,14 @@ export const getMemoryRecordDetail = query({
     memoryRecordId: v.id("memoryRecords"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    return await getMemoryDetailForFamilySpace(ctx, {
-      familySpaceId: membership.familySpaceId,
+    const { membership } = await requireCircleMembership(ctx, "family_side");
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      return null;
+    }
+
+    return await getMemoryDetailForSenior(ctx, {
+      seniorProfileId,
       memoryRecordId: args.memoryRecordId,
     });
   },
@@ -94,7 +104,15 @@ export const addMemoryText = mutation({
     photoFileName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     const assets = await buildValidatedStorageAsset(
       ctx,
       "image",
@@ -104,8 +122,8 @@ export const addMemoryText = mutation({
     );
 
     return await createMemoryRecord(ctx, {
-      familySpaceId: membership.familySpaceId,
-      membershipId: membership._id,
+      seniorProfileId,
+      circleMembershipId: circleMembership?._id ?? null,
       recordType: "text",
       title: args.title.trim(),
       story: args.story.trim(),
@@ -126,7 +144,15 @@ export const addMemoryAudio = mutation({
     audioFileName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     const assets = await buildValidatedStorageAsset(
       ctx,
       "audio",
@@ -136,8 +162,8 @@ export const addMemoryAudio = mutation({
     );
 
     return await createMemoryRecord(ctx, {
-      familySpaceId: membership.familySpaceId,
-      membershipId: membership._id,
+      seniorProfileId,
+      circleMembershipId: circleMembership?._id ?? null,
       recordType: "audio",
       title: args.title.trim(),
       story: args.story.trim(),
@@ -155,11 +181,18 @@ export const addMemoryVoice = mutation({
     transcript: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
 
     return await createMemoryRecord(ctx, {
-      familySpaceId: membership.familySpaceId,
-      membershipId: membership._id,
+      seniorProfileId,
+      circleMembershipId: circleMembership?._id ?? null,
       recordType: "voice",
       title: args.title.trim(),
       transcript: args.transcript.trim(),
@@ -179,7 +212,15 @@ export const addMemoryMedia = mutation({
     mediaAssetType: v.optional(v.union(v.literal("image"), v.literal("video"))),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     const assets = await buildValidatedStorageAsset(
       ctx,
       args.mediaAssetType ?? "image",
@@ -189,8 +230,8 @@ export const addMemoryMedia = mutation({
     );
 
     return await createMemoryRecord(ctx, {
-      familySpaceId: membership.familySpaceId,
-      membershipId: membership._id,
+      seniorProfileId,
+      circleMembershipId: circleMembership?._id ?? null,
       recordType: "media",
       title: args.title.trim(),
       story: normalizeOptionalText(args.story) ?? null,
@@ -212,9 +253,16 @@ export const updateTextMemory = mutation({
     removePhoto: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
     const record = await ctx.db.get(args.memoryRecordId);
-    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "text") {
+    if (
+      !record ||
+      record.seniorProfileId !== membership.seniorProfileId ||
+      record.recordType !== "text"
+    ) {
       throw new Error("This memory record does not belong to your Circle.");
     }
 
@@ -222,7 +270,7 @@ export const updateTextMemory = mutation({
       title: args.title.trim(),
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
@@ -237,7 +285,7 @@ export const updateTextMemory = mutation({
           )
         : [];
       await replaceMemoryAssets(ctx, {
-        familySpaceId: membership.familySpaceId,
+        seniorProfileId: record.seniorProfileId,
         memoryRecordId: record._id,
         assets,
       });
@@ -260,9 +308,16 @@ export const updateAudioMemory = mutation({
     removeAudio: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
     const record = await ctx.db.get(args.memoryRecordId);
-    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "audio") {
+    if (
+      !record ||
+      record.seniorProfileId !== membership.seniorProfileId ||
+      record.recordType !== "audio"
+    ) {
       throw new Error("This memory record does not belong to your Circle.");
     }
 
@@ -271,7 +326,7 @@ export const updateAudioMemory = mutation({
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       externalUrl: normalizeOptionalText(args.songLink) ?? null,
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
@@ -286,7 +341,7 @@ export const updateAudioMemory = mutation({
           )
         : [];
       await replaceMemoryAssets(ctx, {
-        familySpaceId: membership.familySpaceId,
+        seniorProfileId: record.seniorProfileId,
         memoryRecordId: record._id,
         assets,
       });
@@ -304,9 +359,16 @@ export const updateVoiceMemory = mutation({
     transcript: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
     const record = await ctx.db.get(args.memoryRecordId);
-    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "voice") {
+    if (
+      !record ||
+      record.seniorProfileId !== membership.seniorProfileId ||
+      record.recordType !== "voice"
+    ) {
       throw new Error("This memory record does not belong to your Circle.");
     }
 
@@ -314,7 +376,7 @@ export const updateVoiceMemory = mutation({
       title: args.title.trim(),
       transcript: args.transcript.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
@@ -335,9 +397,16 @@ export const updateMediaMemory = mutation({
     removeMedia: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
     const record = await ctx.db.get(args.memoryRecordId);
-    if (!record || record.familySpaceId !== membership.familySpaceId || record.recordType !== "media") {
+    if (
+      !record ||
+      record.seniorProfileId !== membership.seniorProfileId ||
+      record.recordType !== "media"
+    ) {
       throw new Error("This memory record does not belong to your Circle.");
     }
 
@@ -345,7 +414,7 @@ export const updateMediaMemory = mutation({
       title: args.title.trim(),
       story: normalizeOptionalText(args.story) ?? null,
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
@@ -360,7 +429,7 @@ export const updateMediaMemory = mutation({
           )
         : [];
       await replaceMemoryAssets(ctx, {
-        familySpaceId: membership.familySpaceId,
+        seniorProfileId: record.seniorProfileId,
         memoryRecordId: record._id,
         assets,
       });
@@ -375,9 +444,9 @@ export const deleteMemoryRecord = mutation({
     memoryRecordId: v.id("memoryRecords"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership } = await requireCircleMembership(ctx, "family_side");
     const record = await ctx.db.get(args.memoryRecordId);
-    if (!record || record.familySpaceId !== membership.familySpaceId) {
+    if (!record || record.seniorProfileId !== membership.seniorProfileId) {
       throw new Error("This memory record does not belong to your Circle.");
     }
 
@@ -389,7 +458,7 @@ export const deleteMemoryRecord = mutation({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireFamilySpaceMembership(ctx, "family_side");
+    await requireCircleMembership(ctx, "family_side");
     return await ctx.storage.generateUploadUrl();
   },
 });

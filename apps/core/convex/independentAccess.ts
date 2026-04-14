@@ -7,7 +7,7 @@ import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
   upsertIndependentSeniorProfile,
-} from "./familySpaceAuth";
+} from "./circleAuth";
 import {
   formatInvalidSessionMessage,
   INDEPENDENT_PROFILE_LABEL,
@@ -15,10 +15,6 @@ import {
   normalizeUserFacingText,
   buildCircleName,
 } from "./terminology";
-import {
-  ensureCircleForFamilySpace,
-  ensureCircleMembershipForLegacyMembership,
-} from "./circleCompat";
 import {
   formatIndependentRecoveryCode,
   generateNumericCode,
@@ -100,9 +96,9 @@ export function isActiveOnboardingSession(
 
 export function evaluateIndependentPasskeyOwnership(args: {
   existingPasskey:
-    | Pick<Doc<"independentSeniorPasskeys">, "familySpaceId" | "seniorProfileId">
+    | Pick<Doc<"independentSeniorPasskeys">, "circleId" | "seniorProfileId">
     | null;
-  familySpaceId: Id<"familySpaces">;
+  circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
 }) {
   if (!args.existingPasskey) {
@@ -110,7 +106,7 @@ export function evaluateIndependentPasskeyOwnership(args: {
   }
 
   if (
-    args.existingPasskey.familySpaceId !== args.familySpaceId ||
+    args.existingPasskey.circleId !== args.circleId ||
     args.existingPasskey.seniorProfileId !== args.seniorProfileId
   ) {
     return {
@@ -249,18 +245,21 @@ async function resolveActiveOnboardingSession(
     return null;
   }
 
-  const [seniorProfile, membership] = await Promise.all([
+  const [seniorProfile, sourceCircleMembership] = await Promise.all([
     ctx.db.get(onboardingSession.seniorProfileId),
-    ctx.db.get(onboardingSession.membershipId),
+    onboardingSession.sourceCircleMembershipId
+      ? ctx.db.get(onboardingSession.sourceCircleMembershipId)
+      : Promise.resolve(null),
   ]);
 
+  if (!seniorProfile || seniorProfile.seniorMode !== "independent") {
+    return null;
+  }
+
   if (
-    !seniorProfile ||
-    seniorProfile.seniorMode !== "independent" ||
-    !membership ||
-    membership.role !== "independent_senior" ||
-    membership.seniorProfileId !== seniorProfile._id ||
-    membership.familySpaceId !== seniorProfile.familySpaceId
+    sourceCircleMembership &&
+    (sourceCircleMembership.seniorProfileId !== seniorProfile._id ||
+      sourceCircleMembership.circleId !== seniorProfile.circleId)
   ) {
     return null;
   }
@@ -268,7 +267,7 @@ async function resolveActiveOnboardingSession(
   return {
     onboardingSession,
     seniorProfile,
-    membership,
+    sourceCircleMembership,
   };
 }
 
@@ -296,7 +295,7 @@ async function requireIndependentWebSession(
 async function upsertIndependentPasskey(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles"> | null;
     seniorProfileId: Id<"seniorProfiles">;
     credentialId: string;
     credentialPublicKey: string;
@@ -313,7 +312,7 @@ async function upsertIndependentPasskey(
 
   const ownership = evaluateIndependentPasskeyOwnership({
     existingPasskey,
-    familySpaceId: args.familySpaceId,
+    circleId: args.circleId,
     seniorProfileId: args.seniorProfileId,
   });
 
@@ -327,7 +326,7 @@ async function upsertIndependentPasskey(
     }
 
     await ctx.db.patch(existingPasskey._id, {
-      familySpaceId: args.familySpaceId,
+      circleId: args.circleId,
       seniorProfileId: args.seniorProfileId,
       credentialPublicKey: args.credentialPublicKey,
       counter: args.counter,
@@ -341,7 +340,7 @@ async function upsertIndependentPasskey(
   }
 
   return await ctx.db.insert("independentSeniorPasskeys", {
-    familySpaceId: args.familySpaceId,
+    circleId: args.circleId,
     seniorProfileId: args.seniorProfileId,
     credentialId: args.credentialId,
     credentialPublicKey: args.credentialPublicKey,
@@ -409,9 +408,9 @@ async function revokeActiveRecoveryCodesForProfile(
 async function rotateRecoveryCodes(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles"> | null;
     seniorProfileId: Id<"seniorProfiles">;
-    createdByMembershipId: Id<"familySpaceMemberships"> | null;
+    createdByCircleMembershipId: Id<"circleMemberships"> | null;
     createdBySource: "independent" | "organiser";
   },
 ) {
@@ -424,12 +423,12 @@ async function rotateRecoveryCodes(
   for (let index = 0; index < INDEPENDENT_RECOVERY_CODE_COUNT; index += 1) {
     const rawCode = generateNumericCode(12);
     await ctx.db.insert("independentSeniorRecoveryCodes", {
-      familySpaceId: args.familySpaceId,
+      circleId: args.circleId,
       seniorProfileId: args.seniorProfileId,
       codeHash: await hashIndependentRecoveryCode(rawCode),
       codeSuffix: rawCode.slice(-4),
       createdAt,
-      createdByMembershipId: args.createdByMembershipId,
+      createdByCircleMembershipId: args.createdByCircleMembershipId,
       createdBySource: args.createdBySource,
       consumedAt: null,
       revokedAt: null,
@@ -470,15 +469,14 @@ export const beginIndependentOnboarding = mutation({
       throw new Error("Please tell Memvella what to call you.");
     }
 
-    const familySpaceId = await ctx.db.insert("familySpaces", {
+    const circleId = await ctx.db.insert("circles", {
       displayName: buildCircleName(displayName),
       timezone: undefined,
       locale: undefined,
     });
-    await ensureCircleForFamilySpace(ctx, familySpaceId);
 
     const seniorProfile = await upsertIndependentSeniorProfile(ctx, {
-      familySpaceId,
+      circleId,
       displayName,
     });
 
@@ -486,23 +484,10 @@ export const beginIndependentOnboarding = mutation({
       throw new Error(`Unable to create the ${INDEPENDENT_PROFILE_LABEL}.`);
     }
 
-    const membershipId = await ctx.db.insert("familySpaceMemberships", {
-      familySpaceId,
-      authIdentityToken: `independent:${seniorProfile._id}`,
-      authEmail: null,
-      displayName,
-      role: "independent_senior",
-      seniorProfileId: seniorProfile._id,
-      onboardingStep: 1,
-      lastSeenAt: Date.now(),
-    });
-    await ensureCircleMembershipForLegacyMembership(ctx, membershipId);
-
     const onboardingToken = generateOpaqueToken();
     await ctx.db.insert("independentOnboardingSessions", {
-      familySpaceId,
       seniorProfileId: seniorProfile._id,
-      membershipId,
+      sourceCircleMembershipId: null,
       tokenHash: await hashIndependentOnboardingToken(onboardingToken),
       expiresAt: Date.now() + INDEPENDENT_ONBOARDING_TTL_MS,
       consumedAt: null,
@@ -607,7 +592,7 @@ export const completeOnboardingPasskeyRegistration = mutation({
     });
 
     const passkeyId = await upsertIndependentPasskey(ctx, {
-      familySpaceId: onboardingContext.seniorProfile.familySpaceId,
+      circleId: onboardingContext.seniorProfile.circleId,
       seniorProfileId: onboardingContext.seniorProfile._id,
       credentialId: args.credentialId,
       credentialPublicKey: args.credentialPublicKey,
@@ -620,17 +605,20 @@ export const completeOnboardingPasskeyRegistration = mutation({
     await ctx.db.patch(onboardingContext.onboardingSession._id, {
       consumedAt: Date.now(),
     });
-    await ctx.db.patch(onboardingContext.membership._id, {
-      onboardingStep: 2,
-      lastSeenAt: Date.now(),
-    });
+
+    if (onboardingContext.sourceCircleMembership) {
+      await ctx.db.patch(onboardingContext.sourceCircleMembership._id, {
+        onboardingStep: 2,
+        lastSeenAt: Date.now(),
+      });
+    }
 
     const session = await issueSeniorAccessSession(ctx, {
-      familySpaceId: onboardingContext.seniorProfile.familySpaceId,
+      circleId: onboardingContext.seniorProfile.circleId,
       seniorProfileId: onboardingContext.seniorProfile._id,
       sessionType: "independent_web",
       deviceFingerprint: args.deviceFingerprint,
-      sourceMembershipId: onboardingContext.membership._id,
+      sourceCircleMembershipId: onboardingContext.sourceCircleMembership?._id ?? null,
       sourcePasskeyId: passkeyId,
       sourcePinId: null,
     });
@@ -717,7 +705,7 @@ export const completeSessionPasskeyRegistration = mutation({
     });
 
     const passkeyId = await upsertIndependentPasskey(ctx, {
-      familySpaceId: validation.seniorProfile.familySpaceId,
+      circleId: validation.seniorProfile.circleId,
       seniorProfileId: validation.seniorProfile._id,
       credentialId: args.credentialId,
       credentialPublicKey: args.credentialPublicKey,
@@ -777,7 +765,7 @@ export const completeDiscoverablePasskeyAuthentication = mutation({
 
     const membership = await getIndependentMembershipForSeniorProfile(
       ctx,
-      passkey.familySpaceId,
+      passkey.circleId,
       passkey.seniorProfileId,
     );
 
@@ -793,12 +781,12 @@ export const completeDiscoverablePasskeyAuthentication = mutation({
     });
 
     const session = await issueSeniorAccessSession(ctx, {
-      familySpaceId: passkey.familySpaceId,
+      circleId: passkey.circleId,
       seniorProfileId: passkey.seniorProfileId,
       sessionType: "independent_web",
       deviceFingerprint: args.deviceFingerprint,
       sourcePinId: null,
-      sourceMembershipId: membership?._id ?? null,
+      sourceCircleMembershipId: membership?._id ?? null,
       sourcePasskeyId: passkey._id,
     });
 
@@ -881,7 +869,7 @@ export const redeemIndependentRecoveryCode = mutation({
 
     const membership = await getIndependentMembershipForSeniorProfile(
       ctx,
-      seniorProfile.familySpaceId,
+      seniorProfile.circleId,
       seniorProfile._id,
     );
 
@@ -896,12 +884,12 @@ export const redeemIndependentRecoveryCode = mutation({
     });
 
     const session = await issueSeniorAccessSession(ctx, {
-      familySpaceId: seniorProfile.familySpaceId,
+      circleId: seniorProfile.circleId,
       seniorProfileId: seniorProfile._id,
       sessionType: "independent_web",
       deviceFingerprint: args.deviceFingerprint,
       sourcePinId: null,
-      sourceMembershipId: membership?._id ?? null,
+      sourceCircleMembershipId: membership?._id ?? null,
       sourcePasskeyId: null,
     });
 
@@ -955,9 +943,9 @@ export const rotateIndependentRecoveryCodes = mutation({
     const validation = await requireIndependentWebSession(ctx, args);
 
     return await rotateRecoveryCodes(ctx, {
-      familySpaceId: validation.seniorProfile.familySpaceId,
+      circleId: validation.seniorProfile.circleId,
       seniorProfileId: validation.seniorProfile._id,
-      createdByMembershipId: validation.session.sourceMembershipId ?? null,
+      createdByCircleMembershipId: validation.session.sourceCircleMembershipId ?? null,
       createdBySource: "independent",
     });
   },
@@ -975,7 +963,7 @@ export const revokeIndependentTrustedDevice = mutation({
     if (
       !passkey ||
       passkey.seniorProfileId !== validation.seniorProfile._id ||
-      passkey.familySpaceId !== validation.seniorProfile.familySpaceId
+      passkey.circleId !== validation.seniorProfile.circleId
     ) {
       throw new Error("That trusted device could not be found.");
     }
@@ -999,7 +987,7 @@ export const getOrganiserIndependentRecoveryOverview = query({
     const { membership } = await requireFamilySideCapability(ctx, "manage_circle_members");
     const seniorProfile = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "independent",
     );
     if (!seniorProfile) {
@@ -1034,9 +1022,12 @@ export const revokeIndependentTrustedDeviceForOrganiser = mutation({
     passkeyId: v.id("independentSeniorPasskeys"),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_circle_members");
+    const { circleMembership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_members",
+    );
     const passkey = await ctx.db.get(args.passkeyId);
-    if (!passkey || passkey.familySpaceId !== membership.familySpaceId) {
+    if (!passkey || passkey.circleId !== (circleMembership?.circleId ?? null)) {
       throw new Error("That trusted device could not be found.");
     }
 
@@ -1059,7 +1050,7 @@ export const revokeAllIndependentTrustedDevicesForOrganiser = mutation({
     const { membership } = await requireFamilySideCapability(ctx, "manage_circle_members");
     const seniorProfile = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "independent",
     );
     if (!seniorProfile) {
@@ -1084,10 +1075,13 @@ export const revokeAllIndependentTrustedDevicesForOrganiser = mutation({
 export const rotateIndependentRecoveryCodesForOrganiser = mutation({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_circle_members");
+    const { membership, circleMembership } = await requireFamilySideCapability(
+      ctx,
+      "manage_circle_members",
+    );
     const seniorProfile = await getSeniorProfileByMode(
       ctx,
-      membership.familySpaceId,
+      membership.circleId,
       "independent",
     );
     if (!seniorProfile) {
@@ -1095,9 +1089,9 @@ export const rotateIndependentRecoveryCodesForOrganiser = mutation({
     }
 
     return await rotateRecoveryCodes(ctx, {
-      familySpaceId: membership.familySpaceId,
+      circleId: circleMembership?.circleId ?? null,
       seniorProfileId: seniorProfile._id,
-      createdByMembershipId: membership._id,
+      createdByCircleMembershipId: circleMembership?._id ?? null,
       createdBySource: "organiser",
     });
   },

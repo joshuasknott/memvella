@@ -1,22 +1,13 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import {
-  normalizeOptionalText,
-} from "./security";
-import {
-  MEMBER_LABEL,
-} from "./terminology";
+import { normalizeOptionalText } from "./security";
+import { MEMBER_LABEL } from "./terminology";
 
 type DbCtx = MutationCtx | QueryCtx;
 
-type StoredFamilySideMembershipRole = "organiser" | "member";
-
 export type FamilySideMembershipRole = "organiser" | "member";
-export type MembershipRole = StoredFamilySideMembershipRole | "independent_senior";
-export type MembershipAccessRequirement =
-  | FamilySideMembershipRole
-  | "independent_senior"
-  | "family_side";
+export type MembershipRole = FamilySideMembershipRole;
+export type MembershipAccessRequirement = FamilySideMembershipRole | "family_side";
 export type FamilySideCapability =
   | "manage_circle_members"
   | "manage_invite_codes"
@@ -28,32 +19,10 @@ export type FamilySideCapability =
 
 export type CircleAuthContext = {
   authIdentityToken: string;
-  membership: Doc<"familySpaceMemberships">;
-  familySpace: Doc<"familySpaces">;
-  circleMembership: Doc<"circleMemberships"> | null;
-  circle: Doc<"circles"> | null;
+  membership: Doc<"circleMemberships">;
+  circleMembership: Doc<"circleMemberships">;
+  circle: Doc<"circles">;
 };
-
-function compareMembershipDeterministically(
-  left: Doc<"familySpaceMemberships">,
-  right: Doc<"familySpaceMemberships">,
-) {
-  if (left._creationTime !== right._creationTime) {
-    return left._creationTime - right._creationTime;
-  }
-
-  return String(left._id).localeCompare(String(right._id));
-}
-
-export function pickDeterministicMembership(
-  memberships: ReadonlyArray<Doc<"familySpaceMemberships">>,
-) {
-  if (memberships.length === 0) {
-    return null;
-  }
-
-  return [...memberships].sort(compareMembershipDeterministically)[0];
-}
 
 function compareCircleMembershipDeterministically(
   left: Doc<"circleMemberships">,
@@ -74,6 +43,12 @@ export function pickDeterministicCircleMembership(
   }
 
   return [...memberships].sort(compareCircleMembershipDeterministically)[0];
+}
+
+export function pickDeterministicMembership(
+  memberships: ReadonlyArray<Doc<"circleMemberships">>,
+) {
+  return pickDeterministicCircleMembership(memberships);
 }
 
 export function normalizeFamilySideMembershipRole(
@@ -126,23 +101,15 @@ export function assertFamilySideCapability(
 }
 
 function membershipMatchesRequirement(
-  membership: Doc<"familySpaceMemberships">,
+  membership: Doc<"circleMemberships">,
   expectedRole: MembershipAccessRequirement | undefined,
 ) {
-  const normalizedFamilySideRole = normalizeFamilySideMembershipRole(
-    membership.role,
-  );
-
   if (!expectedRole) {
     return true;
   }
 
   if (expectedRole === "family_side") {
-    return normalizedFamilySideRole !== null;
-  }
-
-  if (expectedRole === "organiser" || expectedRole === "member") {
-    return normalizedFamilySideRole === expectedRole;
+    return true;
   }
 
   return membership.role === expectedRole;
@@ -155,45 +122,6 @@ export async function requireAuthIdentityToken(ctx: DbCtx) {
   }
 
   return identity.tokenIdentifier;
-}
-
-export async function getMembershipByAuthIdentityToken(
-  ctx: DbCtx,
-  authIdentityToken: string,
-) {
-  const circleMemberships = await listCircleMembershipsByAuthIdentityToken(
-    ctx,
-    authIdentityToken,
-  );
-
-  const mappedCircleLegacyMemberships = (
-    await Promise.all(
-      circleMemberships
-        .map((membership) => membership.legacyFamilySpaceMembershipId)
-        .filter(
-          (
-            membershipId,
-          ): membershipId is Id<"familySpaceMemberships"> => membershipId !== null,
-        )
-        .map((membershipId) => ctx.db.get(membershipId)),
-    )
-  ).filter(
-    (membership): membership is Doc<"familySpaceMemberships"> =>
-      membership !== null,
-  );
-
-  const preferredCircleMembership = pickDeterministicMembership(
-    mappedCircleLegacyMemberships,
-  );
-  if (preferredCircleMembership) {
-    return preferredCircleMembership;
-  }
-
-  const legacyMemberships = await listMembershipsByAuthIdentityToken(
-    ctx,
-    authIdentityToken,
-  );
-  return pickDeterministicMembership(legacyMemberships);
 }
 
 export async function listCircleMembershipsByAuthIdentityToken(
@@ -222,61 +150,44 @@ export async function getCircleMembershipByAuthIdentityToken(
   return pickDeterministicCircleMembership(memberships);
 }
 
-async function resolveCircleAuthContext(
-  ctx: DbCtx,
-  authIdentityToken: string,
-  membership: Doc<"familySpaceMemberships">,
-): Promise<CircleAuthContext | null> {
-  const familySpace = await ctx.db.get(membership.familySpaceId);
-  if (!familySpace) {
-    return null;
-  }
-
-  const circleMembershipCandidates = await listCircleMembershipsByAuthIdentityToken(
-    ctx,
-    authIdentityToken,
-  );
-  const matchedCircleMembership =
-    pickDeterministicCircleMembership(
-      circleMembershipCandidates.filter(
-        (candidate) => candidate.legacyFamilySpaceMembershipId === membership._id,
-      ),
-    ) ?? pickDeterministicCircleMembership(circleMembershipCandidates);
-
-  const circle = matchedCircleMembership
-    ? await ctx.db.get(matchedCircleMembership.circleId)
-    : await ctx.db
-        .query("circles")
-        .withIndex("by_legacyFamilySpaceId", (query) =>
-          query.eq("legacyFamilySpaceId", membership.familySpaceId),
-        )
-        .unique();
-
-  return {
-    authIdentityToken,
-    membership,
-    familySpace,
-    circleMembership: matchedCircleMembership,
-    circle,
-  };
-}
-
 export async function listMembershipsByAuthIdentityToken(
   ctx: DbCtx,
   authIdentityToken: string,
   limit = 20,
 ) {
-  const memberships = await ctx.db
-    .query("familySpaceMemberships")
-    .withIndex("by_authIdentityToken", (query) =>
-      query.eq("authIdentityToken", authIdentityToken),
-    )
-    .take(limit);
-
-  return [...memberships].sort(compareMembershipDeterministically);
+  return await listCircleMembershipsByAuthIdentityToken(
+    ctx,
+    authIdentityToken,
+    limit,
+  );
 }
 
-export async function getOptionalFamilySpaceMembership(
+export async function getMembershipByAuthIdentityToken(
+  ctx: DbCtx,
+  authIdentityToken: string,
+) {
+  return await getCircleMembershipByAuthIdentityToken(ctx, authIdentityToken);
+}
+
+async function resolveCircleAuthContext(
+  ctx: DbCtx,
+  authIdentityToken: string,
+  membership: Doc<"circleMemberships">,
+): Promise<CircleAuthContext | null> {
+  const circle = await ctx.db.get(membership.circleId);
+  if (!circle) {
+    return null;
+  }
+
+  return {
+    authIdentityToken,
+    membership,
+    circleMembership: membership,
+    circle,
+  };
+}
+
+export async function getOptionalCircleMembership(
   ctx: DbCtx,
   expectedRole?: MembershipAccessRequirement,
 ) {
@@ -285,7 +196,7 @@ export async function getOptionalFamilySpaceMembership(
     return null;
   }
 
-  const membership = await getMembershipByAuthIdentityToken(
+  const membership = await getCircleMembershipByAuthIdentityToken(
     ctx,
     identity.tokenIdentifier,
   );
@@ -305,12 +216,15 @@ export async function getOptionalFamilySpaceMembership(
   );
 }
 
-export async function requireFamilySpaceMembership(
+export async function requireCircleMembership(
   ctx: DbCtx,
   expectedRole?: MembershipAccessRequirement,
 ) {
   const authIdentityToken = await requireAuthIdentityToken(ctx);
-  const membership = await getMembershipByAuthIdentityToken(ctx, authIdentityToken);
+  const membership = await getCircleMembershipByAuthIdentityToken(
+    ctx,
+    authIdentityToken,
+  );
 
   if (!membership) {
     throw new Error("No Circle membership is linked to this account.");
@@ -332,26 +246,12 @@ export async function requireFamilySpaceMembership(
   return circleContext;
 }
 
-export async function getOptionalCircleMembership(
-  ctx: DbCtx,
-  expectedRole?: MembershipAccessRequirement,
-) {
-  return await getOptionalFamilySpaceMembership(ctx, expectedRole);
-}
-
-export async function requireCircleMembership(
-  ctx: DbCtx,
-  expectedRole?: MembershipAccessRequirement,
-) {
-  return await requireFamilySpaceMembership(ctx, expectedRole);
-}
-
 export async function getOptionalFamilySideMembership(ctx: DbCtx) {
-  return await getOptionalFamilySpaceMembership(ctx, "family_side");
+  return await getOptionalCircleMembership(ctx, "family_side");
 }
 
 export async function requireFamilySideMembership(ctx: DbCtx) {
-  return await requireFamilySpaceMembership(ctx, "family_side");
+  return await requireCircleMembership(ctx, "family_side");
 }
 
 export async function getOptionalFamilySideCircleMembership(ctx: DbCtx) {
@@ -387,13 +287,13 @@ export async function requireCircleCapability(
 
 export async function getSeniorProfileByMode(
   ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
   seniorMode: Doc<"seniorProfiles">["seniorMode"],
 ) {
   return await ctx.db
     .query("seniorProfiles")
-    .withIndex("by_familySpaceId_and_seniorMode", (query) =>
-      query.eq("familySpaceId", familySpaceId).eq("seniorMode", seniorMode),
+    .withIndex("by_circleId_and_seniorMode", (query) =>
+      query.eq("circleId", circleId).eq("seniorMode", seniorMode),
     )
     .unique();
 }
@@ -407,37 +307,43 @@ export async function getSeniorProfileById(
 
 export async function getIndependentMembershipForSeniorProfile(
   ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles"> | null,
   seniorProfileId: Id<"seniorProfiles">,
 ) {
-  return await ctx.db
-    .query("familySpaceMemberships")
-    .withIndex("by_familySpaceId_and_role_and_seniorProfileId", (query) =>
-      query
-        .eq("familySpaceId", familySpaceId)
-        .eq("role", "independent_senior")
-        .eq("seniorProfileId", seniorProfileId),
+  if (!circleId) {
+    return null;
+  }
+
+  const candidates = await ctx.db
+    .query("circleMemberships")
+    .withIndex("by_seniorProfileId", (query) =>
+      query.eq("seniorProfileId", seniorProfileId),
     )
-    .unique();
+    .take(20);
+
+  return pickDeterministicCircleMembership(
+    candidates.filter((candidate) => candidate.circleId === circleId),
+  );
 }
 
 export async function upsertAssistedSeniorProfile(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles">;
     displayName: string;
   },
 ) {
-  const assistedSenior = await getSeniorProfileByMode(
-    ctx,
-    args.familySpaceId,
-    "assisted",
-  );
+  const circle = await ctx.db.get(args.circleId);
+  if (!circle) {
+    throw new Error("The linked Circle could not be found.");
+  }
+
+  const assistedSenior = await getSeniorProfileByMode(ctx, args.circleId, "assisted");
   const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
 
   if (!assistedSenior) {
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
-      familySpaceId: args.familySpaceId,
+      circleId: circle._id,
       displayName,
       seniorMode: "assisted",
       accessStatus: "active",
@@ -460,20 +366,25 @@ export async function upsertAssistedSeniorProfile(
 export async function upsertIndependentSeniorProfile(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles">;
     displayName: string;
   },
 ) {
+  const circle = await ctx.db.get(args.circleId);
+  if (!circle) {
+    throw new Error("The linked Circle could not be found.");
+  }
+
   const independentSenior = await getSeniorProfileByMode(
     ctx,
-    args.familySpaceId,
+    args.circleId,
     "independent",
   );
   const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
 
   if (!independentSenior) {
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
-      familySpaceId: args.familySpaceId,
+      circleId: circle._id,
       displayName,
       seniorMode: "independent",
       accessStatus: "active",

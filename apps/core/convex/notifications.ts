@@ -8,7 +8,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { requireCircleCapability } from "./familySpaceAuth";
+import { requireCircleCapability } from "./circleAuth";
 import {
   addDaysToDateKey,
   getNextRoutineEventForCircle,
@@ -51,7 +51,7 @@ function deliveryStatusValidator() {
 }
 
 function buildDefaultSettings(
-  membershipId: Id<"familySpaceMemberships">,
+  circleMembershipId: Id<"circleMemberships">,
   updatedAt: number,
 ) {
   return {
@@ -59,19 +59,19 @@ function buildDefaultSettings(
     urgentAlerts: true,
     routineReminders: false,
     dailySummaryTimeMinutes: DAILY_SUMMARY_DEFAULT_TIME_MINUTES,
-    updatedByMembershipId: membershipId,
+    updatedByCircleMembershipId: circleMembershipId,
     updatedAt,
   };
 }
 
 async function getNotificationSettingsRecord(
   ctx: MutationCtx | QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
 ) {
   return await ctx.db
     .query("notificationSettings")
-    .withIndex("by_familySpaceId", (query) =>
-      query.eq("familySpaceId", familySpaceId),
+    .withIndex("by_circleId", (query) =>
+      query.eq("circleId", circleId),
     )
     .unique();
 }
@@ -192,14 +192,14 @@ export function buildNotificationDeliveryResultPatches(args: {
   };
 }
 
-async function listActivePushSubscriptionsForFamilySpace(
+async function listActivePushSubscriptionsForCircle(
   ctx: MutationCtx | QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
 ) {
   return await ctx.db
     .query("pushSubscriptions")
-    .withIndex("by_familySpaceId_and_revokedAt", (query) =>
-      query.eq("familySpaceId", familySpaceId).eq("revokedAt", null),
+    .withIndex("by_circleId_and_revokedAt", (query) =>
+      query.eq("circleId", circleId).eq("revokedAt", null),
     )
     .take(25);
 }
@@ -223,28 +223,28 @@ function getMinutesUntilOccurrence(
 
 async function buildDailySummaryBody(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  circleId: Id<"circles">,
 ) {
   const [queuedInsights, nextRoutine, recentVoiceInteractions] = await Promise.all([
     Promise.all([
       ctx.db
         .query("insights")
-        .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-          query.eq("familySpaceId", familySpaceId).eq("status", "queued"),
+        .withIndex("by_circleId_and_status_and_createdAt", (query) =>
+          query.eq("circleId", circleId).eq("status", "queued"),
         )
         .take(20),
       ctx.db
         .query("alerts")
-        .withIndex("by_familySpaceId_and_status_and_createdAt", (query) =>
-          query.eq("familySpaceId", familySpaceId).eq("status", "queued"),
+        .withIndex("by_circleId_and_status_and_createdAt", (query) =>
+          query.eq("circleId", circleId).eq("status", "queued"),
         )
         .take(20),
     ]),
-    getNextRoutineEventForCircle(ctx, familySpaceId),
+    getNextRoutineEventForCircle(ctx, circleId),
     ctx.db
       .query("voiceInteractions")
-      .withIndex("by_familySpaceId_and_createdAt", (query) =>
-        query.eq("familySpaceId", familySpaceId),
+      .withIndex("by_circleId_and_createdAt", (query) =>
+        query.eq("circleId", circleId),
       )
       .order("desc")
       .take(24),
@@ -275,17 +275,22 @@ async function buildDailySummaryBody(
 export const getOrganiserNotificationSettings = query({
   args: {},
   handler: async (ctx) => {
-    const { membership } = await requireCircleCapability(
+    const { circleMembership } = await requireCircleCapability(
       ctx,
       "manage_circle_notifications",
     );
+    if (!circleMembership) {
+      throw new Error("The linked Circle could not be found.");
+    }
+
+    const circleId = circleMembership.circleId;
     const [settings, activeSubscriptions] = await Promise.all([
-      getNotificationSettingsRecord(ctx, membership.familySpaceId),
-      listActivePushSubscriptionsForFamilySpace(ctx, membership.familySpaceId),
+      getNotificationSettingsRecord(ctx, circleId),
+      listActivePushSubscriptionsForCircle(ctx, circleId),
     ]);
 
     const resolvedSettings = {
-      ...buildDefaultSettings(membership._id, 0),
+      ...buildDefaultSettings(circleMembership._id, 0),
       ...(settings ?? {}),
     };
 
@@ -311,11 +316,15 @@ export const updateOrganiserNotificationSettings = mutation({
     dailySummaryTimeMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireCircleCapability(
+    const { circleMembership } = await requireCircleCapability(
       ctx,
       "manage_circle_notifications",
     );
-    const existing = await getNotificationSettingsRecord(ctx, membership.familySpaceId);
+    if (!circleMembership) {
+      throw new Error("The linked Circle could not be found.");
+    }
+
+    const existing = await getNotificationSettingsRecord(ctx, circleMembership.circleId);
     const updatedAt = Date.now();
     const payload = {
       dailySummary: args.dailySummary,
@@ -323,7 +332,7 @@ export const updateOrganiserNotificationSettings = mutation({
       routineReminders: args.routineReminders,
       dailySummaryTimeMinutes:
         args.dailySummaryTimeMinutes ?? DAILY_SUMMARY_DEFAULT_TIME_MINUTES,
-      updatedByMembershipId: membership._id,
+      updatedByCircleMembershipId: circleMembership._id,
       updatedAt,
     };
 
@@ -333,7 +342,7 @@ export const updateOrganiserNotificationSettings = mutation({
     }
 
     return await ctx.db.insert("notificationSettings", {
-      familySpaceId: membership.familySpaceId,
+      circleId: circleMembership.circleId,
       ...payload,
     });
   },
@@ -352,10 +361,14 @@ export const upsertPushSubscription = mutation({
     permissionState: permissionStateValidator(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireCircleCapability(
+    const { circleMembership } = await requireCircleCapability(
       ctx,
       "manage_circle_notifications",
     );
+    if (!circleMembership) {
+      throw new Error("The linked Circle could not be found.");
+    }
+
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
@@ -364,8 +377,8 @@ export const upsertPushSubscription = mutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, {
-        familySpaceId: membership.familySpaceId,
-        membershipId: membership._id,
+        circleId: circleMembership.circleId,
+        circleMembershipId: circleMembership._id,
         expirationTime: args.expirationTime,
         p256dh: args.keys.p256dh,
         auth: args.keys.auth,
@@ -382,8 +395,8 @@ export const upsertPushSubscription = mutation({
     }
 
     return await ctx.db.insert("pushSubscriptions", {
-      familySpaceId: membership.familySpaceId,
-      membershipId: membership._id,
+      circleId: circleMembership.circleId,
+      circleMembershipId: circleMembership._id,
       endpoint: args.endpoint,
       expirationTime: args.expirationTime,
       p256dh: args.keys.p256dh,
@@ -408,16 +421,20 @@ export const revokePushSubscription = mutation({
     endpoint: v.string(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireCircleCapability(
+    const { circleMembership } = await requireCircleCapability(
       ctx,
       "manage_circle_notifications",
     );
+    if (!circleMembership) {
+      throw new Error("The linked Circle could not be found.");
+    }
+
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (query) => query.eq("endpoint", args.endpoint))
       .unique();
 
-    if (!existing || existing.familySpaceId !== membership.familySpaceId) {
+    if (!existing || existing.circleId !== circleMembership.circleId) {
       return { revoked: false as const };
     }
 
@@ -471,24 +488,33 @@ export const listRoutineReminderCandidates = internalQuery({
         .map((schedule) => [schedule._id, schedule]),
     );
 
-    const settingsByFamilySpaceId = new Map<
-      Id<"familySpaces">,
+    const settingsByCircleId = new Map<
+      Id<"circles">,
       Awaited<ReturnType<typeof getNotificationSettingsRecord>>
     >();
 
+    const seniorProfiles = await Promise.all(
+      [...uniqueOccurrences.values()].map((occurrence) =>
+        ctx.db.get(occurrence.seniorProfileId),
+      ),
+    );
+    const seniorProfileById = new Map(
+      seniorProfiles
+        .filter(
+          (seniorProfile): seniorProfile is NonNullable<typeof seniorProfile> =>
+            seniorProfile !== null,
+        )
+        .map((seniorProfile) => [seniorProfile._id, seniorProfile]),
+    );
+
     const candidates = [] as Array<{
       occurrenceId: Id<"routineOccurrences">;
-      circleId: Id<"circles"> | null;
-      familySpaceId: Id<"familySpaces">;
+      circleId: Id<"circles">;
       title: string;
       timeLabel: string;
       scheduledFor: number;
       minutesUntil: number;
     }>;
-    const circleDetailsByFamilySpaceId = new Map<
-      Id<"familySpaces">,
-      Awaited<ReturnType<typeof resolveCircleRuntimeDetails>>
-    >();
 
     for (const occurrence of uniqueOccurrences.values()) {
       const minutesUntil = getMinutesUntilOccurrence(now, occurrence);
@@ -505,27 +531,24 @@ export const listRoutineReminderCandidates = internalQuery({
         continue;
       }
 
-      const cachedCircleDetails = circleDetailsByFamilySpaceId.get(
-        occurrence.familySpaceId,
-      );
-      const circleDetails =
-        cachedCircleDetails ??
-        (await resolveCircleRuntimeDetails(ctx, occurrence.familySpaceId));
-      circleDetailsByFamilySpaceId.set(occurrence.familySpaceId, circleDetails);
+      const seniorProfile = seniorProfileById.get(occurrence.seniorProfileId);
+      const circleId = seniorProfile?.circleId;
+      if (!circleId) {
+        continue;
+      }
 
-      const cachedSettings = settingsByFamilySpaceId.get(occurrence.familySpaceId);
+      const cachedSettings = settingsByCircleId.get(circleId);
       const settings =
         cachedSettings ??
-        (await getNotificationSettingsRecord(ctx, occurrence.familySpaceId));
-      settingsByFamilySpaceId.set(occurrence.familySpaceId, settings);
+        (await getNotificationSettingsRecord(ctx, circleId));
+      settingsByCircleId.set(circleId, settings);
       if (!settings?.routineReminders) {
         continue;
       }
 
       candidates.push({
         occurrenceId: occurrence._id,
-        circleId: circleDetails.circle?._id ?? null,
-        familySpaceId: occurrence.familySpaceId,
+        circleId,
         title: schedule.title,
         timeLabel: occurrence.timeLabel,
         scheduledFor: Date.now() + minutesUntil * 60 * 1000,
@@ -542,32 +565,31 @@ export const listDailySummaryCandidates = internalQuery({
   handler: async (ctx) => {
     const settingsRecords = await ctx.db
       .query("notificationSettings")
-      .withIndex("by_dailySummary_and_familySpaceId", (query) =>
+      .withIndex("by_dailySummary_and_circleId", (query) =>
         query.eq("dailySummary", true),
       )
       .take(100);
 
-    const familySpaces = await Promise.all(
-      settingsRecords.map((settings) => ctx.db.get(settings.familySpaceId)),
+    const circles = await Promise.all(
+      settingsRecords.map((settings) => ctx.db.get(settings.circleId)),
     );
 
     const now = new Date();
     const candidates = [] as Array<{
-      circleId: Id<"circles"> | null;
-      familySpaceId: Id<"familySpaces">;
+      circleId: Id<"circles">;
       summaryDateKey: string;
       scheduledFor: number;
     }>;
 
     for (const settings of settingsRecords) {
-      const familySpace =
-        familySpaces.find((candidate) => candidate?._id === settings.familySpaceId) ??
+      const circle =
+        circles.find((candidate) => candidate?._id === settings.circleId) ??
         null;
       const circleDetails = await resolveCircleRuntimeDetails(
         ctx,
-        settings.familySpaceId,
+        settings.circleId,
       );
-      const timeZone = circleDetails.timeZone ?? familySpace?.timezone ?? "UTC";
+      const timeZone = circleDetails.timeZone ?? circle?.timezone ?? "UTC";
       const clock = getTimeZoneClock(now, timeZone);
       const minutesFromDigest = Math.abs(
         clock.currentMinutes - settings.dailySummaryTimeMinutes,
@@ -577,17 +599,16 @@ export const listDailySummaryCandidates = internalQuery({
         continue;
       }
 
-      const activeSubscriptions = await listActivePushSubscriptionsForFamilySpace(
+      const activeSubscriptions = await listActivePushSubscriptionsForCircle(
         ctx,
-        settings.familySpaceId,
+        settings.circleId,
       );
       if (activeSubscriptions.length === 0) {
         continue;
       }
 
       candidates.push({
-        circleId: circleDetails.circle?._id ?? null,
-        familySpaceId: settings.familySpaceId,
+        circleId: settings.circleId,
         summaryDateKey: clock.dateKey,
         scheduledFor: Date.now(),
       });
@@ -599,17 +620,17 @@ export const listDailySummaryCandidates = internalQuery({
 
 export const getDailySummaryDigestPayload = internalQuery({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.id("circles"),
   },
   handler: async (ctx, args) => {
-    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.familySpaceId);
+    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.circleId);
     const title = circleDetails.circleName
       ? `${circleDetails.circleName} daily summary`
       : `Your ${CIRCLE_LABEL} daily summary`;
-    const body = await buildDailySummaryBody(ctx, args.familySpaceId);
+    const body = await buildDailySummaryBody(ctx, args.circleId);
 
     return {
-      circleId: circleDetails.circle?._id ?? null,
+      circleId: args.circleId,
       title,
       body,
       deepLink: "/circle/insights",
@@ -624,36 +645,32 @@ export const getUrgentAlertDispatchPlan = internalQuery({
   },
   handler: async (ctx, args) => {
     const alert = await ctx.db.get(args.alertId);
-    if (!alert) {
+    if (!alert || !alert.circleId) {
       return null;
     }
 
-    const settings = await getNotificationSettingsRecord(ctx, alert.familySpaceId);
+    const settings = await getNotificationSettingsRecord(ctx, alert.circleId);
     if (!settings?.urgentAlerts) {
       return null;
     }
 
-    const activeSubscriptions = await listActivePushSubscriptionsForFamilySpace(
+    const activeSubscriptions = await listActivePushSubscriptionsForCircle(
       ctx,
-      alert.familySpaceId,
+      alert.circleId,
     );
     if (activeSubscriptions.length === 0) {
       return null;
     }
 
     return {
-      circleId:
-        (
-          await resolveCircleRuntimeDetails(ctx, alert.familySpaceId)
-        ).circle?._id ?? null,
-      familySpaceId: alert.familySpaceId,
+      circleId: alert.circleId,
       title: alert.title,
       body: alert.summary,
       deepLink: "/circle/insights",
       payloadTag: "urgent-alert",
       subscriptions: activeSubscriptions.map((subscription) => ({
         pushSubscriptionId: subscription._id,
-        membershipId: subscription.membershipId,
+        circleMembershipId: subscription.circleMembershipId,
       })),
     };
   },
@@ -661,19 +678,19 @@ export const getUrgentAlertDispatchPlan = internalQuery({
 
 export const listActivePushSubscriptions = internalQuery({
   args: {
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.id("circles"),
   },
   handler: async (ctx, args) => {
-    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.familySpaceId);
-    const subscriptions = await listActivePushSubscriptionsForFamilySpace(
+    const circleDetails = await resolveCircleRuntimeDetails(ctx, args.circleId);
+    const subscriptions = await listActivePushSubscriptionsForCircle(
       ctx,
-      args.familySpaceId,
+      args.circleId,
     );
 
     return subscriptions.map((subscription) => ({
-      circleId: circleDetails.circle?._id ?? null,
+      circleId: circleDetails.circle?._id ?? args.circleId,
       pushSubscriptionId: subscription._id,
-      membershipId: subscription.membershipId,
+      circleMembershipId: subscription.circleMembershipId,
       endpoint: subscription.endpoint,
       expirationTime: subscription.expirationTime,
       p256dh: subscription.p256dh,
@@ -686,8 +703,8 @@ export const listActivePushSubscriptions = internalQuery({
 
 export const enqueueNotificationDelivery = internalMutation({
   args: {
-    familySpaceId: v.id("familySpaces"),
-    membershipId: v.id("familySpaceMemberships"),
+    circleId: v.id("circles"),
+    circleMembershipId: v.id("circleMemberships"),
     pushSubscriptionId: v.id("pushSubscriptions"),
     notificationType: notificationTypeValidator(),
     dedupeKey: v.string(),
@@ -713,8 +730,8 @@ export const enqueueNotificationDelivery = internalMutation({
 
     const now = Date.now();
     const deliveryId = await ctx.db.insert("notificationDeliveries", {
-      familySpaceId: args.familySpaceId,
-      membershipId: args.membershipId,
+      circleId: args.circleId,
+      circleMembershipId: args.circleMembershipId,
       pushSubscriptionId: args.pushSubscriptionId,
       notificationType: args.notificationType,
       dedupeKey: args.dedupeKey,

@@ -17,12 +17,12 @@ The JSON object must have exactly two keys:
 2. "actionPayload": an object with an "action" key.
 
 Allowed actions:
-- "update_profile": use when the speaker shares their name, another person's display name, or their role. Valid keys are organiserName, seniorDisplayName, role ("organiser" | "assisted_senior" | "independent_senior"), and onboardingStep.
+- "update_profile": use when the speaker shares their name, another person's display name, or their role. Valid keys are organiserName, seniorDisplayName, role ("organiser" | "assisted_senior" | "independent"), and onboardingStep.
 - "add_relation": use when the speaker mentions a connection. Valid keys are name, relationship, and aiContext.
 - "none": use for greetings or unstructured input.
 
 Role guidance:
-- If the speaker says they are setting Memvella up for themselves, use "independent_senior".
+- If the speaker says they are setting Memvella up for themselves, use "independent".
 - If the speaker says they are setting Memvella up for someone else, use "organiser".
 - If the speaker says the person uses the read-only tablet mode, use "assisted_senior".`;
 

@@ -10,7 +10,9 @@ import {
 } from "./security";
 import {
   getNextRoutineEventForCircle,
+  getNextRoutineEventForSenior,
   listTodayTimelineForCircle,
+  listTodayTimelineForSenior,
 } from "./routineHelpers";
 import { formatMemoryDateLabel, summarizeMemory } from "./memoryHelpers";
 
@@ -27,7 +29,7 @@ export type SeniorSessionInvalidReason =
 export type SeniorSessionValidationResult =
   | {
       status: "active";
-      familySpace: Doc<"familySpaces">;
+      circle: Doc<"circles"> | null;
       seniorProfile: Doc<"seniorProfiles">;
       session: Doc<"seniorAccessSessions">;
     }
@@ -193,16 +195,16 @@ export async function validateSeniorSession(
     return { status: "invalid", reason: "not_found" };
   }
 
-  const [familySpace, seniorProfile] = await Promise.all([
-    ctx.db.get(session.familySpaceId),
+  const [circle, seniorProfile] = await Promise.all([
+    session.circleId ? ctx.db.get(session.circleId) : Promise.resolve(null),
     ctx.db.get(session.seniorProfileId),
   ]);
 
-  if (!familySpace || !seniorProfile) {
+  if (!seniorProfile) {
     return { status: "invalid", reason: "not_found" };
   }
 
-  if (seniorProfile.familySpaceId !== session.familySpaceId) {
+  if (seniorProfile.circleId !== session.circleId) {
     return { status: "invalid", reason: "not_found" };
   }
 
@@ -217,7 +219,7 @@ export async function validateSeniorSession(
 
   return {
     status: "active",
-    familySpace,
+    circle,
     seniorProfile,
     session,
   };
@@ -226,12 +228,12 @@ export async function validateSeniorSession(
 export async function issueSeniorAccessSession(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
+    circleId: Id<"circles"> | null;
     seniorProfileId: Id<"seniorProfiles">;
     sessionType: SeniorSessionType;
     deviceFingerprint: string;
     sourcePinId?: Id<"assistedDevicePins"> | null;
-    sourceMembershipId?: Id<"familySpaceMemberships"> | null;
+    sourceCircleMembershipId?: Id<"circleMemberships"> | null;
     sourcePasskeyId?: Id<"independentSeniorPasskeys"> | null;
   },
 ) {
@@ -249,7 +251,7 @@ export async function issueSeniorAccessSession(
   );
 
   const sessionId = await ctx.db.insert("seniorAccessSessions", {
-    familySpaceId: args.familySpaceId,
+    circleId: args.circleId,
     seniorProfileId: args.seniorProfileId,
     sessionType: args.sessionType,
     sessionTokenHash,
@@ -261,7 +263,7 @@ export async function issueSeniorAccessSession(
     revokedAt: null,
     revokedReason: null,
     sourcePinId: args.sourcePinId ?? null,
-    sourceMembershipId: args.sourceMembershipId ?? null,
+    sourceCircleMembershipId: args.sourceCircleMembershipId ?? null,
     sourcePasskeyId: args.sourcePasskeyId ?? null,
   });
 
@@ -304,7 +306,7 @@ export async function revokeSeniorSessionsForProfile(
 
 export async function buildSeniorDashboard(
   ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
+  seniorProfileId: Id<"seniorProfiles">,
 ) {
   type GalleryItem = {
     id: string;
@@ -318,12 +320,12 @@ export async function buildSeniorDashboard(
   };
 
   const [nextRoutine, todaysTimeline, memoryRecords] = await Promise.all([
-    getNextRoutineEventForCircle(ctx, familySpaceId),
-    listTodayTimelineForCircle(ctx, familySpaceId),
+    getNextRoutineEventForSenior(ctx, seniorProfileId),
+    listTodayTimelineForSenior(ctx, seniorProfileId),
     ctx.db
       .query("memoryRecords")
-      .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
-        query.eq("familySpaceId", familySpaceId),
+      .withIndex("by_seniorProfileId_and_lastEditedAt", (query) =>
+        query.eq("seniorProfileId", seniorProfileId),
       )
       .order("desc")
       .take(25),

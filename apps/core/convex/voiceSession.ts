@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, type MutationCtx } from "./_generated/server";
-import { getIndependentMembershipForSeniorProfile } from "./familySpaceAuth";
+import { getIndependentMembershipForSeniorProfile } from "./circleAuth";
 import { createMemoryRecord } from "./memoryHelpers";
 import {
   formatTimeLabel,
@@ -36,12 +36,9 @@ async function requireIndependentVoiceActor(
 
   const membership = await getIndependentMembershipForSeniorProfile(
     ctx,
-    validation.familySpace._id,
+    validation.circle?._id ?? null,
     validation.seniorProfile._id,
   );
-  if (!membership) {
-    throw new Error("No independent access is linked to this Circle.");
-  }
 
   return { validation, membership };
 }
@@ -68,7 +65,7 @@ export const confirmIndependentVoiceDraft = mutation({
     const interaction = await ctx.db.get(args.interactionId);
     if (
       !interaction ||
-      interaction.familySpaceId !== validation.familySpace._id ||
+      interaction.circleId !== validation.circle?._id ||
       interaction.seniorProfileId !== validation.seniorProfile._id
     ) {
       throw new Error("This voice draft is no longer available.");
@@ -91,8 +88,8 @@ export const confirmIndependentVoiceDraft = mutation({
 
     if (args.intent === "memory") {
       const memoryRecordId = await createMemoryRecord(ctx, {
-        familySpaceId: validation.familySpace._id,
-        membershipId: membership._id,
+        seniorProfileId: validation.seniorProfile._id,
+        circleMembershipId: membership?._id ?? null,
         recordType: "voice",
         title,
         transcript: description,
@@ -136,10 +133,10 @@ export const confirmIndependentVoiceDraft = mutation({
 
     const timezone = await resolveCircleTimeZone(
       ctx,
-      validation.familySpace._id,
+      validation.circle?._id ?? null,
     );
     const routineScheduleId = await ctx.db.insert("routineSchedules", {
-      familySpaceId: validation.familySpace._id,
+      seniorProfileId: validation.seniorProfile._id,
       title,
       aiInstructions: description,
       daysOfWeek: normalizedDays,
@@ -150,8 +147,8 @@ export const confirmIndependentVoiceDraft = mutation({
       startDate,
       endDate,
       status: "active",
-      createdByMembershipId: membership._id,
-      updatedByMembershipId: membership._id,
+      createdByCircleMembershipId: membership?._id ?? null,
+      updatedByCircleMembershipId: membership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
@@ -197,7 +194,7 @@ export const rejectIndependentVoiceDraft = mutation({
     const interaction = await ctx.db.get(args.interactionId);
     if (
       !interaction ||
-      interaction.familySpaceId !== validation.familySpace._id ||
+      interaction.circleId !== validation.circle?._id ||
       interaction.seniorProfileId !== validation.seniorProfile._id
     ) {
       throw new Error("This voice draft is no longer available.");

@@ -584,7 +584,7 @@ function SuccessStep() {
 
 export default function MemberJoinClient() {
   const { data: session } = authClient.useSession();
-  const redeemMemberInviteCode = useMutation(api.familyInvites.redeemMemberInviteCode);
+  const redeemMemberInviteCode = useMutation(api.circleInvites.redeemMemberInviteCode);
 
   const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(() =>
     loadPendingInvitePreview(),

@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-12
+Last reviewed: 2026-04-14
 Owners: engineering
 Read when: touching routes, schema names, migrations, compatibility code, or role naming
 Depends on: docs/product.md, docs/terminology.md, docs/architecture.md, docs/auth-and-identity.md, docs/data-model.md
@@ -23,10 +23,30 @@ Use it when changing:
 
 - Batch 1 route cleanup: largely complete. `app/supporter` runtime routes are gone, `/circle` owns the active family-side workspace, and `next.config.ts` no longer redirects `/supporter*` or `/admin*`.
 - Batch 2 role cleanup: complete on active auth paths. Organiser and Member are the only family-side roles used by current authorization logic.
-- Batch 3 circle table introduction: in progress but canonical-first in hot paths. Runtime auth, invites, and notification/voice helper resolution now prefer `circles`, `circleMemberships`, and `circleInviteCodes`, while legacy tables remain for compatibility and migration proof.
+- Batch 3 circle table introduction: complete. Runtime auth, invites, and notification or voice helper resolution run on `circles`, `circleMemberships`, and `circleInviteCodes`.
 - Batch 4 people and awareness split: `people`, `alerts`, and `insights` now run on canonical tables only.
-- Batch 5 canonical field/helper rename cleanup: in progress. Runtime helpers are moving toward `circle` naming, but persisted field names such as `familySpaceId` still exist widely.
-- Batch 6 retirement of compatibility surfaces: in progress. Legacy awareness and people compatibility tables are gone, and routine check-ins now use the canonical `routineCheckIns` name.
+- Batch 5 canonical field or helper rename cleanup: complete in runtime code for circle auth and invite surfaces.
+- Batch 6 retirement of compatibility surfaces: complete for Circle auth and invite compatibility. Legacy awareness and people compatibility tables are gone, and routine check-ins use `routineCheckIns`.
+
+## Phase 8 Completion Snapshot
+
+Phase 8 legacy-removal cleanup is complete for Circle auth and invite compatibility surfaces.
+
+Completed changes:
+
+- deleted Convex compatibility modules:
+  - `apps/core/convex/circleCompat.ts`
+  - `apps/core/convex/circleMigrations.ts`
+- replaced legacy auth and invite modules with canonical modules:
+  - `apps/core/convex/familySpaceAuth.ts` -> `apps/core/convex/circleAuth.ts`
+  - `apps/core/convex/familyInvites.ts` -> `apps/core/convex/circleInvites.ts`
+- removed `independent_senior` from Circle participant roles so only `organiser` and `member` remain
+- removed runtime `legacyFamily*` references and compatibility read or write paths from active Convex auth and invite flows
+- migrated frontend and route callsites from `api.familyInvites.*` to `api.circleInvites.*`
+
+Explicitly still legacy by design and out of this batch scope:
+
+- legacy `routines` and legacy `memories` transitional tables in `apps/core/convex/schema.ts` remain and still use `familySpaceId` index naming
 
 ## Non-Negotiables
 
@@ -52,27 +72,29 @@ Use it when changing:
 
 ### Backend Modules
 
+No active runtime modules should import or reference:
+
 - `apps/core/convex/familySpaceAuth.ts`
 - `apps/core/convex/familyInvites.ts`
-- `apps/core/convex/familyMembershipMigrations.ts`
-- `apps/core/convex/organiser.ts`
-- `apps/core/convex/voiceHelpers.ts`
-- `apps/core/convex/voiceSession.ts`
-- `apps/core/convex/routineHelpers.ts`
-- `apps/core/convex/seniorAccessHelpers.ts`
+- `apps/core/convex/circleCompat.ts`
+- `apps/core/convex/circleMigrations.ts`
 
 ### Schema And Data Surfaces
 
 Legacy or retired tables and fields still present in `apps/core/convex/schema.ts`:
 
+- legacy `memories`
+- legacy `routines`
+
+Removed from schema in this phase:
+
 - `familySpaces`
 - `familySpaceMemberships`
 - `familyInvites`
-- legacy `memories`
-- legacy `routines`
-- `primarySupporterAuthUserId`
-- `role: "supporter"`
-- widespread `familySpaceId` and `...MembershipId` naming
+- `legacyFamilySpaceId`
+- `legacyFamilySpaceMembershipId`
+- `legacyFamilyInviteId`
+- `role: "independent_senior"`
 
 ### Auth And Environment Compatibility
 
@@ -179,11 +201,9 @@ Introduce new canonical tables:
 
 Rollout rules:
 
-- Deploy widened schema that can read both old and new sources.
-- Add migration-aware helpers that can dual-read and, where needed, dual-write.
-- Backfill data from `familySpaces`, `familySpaceMemberships`, and `familyInvites`.
-- Verify migration completeness before narrowing.
-- Remove old tables only after all reads and writes are on canonical tables.
+- Introduce and verify canonical tables and indexes.
+- Move reads and writes fully to canonical tables.
+- Remove old compatibility tables and helpers once migration completeness is proven.
 
 ### Batch 4: Senior-Grounding And Awareness Split
 
@@ -206,10 +226,8 @@ Rollout rules:
 
 After new tables are in use, clean up the remaining field naming:
 
-- `familySpaceId` -> `circleId`
-- `...MembershipId` on Circle-scoped tables -> `...CircleMembershipId`
-- lingering `familySpaceName` variables -> `circleName`
-- any `supporter`-named helper or enum surface -> `organiser`
+- Runtime auth and invite helper naming cleanup is complete.
+- Remaining schema-level `familySpaceId` naming is limited to legacy `routines` and `memories` transitional tables.
 
 This batch should be done only after the table migrations are stable, otherwise field renames multiply the migration surface.
 
@@ -217,10 +235,14 @@ This batch should be done only after the table migrations are stable, otherwise 
 
 Remove once the canonical replacements are fully live:
 
+- `circleCompat.ts`
+- `circleMigrations.ts`
+- legacy auth or invite compatibility modules and generated API surfaces that referenced them
+
+Still pending in later cleanup:
+
 - legacy `memories`
 - legacy `routines`
-- `primarySupporterAuthUserId`
-- any read path that still depends on `familySpace*` names
 
 ## Migration Mechanics
 

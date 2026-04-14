@@ -11,11 +11,9 @@
 import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
 import type * as auth from "../auth.js";
-import type * as circleCompat from "../circleCompat.js";
-import type * as circleMigrations from "../circleMigrations.js";
+import type * as circleAuth from "../circleAuth.js";
+import type * as circleInvites from "../circleInvites.js";
 import type * as crons from "../crons.js";
-import type * as familyInvites from "../familyInvites.js";
-import type * as familySpaceAuth from "../familySpaceAuth.js";
 import type * as http from "../http.js";
 import type * as independentAccess from "../independentAccess.js";
 import type * as insights from "../insights.js";
@@ -54,11 +52,9 @@ declare const fullApi: ApiFromModules<{
   agent: typeof agent;
   aiActions: typeof aiActions;
   auth: typeof auth;
-  circleCompat: typeof circleCompat;
-  circleMigrations: typeof circleMigrations;
+  circleAuth: typeof circleAuth;
+  circleInvites: typeof circleInvites;
   crons: typeof crons;
-  familyInvites: typeof familyInvites;
-  familySpaceAuth: typeof familySpaceAuth;
   http: typeof http;
   independentAccess: typeof independentAccess;
   insights: typeof insights;

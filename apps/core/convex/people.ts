@@ -5,28 +5,47 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { requireFamilySideCapability } from "./familySpaceAuth";
+import {
+  getSeniorProfileByMode,
+  requireFamilySideCapability,
+} from "./circleAuth";
 import { assertValidStoredUpload } from "./uploadValidation";
 
 type DbCtx = MutationCtx | QueryCtx;
 
-export async function listPeopleForFamilySpace(
+export async function listPeopleForSeniorProfile(
   ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
+  seniorProfileId: Id<"seniorProfiles">,
   limit: number,
 ) {
   return await ctx.db
     .query("people")
-    .withIndex("by_familySpaceId", (query) => query.eq("familySpaceId", familySpaceId))
+    .withIndex("by_seniorProfileId", (query) =>
+      query.eq("seniorProfileId", seniorProfileId),
+    )
     .take(limit);
+}
+
+export async function listPeopleForCircle(
+  ctx: DbCtx,
+  circleId: Id<"circles">,
+  limit: number,
+) {
+  const seniorProfile =
+    (await getSeniorProfileByMode(ctx, circleId, "assisted")) ??
+    (await getSeniorProfileByMode(ctx, circleId, "independent"));
+  if (!seniorProfile) {
+    return [];
+  }
+
+  return await listPeopleForSeniorProfile(ctx, seniorProfile._id, limit);
 }
 
 export async function createPersonRecord(
   ctx: MutationCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
-    seniorProfileId: Id<"seniorProfiles"> | null;
-    membershipId: Id<"familySpaceMemberships">;
+    seniorProfileId: Id<"seniorProfiles">;
+    circleMembershipId: Id<"circleMemberships"> | null;
     name: string;
     relationship: string;
     isLiving: boolean;
@@ -37,15 +56,14 @@ export async function createPersonRecord(
   const now = Date.now();
 
   return await ctx.db.insert("people", {
-    familySpaceId: args.familySpaceId,
     seniorProfileId: args.seniorProfileId,
     name: args.name,
     relationship: args.relationship,
     isLiving: args.isLiving,
     aiContext: args.aiContext,
     photoStorageId: args.photoStorageId,
-    createdByMembershipId: args.membershipId,
-    updatedByMembershipId: args.membershipId,
+    createdByCircleMembershipId: args.circleMembershipId,
+    updatedByCircleMembershipId: args.circleMembershipId,
     lastEditedAt: now,
   });
 }
@@ -59,7 +77,10 @@ export const addPerson = mutation({
     photoStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySideCapability(ctx, "manage_people");
+    const { membership, circleMembership } = await requireFamilySideCapability(
+      ctx,
+      "manage_people",
+    );
     if (args.photoStorageId) {
       await assertValidStoredUpload(ctx, {
         storageId: args.photoStorageId,
@@ -67,10 +88,19 @@ export const addPerson = mutation({
       });
     }
 
+    const seniorProfile =
+      (membership.seniorProfileId
+        ? await ctx.db.get(membership.seniorProfileId)
+        : null) ??
+      (await getSeniorProfileByMode(ctx, membership.circleId, "assisted")) ??
+      (await getSeniorProfileByMode(ctx, membership.circleId, "independent"));
+    if (!seniorProfile) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
     return await createPersonRecord(ctx, {
-      familySpaceId: membership.familySpaceId,
-      seniorProfileId: membership.seniorProfileId,
-      membershipId: membership._id,
+      seniorProfileId: seniorProfile._id,
+      circleMembershipId: circleMembership?._id ?? null,
       name: args.name,
       relationship: args.relationship,
       isLiving: args.isLiving,

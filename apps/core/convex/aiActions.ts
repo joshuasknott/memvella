@@ -1,21 +1,24 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import {
-  requireFamilySpaceMembership,
+  getSeniorProfileByMode,
+  requireCircleMembership,
   upsertAssistedSeniorProfile,
   upsertIndependentSeniorProfile,
-} from "./familySpaceAuth";
+} from "./circleAuth";
 import { createPersonRecord } from "./people";
 import { normalizeOptionalText } from "./security";
 import { buildCircleName } from "./terminology";
-import { patchCircleFromFamilySpace } from "./circleCompat";
 
 export const processOnboardingAction = internalMutation({
   args: {
     actionPayload: v.any(),
   },
   handler: async (ctx, args) => {
-    const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
     const payload = args.actionPayload as Record<string, unknown>;
     const action = payload.action as string | undefined;
 
@@ -46,27 +49,24 @@ export const processOnboardingAction = internalMutation({
 
         if (seniorDisplayName) {
           const seniorProfile =
-            incomingRole === "independent_senior"
+            incomingRole === "independent"
               ? await upsertIndependentSeniorProfile(ctx, {
-                  familySpaceId: membership.familySpaceId,
+                  circleId: membership.circleId,
                   displayName: seniorDisplayName,
                 })
               : await upsertAssistedSeniorProfile(ctx, {
-                  familySpaceId: membership.familySpaceId,
+                  circleId: membership.circleId,
                   displayName: seniorDisplayName,
                 });
 
           if (seniorProfile) {
             await ctx.db.patch(membership._id, {
               seniorProfileId:
-                incomingRole === "independent_senior"
+                incomingRole === "independent"
                   ? seniorProfile._id
                   : membership.seniorProfileId,
             });
-            await ctx.db.patch(membership.familySpaceId, {
-              displayName: buildCircleName(seniorDisplayName),
-            });
-            await patchCircleFromFamilySpace(ctx, membership.familySpaceId, {
+            await ctx.db.patch(membership.circleId, {
               displayName: buildCircleName(seniorDisplayName),
             });
           }
@@ -90,10 +90,19 @@ export const processOnboardingAction = internalMutation({
           );
         }
 
+        const seniorProfile =
+          (membership.seniorProfileId
+            ? await ctx.db.get(membership.seniorProfileId)
+            : null) ??
+          (await getSeniorProfileByMode(ctx, membership.circleId, "assisted")) ??
+          (await getSeniorProfileByMode(ctx, membership.circleId, "independent"));
+        if (!seniorProfile) {
+          throw new Error("No senior profile is linked to this Circle.");
+        }
+
         await createPersonRecord(ctx, {
-          familySpaceId: membership.familySpaceId,
-          seniorProfileId: membership.seniorProfileId,
-          membershipId: membership._id,
+          seniorProfileId: seniorProfile._id,
+          circleMembershipId: circleMembership?._id ?? null,
           name,
           relationship,
           isLiving: true,

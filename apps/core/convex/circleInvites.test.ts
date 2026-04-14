@@ -3,22 +3,20 @@ import type { Doc, Id } from "./_generated/dataModel";
 import {
   evaluateRedeemMemberships,
   getInviteLookupMessage,
-  shouldWriteLegacyInviteForCanonicalInviteGeneration,
-} from "./familyInvites";
+} from "./circleInvites";
 
 let membershipCounter = 0;
 
 function makeMembership(
-  overrides: Partial<Doc<"familySpaceMemberships">> = {},
-): Doc<"familySpaceMemberships"> {
+  overrides: Partial<Doc<"circleMemberships">> = {},
+): Doc<"circleMemberships"> {
   membershipCounter += 1;
   return {
     _id:
       overrides._id ??
-      (`membership-${membershipCounter}` as Id<"familySpaceMemberships">),
+      (`membership-${membershipCounter}` as Id<"circleMemberships">),
     _creationTime: overrides._creationTime ?? membershipCounter,
-    familySpaceId:
-      overrides.familySpaceId ?? (`family-default` as Id<"familySpaces">),
+    circleId: overrides.circleId ?? ("circle-default" as Id<"circles">),
     authIdentityToken: overrides.authIdentityToken ?? "token-1",
     authEmail: overrides.authEmail ?? null,
     displayName: overrides.displayName ?? "Member",
@@ -29,7 +27,7 @@ function makeMembership(
   };
 }
 
-describe("family invite messaging", () => {
+describe("circle invite messaging", () => {
   it("returns deterministic preview and redeem messages for every terminal invite state", () => {
     expect(getInviteLookupMessage("invalid_code", "preview")).toBe(
       "We couldn't find that Circle. Please double-check the code and try again.",
@@ -57,27 +55,24 @@ describe("family invite messaging", () => {
     );
   });
 
-  it("keeps canonical-first compatibility gates disabled", () => {
-    expect(shouldWriteLegacyInviteForCanonicalInviteGeneration()).toBe(false);
-  });
 });
 
-describe("family invite membership evaluation", () => {
-  const targetFamilySpaceId = "family-target" as Id<"familySpaces">;
-  const otherFamilySpaceId = "family-other" as Id<"familySpaces">;
+describe("circle invite membership evaluation", () => {
+  const targetCircleId = "circle-target" as Id<"circles">;
+  const otherCircleId = "circle-other" as Id<"circles">;
 
   it("returns eligible for a first-time account (happy path)", () => {
-    const result = evaluateRedeemMemberships([], targetFamilySpaceId);
+    const result = evaluateRedeemMemberships([], targetCircleId);
     expect(result).toEqual({ status: "eligible" });
   });
 
   it("returns already_joined when identity is already in the target Circle", () => {
     const membership = makeMembership({
-      familySpaceId: targetFamilySpaceId,
+      circleId: targetCircleId,
       role: "organiser",
     });
 
-    const result = evaluateRedeemMemberships([membership], targetFamilySpaceId);
+    const result = evaluateRedeemMemberships([membership], targetCircleId);
     expect(result.status).toBe("already_joined");
     if (result.status === "already_joined") {
       expect(result.membership._id).toBe(membership._id);
@@ -87,21 +82,21 @@ describe("family invite membership evaluation", () => {
 
   it("deterministically selects one target membership when duplicates exist", () => {
     const newerMembership = makeMembership({
-      _id: "membership-z" as Id<"familySpaceMemberships">,
+      _id: "membership-z" as Id<"circleMemberships">,
       _creationTime: 100,
-      familySpaceId: targetFamilySpaceId,
+      circleId: targetCircleId,
       role: "member",
     });
     const preferredMembership = makeMembership({
-      _id: "membership-a" as Id<"familySpaceMemberships">,
+      _id: "membership-a" as Id<"circleMemberships">,
       _creationTime: 100,
-      familySpaceId: targetFamilySpaceId,
+      circleId: targetCircleId,
       role: "member",
     });
 
     const result = evaluateRedeemMemberships(
       [newerMembership, preferredMembership],
-      targetFamilySpaceId,
+      targetCircleId,
     );
     expect(result.status).toBe("already_joined");
     if (result.status === "already_joined") {
@@ -109,45 +104,32 @@ describe("family invite membership evaluation", () => {
     }
   });
 
-  it("returns role_collision for independent identities", () => {
-    const independentMembership = makeMembership({
-      familySpaceId: otherFamilySpaceId,
-      role: "independent_senior",
-    });
-
-    const result = evaluateRedeemMemberships(
-      [independentMembership],
-      targetFamilySpaceId,
-    );
-    expect(result.status).toBe("role_collision");
-  });
-
   it("returns circle_conflict for family-side identities in another Circle", () => {
     const otherCircleMembership = makeMembership({
-      familySpaceId: otherFamilySpaceId,
+      circleId: otherCircleId,
       role: "member",
     });
 
     const result = evaluateRedeemMemberships(
       [otherCircleMembership],
-      targetFamilySpaceId,
+      targetCircleId,
     );
     expect(result.status).toBe("circle_conflict");
   });
 
-  it("prioritizes already_joined over other collision states", () => {
+  it("prioritizes already_joined over circle_conflict", () => {
     const targetMembership = makeMembership({
-      familySpaceId: targetFamilySpaceId,
+      circleId: targetCircleId,
       role: "member",
     });
-    const independentMembership = makeMembership({
-      familySpaceId: otherFamilySpaceId,
-      role: "independent_senior",
+    const otherMembership = makeMembership({
+      circleId: otherCircleId,
+      role: "organiser",
     });
 
     const result = evaluateRedeemMemberships(
-      [independentMembership, targetMembership],
-      targetFamilySpaceId,
+      [otherMembership, targetMembership],
+      targetCircleId,
     );
     expect(result.status).toBe("already_joined");
   });

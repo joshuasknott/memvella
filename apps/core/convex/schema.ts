@@ -2,78 +2,35 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  familySpaces: defineTable({
-    displayName: v.optional(v.string()),
-    timezone: v.optional(v.string()),
-    locale: v.optional(v.string()),
-    // Deprecated compatibility field kept until a data migration removes legacy docs.
-    primarySupporterAuthUserId: v.optional(v.string()),
-  }).index("by_primarySupporterAuthUserId", ["primarySupporterAuthUserId"]),
-
   circles: defineTable({
-    legacyFamilySpaceId: v.union(v.id("familySpaces"), v.null()),
     displayName: v.optional(v.string()),
     timezone: v.optional(v.string()),
     locale: v.optional(v.string()),
-  }).index("by_legacyFamilySpaceId", ["legacyFamilySpaceId"]),
-
-  familySpaceMemberships: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    authIdentityToken: v.string(),
-    authEmail: v.union(v.string(), v.null()),
-    displayName: v.string(),
-    role: v.union(
-      v.literal("organiser"),
-      v.literal("member"),
-      v.literal("independent_senior"),
-    ),
-    seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
-    onboardingStep: v.optional(v.number()),
-    lastSeenAt: v.optional(v.number()),
-  })
-    .index("by_authIdentityToken", ["authIdentityToken"])
-    .index("by_role", ["role"])
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_familySpaceId_and_authIdentityToken", [
-      "familySpaceId",
-      "authIdentityToken",
-    ])
-    .index("by_familySpaceId_and_role", ["familySpaceId", "role"])
-    .index("by_familySpaceId_and_role_and_seniorProfileId", [
-      "familySpaceId",
-      "role",
-      "seniorProfileId",
-    ])
-    .index("by_seniorProfileId", ["seniorProfileId"]),
+  }),
 
   circleMemberships: defineTable({
     circleId: v.id("circles"),
-    legacyFamilySpaceMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
     authIdentityToken: v.string(),
     authEmail: v.union(v.string(), v.null()),
     displayName: v.string(),
-    role: v.union(
-      v.literal("organiser"),
-      v.literal("member"),
-      v.literal("independent_senior"),
-    ),
+    role: v.union(v.literal("organiser"), v.literal("member")),
     seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
     onboardingStep: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
   })
     .index("by_circleId", ["circleId"])
     .index("by_authIdentityToken", ["authIdentityToken"])
+    .index("by_circleId_and_authIdentityToken", ["circleId", "authIdentityToken"])
     .index("by_circleId_and_role", ["circleId", "role"])
     .index("by_circleId_and_role_and_seniorProfileId", [
       "circleId",
       "role",
       "seniorProfileId",
     ])
-    .index("by_seniorProfileId", ["seniorProfileId"])
-    .index("by_legacyFamilySpaceMembershipId", ["legacyFamilySpaceMembershipId"]),
+    .index("by_seniorProfileId", ["seniorProfileId"]),
 
   seniorProfiles: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     displayName: v.string(),
     seniorMode: v.union(v.literal("assisted"), v.literal("independent")),
     accessStatus: v.union(
@@ -86,13 +43,12 @@ export default defineSchema({
     locale: v.union(v.string(), v.null()),
     lastSessionAt: v.optional(v.number()),
   })
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_familySpaceId_and_seniorMode", ["familySpaceId", "seniorMode"]),
+    .index("by_circleId", ["circleId"])
+    .index("by_circleId_and_seniorMode", ["circleId", "seniorMode"]),
 
   independentOnboardingSessions: defineTable({
-    familySpaceId: v.id("familySpaces"),
     seniorProfileId: v.id("seniorProfiles"),
-    membershipId: v.id("familySpaceMemberships"),
+    sourceCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     tokenHash: v.string(),
     expiresAt: v.number(),
     consumedAt: v.union(v.number(), v.null()),
@@ -102,9 +58,9 @@ export default defineSchema({
     .index("by_seniorProfileId", ["seniorProfileId"]),
 
   assistedDevicePins: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.id("circles"),
     seniorProfileId: v.id("seniorProfiles"),
-    createdByMembershipId: v.id("familySpaceMemberships"),
+    createdByCircleMembershipId: v.id("circleMemberships"),
     pinHash: v.string(),
     expiresAt: v.number(),
     consumedAt: v.union(v.number(), v.null()),
@@ -113,26 +69,11 @@ export default defineSchema({
     maxAttempts: v.number(),
   })
     .index("by_pinHash", ["pinHash"])
-    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_circleId", ["circleId"])
     .index("by_seniorProfileId", ["seniorProfileId"]),
-
-  familyInvites: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    createdByMembershipId: v.id("familySpaceMemberships"),
-    role: v.literal("member"),
-    inviteCodeHash: v.string(),
-    expiresAt: v.number(),
-    consumedAt: v.union(v.number(), v.null()),
-    revokedAt: v.union(v.number(), v.null()),
-    redeemedByAuthIdentityToken: v.union(v.string(), v.null()),
-    redeemedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
-  })
-    .index("by_inviteCodeHash", ["inviteCodeHash"])
-    .index("by_familySpaceId_and_role", ["familySpaceId", "role"]),
 
   circleInviteCodes: defineTable({
     circleId: v.id("circles"),
-    legacyFamilyInviteId: v.union(v.id("familyInvites"), v.null()),
     createdByCircleMembershipId: v.id("circleMemberships"),
     role: v.literal("member"),
     inviteCodeHash: v.string(),
@@ -143,11 +84,10 @@ export default defineSchema({
     redeemedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
   })
     .index("by_inviteCodeHash", ["inviteCodeHash"])
-    .index("by_circleId_and_role", ["circleId", "role"])
-    .index("by_legacyFamilyInviteId", ["legacyFamilyInviteId"]),
+    .index("by_circleId_and_role", ["circleId", "role"]),
 
   seniorAccessSessions: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     sessionType: v.union(
       v.literal("assisted_device"),
@@ -162,19 +102,19 @@ export default defineSchema({
     revokedAt: v.union(v.number(), v.null()),
     revokedReason: v.union(v.string(), v.null()),
     sourcePinId: v.union(v.id("assistedDevicePins"), v.null()),
-    sourceMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    sourceCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     sourcePasskeyId: v.union(v.id("independentSeniorPasskeys"), v.null()),
   })
     .index("by_sessionTokenHash", ["sessionTokenHash"])
     .index("by_seniorProfileId", ["seniorProfileId"])
-    .index("by_familySpaceId", ["familySpaceId"])
+    .index("by_circleId", ["circleId"])
     .index("by_seniorProfileId_and_sessionType", [
       "seniorProfileId",
       "sessionType",
     ]),
 
   independentSeniorPasskeys: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     credentialId: v.string(),
     credentialPublicKey: v.string(),
@@ -189,12 +129,12 @@ export default defineSchema({
     .index("by_seniorProfileId", ["seniorProfileId"]),
 
   independentSeniorRecoveryCodes: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     codeHash: v.string(),
     codeSuffix: v.string(),
     createdAt: v.number(),
-    createdByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     createdBySource: v.union(v.literal("independent"), v.literal("organiser")),
     consumedAt: v.union(v.number(), v.null()),
     revokedAt: v.union(v.number(), v.null()),
@@ -215,28 +155,27 @@ export default defineSchema({
     .index("by_challenge", ["challenge"])
     .index("by_seniorProfileId_and_purpose", ["seniorProfileId", "purpose"]),
 
-  // Legacy content tables stay permissive during the widen phase so older rows
-  // can coexist while new writes are anchored to FamilySpace ids.
   people: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    seniorProfileId: v.union(v.id("seniorProfiles"), v.null()),
+    seniorProfileId: v.id("seniorProfiles"),
     name: v.string(),
     relationship: v.string(),
     isLiving: v.boolean(),
     aiContext: v.string(),
     photoStorageId: v.optional(v.id("_storage")),
-    createdByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
-    updatedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
+    updatedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     lastEditedAt: v.number(),
   })
-    .index("by_familySpaceId", ["familySpaceId"])
     .index("by_seniorProfileId", ["seniorProfileId"])
-    .index("by_familySpaceId_and_lastEditedAt", ["familySpaceId", "lastEditedAt"]),
+    .index("by_seniorProfileId_and_lastEditedAt", [
+      "seniorProfileId",
+      "lastEditedAt",
+    ]),
 
   routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
   routineSchedules: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
     title: v.string(),
     aiInstructions: v.union(v.string(), v.null()),
     daysOfWeek: v.array(v.number()),
@@ -247,19 +186,19 @@ export default defineSchema({
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
     status: v.union(v.literal("active"), v.literal("paused")),
-    createdByMembershipId: v.id("familySpaceMemberships"),
-    updatedByMembershipId: v.id("familySpaceMemberships"),
+    createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
+    updatedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     lastEditedAt: v.number(),
   })
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_familySpaceId_and_status", ["familySpaceId", "status"])
-    .index("by_familySpaceId_and_lastEditedAt", [
-      "familySpaceId",
+    .index("by_seniorProfileId", ["seniorProfileId"])
+    .index("by_seniorProfileId_and_status", ["seniorProfileId", "status"])
+    .index("by_seniorProfileId_and_lastEditedAt", [
+      "seniorProfileId",
       "lastEditedAt",
     ]),
 
   routineOccurrences: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
     routineScheduleId: v.id("routineSchedules"),
     occurrenceDateKey: v.string(),
     startTimeMinutes: v.number(),
@@ -274,8 +213,8 @@ export default defineSchema({
     ),
   })
     .index("by_routineScheduleId", ["routineScheduleId"])
-    .index("by_familySpaceId_status_occurrenceDateKey_startTimeMinutes", [
-      "familySpaceId",
+    .index("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", [
+      "seniorProfileId",
       "status",
       "occurrenceDateKey",
       "startTimeMinutes",
@@ -287,7 +226,6 @@ export default defineSchema({
     ]),
 
   routineCheckIns: defineTable({
-    familySpaceId: v.id("familySpaces"),
     seniorProfileId: v.id("seniorProfiles"),
     routineOccurrenceId: v.id("routineOccurrences"),
     routineScheduleId: v.id("routineSchedules"),
@@ -321,7 +259,7 @@ export default defineSchema({
     .index("by_familySpaceId_and_mediaType", ["familySpaceId", "mediaType"]),
 
   memoryRecords: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
     recordType: v.union(
       v.literal("text"),
       v.literal("media"),
@@ -333,22 +271,22 @@ export default defineSchema({
     transcript: v.union(v.string(), v.null()),
     memoryDate: v.union(v.string(), v.null()),
     externalUrl: v.union(v.string(), v.null()),
-    createdByMembershipId: v.id("familySpaceMemberships"),
-    updatedByMembershipId: v.id("familySpaceMemberships"),
+    createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
+    updatedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     lastEditedAt: v.number(),
   })
-    .index("by_familySpaceId_and_lastEditedAt", [
-      "familySpaceId",
+    .index("by_seniorProfileId_and_lastEditedAt", [
+      "seniorProfileId",
       "lastEditedAt",
     ])
-    .index("by_familySpaceId_and_recordType_and_lastEditedAt", [
-      "familySpaceId",
+    .index("by_seniorProfileId_and_recordType_and_lastEditedAt", [
+      "seniorProfileId",
       "recordType",
       "lastEditedAt",
     ]),
 
   memoryAssets: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    seniorProfileId: v.id("seniorProfiles"),
     memoryRecordId: v.id("memoryRecords"),
     assetType: v.union(
       v.literal("image"),
@@ -362,30 +300,30 @@ export default defineSchema({
     sortOrder: v.number(),
   })
     .index("by_memoryRecordId_and_sortOrder", ["memoryRecordId", "sortOrder"])
-    .index("by_familySpaceId", ["familySpaceId"]),
+    .index("by_seniorProfileId", ["seniorProfileId"]),
 
   notificationSettings: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.id("circles"),
     dailySummary: v.boolean(),
     urgentAlerts: v.boolean(),
     routineReminders: v.boolean(),
     dailySummaryTimeMinutes: v.number(),
-    updatedByMembershipId: v.id("familySpaceMemberships"),
+    updatedByCircleMembershipId: v.id("circleMemberships"),
     updatedAt: v.number(),
   })
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_dailySummary_and_familySpaceId", [
+    .index("by_circleId", ["circleId"])
+    .index("by_dailySummary_and_circleId", [
       "dailySummary",
-      "familySpaceId",
+      "circleId",
     ])
-    .index("by_routineReminders_and_familySpaceId", [
+    .index("by_routineReminders_and_circleId", [
       "routineReminders",
-      "familySpaceId",
+      "circleId",
     ]),
 
   pushSubscriptions: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    membershipId: v.id("familySpaceMemberships"),
+    circleId: v.id("circles"),
+    circleMembershipId: v.id("circleMemberships"),
     endpoint: v.string(),
     expirationTime: v.union(v.number(), v.null()),
     p256dh: v.string(),
@@ -407,14 +345,14 @@ export default defineSchema({
     revokedAt: v.union(v.number(), v.null()),
     revokedReason: v.union(v.string(), v.null()),
   })
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_membershipId", ["membershipId"])
+    .index("by_circleId", ["circleId"])
+    .index("by_circleMembershipId", ["circleMembershipId"])
     .index("by_endpoint", ["endpoint"])
-    .index("by_familySpaceId_and_revokedAt", ["familySpaceId", "revokedAt"]),
+    .index("by_circleId_and_revokedAt", ["circleId", "revokedAt"]),
 
   notificationDeliveries: defineTable({
-    familySpaceId: v.id("familySpaces"),
-    membershipId: v.id("familySpaceMemberships"),
+    circleId: v.id("circles"),
+    circleMembershipId: v.id("circleMemberships"),
     pushSubscriptionId: v.id("pushSubscriptions"),
     notificationType: v.union(
       v.literal("routine_reminder"),
@@ -443,8 +381,8 @@ export default defineSchema({
   })
     .index("by_dedupeKey", ["dedupeKey"])
     .index("by_status_and_scheduledFor", ["status", "scheduledFor"])
-    .index("by_familySpaceId_and_status_and_scheduledFor", [
-      "familySpaceId",
+    .index("by_circleId_and_status_and_scheduledFor", [
+      "circleId",
       "status",
       "scheduledFor",
     ]),
@@ -471,7 +409,7 @@ export default defineSchema({
   }).index("by_scopeKey_and_actionKey", ["scopeKey", "actionKey"]),
 
   voiceInteractions: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     sessionType: v.union(
       v.literal("assisted_device"),
@@ -513,9 +451,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
-    .index("by_familySpaceId_and_aiInsightStatus_and_createdAt", [
-      "familySpaceId",
+    .index("by_circleId_and_createdAt", ["circleId", "createdAt"])
+    .index("by_circleId_and_aiInsightStatus_and_createdAt", [
+      "circleId",
       "aiInsightStatus",
       "createdAt",
     ])
@@ -526,7 +464,7 @@ export default defineSchema({
     .index("by_seniorProfileId_and_createdAt", ["seniorProfileId", "createdAt"]),
 
   insights: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     sourceVoiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
     sourceType: v.union(
@@ -551,18 +489,18 @@ export default defineSchema({
     ),
     createdAt: v.number(),
     reviewedAt: v.union(v.number(), v.null()),
-    reviewedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    reviewedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
   })
-    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
-    .index("by_familySpaceId_and_status_and_createdAt", [
-      "familySpaceId",
+    .index("by_circleId_and_createdAt", ["circleId", "createdAt"])
+    .index("by_circleId_and_status_and_createdAt", [
+      "circleId",
       "status",
       "createdAt",
     ])
     .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"]),
 
   alerts: defineTable({
-    familySpaceId: v.id("familySpaces"),
+    circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
     sourceVoiceInteractionId: v.union(v.id("voiceInteractions"), v.null()),
     sourceType: v.union(
@@ -586,11 +524,11 @@ export default defineSchema({
     ),
     createdAt: v.number(),
     reviewedAt: v.union(v.number(), v.null()),
-    reviewedByMembershipId: v.union(v.id("familySpaceMemberships"), v.null()),
+    reviewedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
   })
-    .index("by_familySpaceId_and_createdAt", ["familySpaceId", "createdAt"])
-    .index("by_familySpaceId_and_status_and_createdAt", [
-      "familySpaceId",
+    .index("by_circleId_and_createdAt", ["circleId", "createdAt"])
+    .index("by_circleId_and_status_and_createdAt", [
+      "circleId",
       "status",
       "createdAt",
     ])

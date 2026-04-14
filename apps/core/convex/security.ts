@@ -131,7 +131,7 @@ export async function hashAssistedPin(pinCode: string) {
   return createNamespacedHmac("assisted-pin", pinCode);
 }
 
-export async function hashFamilyInviteCode(inviteCode: string) {
+export async function hashCircleInviteCode(inviteCode: string) {
   return createNamespacedHmac("family-invite", inviteCode);
 }
 

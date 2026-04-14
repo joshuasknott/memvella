@@ -9,7 +9,7 @@ import { internalAction, type ActionCtx } from "./_generated/server";
 type ActivePushSubscription = {
   circleId: Id<"circles"> | null;
   pushSubscriptionId: Id<"pushSubscriptions">;
-  membershipId: Id<"familySpaceMemberships">;
+  circleMembershipId: Id<"circleMemberships">;
   endpoint: string;
   expirationTime: number | null;
   p256dh: string;
@@ -56,12 +56,11 @@ function getDeliveryErrorMessage(error: unknown) {
 async function getActiveSubscriptionsForFamilySpace(
   ctx: ActionCtx,
   args: {
-    familySpaceId: Id<"familySpaces">;
-    circleId: Id<"circles"> | null;
+    circleId: Id<"circles">;
   },
   cache: Map<string, ActivePushSubscription[]>,
 ) {
-  const cacheKey = args.circleId ?? args.familySpaceId;
+  const cacheKey = args.circleId;
   const cached = cache.get(cacheKey);
   if (cached) {
     return cached;
@@ -69,7 +68,7 @@ async function getActiveSubscriptionsForFamilySpace(
 
   const subscriptions = (await ctx.runQuery(
     internal.notifications.listActivePushSubscriptions,
-    { familySpaceId: args.familySpaceId },
+    { circleId: args.circleId },
   )) as ActivePushSubscription[];
   cache.set(cacheKey, subscriptions);
   return subscriptions;
@@ -157,8 +156,7 @@ export const sweepRoutineReminderNotifications = internalAction({
       {},
     )) as Array<{
       occurrenceId: Id<"routineOccurrences">;
-      circleId: Id<"circles"> | null;
-      familySpaceId: Id<"familySpaces">;
+      circleId: Id<"circles">;
       title: string;
       timeLabel: string;
       scheduledFor: number;
@@ -172,7 +170,6 @@ export const sweepRoutineReminderNotifications = internalAction({
       const subscriptions = await getActiveSubscriptionsForFamilySpace(
         ctx,
         {
-          familySpaceId: candidate.familySpaceId,
           circleId: candidate.circleId,
         },
         subscriptionsByCircleId,
@@ -182,8 +179,8 @@ export const sweepRoutineReminderNotifications = internalAction({
         const result = await ctx.runMutation(
           internal.notifications.enqueueNotificationDelivery,
           {
-            familySpaceId: candidate.familySpaceId,
-            membershipId: subscription.membershipId,
+            circleId: candidate.circleId,
+            circleMembershipId: subscription.circleMembershipId,
             pushSubscriptionId: subscription.pushSubscriptionId,
             notificationType: "routine_reminder",
             dedupeKey: `${subscription.pushSubscriptionId}:routine:${candidate.occurrenceId}`,
@@ -217,8 +214,7 @@ export const sweepDailySummaryNotifications = internalAction({
       internal.notifications.listDailySummaryCandidates,
       {},
     )) as Array<{
-      circleId: Id<"circles"> | null;
-      familySpaceId: Id<"familySpaces">;
+      circleId: Id<"circles">;
       summaryDateKey: string;
       scheduledFor: number;
     }>;
@@ -231,13 +227,12 @@ export const sweepDailySummaryNotifications = internalAction({
         getActiveSubscriptionsForFamilySpace(
           ctx,
           {
-            familySpaceId: candidate.familySpaceId,
             circleId: candidate.circleId,
           },
           subscriptionsByCircleId,
         ),
         ctx.runQuery(internal.notifications.getDailySummaryDigestPayload, {
-          familySpaceId: candidate.familySpaceId,
+          circleId: candidate.circleId,
         }),
       ]);
 
@@ -245,8 +240,8 @@ export const sweepDailySummaryNotifications = internalAction({
         const result = await ctx.runMutation(
           internal.notifications.enqueueNotificationDelivery,
           {
-            familySpaceId: candidate.familySpaceId,
-            membershipId: subscription.membershipId,
+            circleId: candidate.circleId,
+            circleMembershipId: subscription.circleMembershipId,
             pushSubscriptionId: subscription.pushSubscriptionId,
             notificationType: "daily_summary",
             dedupeKey: `${subscription.pushSubscriptionId}:daily:${candidate.summaryDateKey}`,
@@ -289,8 +284,8 @@ export const dispatchUrgentAlertNotification = internalAction({
       const result = await ctx.runMutation(
         internal.notifications.enqueueNotificationDelivery,
         {
-          familySpaceId: plan.familySpaceId,
-          membershipId: subscription.membershipId,
+          circleId: plan.circleId,
+          circleMembershipId: subscription.circleMembershipId,
           pushSubscriptionId: subscription.pushSubscriptionId,
           notificationType: "urgent_alert",
           dedupeKey: `${subscription.pushSubscriptionId}:urgent:${args.alertId}`,

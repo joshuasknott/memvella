@@ -9,7 +9,8 @@ import {
   normalizeRecoveryCode,
 } from "./independentAccess";
 
-const familySpaceId = "family-1" as Id<"familySpaces">;
+const circleId = "circle-1" as Id<"circles">;
+const sourceCircleMembershipId = "circle-membership-1" as Id<"circleMemberships">;
 const seniorProfileId = "senior-1" as Id<"seniorProfiles">;
 
 function makeOnboardingSession(
@@ -18,9 +19,8 @@ function makeOnboardingSession(
   return {
     _id: (overrides._id ?? "onboarding-1") as Id<"independentOnboardingSessions">,
     _creationTime: overrides._creationTime ?? 1,
-    familySpaceId,
     seniorProfileId,
-    membershipId: "membership-1" as Id<"familySpaceMemberships">,
+    sourceCircleMembershipId,
     tokenHash: overrides.tokenHash ?? "token-hash",
     expiresAt: overrides.expiresAt ?? 1_000,
     consumedAt: overrides.consumedAt ?? null,
@@ -53,10 +53,10 @@ describe("independent recovery helpers", () => {
     expect(
       evaluateIndependentPasskeyOwnership({
         existingPasskey: {
-          familySpaceId: "family-2" as Id<"familySpaces">,
+          circleId: "circle-2" as Id<"circles">,
           seniorProfileId,
         },
-        familySpaceId,
+        circleId,
         seniorProfileId,
       }),
     ).toEqual({
@@ -69,17 +69,17 @@ describe("independent recovery helpers", () => {
     expect(
       evaluateIndependentPasskeyOwnership({
         existingPasskey: {
-          familySpaceId,
+          circleId,
           seniorProfileId,
         },
-        familySpaceId,
+        circleId,
         seniorProfileId,
       }),
     ).toEqual({ status: "update" });
     expect(
       evaluateIndependentPasskeyOwnership({
         existingPasskey: null,
-        familySpaceId,
+        circleId,
         seniorProfileId,
       }),
     ).toEqual({ status: "create" });
