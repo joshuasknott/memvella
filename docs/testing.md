@@ -2,9 +2,9 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-12
+Last reviewed: 2026-04-14
 Owners: engineering
-Read when: changing onboarding, auth, permissions, senior sessions, transitions, or marketing conversion flows
+Read when: changing onboarding, auth, permissions, senior sessions, voice flows, or notifications
 Depends on: docs/auth-and-identity.md, docs/env.md
 
 ## Preflight
@@ -30,67 +30,90 @@ Current gate:
 
 ## Release Principle
 
-Before any early user rollout, the core product must be treated as the priority verification surface.
+Before any rollout, the core product is the priority verification surface.
 
 - deterministic automated coverage comes first
-- browser-agent exploratory testing comes after deterministic coverage, not instead of it
-- marketing verification is secondary until the core product is stable
+- exploratory browser testing comes after deterministic coverage, not instead of it
+- origin-sensitive auth and cross-device pairing still require manual smoke coverage
 
 ## Manual Smoke Tests
 
-### Organiser Account
+### Root Entry And Organiser Setup
 
-- create a new organiser account
-- sign out and sign back in
-- confirm the Circle workspace resolves a Circle membership
-- confirm memories, people, routines, alerts, insights, and settings still load
+- open `/` and confirm the four entry actions are present
+- create a new organiser account from `/onboarding/organiser`
+- confirm the new account lands in `/circle`
+- sign out and sign back in through `/organiser/signin`
+- confirm the Circle workspace resolves a Circle membership and settings load
 
 ### Member Join Flow
 
-- enter a valid invite code from `/onboarding/member`
+- enter a valid invite code at `/onboarding/member`
 - confirm the target Circle name is shown before auth
 - create or sign in to a family-side account without re-entering the code
-- confirm the account lands in the Circle workspace
+- confirm the account lands in `/circle`
 - confirm organiser-only settings remain unavailable to the Member account
 - confirm the Member can create, edit, and delete memories
-- confirm the Member can view people and routines without gaining management controls
+- confirm the Member can view routines and Circle members without gaining organiser controls
+
+### Circle Home, Insights, And Settings
+
+- verify `/circle` loads `Current Status`, quick actions, and `Today's Updates`
+- verify `/circle/insights` loads the combined organiser queue for alerts and insights
+- verify reviewing or dismissing an item updates the queue
+- verify `/circle/settings/account` loads the current profile and session information
+- verify `/circle/settings/members` lists current Circle participants
+
+Current shipped scope note:
+
+- there is no dedicated Activity page to smoke test yet
+- there is no separate Alerts page; test the combined `/circle/insights` queue instead
+
+### Memories
+
+- verify `/circle/memories` loads the memory library
+- verify each add flow still works: text, media, audio, and voice
+- verify memory detail and edit pages still load
+- verify organiser and member memory CRUD still works
+
+### Routines
+
+- verify `/circle/routines` loads the current schedule list and today's timeline
+- verify `/circle/add-routine` can create a routine that appears in the list
+- verify assisted routine check-ins still prompt and resolve through the live voice flow
+
+### People
+
+- verify `/circle/add-person` still saves a person for the current Circle context
+
+Current shipped scope note:
+
+- the People UI is still limited to add-person; there is no dedicated people list, edit, or delete surface to smoke test yet
+
+### Notifications
+
+- verify `/circle/settings/notifications` loads for an Organiser
+- if web push keys are configured, verify browser subscription can be enabled and disabled
+- verify notification toggles save correctly
+- verify active organiser device subscriptions appear in the settings page
 
 ### Tablet User
 
-- generate a pairing code from the Organiser side
-- pair a tablet or browser session through the assisted login screen
-- verify the assisted dashboard loads and the session survives a refresh
+- generate a pairing code from `/circle/settings/pairing`
+- pair a tablet or browser session through `/assisted/login`
+- verify `/assisted` loads and the session survives a refresh
 - verify an expired or revoked session falls back to reconnect messaging
-- verify the dashboard remains low-friction and does not expose browsing-heavy flows
+- verify the assisted dashboard remains low-friction and does not expose family-side navigation
 
 ### Independent User
 
-- complete first-run onboarding
+- complete first-run onboarding at `/onboarding/independent`
 - verify passkey creation succeeds on a compatible browser
-- verify onboarding lands in the independent experience without requiring a Circle
+- verify onboarding lands in `/independent` without requiring a Circle
 - verify recovery codes can be created and are shown once
 - verify repeat sign-in works with the device passkey
-- verify the recovery flow can add a fresh passkey on a new device
-
-### Alerts, Insights, And Activity
-
-- verify urgent events surface as organiser-facing alerts
-- verify non-urgent summaries surface as insights
-- verify the Circle activity feed shows meaningful family-side and senior-side events without turning into a raw transcript log
-- verify evidence snippets, where shown, are selective and relevant
-
-### Routines And Notifications
-
-- verify `/circle/routines` loads the current schedule list without errors
-- verify `/circle/add-routine` can still create a routine that appears in the Circle schedule
-- verify assisted routine check-ins still prompt and resolve through the live voice flow
-- verify `/circle/settings/notifications` loads for an Organiser and saves notification toggle changes
-
-### Transition Flows
-
-- verify an Independent User can be prepared for transition into assisted or Circle-linked mode
-- verify the transition flow can offer migrate versus start-fresh behavior when implemented
-- verify no transition silently changes ownership, permissions, or senior data shape
+- verify `/independent/security` can add or revoke trusted devices and rotate recovery codes
+- verify `/independent/recover` can redeem a recovery code and set up a fresh passkey
 
 ### Cross-Device And Origin
 
@@ -98,34 +121,8 @@ Before any early user rollout, the core product must be treated as the priority 
 - test the intended phone or tablet origin explicitly
 - if testing from a different host fails with `invalid origin`, treat that as an auth configuration issue, not as a data issue
 
-### Marketing
-
-- verify `/`, `/privacy`, `/terms`, and `/contact` all render
-- verify the homepage waitlist form submits successfully and repeat submissions dedupe cleanly
-
-## Required Automated Coverage Direction
-
-The codebase should grow deterministic coverage around:
-
-- organiser and member permission boundaries
-- invite flows
-- pairing flows
-- senior sessions
-- independent onboarding and recovery
-- routines and routine history
-- memory CRUD and memory relationships
-- alerts, insights, and activity generation
-- independent-to-assisted transition flows
-
-## Exploratory Testing Guidance
-
-- Browser agents are useful for exploratory and cross-device regression testing.
-- Use them to find UX and integration issues after the deterministic checks are in place.
-- Do not rely on browser-agent output as the only release gate for auth-sensitive or senior-sensitive flows.
-
 ## Current Testing Gaps
 
-- There is not yet an end-to-end browser test suite for the full onboarding and permissions matrix.
+- There is not yet an end-to-end browser test suite for the onboarding and permissions matrix.
 - There is not yet a `convex-test` transaction-level suite that seeds auth identities and exercises public Convex functions end-to-end.
-- Manual smoke coverage is still required for origin-sensitive auth, cross-device pairing, and real push-delivery integrations.
-- Marketing automation is intentionally lower priority until the core product is stable.
+- Manual smoke coverage is still required for origin-sensitive auth, cross-device pairing, real push-delivery integrations, and senior voice flows.

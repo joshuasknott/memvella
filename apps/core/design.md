@@ -2,14 +2,14 @@
 
 Status: canonical
 Scope: apps/core
-Last reviewed: 2026-04-04
+Last reviewed: 2026-04-14
 Owners: product, engineering
 Read when: touching product UI, layouts, or interaction design in `apps/core`
 Depends on: docs/product.md, docs/terminology.md
 
 ## Core Principle
 
-The product app should feel calm, legible, and operationally clear. Family-side surfaces may be denser than senior surfaces, but every experience should still feel deliberate and low-friction.
+The product app should feel calm, legible, and operationally clear. Family-side surfaces can be denser than senior surfaces, but every experience should still feel deliberate and low-friction.
 
 ## Shared Rules
 
@@ -26,7 +26,7 @@ The product app should feel calm, legible, and operationally clear. Family-side 
 - Secondary action: strong blue when a distinct secondary control is needed
 - Typography: highly legible sans-serif with generous line height
 
-## Organiser And Member Experience
+## Circle Experience
 
 Target user:
 
@@ -34,12 +34,22 @@ Target user:
 - high context, low patience
 - wants speed, clear status, and reversible actions
 
+Current shell facts:
+
+- `/circle` uses a fixed top header and fixed bottom navigation
+- top-level nav items are `Home`, `Routines`, `Memories`, and `Settings`
+- `Insights` is reached from the home screen, not from the bottom nav
+- `People` is currently reached through the `Add Person` action, not through a dedicated tab or directory
+- there is no shipped `Activity` or `Alerts` tab
+
 Rules:
 
 - Mobile layouts should feel app-like rather than stretched desktop pages.
 - Put setup context before credential entry during onboarding.
 - Dense cards and lists are acceptable if hierarchy is clear.
 - Destructive actions must be explicit and easy to back out of.
+- Do not imply a full People management surface where only add-person exists.
+- Do not imply separate alerts and insights destinations when the current UI uses one combined organiser queue.
 
 ## Root Onboarding Entry Screen
 
@@ -53,7 +63,7 @@ Required structure:
 - `Start a New Circle`
 - `Join a Circle`
 - Visual separation between primary and secondary actions through spacing or a subtle divider
-- Secondary action group using outlined or lighter treatment:
+- Secondary action group using lighter treatment:
 - `Connect a Tablet`
 - `Set Up My Own Profile`
 
@@ -88,7 +98,7 @@ Rules:
 - Keep the experience passwordless.
 - Use a device passkey as the primary auth method.
 - Copy should work for face, fingerprint, or device screen lock without Apple-only wording.
-- Offer recovery codes clearly after passkey setup.
+- Offer recovery codes clearly after passkey setup and inside security or recovery flows.
 - Voice should remain the preferred creation path for memories and routines.
 - AI-extracted actions must present explicit confirmation and rejection states.
 

@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-14
 Owners: engineering
 Read when: touching routing, backend integration, schema design, or repo structure
 Depends on: docs/product.md, docs/data-model.md
@@ -17,97 +17,133 @@ Depends on: docs/product.md, docs/data-model.md
 
 - `apps/core/app`: App Router routes, layouts, and API routes
 - `apps/core/components`: shared UI and experience-specific components
-- `apps/core/lib`: frontend helpers, auth glue, device fingerprinting, push helpers
+- `apps/core/lib`: frontend helpers, auth glue, device fingerprinting, push helpers, and senior session helpers
 - `apps/core/convex`: schema, queries, mutations, actions, HTTP router, and auth integration
 
 ## Routing Model
 
-### Core Product Routes
+### Family-Side Routes
 
 - `/`: role-selection entry point
-- `/circle`: shared family-side workspace for Organisers and Members
 - `/onboarding/organiser`: organiser account creation
-- `/organiser/signin`: organiser sign-in
-- `/onboarding/member`: member join flow
-- `/assisted/login`: Tablet User pairing and assisted session bootstrap
-- `/assisted`: Tablet User experience
-- `/onboarding/independent`: Independent User onboarding
-- `/independent`: Independent User experience
+- `/organiser/signin`: family-side sign-in page currently used for organiser sign-in
+- `/onboarding/member`: member invite-code preview, sign-up, sign-in, and join flow
+- `/circle`: shared family-side home
+- `/circle/routines`
+- `/circle/add-routine`
+- `/circle/memories`
+- `/circle/memories/[memoryId]`
+- `/circle/memories/[memoryId]/edit`
+- `/circle/add-memory`
+- `/circle/add-memory/text`
+- `/circle/add-memory/media`
+- `/circle/add-memory/audio`
+- `/circle/add-memory/voice`
+- `/circle/add-person`
+- `/circle/insights`
+- `/circle/settings`
+- `/circle/settings/account`
+- `/circle/settings/members`
+- `/circle/settings/invite`
+- `/circle/settings/notifications`
+- `/circle/settings/pairing`
 
-Rules:
+Current route facts:
 
-- `/circle` is the canonical family-side workspace route.
-- Organiser and Member entry flows may differ, but they converge into `/circle`.
-- Legacy `/supporter` and `/admin` routes are migration debt and should be removed.
+- `/circle` is the canonical family-side workspace.
+- Organisers and Members share the same `/circle` shell.
+- There is no dedicated `/circle/activity` route.
+- There is no separate `/circle/alerts` route.
 
-### Marketing Routes
+### Senior Routes
 
-- `/`: single-page homepage
-- `/privacy`: privacy policy
-- `/terms`: terms of service
-- `/contact`: contact page
+- `/assisted/login`: tablet pairing flow
+- `/assisted`: assisted tablet dashboard
+- `/onboarding/independent`: independent onboarding
+- `/onboarding/independent/verify`: redirect shim back to `/onboarding/independent`
+- `/independent`: independent home
+- `/independent/security`: trusted-device and recovery-code management
+- `/independent/recover`: recovery-code sign-in and passkey reset
 
-Rules:
+### Product API Routes
 
-- Marketing is single-page-first.
-- Separate marketing subpages should exist only when they have a real information architecture reason.
-- Waitlist submission belongs to the homepage flow, even if the backend may expose a dedicated API route.
+- `/api/auth/[...all]`: Better Auth handler exposed through Next.js
+- `/api/member-invite/preview`: preview a 6-digit member invite code before auth
+- `/api/assisted/pairing`: redeem a 6-digit tablet pairing code
+- `/api/device/fingerprint`: device fingerprint helper
+- `/api/independent/onboarding/start`: bootstrap independent onboarding
+- `/api/independent/passkey/register/options`
+- `/api/independent/passkey/register/verify`
+- `/api/independent/passkey/authenticate/options`
+- `/api/independent/passkey/authenticate/verify`
+- `/api/independent/recovery-codes/redeem`
+- `/api/voice/live/token`: live voice token route
 
 ## Runtime Architecture
 
 ### Frontend
 
 - Next.js 16 App Router powers both apps.
-- `apps/core/app/providers.tsx` wires the Convex client and Better Auth provider integration.
-- `apps/marketing` posts waitlist submissions through a server route to the Convex backend.
+- `apps/core/app/providers.tsx` wires `ConvexBetterAuthProvider` with the shared Convex client and Better Auth client.
+- The family-side shell lives under `apps/core/app/circle/layout.tsx` with `CircleHeader` and `CircleBottomNav`.
+- The bottom nav currently exposes `Home`, `Routines`, `Memories`, and `Settings` only.
 
 ### Backend
 
 - Convex is the system of record for product data and backend logic.
 - Better Auth routes are registered into the Convex HTTP router in `apps/core/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
+- Convex functions implement family-side auth, member invites, assisted sessions, independent passkeys and recovery, routines, memories, notifications, and live voice.
 
 ## Auth Architecture
 
 - Better Auth handles authenticated family-side account sessions for Circle participants.
-- Convex-managed senior sessions handle Tablet User and Independent User device access.
+- Convex-managed `seniorAccessSessions` handle assisted tablet access and independent senior web access.
 - Independent auth is standalone and must not assume an existing Circle membership.
 
 ## Data Architecture
 
 ### Circle-Scoped Data
 
-Circle-scoped data exists to coordinate human participants and Circle-level settings.
+Circle-scoped data coordinates human participants and Circle-level settings.
 
-Examples:
+Current tables:
 
-- circles
-- circle memberships
-- invite codes
-- Circle settings
-- push subscriptions
-- notification delivery state
-- Circle activity visibility
+- `circles`
+- `circleMemberships`
+- `circleInviteCodes`
+- `notificationSettings`
+- `pushSubscriptions`
+- `notificationDeliveries`
 
 ### Senior-Scoped Data
 
-Senior-scoped data exists to represent the senior's world, not the Circle's admin surface.
+Senior-scoped data represents the senior's world rather than the Circle's admin surface.
 
-Examples:
+Current tables:
 
-- senior profiles
-- people used for grounding and memory context
-- memories and memory assets
-- routines and routine history
-- voice interactions
-- insights
-- alerts
+- `seniorProfiles`
+- `people`
+- `memoryRecords`
+- `memoryAssets`
+- `routineSchedules`
+- `routineOccurrences`
+- `routineCheckIns`
+- `voiceInteractions`
+- `insights`
+- `alerts`
+
+Current omissions and deferred work:
+
+- there is no shipped `activityEvents` table yet
+- there is no dedicated activity route yet
+- alerts exist as their own table, but the UI reviews alerts and insights together inside `/circle/insights`
 
 Rules:
 
 - Senior-facing content should anchor on `seniorProfileId`.
 - Circle-facing coordination data should anchor on `circleId`.
-- When a senior is linked to a Circle, Circle visibility derives from that senior's Circle relationship.
+- When a senior is linked to a Circle, family-side visibility derives from that Circle relationship.
 - Independent seniors remain valid without a Circle.
 
 ## Documentation Rules
@@ -128,10 +164,6 @@ These are not source material and should not be treated as product or architectu
 ## New Work Guidance
 
 - Update the relevant canonical doc when a contract changes.
-- Prefer the smallest change that moves the codebase toward the target `circle` model.
-- Do not preserve legacy route, schema, or module names once a clean replacement exists.
-- Do not rebuild retired caregiver-era or FamilySpace-era concepts through new code or docs.
-
-## Implementation Note
-
-The current implementation still contains legacy route aliases, module names, and schema surfaces. Those are temporary migration concerns, not the target architecture.
+- Prefer the smallest change that keeps the codebase on the canonical `circle` model.
+- Do not add new product behavior to legacy `familySpace` surfaces.
+- Do not reintroduce retired caregiver-era or `FamilySpace` terminology through code or docs.

@@ -2,12 +2,12 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-14
 Owners: engineering
-Read when: setting up local dev, auth, AI, or deployment
+Read when: setting up local dev, auth, AI, push, or deployment
 Depends on: docs/auth-and-identity.md
 
-## Local Example File
+## Local Example Files
 
 The local examples live at:
 
@@ -18,20 +18,21 @@ The local examples live at:
 
 | Variable | Required | Scope | Used by | Notes |
 | --- | --- | --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | yes | client and server | Better Auth callbacks, passkey origin | Must match the actual browser origin you use for auth flows |
-| `BETTER_AUTH_URL` | yes | server | Better Auth base URL | Usually the same value as `NEXT_PUBLIC_SITE_URL` |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | optional | server | Better Auth origin validation | Comma-separated list of extra trusted origins for staging or multi-origin setups |
-| `SITE_URL` | no | server | legacy fallback in auth helpers | Prefer `BETTER_AUTH_URL` instead |
-| `NEXT_PUBLIC_CONVEX_URL` | yes | client and server | Convex React client and HTTP client | Convex deployment URL |
-| `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | Better Auth and Convex Next.js bridge | Convex site URL |
+| `NEXT_PUBLIC_SITE_URL` | yes | client and server | Better Auth callbacks, passkey origin | Must match the actual browser origin used for auth flows |
+| `BETTER_AUTH_URL` | yes | server and Convex | Better Auth base URL | Usually the same value as `NEXT_PUBLIC_SITE_URL` |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | optional | server and Convex | Better Auth origin validation | Comma-separated list of extra trusted origins |
+| `SITE_URL` | optional | server and Convex | legacy Better Auth fallback | Keep only as fallback while it still exists in code |
+| `CONVEX_DEPLOYMENT` | required for normal Convex CLI setup | local dev and deployment tooling | Convex CLI and production detection helpers | Present in `apps/core/.env.example` |
+| `NEXT_PUBLIC_CONVEX_URL` | yes | client and server | Convex React client, HTTP client, Better Auth bridge | Convex deployment URL |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | `convexBetterAuthNextJs` bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
-| `MEMVELLA_AUTH_PEPPER` | recommended in general, required in production when `BETTER_AUTH_SECRET` is not present | server and Convex | extra hashing/pepper helpers | Secret value |
-| `GEMINI_API_KEY` | required for AI features | server and Convex | live voice and AI actions | Needed for voice and insights paths |
-| `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default model when omitted |
-| `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push notification subscription flow | Needed for browser push |
+| `MEMVELLA_AUTH_PEPPER` | recommended, and required in production if `BETTER_AUTH_SECRET` is absent | server and Convex | hashing and token helpers | Secret value |
+| `GEMINI_API_KEY` | required for AI and live voice features | server and Convex | live voice token route, AI actions, insights pipeline | Needed for voice and AI paths |
+| `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default live model when omitted |
+| `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push subscription flow | If absent, organiser push setup is unavailable |
 | `MEMVELLA_WEB_PUSH_PRIVATE_KEY` | optional | Convex | push delivery worker | Secret value |
 | `MEMVELLA_WEB_PUSH_SUBJECT` | optional | Convex | push delivery worker | Usually a `mailto:` value |
-| `CONVEX_URL` | yes for marketing waitlist writes | server | marketing waitlist API route | `apps/marketing` server route uses this to submit waitlist entries |
+| `CONVEX_URL` | required only for the marketing waitlist server route | server | `apps/marketing` waitlist submission route | Marketing-only variable |
 
 ## Local Auth Rule
 
@@ -49,9 +50,13 @@ Security-sensitive hashing and signing helpers in both Convex and Next.js server
 
 1. `MEMVELLA_AUTH_PEPPER`
 2. `BETTER_AUTH_SECRET`
-3. local development fallback (non-production only)
+3. local development fallback in non-production only
 
 Production behavior is fail-closed:
 
-- if both `MEMVELLA_AUTH_PEPPER` and `BETTER_AUTH_SECRET` are missing, requests that need crypto helpers fail with a server error instead of silently using a weak default.
-- production detection includes `NODE_ENV=production` and Convex production deployments (for example `CONVEX_DEPLOYMENT=prod:...`).
+- if both `MEMVELLA_AUTH_PEPPER` and `BETTER_AUTH_SECRET` are missing, requests that need crypto helpers fail with a server error instead of silently using a weak default
+- production detection includes `NODE_ENV=production` and Convex production deployments such as `CONVEX_DEPLOYMENT=prod:...`
+
+## Push Configuration Note
+
+Push notifications are optional but the shipped organiser notifications page expects the public key to exist before browser subscription can be enabled. Without the push keys, the page still loads but reports that push alerts are not configured for the deployment.

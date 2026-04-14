@@ -1,11 +1,29 @@
 # Memvella
 
-Memvella is a PNPM/Turbo monorepo for a voice-first digital wellness companion.
+Memvella is a PNPM/Turbo monorepo for the shipped Memvella product and its marketing site.
 
 ## Workspace
 
-- `apps/core`: the product app. This includes the Organiser, Member, Tablet User, and Independent User experiences, the Next.js frontend, and the Convex backend.
+- `apps/core`: the product app. This contains the shared `/circle` family-side workspace, the assisted tablet flow, the independent senior flow, the Next.js frontend, and the Convex backend.
 - `apps/marketing`: the marketing and waitlist app.
+
+## Current Product Surface
+
+- `/`: role-selection entry screen
+- `/circle`: shared family-side workspace for Organisers and Members
+- `/circle/routines`: routine list and timeline
+- `/circle/memories`: memory library, detail, edit, and add flows
+- `/circle/insights`: combined organiser review queue for alerts and insights
+- `/circle/settings`: account, members, invite codes, notifications, and tablet pairing
+- `/assisted/login` and `/assisted`: paired tablet experience
+- `/onboarding/independent`, `/independent`, `/independent/security`, `/independent/recover`: independent senior flow
+
+Current deferred gaps:
+
+- there is no dedicated Activity route yet; `/circle` shows current status and a routines-focused timeline instead
+- there is no separate Alerts page yet; alerts are reviewed inside `/circle/insights`
+- People is currently a limited add-person surface, not a full directory
+- there is no end-to-end browser suite yet
 
 ## Stack
 
@@ -49,12 +67,12 @@ Read these files in order when you need product or implementation context:
 3. `docs/architecture.md`
 4. `docs/auth-and-identity.md`
 5. `docs/data-model.md`
-6. `docs/legacy-removal.md` when working on renames, migrations, or compatibility cleanup
+6. `docs/legacy-removal.md`
 7. `docs/env.md`
 8. `docs/testing.md`
 9. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
 
-The root `docs/` files describe the target product and architecture contracts. During migrations, implementation may temporarily lag those contracts, but new work should move toward them rather than preserving legacy names or structures.
+The root `docs/` files are expected to describe the current shipped product and architecture. If implementation changes a contract, update the relevant canonical doc in the same change.
 
 ## Repo Rules
 

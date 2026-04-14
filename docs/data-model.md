@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-11
+Last reviewed: 2026-04-14
 Owners: engineering
 Read when: touching schema, queries, mutations, migrations, onboarding, or role boundaries
 Depends on: docs/architecture.md, docs/auth-and-identity.md
@@ -11,15 +11,13 @@ Depends on: docs/architecture.md, docs/auth-and-identity.md
 
 New work should be built on the `circle` model, not the retired `familySpace` model.
 
-For the concrete rename map and rollout order that gets the codebase there, read `docs/legacy-removal.md`.
-
 Primary entities:
 
 - `circles`: top-level shared workspace for family-side coordination
 - `circleMemberships`: authenticated human participants in a Circle, with role `organiser` or `member`
 - `seniorProfiles`: canonical senior identity records for both assisted and independent experiences
 
-## Canonical Table Families
+## Current Table Families
 
 ### Identity And Access
 
@@ -46,9 +44,8 @@ Primary entities:
 - `routineOccurrences`
 - `routineCheckIns`
 
-### Awareness, Alerts, And Operations
+### Awareness And Operations
 
-- `activityEvents`
 - `insights`
 - `alerts`
 - `notificationSettings`
@@ -58,37 +55,82 @@ Primary entities:
 - `voiceInteractions`
 - `waitlistEntries`
 
+Current omission:
+
+- there is no shipped `activityEvents` table yet
+
+## Key Invariants
+
+### Circles And Memberships
+
+- `circleMemberships.role` is `organiser` or `member` only.
+- `circleMemberships` are keyed to Better Auth identities through `authIdentityToken`.
+- `circleMemberships.seniorProfileId` can point at the senior profile most relevant to that participant.
+
+### Senior Profiles
+
+- `seniorProfiles.seniorMode` is `assisted` or `independent`.
+- `seniorProfiles.circleId` may be `null` for standalone independent seniors.
+- `seniorProfiles.accessStatus` tracks whether access is pending, active, recovery-required, or revoked.
+
+### Invite And Session Records
+
+- `circleInviteCodes.role` is always `member`.
+- `seniorAccessSessions.sessionType` is `assisted_device` or `independent_web`.
+- `assistedDevicePins` and `circleInviteCodes` both store hashes rather than plaintext secrets.
+
+### Memory Records
+
+- `memoryRecords.recordType` is `text`, `media`, `audio`, or `voice`.
+- `memoryAssets.assetType` is `image`, `video`, or `audio`.
+- Memory content belongs to the senior profile first and records the creating or updating Circle membership when relevant.
+
+### Routine Records
+
+- `routineSchedules` hold the durable schedule definition.
+- `routineOccurrences` hold dated scheduled instances.
+- `routineCheckIns` hold assisted live routine prompt state and outcomes.
+
+### Awareness And Notifications
+
+- `insights` and `alerts` are separate tables.
+- Both tables use `status` of `queued`, `reviewed`, or `dismissed`.
+- `notificationSettings` are Circle-scoped.
+- `notificationDeliveries.notificationType` is `routine_reminder`, `urgent_alert`, or `daily_summary`.
+
 ## Entity Boundaries
 
 ### Circle Participants Versus People
 
-- `circleMemberships` represent actual human participants in a Circle.
+- `circleMemberships` represent actual authenticated participants in a Circle.
 - `people` represent senior-grounding people used for memories and companion grounding.
 - A `Person` is not automatically a Circle participant.
 - A Circle participant is not automatically a `Person` in the senior's grounding data.
 
 ### Circle-Scoped Data
 
-These tables should anchor on `circleId`:
+These tables anchor on `circleId`:
 
-- circles
-- circle memberships
-- invite codes
-- Circle settings
-- push subscriptions
-- notification deliveries
-- Circle activity visibility
+- `circles`
+- `circleMemberships`
+- `circleInviteCodes`
+- `notificationSettings`
+- `pushSubscriptions`
+- `notificationDeliveries`
 
 ### Senior-Scoped Data
 
-These tables should anchor on `seniorProfileId`:
+These tables anchor on `seniorProfileId`:
 
-- people
-- memory records and assets
-- routine schedules and occurrences
-- voice interactions
-- insights
-- alerts
+- `people`
+- `memoryRecords`
+- `memoryAssets`
+- `routineSchedules`
+- `routineOccurrences`
+- `routineCheckIns`
+- `voiceInteractions`
+- `insights`
+- `alerts`
 
 Rules:
 
@@ -96,34 +138,24 @@ Rules:
 - Circle-facing visibility is derived from the senior's Circle relationship when one exists.
 - Independent seniors remain valid without a Circle.
 
-## Senior Mode Rules
-
-- A `seniorProfile` may be assisted and linked to a Circle.
-- A `seniorProfile` may be independent and exist without a Circle.
-- An Independent User may later transition into assisted or Circle-linked mode.
-- That transition must support either data migration or a clean start.
-
 ## Locale And Time Rules
 
-- Circle-linked family-side experiences should use Circle-level default timezone and locale.
-- Independent senior profiles should carry whatever effective timezone and locale they need until linked to a Circle.
-- Do not introduce multiple competing locale layers unless there is a clear product need.
+- Circle-linked family-side experiences use Circle-level timezone and locale defaults where available.
+- Independent senior profiles can carry their own timezone and locale until linked to a Circle.
+- Do not introduce competing locale layers without a concrete product need.
 
-## Retired Surfaces
+## Remaining Legacy Surfaces
 
-These are legacy and should be migrated away from rather than extended:
+These still exist in the schema and should not receive net-new product work:
 
-- `familySpaces`
-- `familySpaceMemberships`
-- legacy `memories`
 - legacy `routines`
-- any `supporter` or `admin` compatibility field that only exists for old naming
+- legacy `memories`
 
-Rules:
+Current facts about those legacy tables:
 
-- Do not add net-new product features to retired tables or fields.
-- Use them only when explicitly doing migration or compatibility work.
-- Remove them once canonical data has been migrated.
+- they remain transitional compatibility tables in `apps/core/convex/schema.ts`
+- they still use `familySpaceId` index naming
+- the active product surfaces use `routineSchedules`, `routineOccurrences`, `routineCheckIns`, `memoryRecords`, and `memoryAssets` instead
 
 ## Authoring Rules
 
@@ -131,8 +163,4 @@ Rules:
 - Prefer explicit indexes over broad scans.
 - Document any breaking schema change before implementing it.
 - Use a widen-migrate-narrow rollout when existing data must move.
-- If removing a compatibility surface, pair the code change with a migration plan.
-
-## Implementation Note
-
-The current schema still contains legacy names and compatibility surfaces, but the live routine check-in surface now uses `routineCheckIns` and the retreat-specific name has been retired.
+- If removing a remaining compatibility surface, pair the code change with an update to `docs/legacy-removal.md`.

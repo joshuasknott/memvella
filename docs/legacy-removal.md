@@ -9,274 +9,110 @@ Depends on: docs/product.md, docs/terminology.md, docs/architecture.md, docs/aut
 
 ## Purpose
 
-This document defines the approved rename map and rollout order for removing legacy concepts from Memvella.
+This document records what cleanup has already landed, what legacy surfaces are still present, and what must not be extended.
 
-Use it when changing:
+## Post-Cleanup Runtime Status
 
-- route names
-- file and module names
-- schema table names
-- field names
-- compatibility tables and migration helpers
+These cleanup phases are complete in the shipped runtime:
 
-## Current Migration Status
-
-- Batch 1 route cleanup: largely complete. `app/supporter` runtime routes are gone, `/circle` owns the active family-side workspace, and `next.config.ts` no longer redirects `/supporter*` or `/admin*`.
-- Batch 2 role cleanup: complete on active auth paths. Organiser and Member are the only family-side roles used by current authorization logic.
-- Batch 3 circle table introduction: complete. Runtime auth, invites, and notification or voice helper resolution run on `circles`, `circleMemberships`, and `circleInviteCodes`.
-- Batch 4 people and awareness split: `people`, `alerts`, and `insights` now run on canonical tables only.
-- Batch 5 canonical field or helper rename cleanup: complete in runtime code for circle auth and invite surfaces.
-- Batch 6 retirement of compatibility surfaces: complete for Circle auth and invite compatibility. Legacy awareness and people compatibility tables are gone, and routine check-ins use `routineCheckIns`.
+- `/circle` owns the family-side workspace route tree
+- legacy `/supporter*` and `/admin*` runtime routes are gone
+- family-side participant roles are `organiser` and `member` only
+- active auth and invite flows use `circles`, `circleMemberships`, and `circleInviteCodes`
+- active invite APIs use `circleInvites`
+- active auth helpers use `circleAuth`
+- active awareness tables are `alerts` and `insights`
+- assisted routine check-ins use `routineCheckIns`
 
 ## Phase 8 Completion Snapshot
 
-Phase 8 legacy-removal cleanup is complete for Circle auth and invite compatibility surfaces.
+Phase 8 removed the main family-side compatibility layer.
 
 Completed changes:
 
-- deleted Convex compatibility modules:
-  - `apps/core/convex/circleCompat.ts`
-  - `apps/core/convex/circleMigrations.ts`
+- deleted `apps/core/convex/circleCompat.ts`
+- deleted `apps/core/convex/circleMigrations.ts`
 - replaced legacy auth and invite modules with canonical modules:
-  - `apps/core/convex/familySpaceAuth.ts` -> `apps/core/convex/circleAuth.ts`
-  - `apps/core/convex/familyInvites.ts` -> `apps/core/convex/circleInvites.ts`
-- removed `independent_senior` from Circle participant roles so only `organiser` and `member` remain
-- removed runtime `legacyFamily*` references and compatibility read or write paths from active Convex auth and invite flows
-- migrated frontend and route callsites from `api.familyInvites.*` to `api.circleInvites.*`
+- `apps/core/convex/familySpaceAuth.ts` -> `apps/core/convex/circleAuth.ts`
+- `apps/core/convex/familyInvites.ts` -> `apps/core/convex/circleInvites.ts`
+- removed `independent_senior` from Circle participant roles
+- removed active runtime `legacyFamily*` auth and invite paths
+- migrated frontend callsites from `api.familyInvites.*` to `api.circleInvites.*`
 
-Explicitly still legacy by design and out of this batch scope:
+## Current Remaining Legacy Surfaces
 
-- legacy `routines` and legacy `memories` transitional tables in `apps/core/convex/schema.ts` remain and still use `familySpaceId` index naming
+### Schema Debt
+
+These legacy tables still exist in `apps/core/convex/schema.ts` and should not receive new product work:
+
+- `routines`
+- `memories`
+
+Current facts:
+
+- both are transitional compatibility tables
+- both still use `familySpaceId` index naming
+- the shipped product uses `routineSchedules`, `routineOccurrences`, `routineCheckIns`, `memoryRecords`, and `memoryAssets` instead
+
+### Auth And Environment Compatibility
+
+- `SITE_URL` still exists as a fallback when Better Auth resolves its base URL
+
+### Internal Naming Leftovers
+
+- some internal auth helper code still uses `family_side` as a grouping label for organiser/member permissions
+- this is internal shorthand only and should not become a route, table, or user-facing term
+
+### Module Shape Still Deferred
+
+- `apps/core/convex/organiser.ts` still acts as a mixed family-side dashboard and settings module
+- splitting that file by domain is still deferred work, not completed cleanup
+
+### Activity Still Deferred
+
+- there is no shipped `activityEvents` table yet
+- there is no dedicated Activity route yet
+- the current `/circle` home timeline is routines-focused and should not be documented as a completed activity system
+
+## Removed Surfaces
+
+These legacy surfaces are already retired from the active runtime:
+
+- `supporter` routes
+- `admin` routes
+- `familySpaces`
+- `familySpaceMemberships`
+- `familyInvites`
+- `circleCompat.ts`
+- `circleMigrations.ts`
+- `familySpaceAuth.ts`
+- `familyInvites.ts`
+- `role: "independent_senior"`
+
+## Canonical Rename Map
+
+| Retired | Current |
+| --- | --- |
+| `familySpace` | `circle` |
+| `familySpaceMembership` | `circleMembership` |
+| `supporter` | `organiser` |
+| `familyMembers` | `people` |
+| `supporterInsights` | `alerts` and `insights` |
+| `routineRetreatCheckIns` | `routineCheckIns` |
 
 ## Non-Negotiables
 
 - No new work may be built on retired names.
-- The end state must contain no surviving `supporter`, `admin`, `FamilySpace`, or `familyMembers` concepts.
-- Schema and data changes must follow widen-migrate-narrow.
-- Temporary compatibility code is allowed only when it has a named rollout step and a removal step.
-- Generated files should only change as a consequence of source changes. Do not treat generated code as the migration plan.
-
-## Current Legacy Surfaces
-
-### Routes And File Structure
-
-- `apps/core/app/supporter/**/*` has already been removed from the runtime route tree.
-- `apps/core/app/circle/**/*` owns the active family-side workspace routes.
-- `apps/core/next.config.ts` no longer redirects `/admin*` or `/supporter*` routes.
-- `apps/core/app/onboarding/supporter/page.tsx` has already been removed.
-
-### Shared Family-Side Components And Helpers
-
-- The legacy route and shared hook renames for this batch have already landed.
-- Use canonical surfaces such as `apps/core/lib/use-circle-profile.ts` for new work.
-
-### Backend Modules
-
-No active runtime modules should import or reference:
-
-- `apps/core/convex/familySpaceAuth.ts`
-- `apps/core/convex/familyInvites.ts`
-- `apps/core/convex/circleCompat.ts`
-- `apps/core/convex/circleMigrations.ts`
-
-### Schema And Data Surfaces
-
-Legacy or retired tables and fields still present in `apps/core/convex/schema.ts`:
-
-- legacy `memories`
-- legacy `routines`
-
-Removed from schema in this phase:
-
-- `familySpaces`
-- `familySpaceMemberships`
-- `familyInvites`
-- `legacyFamilySpaceId`
-- `legacyFamilySpaceMembershipId`
-- `legacyFamilyInviteId`
-- `role: "independent_senior"`
-
-### Auth And Environment Compatibility
-
-- `SITE_URL` still exists as a fallback in auth helpers.
-
-### Tooling And Rewrite Safety
-
-- The legacy bulk terminology rewrite script has been removed. Blind global terminology rewrites are not an approved migration mechanism.
-
-## Approved Target Names
-
-### Routes
-
-| Current | Target | Notes |
-| --- | --- | --- |
-| `/supporter/*` | removed | Real implementation must live under `/circle/*` |
-| `/supporter/signin` | removed | Use `/organiser/signin` |
-| `/onboarding/supporter/*` | removed | Use `/onboarding/organiser/*` |
-| `/admin/*` | removed | Use `/organiser/*` for organiser-only entry or `/circle/*` for shared family-side workspace |
-| `/onboarding/admin/*` | removed | Use `/onboarding/organiser/*` |
-
-### Internal Names
-
-| Current | Target | Notes |
-| --- | --- | --- |
-| `familySpace` | `circle` | Applies to variables, helper names, file names, and table names |
-| `familySpaceMembership` | `circleMembership` | Applies everywhere |
-| `supporter` | `organiser` | Applies to roles, helpers, routes, and copy |
-| `familyMembers` | `people` | Senior-grounding people only, not Circle participants |
-| `supporterInsights` | `alerts` and `insights` | Split urgent versus non-urgent concepts |
-| `routineRetreatCheckIns` | `routineCheckIns` | Live schema and assisted routine flows now use the canonical name |
-
-### Backend Module Names
-
-| Current | Target | Notes |
-| --- | --- | --- |
-| `familySpaceAuth.ts` | `circleAuth.ts` | Circle membership auth helpers |
-| `familyInvites.ts` | `circleInvites.ts` | Invite generation, preview, redeem, revoke |
-| `familyMembershipMigrations.ts` | `circleMembershipMigrations.ts` | Membership-specific migration helpers |
-| `use-family-space-profile.ts` | `use-circle-profile.ts` | Shared family-side hook |
-| `OrganiserHeader.tsx` | `CircleHeader.tsx` | Shared family-side shell component |
-| `OrganiserBottomNav.tsx` | `CircleBottomNav.tsx` | Shared family-side shell component |
-
-### Modules That Must Be Split, Not Just Renamed
-
-- `apps/core/convex/organiser.ts` should not survive as a mixed bucket.
-- Its responsibilities should be split across Circle bootstrap or dashboard logic, people management, and existing domain modules such as memories, routines, notifications, and insights.
-- `supporterInsights` data should not simply be renamed in place. It must be split into separate `alerts` and `insights` concepts with distinct product behavior.
-
-## Approved Target Table Families
-
-### Circle-Scoped Tables
-
-- `circles`
-- `circleMemberships`
-- `circleInviteCodes`
-- `notificationSettings`
-- `pushSubscriptions`
-- `notificationDeliveries`
-
-### Senior-Scoped Tables
-
-- `seniorProfiles`
-- `people`
-- `memoryRecords`
-- `memoryAssets`
-- `routineSchedules`
-- `routineOccurrences`
-- `routineCheckIns`
-- `voiceInteractions`
-- `activityEvents`
-- `alerts`
-- `insights`
-
-## Rollout Order
-
-### Batch 1: Route And File Ownership Cleanup
-
-- Move the real family-side implementation from `app/supporter` into `app/circle`.
-- Rename shared family-side hooks and components away from organiser-specific or FamilySpace-specific names.
-- Keep temporary redirects only while the move is landing.
-- Remove `/supporter` and `/admin` redirects once the canonical routes are stable.
-
-This batch should not change persisted data.
-
-### Batch 2: Role And Membership Cleanup
-
-- Backfill every `supporter` membership to `organiser`.
-- Remove `supporter` from the allowed family-side role set.
-- Normalize auth helpers so family-side roles are only `organiser` and `member`.
-- Support multiple organisers explicitly in the authorization model.
-
-This batch may patch existing rows but should not yet rename tables.
-
-### Batch 3: Circle Table Introduction
-
-Because Convex table names cannot be renamed in place, every table rename is a create-copy-switch-delete migration.
-
-Introduce new canonical tables:
-
-- `circles`
-- `circleMemberships`
-- `circleInviteCodes`
-
-Rollout rules:
-
-- Introduce and verify canonical tables and indexes.
-- Move reads and writes fully to canonical tables.
-- Remove old compatibility tables and helpers once migration completeness is proven.
-
-### Batch 4: Senior-Grounding And Awareness Split
-
-Introduce new canonical senior-scoped tables:
-
-- `people`
-- `activityEvents`
-- `alerts`
-- `insights`
-
-Rollout rules:
-
-- Move senior-grounding writes off `familyMembers` and onto `people`.
-- Add memory-to-person relationships where the source data supports them.
-- Move urgent actionable events into `alerts`.
-- Move non-urgent tracking and summaries into `insights`.
-- Build `activityEvents` as the canonical source for the Circle activity feed.
-
-### Batch 5: Canonical Field Renames
-
-After new tables are in use, clean up the remaining field naming:
-
-- Runtime auth and invite helper naming cleanup is complete.
-- Remaining schema-level `familySpaceId` naming is limited to legacy `routines` and `memories` transitional tables.
-
-This batch should be done only after the table migrations are stable, otherwise field renames multiply the migration surface.
-
-### Batch 6: Retire Compatibility Surfaces
-
-Remove once the canonical replacements are fully live:
-
-- `circleCompat.ts`
-- `circleMigrations.ts`
-- legacy auth or invite compatibility modules and generated API surfaces that referenced them
-
-Still pending in later cleanup:
-
-- legacy `memories`
-- legacy `routines`
-
-## Migration Mechanics
-
-### Default Strategy
-
-Use widen-migrate-narrow for every breaking schema or data-model change.
-
-### Table Rename Strategy
-
-For Convex table renames:
-
-1. add the new table
-2. dual-read or dual-write where needed
-3. backfill old rows into the new table
-4. verify completeness
-5. switch reads and writes fully to the new table
-6. remove the old table
-
-### Migration Tooling
-
-- Use the existing `@convex-dev/migrations` component in `apps/core/convex/migrations.ts` for non-trivial backfills.
-- Use dry runs before production writes when possible.
-- Add a verification query for each migration that can prove the old surface is empty or no longer referenced.
-
-## Verification Gates
-
-Do not narrow or delete a legacy surface until all of the following are true:
-
-- all new writes land on the canonical surface
-- all reads prefer the canonical surface
-- migration status shows no remaining unmigrated rows
-- there is a verification query or equivalent proof for the relevant table or field
-- the app can complete the relevant auth or product smoke flow without touching the old path
-
-## Implementation Note
-
-This document is the approved migration contract for later phases. If a later code change needs a different rename, table split, or rollout order, update this document first.
+- Do not add product features to legacy `routines` or `memories` tables.
+- Schema and data changes must still follow widen-migrate-narrow when persisted data moves.
+- Generated files should change only as a consequence of source changes.
+- Blind bulk-rewrite scripts are not an approved migration mechanism.
+
+## Verification Rule For Remaining Cleanup
+
+Do not delete a remaining legacy surface until all of the following are true:
+
+- all reads and writes are on the canonical surface
+- there is proof that the legacy surface is no longer needed
+- the relevant auth or product smoke flows complete without touching the legacy path
+- the matching canonical docs stay accurate after the change
