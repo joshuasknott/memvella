@@ -91,17 +91,16 @@ function buildSoftCheckInInstruction(
 export default function AssistedHomePage() {
   const now = useLiveClock();
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
-  const [activeCheckInId, setActiveCheckInId] =
-    useState<Id<"routineRetreatCheckIns"> | null>(null);
+  const [activeCheckInId, setActiveCheckInId] = useState<Id<"routineCheckIns"> | null>(null);
   const { dashboard, deviceFingerprint, sessionState, clearSession } =
     useSeniorDashboardSession("assisted");
   const logAssistedLiveTurn = useMutation(api.liveVoice.logAssistedLiveTurn);
-  const markRetreatCheckInPrompted = useMutation(
-    api.routines.markRetreatCheckInPrompted,
+  const markRoutineCheckInPrompted = useMutation(
+    api.routines.markRoutineCheckInPrompted,
   );
-  const resolveRetreatCheckIn = useMutation(api.routines.resolveRetreatCheckIn);
-  const readyRetreatCheckIns = useQuery(
-    api.routines.listReadyRetreatCheckIns,
+  const resolveRoutineCheckIn = useMutation(api.routines.resolveRoutineCheckIn);
+  const readyRoutineCheckIns = useQuery(
+    api.routines.listReadyRoutineCheckIns,
     sessionState?.sessionToken && deviceFingerprint
       ? {
           sessionToken: sessionState.sessionToken,
@@ -130,7 +129,7 @@ export default function AssistedHomePage() {
       }
 
       if (turn.kind === "soft_check_in_prompt") {
-        await markRetreatCheckInPrompted({
+        await markRoutineCheckInPrompted({
           sessionToken: sessionState.sessionToken,
           deviceFingerprint,
           checkInId: turn.checkInId,
@@ -151,7 +150,7 @@ export default function AssistedHomePage() {
       });
 
       if (turn.kind === "soft_check_in_response") {
-        await resolveRetreatCheckIn({
+        await resolveRoutineCheckIn({
           sessionToken: sessionState.sessionToken,
           deviceFingerprint,
           checkInId: turn.checkInId,
@@ -167,7 +166,7 @@ export default function AssistedHomePage() {
         return;
       }
 
-      await resolveRetreatCheckIn({
+      await resolveRoutineCheckIn({
         sessionToken: sessionState.sessionToken,
         deviceFingerprint,
         checkInId,
@@ -186,7 +185,7 @@ export default function AssistedHomePage() {
   const closeVoiceModal = () => {
     stopSpeaking();
     if (activeCheckInId && sessionState?.sessionToken && deviceFingerprint) {
-      void resolveRetreatCheckIn({
+      void resolveRoutineCheckIn({
         sessionToken: sessionState.sessionToken,
         deviceFingerprint,
         checkInId: activeCheckInId,
@@ -201,14 +200,14 @@ export default function AssistedHomePage() {
 
   useEffect(() => {
     if (
-      !readyRetreatCheckIns?.length ||
+      !readyRoutineCheckIns?.length ||
       !dashboard ||
       dashboard.status !== "active"
     ) {
       return;
     }
 
-    const nextCheckIn = readyRetreatCheckIns[0];
+    const nextCheckIn = readyRoutineCheckIns[0];
     if (!nextCheckIn || activeCheckInId) {
       return;
     }
@@ -244,7 +243,7 @@ export default function AssistedHomePage() {
     dashboard,
     isConnecting,
     isVoiceModalOpen,
-    readyRetreatCheckIns,
+    readyRoutineCheckIns,
     sendSoftCheckIn,
   ]);
 

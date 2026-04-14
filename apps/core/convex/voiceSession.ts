@@ -9,9 +9,9 @@ import {
   normalizeDaysOfWeek,
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
-  resolveFamilySpaceTimeZone,
+  resolveCircleTimeZone,
 } from "./routineHelpers";
-import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
+import { scheduleRoutineCheckIns } from "./routineCheckInScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
 import { formatInvalidSessionMessage } from "./terminology";
@@ -134,7 +134,7 @@ export const confirmIndependentVoiceDraft = mutation({
       throw new Error("A routine needs either a date or one or more days.");
     }
 
-    const timezone = await resolveFamilySpaceTimeZone(
+    const timezone = await resolveCircleTimeZone(
       ctx,
       validation.familySpace._id,
     );
@@ -161,7 +161,7 @@ export const confirmIndependentVoiceDraft = mutation({
     }
 
     const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
-    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
+    await scheduleRoutineCheckIns(ctx, createdOccurrences);
 
     await ctx.db.patch(interaction._id, {
       draftTitle: title,

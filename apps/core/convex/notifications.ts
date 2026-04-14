@@ -698,7 +698,6 @@ export const enqueueNotificationDelivery = internalMutation({
     payloadTag: v.union(v.string(), v.null()),
     routineOccurrenceId: v.optional(v.id("routineOccurrences")),
     alertId: v.optional(v.id("alerts")),
-    canonicalInsightId: v.optional(v.id("insights")),
     summaryDateKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -726,7 +725,6 @@ export const enqueueNotificationDelivery = internalMutation({
       payloadTag: args.payloadTag,
       routineOccurrenceId: args.routineOccurrenceId ?? null,
       alertId: args.alertId ?? null,
-      canonicalInsightId: args.canonicalInsightId ?? null,
       summaryDateKey: args.summaryDateKey ?? null,
       status: "queued",
       createdAt: now,

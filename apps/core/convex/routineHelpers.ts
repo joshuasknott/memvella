@@ -251,13 +251,6 @@ export async function resolveCircleTimeZone(
   return details.timeZone;
 }
 
-export async function resolveFamilySpaceTimeZone(
-  ctx: DbCtx,
-  familySpaceId: Id<"familySpaces">,
-) {
-  return await resolveCircleTimeZone(ctx, familySpaceId);
-}
-
 export async function replaceRoutineOccurrences(
   ctx: MutationCtx,
   schedule: Doc<"routineSchedules">,
@@ -371,13 +364,6 @@ export async function listTodayTimelineForCircle(
     .filter((item): item is RoutineTimelineItem => item !== null);
 }
 
-export async function listTodayTimelineForFamilySpace(
-  ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
-) {
-  return await listTodayTimelineForCircle(ctx, familySpaceId);
-}
-
 export async function getNextRoutineEventForCircle(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
@@ -431,13 +417,6 @@ export async function getNextRoutineEventForCircle(
   return null;
 }
 
-export async function getNextRoutineEventForFamilySpace(
-  ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
-) {
-  return await getNextRoutineEventForCircle(ctx, familySpaceId);
-}
-
 export async function listRoutineSchedulesForCircle(
   ctx: QueryCtx,
   familySpaceId: Id<"familySpaces">,
@@ -465,12 +444,4 @@ export async function listRoutineSchedulesForCircle(
     endDate: schedule.endDate ?? null,
     lastEditedAt: schedule.lastEditedAt,
   }));
-}
-
-export async function listRoutineSchedulesForFamilySpace(
-  ctx: QueryCtx,
-  familySpaceId: Id<"familySpaces">,
-  limit = 100,
-) {
-  return await listRoutineSchedulesForCircle(ctx, familySpaceId, limit);
 }

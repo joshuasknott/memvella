@@ -17,8 +17,8 @@ import {
 } from "./security";
 import { revokeSeniorSessionsForProfile } from "./seniorAccessHelpers";
 import {
-  getNextRoutineEventForFamilySpace,
-  listTodayTimelineForFamilySpace,
+  getNextRoutineEventForCircle,
+  listTodayTimelineForCircle,
 } from "./routineHelpers";
 import {
   buildCircleName,
@@ -254,7 +254,7 @@ export const getTodayTimeline = query({
       return [];
     }
 
-    return await listTodayTimelineForFamilySpace(
+    return await listTodayTimelineForCircle(
       ctx,
       familyContext.membership.familySpaceId,
     );
@@ -280,7 +280,7 @@ export const getOrganiserDashboardSummary = query({
           query.eq("familySpaceId", familyContext.membership.familySpaceId),
         )
         .take(200),
-      getNextRoutineEventForFamilySpace(
+      getNextRoutineEventForCircle(
         ctx,
         familyContext.membership.familySpaceId,
       ),

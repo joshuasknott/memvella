@@ -22,13 +22,13 @@ type CompletedLiveTurn =
       kind: "soft_check_in_prompt";
       transcript: string;
       reply: string;
-      checkInId: Id<"routineRetreatCheckIns">;
+      checkInId: Id<"routineCheckIns">;
     }
   | {
       kind: "soft_check_in_response";
       transcript: string;
       reply: string;
-      checkInId: Id<"routineRetreatCheckIns">;
+      checkInId: Id<"routineCheckIns">;
     };
 
 type LiveVoiceOptions = {
@@ -36,15 +36,13 @@ type LiveVoiceOptions = {
   deviceFingerprint: string | null | undefined;
   isActive: boolean;
   onTurnComplete?: (turn: CompletedLiveTurn) => Promise<void> | void;
-  onSoftCheckInTimeout?: (
-    checkInId: Id<"routineRetreatCheckIns">,
-  ) => Promise<void> | void;
+  onSoftCheckInTimeout?: (checkInId: Id<"routineCheckIns">) => Promise<void> | void;
 };
 
 type PendingTurnContext =
   | { kind: "conversation"; checkInId: null }
-  | { kind: "soft_check_in_prompt"; checkInId: Id<"routineRetreatCheckIns"> }
-  | { kind: "soft_check_in_response"; checkInId: Id<"routineRetreatCheckIns"> };
+  | { kind: "soft_check_in_prompt"; checkInId: Id<"routineCheckIns"> }
+  | { kind: "soft_check_in_response"; checkInId: Id<"routineCheckIns"> };
 
 const CHECK_IN_RESPONSE_TIMEOUT_MS = 30 * 1000;
 
@@ -124,7 +122,7 @@ export function useAssistedLiveVoice({
   const assistantTextBufferRef = useRef("");
   const transcriptBufferRef = useRef("");
   const currentTurnRef = useRef<PendingTurnContext | null>(null);
-  const pendingCheckInIdRef = useRef<Id<"routineRetreatCheckIns"> | null>(null);
+  const pendingCheckInIdRef = useRef<Id<"routineCheckIns"> | null>(null);
   const checkInTimeoutRef = useRef<number | null>(null);
 
   async function stopMicrophone() {
@@ -155,7 +153,7 @@ export function useAssistedLiveVoice({
     }
   }
 
-  function beginCheckInTimeout(checkInId: Id<"routineRetreatCheckIns">) {
+  function beginCheckInTimeout(checkInId: Id<"routineCheckIns">) {
     clearCheckInTimeout();
     pendingCheckInIdRef.current = checkInId;
     checkInTimeoutRef.current = window.setTimeout(() => {
@@ -420,7 +418,7 @@ export function useAssistedLiveVoice({
 
   function sendSoftCheckIn(
     promptInstruction: string,
-    checkInId: Id<"routineRetreatCheckIns">,
+    checkInId: Id<"routineCheckIns">,
   ) {
     if (!sessionRef.current) {
       return false;

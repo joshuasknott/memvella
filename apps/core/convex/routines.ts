@@ -8,13 +8,13 @@ import {
 import {
   describeRoutineDays,
   formatTimeLabel,
-  listRoutineSchedulesForFamilySpace,
+  listRoutineSchedulesForCircle,
   normalizeDateKey,
   normalizeDaysOfWeek,
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
 } from "./routineHelpers";
-import { scheduleRoutineRetreatCheckIns } from "./routineRetreatScheduler";
+import { scheduleRoutineCheckIns } from "./routineCheckInScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
 import { normalizeOptionalText } from "./security";
 import { patchCircleFromFamilySpace } from "./circleCompat";
@@ -74,7 +74,7 @@ export const createRoutineSchedule = mutation({
     }
 
     const createdOccurrences = await replaceRoutineOccurrences(ctx, schedule);
-    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
+    await scheduleRoutineCheckIns(ctx, createdOccurrences);
     return routineScheduleId;
   },
 });
@@ -83,7 +83,7 @@ export const listRoutineSchedules = query({
   args: {},
   handler: async (ctx) => {
     const { membership } = await requireFamilySpaceMembership(ctx, "family_side");
-    return await listRoutineSchedulesForFamilySpace(ctx, membership.familySpaceId);
+    return await listRoutineSchedulesForCircle(ctx, membership.familySpaceId);
   },
 });
 
@@ -175,7 +175,7 @@ export const updateRoutineSchedule = mutation({
     }
 
     const createdOccurrences = await replaceRoutineOccurrences(ctx, updatedSchedule);
-    await scheduleRoutineRetreatCheckIns(ctx, createdOccurrences);
+    await scheduleRoutineCheckIns(ctx, createdOccurrences);
     return schedule._id;
   },
 });
@@ -207,7 +207,7 @@ export const deleteRoutineSchedule = mutation({
   },
 });
 
-export const queueRoutineRetreatCheckIn = internalMutation({
+export const queueRoutineCheckIn = internalMutation({
   args: {
     routineOccurrenceId: v.id("routineOccurrences"),
   },
@@ -227,7 +227,7 @@ export const queueRoutineRetreatCheckIn = internalMutation({
     }
 
     const existing = await ctx.db
-      .query("routineRetreatCheckIns")
+      .query("routineCheckIns")
       .withIndex("by_routineOccurrenceId", (query) =>
         query.eq("routineOccurrenceId", occurrence._id),
       )
@@ -253,7 +253,7 @@ export const queueRoutineRetreatCheckIn = internalMutation({
       return { queued: true as const, checkInId: existing._id };
     }
 
-    const checkInId = await ctx.db.insert("routineRetreatCheckIns", {
+    const checkInId = await ctx.db.insert("routineCheckIns", {
       familySpaceId: occurrence.familySpaceId,
       seniorProfileId: assistedSenior._id,
       routineOccurrenceId: occurrence._id,
@@ -274,7 +274,7 @@ export const queueRoutineRetreatCheckIn = internalMutation({
   },
 });
 
-export const listReadyRetreatCheckIns = query({
+export const listReadyRoutineCheckIns = query({
   args: {
     sessionToken: v.string(),
     deviceFingerprint: v.string(),
@@ -290,7 +290,7 @@ export const listReadyRetreatCheckIns = query({
     }
 
     const checkIns = await ctx.db
-      .query("routineRetreatCheckIns")
+      .query("routineCheckIns")
       .withIndex("by_seniorProfileId_and_status_and_softCheckInAt", (query) =>
         query
           .eq("seniorProfileId", validation.seniorProfile._id)
@@ -338,11 +338,11 @@ export const listReadyRetreatCheckIns = query({
   },
 });
 
-export const markRetreatCheckInPrompted = mutation({
+export const markRoutineCheckInPrompted = mutation({
   args: {
     sessionToken: v.string(),
     deviceFingerprint: v.string(),
-    checkInId: v.id("routineRetreatCheckIns"),
+    checkInId: v.id("routineCheckIns"),
     promptText: v.string(),
   },
   handler: async (ctx, args) => {
@@ -357,7 +357,7 @@ export const markRetreatCheckInPrompted = mutation({
 
     const checkIn = await ctx.db.get(args.checkInId);
     if (!checkIn || checkIn.seniorProfileId !== validation.seniorProfile._id) {
-      throw new Error("This routine retreat check-in is no longer available.");
+      throw new Error("This routine check-in is no longer available.");
     }
 
     if (checkIn.status !== "live_prompt_ready") {
@@ -376,11 +376,11 @@ export const markRetreatCheckInPrompted = mutation({
   },
 });
 
-export const resolveRetreatCheckIn = mutation({
+export const resolveRoutineCheckIn = mutation({
   args: {
     sessionToken: v.string(),
     deviceFingerprint: v.string(),
-    checkInId: v.id("routineRetreatCheckIns"),
+    checkInId: v.id("routineCheckIns"),
     outcome: v.union(v.literal("confirmed"), v.literal("unconfirmed")),
     responseTranscript: v.optional(v.string()),
     voiceInteractionId: v.optional(v.id("voiceInteractions")),
@@ -397,7 +397,7 @@ export const resolveRetreatCheckIn = mutation({
 
     const checkIn = await ctx.db.get(args.checkInId);
     if (!checkIn || checkIn.seniorProfileId !== validation.seniorProfile._id) {
-      throw new Error("This routine retreat check-in is no longer available.");
+      throw new Error("This routine check-in is no longer available.");
     }
 
     if (

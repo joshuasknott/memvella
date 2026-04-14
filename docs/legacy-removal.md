@@ -26,7 +26,7 @@ Use it when changing:
 - Batch 3 circle table introduction: in progress but canonical-first in hot paths. Runtime auth, invites, and notification/voice helper resolution now prefer `circles`, `circleMemberships`, and `circleInviteCodes`, while legacy tables remain for compatibility and migration proof.
 - Batch 4 people and awareness split: `people`, `alerts`, and `insights` now run on canonical tables only.
 - Batch 5 canonical field/helper rename cleanup: in progress. Runtime helpers are moving toward `circle` naming, but persisted field names such as `familySpaceId` still exist widely.
-- Batch 6 retirement of compatibility surfaces: not ready. Legacy tables and compatibility fields remain until verification shows they are fully unused.
+- Batch 6 retirement of compatibility surfaces: in progress. Legacy awareness and people compatibility tables are gone, and routine check-ins now use the canonical `routineCheckIns` name.
 
 ## Non-Negotiables
 
@@ -103,7 +103,7 @@ Legacy or retired tables and fields still present in `apps/core/convex/schema.ts
 | `supporter` | `organiser` | Applies to roles, helpers, routes, and copy |
 | `familyMembers` | `people` | Senior-grounding people only, not Circle participants |
 | `supporterInsights` | `alerts` and `insights` | Split urgent versus non-urgent concepts |
-| `routineRetreatCheckIns` | `routineCheckIns` | Remove the legacy retreat-specific name |
+| `routineRetreatCheckIns` | `routineCheckIns` | Live schema and assisted routine flows now use the canonical name |
 
 ### Backend Module Names
 

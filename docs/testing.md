@@ -79,6 +79,13 @@ Before any early user rollout, the core product must be treated as the priority 
 - verify the Circle activity feed shows meaningful family-side and senior-side events without turning into a raw transcript log
 - verify evidence snippets, where shown, are selective and relevant
 
+### Routines And Notifications
+
+- verify `/circle/routines` loads the current schedule list without errors
+- verify `/circle/add-routine` can still create a routine that appears in the Circle schedule
+- verify assisted routine check-ins still prompt and resolve through the live voice flow
+- verify `/circle/settings/notifications` loads for an Organiser and saves notification toggle changes
+
 ### Transition Flows
 
 - verify an Independent User can be prepared for transition into assisted or Circle-linked mode

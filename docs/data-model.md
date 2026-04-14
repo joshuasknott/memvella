@@ -135,4 +135,4 @@ Rules:
 
 ## Implementation Note
 
-The current schema still contains legacy names and compatibility surfaces. This document defines the target model that future migrations should converge on.
+The current schema still contains legacy names and compatibility surfaces, but the live routine check-in surface now uses `routineCheckIns` and the retreat-specific name has been retired.

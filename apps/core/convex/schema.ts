@@ -286,7 +286,7 @@ export default defineSchema({
       "startTimeMinutes",
     ]),
 
-  routineRetreatCheckIns: defineTable({
+  routineCheckIns: defineTable({
     familySpaceId: v.id("familySpaces"),
     seniorProfileId: v.id("seniorProfiles"),
     routineOccurrenceId: v.id("routineOccurrences"),
@@ -429,7 +429,6 @@ export default defineSchema({
     payloadTag: v.union(v.string(), v.null()),
     routineOccurrenceId: v.union(v.id("routineOccurrences"), v.null()),
     alertId: v.union(v.id("alerts"), v.null()),
-    canonicalInsightId: v.union(v.id("insights"), v.null()),
     summaryDateKey: v.union(v.string(), v.null()),
     status: v.union(
       v.literal("queued"),

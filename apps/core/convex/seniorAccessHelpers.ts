@@ -9,8 +9,8 @@ import {
   hashSeniorSessionToken,
 } from "./security";
 import {
-  getNextRoutineEventForFamilySpace,
-  listTodayTimelineForFamilySpace,
+  getNextRoutineEventForCircle,
+  listTodayTimelineForCircle,
 } from "./routineHelpers";
 import { formatMemoryDateLabel, summarizeMemory } from "./memoryHelpers";
 
@@ -318,8 +318,8 @@ export async function buildSeniorDashboard(
   };
 
   const [nextRoutine, todaysTimeline, memoryRecords] = await Promise.all([
-    getNextRoutineEventForFamilySpace(ctx, familySpaceId),
-    listTodayTimelineForFamilySpace(ctx, familySpaceId),
+    getNextRoutineEventForCircle(ctx, familySpaceId),
+    listTodayTimelineForCircle(ctx, familySpaceId),
     ctx.db
       .query("memoryRecords")
       .withIndex("by_familySpaceId_and_lastEditedAt", (query) =>
