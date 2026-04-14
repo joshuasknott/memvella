@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 export function useCircleProfile() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
-    api.organiser.getOrganiserProfile,
+    api.profile.getOrganiserProfile,
     isAuthenticated ? undefined : "skip",
   );
   const role = profile?.role ?? null;

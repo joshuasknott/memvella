@@ -24,7 +24,7 @@ export default function AccountSettingsPage() {
     useCircleProfile();
   const [generatedRecoveryCodes, setGeneratedRecoveryCodes] = useState<string[] | null>(null);
   const assistedSessions = useQuery(
-    api.organiser.listAssistedDeviceSessions,
+    api.sessions.listAssistedDeviceSessions,
     isOrganiser ? undefined : "skip",
   );
   const organiserRecoveryOverview = useQuery(
@@ -32,7 +32,7 @@ export default function AccountSettingsPage() {
     isOrganiser && profile?.seniorMode === "independent" ? {} : "skip",
   );
   const revokeAllAssistedDeviceSessions = useMutation(
-    api.organiser.revokeAllAssistedDeviceSessions,
+    api.sessions.revokeAllAssistedDeviceSessions,
   );
   const revokeTrustedDevice = useMutation(
     api.independentAccess.revokeIndependentTrustedDeviceForOrganiser,

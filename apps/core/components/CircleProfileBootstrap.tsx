@@ -14,8 +14,8 @@ function normalizeName(value: string | null | undefined) {
 export default function CircleProfileBootstrap() {
   const { data: session } = authClient.useSession();
   const { isAuthenticated, isLoading, profile } = useCircleProfile();
-  const createProfile = useMutation(api.organiser.createOrganiserProfile);
-  const patchProfile = useMutation(api.organiser.patchOrganiserProfile);
+  const createProfile = useMutation(api.profile.createOrganiserProfile);
+  const patchProfile = useMutation(api.profile.patchOrganiserProfile);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated || profile === undefined) {

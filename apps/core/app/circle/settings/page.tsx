@@ -16,7 +16,7 @@ import { useCircleProfile } from "@/lib/use-circle-profile";
 export default function OrganiserSettingsPage() {
   const { isOrganiser, seniorDisplayName } = useCircleProfile();
   const assistedSessions = useQuery(
-    api.organiser.listAssistedDeviceSessions,
+    api.sessions.listAssistedDeviceSessions,
     isOrganiser ? undefined : "skip",
   );
   const activeSessionCount = assistedSessions?.length ?? 0;

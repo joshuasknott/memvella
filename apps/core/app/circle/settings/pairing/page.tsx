@@ -28,12 +28,12 @@ export default function PairingSettingsPage() {
   const { toast } = useToast();
   const { seniorDisplayName, isOrganiser } = useCircleProfile();
   const assistedSessions = useQuery(
-    api.organiser.listAssistedDeviceSessions,
+    api.sessions.listAssistedDeviceSessions,
     isOrganiser ? undefined : "skip",
   );
   const generatePin = useMutation(api.kiosk.generateKioskPin);
   const deactivate = useMutation(api.kiosk.deactivateKioskDevice);
-  const revokeSession = useMutation(api.organiser.revokeAssistedDeviceSession);
+  const revokeSession = useMutation(api.sessions.revokeAssistedDeviceSession);
 
   const [pin, setPin] = useState<string | null>(null);
   const [pinExpiresAt, setPinExpiresAt] = useState<number | null>(null);
