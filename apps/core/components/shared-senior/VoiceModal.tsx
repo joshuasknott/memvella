@@ -92,7 +92,7 @@ export function VoiceModal({
             : isSpeaking
               ? "Memvella is speaking back now."
               : isProcessing
-                ? "Memvella is preparing a reply from your FamilySpace."
+                ? "Memvella is preparing a reply from your Circle."
                 : "Speak naturally and Memvella will reply aloud."}
         </p>
 

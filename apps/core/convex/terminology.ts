@@ -25,15 +25,7 @@ export function normalizeUserFacingText(value: string | null | undefined) {
     return MEMBER_LABEL;
   }
 
-  if (normalized === "Supporter" || normalized === "Admin") {
-    return ORGANISER_LABEL;
-  }
-
-  return normalized
-    .replace(/\bSupporter\b/g, ORGANISER_LABEL)
-    .replace(/\bAdmin\b/g, ORGANISER_LABEL)
-    .replace(/\bFamilySpace\b/g, CIRCLE_LABEL)
-    .replace(/\bfamily space\b/gi, "circle");
+  return normalized;
 }
 
 export function formatInvalidSessionMessage(reason: SeniorSessionInvalidReason) {

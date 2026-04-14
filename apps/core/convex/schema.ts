@@ -172,7 +172,6 @@ export default defineSchema({
       "lastEditedAt",
     ]),
 
-  routines: defineTable(v.any()).index("by_familySpaceId", ["familySpaceId"]),
 
   routineSchedules: defineTable({
     seniorProfileId: v.id("seniorProfiles"),
@@ -254,9 +253,6 @@ export default defineSchema({
     ])
     .index("by_status_and_softCheckInAt", ["status", "softCheckInAt"]),
 
-  memories: defineTable(v.any())
-    .index("by_familySpaceId", ["familySpaceId"])
-    .index("by_familySpaceId_and_mediaType", ["familySpaceId", "mediaType"]),
 
   memoryRecords: defineTable({
     seniorProfileId: v.id("seniorProfiles"),
