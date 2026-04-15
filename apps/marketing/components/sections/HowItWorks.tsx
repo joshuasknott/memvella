@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FadeIn } from "@/components/ui/FadeIn";
 
 const cards = [
@@ -9,7 +10,8 @@ const cards = [
       "Routines, reminders, and familiar stories delivered through calm conversation.",
       "Works the same way every single day. No surprises, no confusion.",
     ],
-    imageAlt: "Senior comfortably using voice assistant at home",
+    imageSrc: "/images/how-it-works-senior.png",
+    imageAlt: "Senior man comfortably using voice assistant at home",
     uiSnippet: "\"Good morning, Margaret. Here's what's on for today.\"",
     imagePosition: "right" as const,
     imageAspect: "aspect-[4/3]",
@@ -23,7 +25,8 @@ const cards = [
       "Get quiet updates without making another phone call.",
       "Share the caregiving load across siblings, partners, and friends.",
     ],
-    imageAlt: "Family member checking Memvella updates on their phone",
+    imageSrc: "/images/how-it-works-family.png",
+    imageAlt: "Family member checking Memvella updates casually on their phone",
     uiSnippet: "Dad's morning check-in — completed at 9:12 AM",
     imagePosition: "left" as const,
     imageAspect: "aspect-[9/16] lg:aspect-[3/4]",
@@ -82,13 +85,14 @@ export function HowItWorks() {
               <FadeIn className={`lg:col-span-7 ${card.imageWrapper}`} delay={200}>
                 <div className={`${card.imageAspect} relative w-full`}>
                   <div
-                    className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-surface-muted shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
-                    role="img"
-                    aria-label={card.imageAlt}
+                    className="absolute inset-0 overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-surface-muted shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
                   >
-                    <p className="px-6 text-center text-sm font-medium text-text-muted">
-                      {card.imageAlt}
-                    </p>
+                    <Image
+                      src={card.imageSrc}
+                      alt={card.imageAlt}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
 
                   {/* Glass UI card */}

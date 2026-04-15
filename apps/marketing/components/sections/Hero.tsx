@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FadeIn } from "@/components/ui/FadeIn";
 
 export function Hero() {
@@ -40,10 +41,15 @@ export function Hero() {
           </div>
 
           <FadeIn delay={150} className="w-full">
-            <div
-              className="w-full aspect-[4/3] bg-surface-muted rounded-2xl border border-border/50 shadow-inner"
-              aria-hidden="true"
-            />
+            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border border-border/50 shadow-inner">
+              <Image
+                src="/images/hero-ambient-companion.png"
+                alt="Senior woman relaxing comfortably at home with an ambient tablet"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
           </FadeIn>
 
         </div>

@@ -1,20 +1,27 @@
+import Image from "next/image";
 import { FadeIn } from "@/components/ui/FadeIn";
 
 const rows = [
   {
     imagePosition: "left" as const,
+    imageSrc: "/images/feature-voice-interaction.png",
+    imageAlt: "Senior having a warm conversation with the Memvella voice assistant",
     headline: "They just talk. Memvella handles the rest.",
     body: "No apps to open, no buttons to find. Your loved one speaks naturally and Memvella responds, guiding them through their day with the patience and warmth of a familiar voice.",
   },
   {
     imagePosition: "right" as const,
+    imageSrc: "/images/feature-morning-routine.png",
+    imageAlt: "Senior calmly taking morning medication with Memvella nearby",
     headline: "No more worrying if Mum took her morning pill.",
     body: "Gentle medication reminders, morning check-ins, and daily rhythms are set once by you and delivered through calm conversation to them. Consistent structure without the friction.",
   },
   {
     imagePosition: "left" as const,
+    imageSrc: "/images/feature-family-memories.png",
+    imageAlt: "Senior smiling while looking at a family memory on Memvella",
     headline: "Filled with the stories only your family knows.",
-    body: "Upload wedding photos, a grandchild’s voice note, Dad’s favourite song. Memvella weaves them into conversations so they hear their own life, not a stranger’s script.",
+    body: "Upload wedding photos, a grandchild's voice note, Dad's favourite song. Memvella weaves them into conversations so they hear their own life, not a stranger's script.",
   },
 ];
 
@@ -47,10 +54,14 @@ export function FeatureGlimpse() {
                 delay={100}
                 className={row.imagePosition === "right" ? "lg:order-2" : ""}
               >
-                <div
-                  className="w-full aspect-[4/3] bg-surface-muted rounded-2xl border border-border/50 shadow-inner"
-                  aria-hidden="true"
-                />
+                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border border-border/50 shadow-inner">
+                  <Image
+                    src={row.imageSrc}
+                    alt={row.imageAlt}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </FadeIn>
 
               {/* Text column */}
