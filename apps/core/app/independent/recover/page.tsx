@@ -5,8 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, KeyRound, Loader2, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormCard } from "@/components/ui/FormCard";
-import { TextInput } from "@/components/ui/Input";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { TextInput, PrimaryButton, SecondaryButton } from "@memvella/ui";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import {
   registerIndependentPasskey,

@@ -7,10 +7,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
-import BrandLogo from "@/components/BrandLogo";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { BrandLogo, PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
-import { TextInput } from "@/components/ui/Input";
 
 type AuthMode = "signin" | "create";
 

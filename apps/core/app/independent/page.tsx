@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useAction, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
-import BrandLogo from "@/components/BrandLogo";
+import { BrandLogo } from "@memvella/ui";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceInputPill } from "@/components/shared-senior/VoiceInputPill";
 import { api } from "@/convex/_generated/api";

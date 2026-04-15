@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import BrandLogo from "@/components/BrandLogo";
+import { BrandLogo } from "@memvella/ui";
 
 const TAB_ROUTES = [
   "/circle",

@@ -8,9 +8,8 @@ import { Loader2, Upload, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
-import { TextInput } from "@/components/ui/Input";
 import { inferMemoryAssetType, uploadFileToConvex } from "@/lib/convex-upload";
 import { formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 

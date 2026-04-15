@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   Memvella Design System — Centralized Theme
+   Source of truth for all design tokens across apps/core and
+   apps/marketing. Consumed via @import "@memvella/ui/globals.css".
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ─── Shared Foundation ─── */
+  --color-canvas: #FBFBF9;
+  --color-surface: #FFFFFF;
+  --color-border: #D8DCE3;
+  --color-text-primary: #1A1D26;
+  --color-text-secondary: #4B5263;
+
+  /* ─── Family & Marketing Pathway ─── */
+  --color-family-primary: #2D3250;
+  --color-family-accent: #FF8C42;
+  --color-family-muted: #676F9D;
+
+  /* ─── Senior Interface Pathway ─── */
+  --color-senior-primary: #185C60;
+  --color-senior-warmth: #A64638;
+
+  /* ─── Status & Semantic ─── */
+  --color-status-success: #2D6A4F;
+  --color-status-alert: #8C2B2B;
+  --color-status-insight: #676F9D;
+
+  /* ─── Typography (values injected by next/font/google in layouts) ─── */
+  --font-senior: var(--font-senior);
+  --font-family: var(--font-family);
+
+  /* ─── Border Radius ─── */
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+
+  /* ─── Box Shadow ─── */
+  --shadow-ambient: 0 20px 50px -12px rgba(26, 29, 38, 0.08);
+  --shadow-card: 0 1px 3px 0 rgba(26, 29, 38, 0.06), 0 1px 2px -1px rgba(26, 29, 38, 0.06);
+
+  /* ─── Animations ─── */
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes aura-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+  }
+
+  --animate-breathe: breathe 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Custom Typography Utility Classes
+   These are NOT registered as Tailwind utilities — they are
+   plain CSS classes that bundle font-family + size + weight +
+   line-height from the design spec.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Senior Typography Scale ─── */
+.text-senior-h1 {
+  font-family: var(--font-senior);
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 120%;
+}
+
+.text-senior-h2 {
+  font-family: var(--font-senior);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 130%;
+}
+
+.text-senior-body {
+  font-family: var(--font-senior);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 150%;
+}
+
+.text-senior-label {
+  font-family: var(--font-senior);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 100%;
+  text-transform: uppercase;
+}
+
+/* ─── Family Typography Scale ─── */
+.text-family-h1 {
+  font-family: var(--font-family);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 110%;
+}
+
+.text-family-h2 {
+  font-family: var(--font-family);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 120%;
+}
+
+.text-family-body {
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 150%;
+}
+
+.text-family-small {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 140%;
+}
+
+/* ─── Aura glow utility (marketing) ─── */
+.aura-glow {
+  background: radial-gradient(circle, rgba(103, 111, 157, 0.15) 0%, transparent 70%);
+  animation: aura-pulse 8s ease-in-out infinite;
+}

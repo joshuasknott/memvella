@@ -2,10 +2,10 @@
 
 Status: canonical
 Scope: apps/core
-Last reviewed: 2026-04-14
+Last reviewed: 2026-04-15
 Owners: product, engineering
 Read when: touching product UI, layouts, or interaction design in `apps/core`
-Depends on: docs/product.md, docs/terminology.md
+Depends on: docs/product.md, docs/terminology.md, packages/ui/src/globals.css
 
 ## Core Principle
 
@@ -19,12 +19,61 @@ The product app should feel calm, legible, and operationally clear. Family-side 
 - Default to large touch targets. Senior-critical controls should be at least `72px` high and wide.
 - Copy rules come from `docs/terminology.md`, not from ad hoc component wording.
 
-## Visual Tokens
+## Design System
 
-- Background: soft off-white and muted surface layers
-- Primary action: deep purple
-- Secondary action: strong blue when a distinct secondary control is needed
-- Typography: highly legible sans-serif with generous line height
+All visual tokens are centralized in `packages/ui/src/globals.css` via Tailwind CSS v4 `@theme`.
+Do **not** re-introduce a `tailwind.config.ts` — the CSS-first approach is canonical.
+
+### Source of Truth
+
+| Layer | Location |
+|-------|----------|
+| Design tokens | `packages/ui/src/globals.css` |
+| Components | `packages/ui/src/components/` |
+| Barrel export | `@memvella/ui` |
+| App overrides | `apps/core/app/globals.css` (imports shared theme) |
+
+### Color Palette
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-senior-primary` | `#185C60` | Senior pathway actions, "Mem" wordmark |
+| `--color-senior-accent` | `#D4A574` | Warm accent for senior surfaces |
+| `--color-family-primary` | `#2D3250` | Organiser/family actions, "vella" wordmark |
+| `--color-family-accent` | `#1D4ED8` | Blue accent for family-side CTAs |
+| `--color-canvas` | `#FAF9F6` | Page background (off-white) |
+| `--color-surface-*` | various | Layered surface hierarchy |
+| `--color-status-alert` | `#B91C1C` | Destructive actions |
+| `--color-status-success` | `#15803D` | Confirmations |
+
+### Typography
+
+| Role | Font Family | CSS Variable | Usage |
+|------|-------------|-------------|-------|
+| Headline | Atkinson Hyperlegible | `--font-headline` | Headings, large text, senior-facing copy |
+| Body | Figtree | `--font-body` | Body text, form labels, UI chrome |
+
+Fonts are loaded via `next/font/google` in each app's `layout.tsx` and injected as CSS variables on `<html>`.
+
+### Components
+
+All shared UI components live in `@memvella/ui`. Import from the package, not from local paths.
+
+```tsx
+import { Button, PrimaryButton, TextInput, BrandLogo } from "@memvella/ui";
+```
+
+| Component | Variants | Notes |
+|-----------|----------|-------|
+| `Button` | default, secondary, ghost, destructive, senior, family, familyAccent, highContrast | CVA-based; supports `asChild` via Radix Slot |
+| `PrimaryButton` | — | Legacy wrapper: `Button variant="default" size="senior"` with `href` support |
+| `SecondaryButton` | — | Legacy wrapper: `Button variant="secondary" size="senior"` with `href` support |
+| `HighContrastButton` | — | Legacy wrapper: `Button variant="highContrast" size="senior"` with `href` support |
+| `Input` / `TextInput` | — | Accessible text input; `TextInput` is a migration alias |
+| `BrandLogo` | `mono`, `animated` | Wordmark SVG; adapts to theme tokens via CSS custom properties |
+
+> **Do not** create new components in `apps/core/components/ui/`. All shared primitives belong in `packages/ui/`.
+> App-specific composites (e.g. `FormCard`, `ToastProvider`) may remain local until promoted.
 
 ## Circle Experience
 

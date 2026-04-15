@@ -11,17 +11,22 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@memvella/ui": "workspace:*",
     "@convex-dev/better-auth": "^0.11.3",
     "@convex-dev/migrations": "^0.3.3",
     "@google/genai": "^1.46.0",
+    "@radix-ui/react-slot": "^1.1.1",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",
     "better-auth": "1.5.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "convex": "^1.34.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "tailwind-merge": "^2.5.4",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

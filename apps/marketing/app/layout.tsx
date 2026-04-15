@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
+import { Atkinson_Hyperlegible, Figtree } from "next/font/google";
 import "./globals.css";
+
+const atkinson = Atkinson_Hyperlegible({
+  variable: "--font-senior",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const figtree = Figtree({
+  variable: "--font-family",
+  subsets: ["latin"],
+});
 
 const marketingTitle = "Memvella | Voice-First Memory Companion";
 const marketingDescription =
@@ -38,8 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html
+      lang="en"
+      className={`${atkinson.variable} ${figtree.variable} antialiased`}
+    >
+      <body className="font-family">{children}</body>
     </html>
   );
 }

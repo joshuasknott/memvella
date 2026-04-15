@@ -1,111 +1,7 @@
-@import "tailwindcss";
+@import "@memvella/ui/globals.css";
 @plugin "@tailwindcss/typography";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
 
-@theme {
-  /* ─── Brand Colors ─── */
-  --color-primary: #461599;
-  --color-primary-container: #6b21a8;
-  --color-on-primary: #ffffff;
-  --color-on-primary-fixed: #2d0050;
-  --color-primary-fixed: #f1dbff;
-  --color-primary-fixed-dim: #dfb7ff;
-  --color-on-primary-fixed-variant: #661aa3;
-  --color-on-primary-container: #d7a8ff;
-  --color-inverse-primary: #dfb7ff;
-
-  /* ─── Secondary ─── */
-  --color-secondary: #645e51;
-  --color-secondary-container: #eae2d1;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-fixed: #1f1b11;
-  --color-secondary-fixed: #eae2d1;
-  --color-secondary-fixed-dim: #cec6b5;
-  --color-on-secondary-fixed-variant: #4b463a;
-  --color-on-secondary-container: #6a6456;
-
-  /* ─── Tertiary ─── */
-  --color-tertiary: #410a94;
-  --color-tertiary-container: #582fab;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-fixed: #24005b;
-  --color-tertiary-fixed: #eaddff;
-  --color-tertiary-fixed-dim: #d1bcff;
-  --color-on-tertiary-fixed-variant: #5429a7;
-  --color-on-tertiary-container: #c7afff;
-
-  /* ─── Surface & Background ─── */
-  --color-background: #f9f9f6;
-  --color-on-background: #1a1c1b;
-  --color-surface: #f9f9f6;
-  --color-surface-canvas: #fcfcf9;
-  --color-surface-card: #f6f1e7;
-  --color-surface-dim: #dadad7;
-  --color-surface-bright: #f9f9f6;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f4f4f1;
-  --color-surface-container: #eeeeeb;
-  --color-surface-container-high: #e8e8e5;
-  --color-surface-container-highest: #e2e3e0;
-  --color-on-surface: #1a1c1b;
-  --color-on-surface-variant: #4c4452;
-  --color-surface-variant: #e2e3e0;
-  --color-inverse-surface: #2f312f;
-  --color-inverse-on-surface: #f1f1ee;
-  --color-surface-tint: #803abd;
-
-  /* ─── Outline ─── */
-  --color-outline: #7e7383;
-  --color-outline-variant: #cfc2d4;
-
-  /* ─── Error ─── */
-  --color-error: #ba1a1a;
-  --color-on-error: #ffffff;
-  --color-error-container: #ffdad6;
-  --color-on-error-container: #93000a;
-
-  /* ─── Typography ─── */
-  --font-header: "Plus Jakarta Sans", sans-serif;
-  --font-headline: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Lexend", sans-serif;
-  --font-label: "Lexend", sans-serif;
-
-  /* ─── Border Radius ─── */
-  --radius-lg: 2rem;
-  --radius-xl: 3rem;
-
-  /* ─── Box Shadow ─── */
-  --shadow-ambient: 0 20px 50px -12px rgba(76, 68, 82, 0.08);
-
-  /* ─── Animations ─── */
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  @keyframes aura-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
-  }
-
-  @keyframes logo-pulse {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(70, 21, 153, 0)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(70, 21, 153, 0.15)); }
-  }
-
-  --animate-breathe: breathe 4s ease-in-out infinite;
-}
-
-/* ─── Aura glow utility ─── */
-.aura-glow {
-  background: radial-gradient(circle, rgba(215, 168, 255, 0.2) 0%, rgba(246, 241, 231, 0) 70%);
-  animation: aura-pulse 8s ease-in-out infinite;
-}
-
-.logo-heartbeat {
-  animation: logo-pulse 4s ease-in-out infinite;
-}
-
-/* ─── Base resets ─── */
 @layer base {
   input,
   textarea,
@@ -116,8 +12,8 @@
   }
 
   body {
-    background-color: var(--color-surface);
-    color: var(--color-on-surface);
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
     -webkit-tap-highlight-color: transparent;
   }
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, KeyRound, Loader2, ShieldCheck, Smartphone } from "lucide-react";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
 import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";

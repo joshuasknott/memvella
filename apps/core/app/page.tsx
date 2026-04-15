@@ -1,5 +1,4 @@
-import BrandLogo from '@/components/BrandLogo';
-import { PrimaryButton, SecondaryButton, HighContrastButton } from '@/components/ui/Button';
+import { BrandLogo, PrimaryButton, SecondaryButton, HighContrastButton } from '@memvella/ui';
 import { ShieldCheck, Smartphone, UserRound, Users } from 'lucide-react';
 
 export default function UniversalSplash() {

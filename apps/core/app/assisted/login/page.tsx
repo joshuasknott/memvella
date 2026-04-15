@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Numpad } from "@/components/shared-senior/Numpad";
-import BrandLogo from "@/components/BrandLogo";
+import { BrandLogo } from "@memvella/ui";
 import { persistDeviceFingerprint } from "@/lib/device-fingerprint";
 import {
   clearSeniorSession,

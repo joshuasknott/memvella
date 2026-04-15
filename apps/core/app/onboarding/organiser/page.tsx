@@ -5,9 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
-import { TextInput } from "@/components/ui/Input";
-import { PrimaryButton } from "@/components/ui/Button";
-import BrandLogo from "@/components/BrandLogo";
+import { TextInput, PrimaryButton, BrandLogo } from "@memvella/ui";
 
 export default function OrganiserSetupPage() {
   const [name, setName] = useState("");

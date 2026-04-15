@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { AlarmClockCheck, CalendarClock, Clock3, Plus } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton } from "@memvella/ui";
 
 function RoutineSkeleton() {
   return (

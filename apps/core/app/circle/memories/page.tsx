@@ -13,7 +13,7 @@ import {
   Type,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton } from "@memvella/ui";
 import { formatLastEditedLabel, formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 

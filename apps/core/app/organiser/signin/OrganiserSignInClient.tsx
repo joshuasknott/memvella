@@ -6,8 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { FormCard } from "@/components/ui/FormCard";
-import { TextInput } from "@/components/ui/Input";
-import { PrimaryButton } from "@/components/ui/Button";
+import { TextInput, PrimaryButton } from "@memvella/ui";
 
 function OrganiserAuthLayout({ children }: { children: React.ReactNode }) {
   return (

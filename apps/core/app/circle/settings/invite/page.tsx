@@ -14,7 +14,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/components/ui/ToastProvider";
 import { FormCard } from "@/components/ui/FormCard";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton } from "@memvella/ui";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 
 function formatExpiryLabel(expiresAt: number) {

@@ -16,7 +16,7 @@ import {
 import type { Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@/convex/_generated/api";
-import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@memvella/ui";
 import { formatLastEditedLabel, formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 
 const RECORD_ICON_MAP = {
