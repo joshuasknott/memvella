@@ -33,16 +33,16 @@ const cards = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-[#f5f5f7] py-32 lg:py-48">
+    <section id="how-it-works" className="bg-surface-muted py-32 lg:py-48">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         {/* Section header */}
         <FadeIn>
           <div className="mb-24 max-w-3xl">
-            <p className="text-base font-extrabold tracking-widest text-slate-600 uppercase">
+            <p className="text-base font-extrabold tracking-widest text-text-secondary uppercase">
               How it Works
             </p>
-            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-5xl text-balance leading-[1.05]">
+            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-5xl text-balance leading-[1.05]">
               Built for two people. The one who needs it, and the one who worries.
             </h2>
           </div>
@@ -59,19 +59,19 @@ export function HowItWorks() {
             >
               {/* Text column */}
               <FadeIn className="lg:col-span-5" delay={100}>
-                <p className="mb-4 text-base font-extrabold tracking-widest text-slate-600 uppercase">
+                <p className="mb-4 text-base font-extrabold tracking-widest text-text-secondary uppercase">
                   {card.label}
                 </p>
-                <h3 className="font-headline text-3xl font-extrabold tracking-tighter text-slate-900 md:text-4xl text-balance leading-[1.05]">
+                <h3 className="font-headline text-3xl font-extrabold tracking-tighter text-text-primary md:text-4xl text-balance leading-[1.05]">
                   {card.headline}
                 </h3>
                 <ul className="mt-6 space-y-4">
                   {card.bullets.map((bullet) => (
                     <li
                       key={bullet}
-                      className="flex items-start gap-3 text-lg leading-relaxed text-slate-600"
+                      className="flex items-start gap-3 text-lg leading-relaxed text-text-secondary"
                     >
-                      <span className="mt-1.5 block h-2 w-2 shrink-0 rounded-full bg-purple-400" aria-hidden="true" />
+                      <span className="mt-1.5 block h-2 w-2 shrink-0 rounded-full bg-family-muted" aria-hidden="true" />
                       {bullet}
                     </li>
                   ))}
@@ -82,31 +82,31 @@ export function HowItWorks() {
               <FadeIn className={`lg:col-span-7 ${card.imageWrapper}`} delay={200}>
                 <div className={`${card.imageAspect} relative w-full`}>
                   <div
-                    className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
+                    className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-surface-muted shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
                     role="img"
                     aria-label={card.imageAlt}
                   >
-                    <p className="px-6 text-center text-sm font-medium text-slate-400">
+                    <p className="px-6 text-center text-sm font-medium text-text-muted">
                       {card.imageAlt}
                     </p>
                   </div>
 
                   {/* Glass UI card */}
                   <div
-                    className="absolute -bottom-2 -right-2 md:-bottom-6 md:-right-6 z-10 bg-white/80 backdrop-blur-2xl shadow-xl border border-white/60 rounded-xl md:rounded-2xl p-3 md:p-6 w-[85%] md:w-3/4 max-w-sm"
+                    className="absolute -bottom-2 -right-2 md:-bottom-6 md:-right-6 z-10 bg-surface/80 backdrop-blur-2xl shadow-xl border border-white/60 rounded-xl md:rounded-2xl p-3 md:p-6 w-[85%] md:w-3/4 max-w-sm"
                     aria-hidden="true"
                   >
                     <div className="mb-2 md:mb-3 flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-purple-500" aria-hidden="true" />
-                      <span className="text-xs font-semibold uppercase tracking-widest text-purple-600">
+                      <span className="h-2 w-2 rounded-full bg-family-muted" aria-hidden="true" />
+                      <span className="text-xs font-semibold uppercase tracking-widest text-family-muted">
                         Memvella
                       </span>
                     </div>
-                    <p className="text-xs md:text-base font-semibold leading-snug text-slate-900">
+                    <p className="text-xs md:text-base font-semibold leading-snug text-text-primary">
                       {card.uiSnippet}
                     </p>
-                    <div className="mt-2 md:mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full w-2/3 rounded-full bg-purple-500" aria-hidden="true" />
+                    <div className="mt-2 md:mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                      <div className="h-full w-2/3 rounded-full bg-family-muted" aria-hidden="true" />
                     </div>
                   </div>
                 </div>

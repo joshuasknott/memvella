@@ -7,8 +7,6 @@ interface BrandLogoProps extends React.SVGProps<SVGSVGElement> {
   mono?: boolean;
   /** @deprecated Accepted for legacy compat; no-op on the new wordmark. */
   standalone?: boolean;
-  /** Apply a subtle breathing animation to the logo */
-  animated?: boolean;
 }
 
 /**
@@ -22,7 +20,6 @@ function BrandLogo({
   className,
   mono = false,
   standalone: _standalone,
-  animated = false,
   ...props
 }: BrandLogoProps) {
   return (
@@ -36,7 +33,6 @@ function BrandLogo({
       role="img"
       className={cn(
         "shrink-0",
-        animated && "motion-safe:animate-[breathe_4s_ease-in-out_infinite]",
         className,
       )}
       {...props}

@@ -9,7 +9,7 @@ import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
 
 export default function MarketingHomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-slate-900 selection:bg-purple-100 selection:text-purple-900">
+    <div className="flex min-h-screen flex-col bg-canvas text-text-primary selection:bg-family-primary/10 selection:text-family-primary">
       <Header />
       <main className="flex-1">
         <Hero />

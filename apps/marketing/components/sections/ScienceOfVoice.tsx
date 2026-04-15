@@ -66,17 +66,17 @@ const pillars = [
 
 export function ScienceOfVoice() {
   return (
-    <section id="science-of-voice" className="bg-white py-32 lg:py-48">
+    <section id="science-of-voice" className="bg-surface py-32 lg:py-48">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <FadeIn>
           <div className="mb-20 max-w-3xl">
-            <p className="text-base font-extrabold tracking-widest text-slate-600 uppercase">
+            <p className="text-base font-extrabold tracking-widest text-text-secondary uppercase">
               The Science of Voice
             </p>
-            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-5xl text-balance leading-[1.05]">
+            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-5xl text-balance leading-[1.05]">
               The most natural interface is the one they already know.
             </h2>
-            <p className="mt-6 text-xl leading-relaxed text-slate-600">
+            <p className="mt-6 text-xl leading-relaxed text-text-secondary">
               Voice isn&apos;t a novelty. It&apos;s how humans have communicated for millennia. Memvella is built on that instinct.
             </p>
           </div>
@@ -86,14 +86,14 @@ export function ScienceOfVoice() {
           {pillars.map((pillar, i) => (
             <FadeIn key={pillar.title} delay={i * 100}>
               <div className="flex flex-col gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-700">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
                   {pillar.icon}
                 </div>
                 <div>
-                  <h3 className="font-headline text-xl font-extrabold tracking-tighter text-slate-900 leading-[1.05]">
+                  <h3 className="font-headline text-xl font-extrabold tracking-tighter text-text-primary leading-[1.05]">
                     {pillar.title}
                   </h3>
-                  <p className="mt-3 text-base leading-relaxed text-slate-600">
+                  <p className="mt-3 text-base leading-relaxed text-text-secondary">
                     {pillar.body}
                   </p>
                 </div>

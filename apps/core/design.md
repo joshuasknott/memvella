@@ -70,7 +70,7 @@ import { Button, PrimaryButton, TextInput, BrandLogo } from "@memvella/ui";
 | `SecondaryButton` | — | Legacy wrapper: `Button variant="secondary" size="senior"` with `href` support |
 | `HighContrastButton` | — | Legacy wrapper: `Button variant="highContrast" size="senior"` with `href` support |
 | `Input` / `TextInput` | — | Accessible text input; `TextInput` is a migration alias |
-| `BrandLogo` | `mono`, `animated` | Wordmark SVG; adapts to theme tokens via CSS custom properties |
+| `BrandLogo` | `mono` | Wordmark SVG; adapts to theme tokens via CSS custom properties |
 
 > **Do not** create new components in `apps/core/components/ui/`. All shared primitives belong in `packages/ui/`.
 > App-specific composites (e.g. `FormCard`, `ToastProvider`) may remain local until promoted.

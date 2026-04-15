@@ -20,16 +20,16 @@ const rows = [
 
 export function FeatureGlimpse() {
   return (
-    <section id="features" className="bg-white py-24 lg:py-32">
+    <section id="features" className="bg-surface py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         {/* Section header */}
         <FadeIn>
           <div className="mb-20 max-w-3xl">
-            <p className="text-base font-extrabold tracking-widest text-slate-600 uppercase">
+            <p className="text-base font-extrabold tracking-widest text-text-secondary uppercase">
               What Memvella Does
             </p>
-            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-5xl text-balance leading-[1.05]">
+            <h2 className="mt-4 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-5xl text-balance leading-[1.05]">
               Everything they need. Nothing they don’t.
             </h2>
           </div>
@@ -48,17 +48,17 @@ export function FeatureGlimpse() {
                 className={row.imagePosition === "right" ? "lg:order-2" : ""}
               >
                 <div
-                  className="w-full aspect-[4/3] bg-slate-100 rounded-2xl border border-slate-200/50 shadow-inner"
+                  className="w-full aspect-[4/3] bg-surface-muted rounded-2xl border border-border/50 shadow-inner"
                   aria-hidden="true"
                 />
               </FadeIn>
 
               {/* Text column */}
               <FadeIn delay={200}>
-                <h3 className="font-headline text-3xl font-extrabold tracking-tighter text-slate-900 md:text-4xl text-balance leading-[1.05]">
+                <h3 className="font-headline text-3xl font-extrabold tracking-tighter text-text-primary md:text-4xl text-balance leading-[1.05]">
                   {row.headline}
                 </h3>
-                <p className="mt-6 text-lg leading-relaxed text-slate-600">
+                <p className="mt-6 text-lg leading-relaxed text-text-secondary">
                   {row.body}
                 </p>
               </FadeIn>

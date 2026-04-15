@@ -95,7 +95,7 @@ export default function AssistedSetupPage() {
             <ArrowLeft size={24} /> Back
           </button>
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <BrandLogo standalone animated className="w-auto h-8 md:h-10 drop-shadow-sm" />
+            <BrandLogo standalone className="w-auto h-8 md:h-10 drop-shadow-sm" />
           </div>
           <div className="w-[84px]" aria-hidden="true" />
         </header>

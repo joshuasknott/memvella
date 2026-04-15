@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <StaticPageLayout title="Terms of Service">
-      <p className="text-slate-500 not-prose text-sm">Last updated: April 2026</p>
+      <p className="text-text-tertiary not-prose text-sm">Last updated: April 2026</p>
 
       <p>
         These are the simple ground rules for using the Memvella website and

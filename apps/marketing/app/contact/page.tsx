@@ -6,7 +6,7 @@ import { useState } from 'react';
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
 
 const inputBase =
-    'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 shadow-sm transition focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-60';
+    'w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-text-primary placeholder:text-text-muted shadow-sm transition focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/20 disabled:opacity-60';
 
 export default function ContactPage() {
     const [name, setName] = useState('');
@@ -48,15 +48,15 @@ export default function ContactPage() {
             {/* Contact form — not-prose escapes Tailwind Typography's input overrides */}
             <div className="not-prose mt-10">
                 {status === 'success' ? (
-                    <div className="rounded-2xl border border-green-200 bg-green-50 px-6 py-8 text-center">
-                        <p className="text-lg font-semibold text-green-800">Message received — thank you.</p>
-                        <p className="mt-1 text-sm text-green-700">We&apos;ll get back to you as soon as we can.</p>
+                    <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-6 py-8 text-center">
+                        <p className="text-lg font-semibold text-status-success">Message received — thank you.</p>
+                        <p className="mt-1 text-sm text-status-success">We&apos;ll get back to you as soon as we can.</p>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
                         {/* Name */}
                         <div className="flex flex-col gap-1.5">
-                            <label htmlFor="contact-name" className="text-sm font-semibold text-slate-700">
+                            <label htmlFor="contact-name" className="text-sm font-semibold text-text-secondary">
                                 Your name
                             </label>
                             <input
@@ -73,7 +73,7 @@ export default function ContactPage() {
 
                         {/* Email */}
                         <div className="flex flex-col gap-1.5">
-                            <label htmlFor="contact-email" className="text-sm font-semibold text-slate-700">
+                            <label htmlFor="contact-email" className="text-sm font-semibold text-text-secondary">
                                 Email address
                             </label>
                             <input
@@ -90,7 +90,7 @@ export default function ContactPage() {
 
                         {/* Message */}
                         <div className="flex flex-col gap-1.5">
-                            <label htmlFor="contact-message" className="text-sm font-semibold text-slate-700">
+                            <label htmlFor="contact-message" className="text-sm font-semibold text-text-secondary">
                                 Message
                             </label>
                             <textarea
@@ -107,14 +107,14 @@ export default function ContactPage() {
 
                         {/* API error */}
                         {status === 'error' && error && (
-                            <p className="text-sm text-red-500">{error}</p>
+                            <p className="text-sm text-status-alert">{error}</p>
                         )}
 
                         {/* Submit */}
                         <button
                             type="submit"
                             disabled={status === 'loading'}
-                            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-purple-800 px-10 text-base font-bold text-white shadow-md transition-all hover:bg-purple-900 hover:scale-[1.01] active:scale-95 disabled:opacity-70 disabled:active:scale-100 sm:w-auto"
+                            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-family-primary px-10 text-base font-bold text-white shadow-md transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-70 disabled:active:scale-100 sm:w-auto"
                         >
                             {status === 'loading' ? (
                                 <span className="flex items-center gap-2">

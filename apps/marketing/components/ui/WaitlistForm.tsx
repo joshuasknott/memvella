@@ -60,7 +60,7 @@ export default function WaitlistForm() {
 
     if (status === 'success') {
         return (
-            <div className="p-6 rounded-[40px] flex items-center justify-center bg-slate-800 border border-slate-700">
+            <div className="p-6 rounded-[40px] flex items-center justify-center bg-surface-inverse-muted border border-border-inverse">
                 <p className="text-xl font-bold text-white text-center">{message}</p>
             </div>
         );
@@ -71,7 +71,7 @@ export default function WaitlistForm() {
             <form
                 noValidate
                 onSubmit={handleSubmit}
-                className="relative p-2 rounded-[40px] flex flex-col md:flex-row items-center bg-slate-800 border border-slate-700 transition-all hover:border-slate-600 group"
+                className="relative p-2 rounded-[40px] flex flex-col md:flex-row items-center bg-surface-inverse-muted border border-border-inverse transition-all hover:border-text-tertiary group"
             >
                 <label htmlFor="waitlist-email" className="sr-only">
                     Email address
@@ -85,12 +85,12 @@ export default function WaitlistForm() {
                     disabled={status === 'loading'}
                     aria-invalid={emailError ? 'true' : 'false'}
                     aria-describedby={emailError ? 'waitlist-email-error' : undefined}
-                    className="bg-transparent border-none focus:ring-0 px-8 py-6 w-full text-lg placeholder:text-slate-500 font-medium text-white"
+                    className="bg-transparent border-none focus:ring-0 px-8 py-6 w-full text-lg placeholder:text-text-tertiary font-medium text-white"
                 />
                 <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="w-full md:w-auto whitespace-nowrap bg-purple-600 hover:bg-purple-500 text-white font-bold h-[72px] px-12 rounded-full transition-all focus:scale-95 active:scale-95 hover:shadow-xl disabled:opacity-75 disabled:active:scale-100 flex items-center justify-center"
+                    className="w-full md:w-auto whitespace-nowrap bg-family-primary hover:shadow-xl text-white font-bold h-[72px] px-12 rounded-full transition-all focus:scale-95 active:scale-95 disabled:opacity-75 disabled:active:scale-100 flex items-center justify-center"
                 >
                     <div aria-live="polite" aria-atomic="true" className="flex items-center justify-center">
                         {status === 'loading' ? (
@@ -104,14 +104,14 @@ export default function WaitlistForm() {
 
             {/* Validation error — below the pill */}
             {emailError && (
-                <p id="waitlist-email-error" className="text-sm text-red-500 mt-2 px-4">
+                <p id="waitlist-email-error" className="text-sm text-status-alert mt-2 px-4">
                     {emailError}
                 </p>
             )}
 
             {/* API error — below the pill */}
             {status === 'error' && message && (
-                <p className="text-sm text-red-500 mt-2 px-4">{message}</p>
+                <p className="text-sm text-status-alert mt-2 px-4">{message}</p>
             )}
         </div>
     );

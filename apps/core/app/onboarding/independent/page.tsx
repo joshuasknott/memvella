@@ -164,7 +164,7 @@ function IndependentSetupContent() {
         )}
 
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <BrandLogo standalone animated className="h-8 w-auto drop-shadow-sm md:h-10" />
+          <BrandLogo standalone className="h-8 w-auto drop-shadow-sm md:h-10" />
         </div>
 
         <div className="z-10 flex gap-2">

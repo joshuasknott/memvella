@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <StaticPageLayout title="Privacy Policy">
-      <p className="text-slate-500 not-prose text-sm">Last updated: April 2026</p>
+      <p className="text-text-tertiary not-prose text-sm">Last updated: April 2026</p>
 
       <p>
         We know privacy policies are usually dense and hard to read. Ours is

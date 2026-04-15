@@ -5,7 +5,7 @@ export default function UniversalSplash() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-linear-to-b from-primary-fixed border-t border-transparent to-surface px-6 text-center font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
       <div className="mb-12">
-        <BrandLogo standalone animated className="w-auto h-20 md:h-24 drop-shadow-sm" />
+        <BrandLogo standalone className="w-auto h-20 md:h-24 drop-shadow-sm" />
       </div>
       
       <div className="w-full max-w-lg flex flex-col items-center animate-in slide-in-from-bottom-4 fade-in duration-500 zoom-in-95">

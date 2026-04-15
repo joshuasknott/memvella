@@ -10,9 +10,16 @@
   /* ─── Shared Foundation ─── */
   --color-canvas: #FBFBF9;
   --color-surface: #FFFFFF;
+  --color-surface-muted: #F5F5F7;
+  --color-surface-inverse: #0F172A;
+  --color-surface-inverse-muted: #1E293B;
   --color-border: #D8DCE3;
+  --color-border-inverse: #334155;
   --color-text-primary: #1A1D26;
   --color-text-secondary: #4B5263;
+  --color-text-tertiary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-text-inverse-muted: #CBD5E1;
 
   /* ─── Family & Marketing Pathway ─── */
   --color-family-primary: #2D3250;
@@ -31,6 +38,8 @@
   /* ─── Typography (values injected by next/font/google in layouts) ─── */
   --font-senior: var(--font-senior);
   --font-family: var(--font-family);
+  --font-headline: var(--font-senior);
+  --font-body: var(--font-family);
 
   /* ─── Border Radius ─── */
   --radius-lg: 2rem;
