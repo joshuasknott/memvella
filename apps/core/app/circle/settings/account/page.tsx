@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { KeyRound, Loader2, Shield, Smartphone, User } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { authClient } from "@/lib/auth-client";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 

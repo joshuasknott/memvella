@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPairingRetryMessage, isPairingRateLimitError } from "../lib/pairing-rate-limit";
+import { buildPairingRetryMessage, isPairingRateLimitError } from "./pairingRateLimit";
 import { formatInvalidSessionMessage } from "./terminology";
 
 describe("kiosk pairing throttle behavior", () => {

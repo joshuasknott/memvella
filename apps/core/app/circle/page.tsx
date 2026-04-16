@@ -11,7 +11,7 @@ import {
   MessageSquare,
   UserPlus,
 } from "lucide-react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 
 const ROUTINE_ICON_MAP: Record<string, React.ElementType> = {

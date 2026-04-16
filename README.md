@@ -1,11 +1,17 @@
 # Memvella
 
-Memvella is a PNPM/Turbo monorepo for the shipped Memvella product and its marketing site.
+Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex backend, marketing site, and internal tooling.
 
 ## Workspace
 
-- `apps/core`: the product app. This contains the shared `/circle` family-side workspace, the assisted tablet flow, the independent senior flow, the Next.js frontend, and the Convex backend.
+- `apps/core`: the product frontend. Contains the shared `/circle` family-side workspace, the assisted tablet flow, the independent senior flow, and the Next.js frontend.
+- `apps/backend-convex`: the Convex backend. Owns all server-side functions, schema, auth config, and AI actions. Exports `@memvella/backend` for frontend consumers.
 - `apps/marketing`: the marketing and waitlist app.
+- `apps/internal`: internal operations, support, and QA tools (scaffold).
+- `packages/ui`: shared design system components and tokens (`@memvella/ui`).
+- `packages/config-typescript`: shared TypeScript base configs.
+- `packages/config-eslint`: shared ESLint configs.
+- `packages/testing`: shared test fixtures and seed helpers (scaffold).
 
 ## Current Product Surface
 
@@ -43,9 +49,10 @@ Current deferred gaps:
 
 1. Install dependencies with `pnpm install`.
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
-3. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
-4. Start the Convex dev backend with `pnpm convex:dev`.
-5. Start the monorepo dev processes with `pnpm dev`.
+3. Create `apps/backend-convex/.env.local` from `apps/backend-convex/.env.example` with your `CONVEX_DEPLOYMENT` value.
+4. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
+5. Start the Convex dev backend with `pnpm convex:dev`.
+6. Start the monorepo dev processes with `pnpm dev`.
 
 ## Common Commands
 
@@ -58,8 +65,8 @@ Current deferred gaps:
 - `pnpm test:e2e:ui`: open the Playwright UI runner.
 - `pnpm test:e2e:headed`: run Playwright headed.
 - `pnpm verify`: run lint, type-check, test, and build in sequence.
-- `pnpm convex:dev`: run Convex dev for `apps/core`.
-- `pnpm convex:deploy`: deploy the Convex backend for `apps/core`.
+- `pnpm convex:dev`: run Convex dev for `apps/backend-convex`.
+- `pnpm convex:deploy`: deploy the Convex backend.
 
 ## Documentation
 
@@ -80,6 +87,6 @@ The root `docs/` files are expected to describe the current shipped product and 
 ## Repo Rules
 
 - Root `docs/` files are the canonical written source of truth.
-- `apps/core/convex/_generated/ai/guidelines.md` must be read before editing Convex code.
+- `apps/backend-convex/convex/_generated/ai/guidelines.md` must be read before editing Convex code.
 - Legacy build artifacts such as `.next/` and `.turbo/` are disposable and should not be treated as source material.
 - Historical or superseded notes belong under `docs/archive/`.

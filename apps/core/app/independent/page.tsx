@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAction, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@memvella/backend/dataModel";
 import { BrandLogo } from "@memvella/ui";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceInputPill } from "@/components/shared-senior/VoiceInputPill";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { speakText, type VoiceUiState } from "@/lib/browser-speech";
 import { signInWithIndependentPasskey } from "@/lib/independent-passkey-client";
 import {

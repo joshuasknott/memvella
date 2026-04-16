@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { fetchAuthMutation } from "@/lib/auth-server";
 import { ensureMemvellaTestRequest } from "@/lib/test-support-server";
 

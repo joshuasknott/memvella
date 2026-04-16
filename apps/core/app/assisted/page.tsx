@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@memvella/backend/dataModel";
 import { Mic } from "lucide-react";
 import { BrandLogo } from "@memvella/ui";
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceModal } from "@/components/shared-senior/VoiceModal";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { stopSpeaking } from "@/lib/browser-speech";
 import { useAssistedLiveVoice } from "@/lib/use-assisted-live-voice";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";

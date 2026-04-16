@@ -1,7 +1,7 @@
 "use client";
 
 import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 
 export function useCircleProfile() {
   const { isAuthenticated, isLoading } = useConvexAuth();

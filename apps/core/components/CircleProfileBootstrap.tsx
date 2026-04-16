@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { authClient } from "@/lib/auth-client";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 

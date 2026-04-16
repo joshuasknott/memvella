@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Loader2, Mic, Square } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import {
   resolveSpeechRecognitionCtor,
   type BrowserSpeechRecognitionEventLike,

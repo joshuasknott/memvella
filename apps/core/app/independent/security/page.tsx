@@ -7,8 +7,8 @@ import { ArrowLeft, KeyRound, Loader2, ShieldCheck, Smartphone } from "lucide-re
 import { PrimaryButton, SecondaryButton } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { api } from "@memvella/backend";
+import type { Id } from "@memvella/backend/dataModel";
 import { registerIndependentPasskey } from "@/lib/independent-passkey-client";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
 

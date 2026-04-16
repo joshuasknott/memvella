@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import {
   buildAssistedLiveConnectConfig,

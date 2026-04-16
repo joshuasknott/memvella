@@ -10,7 +10,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 
 export default function OrganiserSettingsPage() {

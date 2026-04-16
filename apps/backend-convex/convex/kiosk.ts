@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx } from "./_generated/server";
-import { buildPairingRetryMessage } from "../lib/pairing-rate-limit";
+import { buildPairingRetryMessage } from "./pairingRateLimit";
 import {
   getSeniorProfileByMode,
   requireFamilySideCapability,

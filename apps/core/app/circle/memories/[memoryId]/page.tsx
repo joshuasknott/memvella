@@ -13,9 +13,9 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@memvella/backend/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { PrimaryButton, SecondaryButton } from "@memvella/ui";
 import { formatLastEditedLabel, formatMemoryRecordTypeLabel } from "@/lib/memory-record-ui";
 

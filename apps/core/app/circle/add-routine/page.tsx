@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { CalendarDays, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
 import { useCircleProfile } from "@/lib/use-circle-profile";

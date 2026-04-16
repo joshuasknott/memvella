@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle2, Sparkles, TriangleAlert, XCircle } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import type { Id } from "@/convex/_generated/dataModel";
-import { api } from "@/convex/_generated/api";
+import type { Id } from "@memvella/backend/dataModel";
+import { api } from "@memvella/backend";
 
 function formatTimestamp(timestamp: number) {
   return new Date(timestamp).toLocaleString("en-GB", {

@@ -1,9 +1,11 @@
 # Memvella Agent Guide
 
-Memvella is a PNPM/Turbo monorepo with two applications:
+Memvella is a PNPM/Turbo monorepo with four applications and several shared packages:
 
-- `apps/core`: the product app plus the Convex backend
+- `apps/core`: the product frontend (Next.js)
+- `apps/backend-convex`: the Convex backend (exports `@memvella/backend`)
 - `apps/marketing`: the marketing and waitlist app
+- `apps/internal`: internal ops/support/QA tools (scaffold)
 
 ## Read Order
 
@@ -36,7 +38,7 @@ This version has breaking changes. APIs, conventions, and file structure may dif
 <!-- convex-ai-start -->
 This project uses [Convex](https://convex.dev) as its backend.
 
-When working on Convex code, **always read `apps/core/convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+When working on Convex code, **always read `apps/backend-convex/convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
 
 If you touch auth, sessions, onboarding, or the data model, also read `docs/auth-and-identity.md` and `docs/data-model.md` before editing.
 

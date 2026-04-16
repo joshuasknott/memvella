@@ -2,15 +2,21 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-04-16
 Owners: engineering
 Read when: touching routing, backend integration, schema design, or repo structure
 Depends on: docs/product.md, docs/data-model.md
 
 ## Monorepo Layout
 
-- `apps/core`: Next.js product app and Convex backend
+- `apps/core`: Next.js product frontend
+- `apps/backend-convex`: Convex backend (exports `@memvella/backend` and `@memvella/backend/dataModel`)
 - `apps/marketing`: Next.js marketing app
+- `apps/internal`: internal operations, support, and QA tools (scaffold)
+- `packages/ui`: shared design system components and tokens (`@memvella/ui`)
+- `packages/config-typescript`: shared TypeScript base configs
+- `packages/config-eslint`: shared ESLint configs
+- `packages/testing`: shared test fixtures and seed helpers (scaffold)
 - `docs/`: canonical product and engineering documentation
 
 ## Core App Structure
@@ -18,7 +24,12 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core/app`: App Router routes, layouts, and API routes
 - `apps/core/components`: shared UI and experience-specific components
 - `apps/core/lib`: frontend helpers, auth glue, device fingerprinting, push helpers, and senior session helpers
-- `apps/core/convex`: schema, queries, mutations, actions, HTTP router, and auth integration
+
+## Backend Structure
+
+- `apps/backend-convex/convex`: schema, queries, mutations, actions, HTTP router, and auth integration
+- Frontend apps import the Convex `api` object as `import { api } from "@memvella/backend"`
+- Frontend apps import types as `import type { Id } from "@memvella/backend/dataModel"`
 
 ## Routing Model
 
@@ -91,7 +102,8 @@ Current route facts:
 ### Backend
 
 - Convex is the system of record for product data and backend logic.
-- Better Auth routes are registered into the Convex HTTP router in `apps/core/convex/http.ts`.
+- The Convex backend lives in `apps/backend-convex/convex/`.
+- Better Auth routes are registered into the Convex HTTP router in `apps/backend-convex/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
 - Convex functions implement family-side auth, member invites, assisted sessions, independent passkeys and recovery, routines, memories, notifications, and live voice.
 

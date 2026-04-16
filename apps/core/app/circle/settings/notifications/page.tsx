@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Bell, Loader2, Smartphone, ShieldCheck } from "lucide-react";
 import Toggle from "@/components/Toggle";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 import {
   getCurrentDeviceLabel,

@@ -7,7 +7,7 @@ import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { PrimaryButton, SecondaryButton, TextInput, BrandLogo } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { registerIndependentPasskey } from "@/lib/independent-passkey-client";
 import {

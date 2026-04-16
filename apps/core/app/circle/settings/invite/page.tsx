@@ -11,7 +11,7 @@ import {
   RefreshCw,
   UserPlus,
 } from "lucide-react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@memvella/backend";
 import { useToast } from "@/components/ui/ToastProvider";
 import { FormCard } from "@/components/ui/FormCard";
 import { PrimaryButton } from "@memvella/ui";

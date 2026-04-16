@@ -7,7 +7,7 @@ import {
   VoiceActivityType,
 } from "@google/genai";
 import { useEffect, useRef, useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@memvella/backend/dataModel";
 import { buildAssistedLiveConnectConfig } from "@/lib/gemini-live-config";
 import {
   isMemvellaBrowserTestMode,

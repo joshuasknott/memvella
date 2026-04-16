@@ -11,8 +11,8 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { api } from "@memvella/backend";
+import type { Id } from "@memvella/backend/dataModel";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 
 function formatDateTime(timestamp: number) {

@@ -1,4 +1,4 @@
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@memvella/backend/dataModel";
 
 export type UploadKind = "image" | "audio" | "video";
 

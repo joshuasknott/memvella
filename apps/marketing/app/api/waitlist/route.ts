@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
 import { NextResponse } from "next/server";
-import { api } from "../../../../core/convex/_generated/api";
+import { api } from "@memvella/backend";
 
 export const runtime = "nodejs";
 

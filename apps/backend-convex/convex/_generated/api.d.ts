@@ -26,6 +26,7 @@ import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as notificationsWorker from "../notificationsWorker.js";
 import type * as organiser from "../organiser.js";
+import type * as pairingRateLimit from "../pairingRateLimit.js";
 import type * as people from "../people.js";
 import type * as profile from "../profile.js";
 import type * as rateLimits from "../rateLimits.js";
@@ -70,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   notificationsWorker: typeof notificationsWorker;
   organiser: typeof organiser;
+  pairingRateLimit: typeof pairingRateLimit;
   people: typeof people;
   profile: typeof profile;
   rateLimits: typeof rateLimits;
