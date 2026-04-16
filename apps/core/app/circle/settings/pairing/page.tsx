@@ -49,13 +49,15 @@ export default function PairingSettingsPage() {
   if (!isOrganiser) {
     return (
       <div className="flex w-full flex-col gap-6 px-4 pb-8">
-        <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
-          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
-            Tablet Access
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-gray-600">
-            Only the Organiser can pair or revoke Tablet User devices for this Circle.
-          </p>
+        <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
+          <div data-testid="pairing-settings-restricted">
+            <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
+              Tablet Access
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-text-secondary">
+              Only the Organiser can pair or revoke Tablet User devices for this Circle.
+            </p>
+          </div>
         </section>
       </div>
     );
@@ -136,45 +138,48 @@ export default function PairingSettingsPage() {
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 pb-8">
-      <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-800">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary">
               Assisted device pairing
             </p>
-            <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
               Pairing
             </h1>
-            <p className="mt-2 text-lg leading-relaxed text-gray-600">
+            <p className="mt-2 text-lg leading-relaxed text-text-secondary">
               Generate a secure pairing code for {seniorDisplayName} and manage every active Tablet User device session linked to this Circle.
             </p>
           </div>
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
             <MonitorSmartphone className="h-7 w-7" />
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border-2 border-dashed border-purple-200 bg-slate-50 p-8 text-center">
+        <div className="mt-6 rounded-xl border-2 border-dashed border-family-primary/20 bg-surface-muted p-8 text-center">
           {formattedPin ? (
             <>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-purple-800">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-family-primary">
                 Active code
               </p>
-              <p className="mt-4 font-mono text-4xl font-bold tracking-[0.2em] text-purple-800">
+              <p
+                className="mt-4 font-mono text-4xl font-bold tracking-[0.2em] text-family-primary"
+                data-testid="active-pairing-code"
+              >
                 {formattedPin}
               </p>
               {pinExpiresAt ? (
-                <p className="mt-3 text-sm font-medium text-gray-600">
+                <p className="mt-3 text-sm font-medium text-text-secondary">
                   Expires {formatDateTime(pinExpiresAt)}
                 </p>
               ) : null}
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-text-tertiary">
                 Ready to pair
               </p>
-              <p className="mt-4 text-lg font-medium text-slate-700">
+              <p className="mt-4 text-lg font-medium text-text-secondary">
                 Generate a fresh 6-digit code to connect a tablet.
               </p>
             </>
@@ -188,7 +193,8 @@ export default function PairingSettingsPage() {
               void handleGeneratePin();
             }}
             disabled={isGenerating}
-            className="flex min-h-[64px] flex-1 items-center justify-center gap-2 rounded-full bg-[#6B21A8] px-6 text-base font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            data-testid="generate-pairing-code-button"
+            className="flex min-h-[64px] flex-1 items-center justify-center gap-2 rounded-full bg-senior-primary px-6 text-base font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isGenerating ? (
               <>
@@ -209,7 +215,7 @@ export default function PairingSettingsPage() {
               void handleDeactivate();
             }}
             disabled={isDeactivating}
-            className="flex min-h-[64px] flex-1 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-6 text-base font-semibold text-slate-700 shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-[64px] flex-1 items-center justify-center gap-2 rounded-full border border-border bg-surface px-6 text-base font-semibold text-text-secondary shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isDeactivating ? (
               <>
@@ -226,16 +232,16 @@ export default function PairingSettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
             <ShieldOff className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="font-headline text-2xl font-bold text-gray-900">
+            <h2 className="font-family text-lg font-bold text-text-primary">
               Active Tablet User devices
             </h2>
-            <p className="mt-2 text-base leading-relaxed text-gray-600">
+            <p className="mt-2 text-base leading-relaxed text-text-secondary">
               Revoke an individual tablet if it is replaced, shared, or no longer trusted.
             </p>
           </div>
@@ -243,11 +249,11 @@ export default function PairingSettingsPage() {
 
         <div className="mt-5 space-y-3">
           {assistedSessions === undefined ? (
-            <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-primary/50" />
+            <div className="flex items-center justify-center rounded-xl bg-surface-muted px-4 py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-family-primary/50" />
             </div>
           ) : assistedSessions.length === 0 ? (
-            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
+            <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
               No active Tablet User device sessions are connected right now.
             </div>
           ) : (
@@ -255,21 +261,21 @@ export default function PairingSettingsPage() {
               (sessionItem: NonNullable<typeof assistedSessions>[number]) => (
                 <div
                   key={sessionItem.id}
-                  className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                  className="rounded-xl border border-border bg-surface-muted px-4 py-4"
                 >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-blue-800 shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-family-accent shadow-sm">
                       <Smartphone className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-base font-bold text-gray-900">
+                      <p className="text-base font-bold text-text-primary">
                         Tablet User device
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Last active {formatDateTime(sessionItem.lastValidatedAt)}
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Expires {formatDateTime(sessionItem.expiresAt)}
                       </p>
                     </div>
@@ -281,7 +287,8 @@ export default function PairingSettingsPage() {
                       void handleRevokeSession(sessionItem.id);
                     }}
                     disabled={revokingSessionId === sessionItem.id}
-                    className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                    data-testid={`revoke-assisted-session-${sessionItem.id}`}
+                    className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-surface-inverse px-4 text-sm font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {revokingSessionId === sessionItem.id ? "Revoking..." : "Revoke"}
                   </button>

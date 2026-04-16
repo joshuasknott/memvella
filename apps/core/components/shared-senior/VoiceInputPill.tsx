@@ -1,8 +1,14 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff } from "lucide-react";
 import type { VoiceUiState } from "@/lib/browser-speech";
+import {
+  isMemvellaBrowserTestMode,
+  resolveSpeechRecognitionCtor,
+  type BrowserSpeechRecognitionEventLike,
+  type BrowserSpeechRecognitionInstance,
+} from "@/lib/browser-speech";
 
 interface VoiceInputPillProps {
   onSubmit: (text: string) => void;
@@ -10,32 +16,6 @@ interface VoiceInputPillProps {
   statusMessage?: string | null;
   errorMessage?: string | null;
 }
-
-interface SpeechRecognitionResultLike {
-  0: {
-    transcript: string;
-  };
-}
-
-interface SpeechRecognitionEventLike {
-  results: ArrayLike<SpeechRecognitionResultLike>;
-}
-
-interface ISpeechRecognition {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-type SpeechRecognitionCtor = new () => ISpeechRecognition;
-type SpeechWindow = Window & {
-  SpeechRecognition?: SpeechRecognitionCtor;
-  webkitSpeechRecognition?: SpeechRecognitionCtor;
-};
 
 function resolvePlaceholder(isListening: boolean, voiceState: VoiceUiState) {
   if (isListening) {
@@ -62,43 +42,105 @@ export function VoiceInputPill({
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
 
-  const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognitionInstance | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const stopIntentRef = useRef<"none" | "user-stop" | "teardown">("none");
+  const startRequestIdRef = useRef(0);
+  const isStartPendingRef = useRef(false);
+  const isMountedRef = useRef(true);
   const isBusy = isListening || voiceState !== "idle";
 
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // Ignore duplicate stop calls after recognition has already ended.
-      }
+  const releaseStream = useCallback((stream?: MediaStream | null) => {
+    if (!stream) {
+      return;
     }
 
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    setIsListening(false);
+    stream.getTracks().forEach((track) => track.stop());
   }, []);
 
-  const startRecording = useCallback(async () => {
-    setInputValue("");
-    setIsListening(true);
+  const cleanupAfterStop = useCallback(() => {
+    releaseStream(streamRef.current);
+    streamRef.current = null;
+    recognitionRef.current = null;
+
+    if (isMountedRef.current) {
+      setIsListening(false);
+    }
+  }, [releaseStream]);
+
+  const stopRecording = useCallback((intent: "user-stop" | "teardown" = "user-stop") => {
+    startRequestIdRef.current += 1;
+    isStartPendingRef.current = false;
+    stopIntentRef.current = intent;
+
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      cleanupAfterStop();
+      return;
+    }
+
+    if (intent === "teardown") {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+    }
 
     try {
-      streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (intent === "teardown" && typeof recognition.abort === "function") {
+        recognition.abort();
+      } else {
+        recognition.stop?.();
+      }
+    } catch {
+      cleanupAfterStop();
+      return;
+    }
 
-      const speechWindow = window as SpeechWindow;
-      const RecognitionApi =
-        speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (intent === "teardown") {
+      cleanupAfterStop();
+    }
+  }, [cleanupAfterStop]);
 
-      if (!RecognitionApi) {
-        alert("Voice recognition is not available in this browser. Please type instead.");
-        setIsListening(false);
+  const startRecording = useCallback(async () => {
+    if (voiceState !== "idle" || isListening || isStartPendingRef.current) {
+      return;
+    }
+
+    const RecognitionApi = resolveSpeechRecognitionCtor();
+
+    if (!RecognitionApi) {
+      alert("Voice recognition is not available in this browser. Please type instead.");
+      return;
+    }
+
+    setInputValue("");
+    setIsListening(true);
+    stopIntentRef.current = "none";
+    isStartPendingRef.current = true;
+
+    const startRequestId = startRequestIdRef.current + 1;
+    startRequestIdRef.current = startRequestId;
+
+    try {
+      const shouldSkipMicrophoneAccess = isMemvellaBrowserTestMode();
+      const mediaStream = shouldSkipMicrophoneAccess
+        ? null
+        : await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      if (
+        startRequestId !== startRequestIdRef.current ||
+        stopIntentRef.current !== "none" ||
+        !isMountedRef.current
+      ) {
+        releaseStream(mediaStream);
+        isStartPendingRef.current = false;
+        if (isMountedRef.current) {
+          setIsListening(false);
+        }
         return;
       }
+
+      streamRef.current = mediaStream;
 
       const recognition = new RecognitionApi();
       recognitionRef.current = recognition;
@@ -108,29 +150,64 @@ export function VoiceInputPill({
 
       let finalCaptured = "";
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: BrowserSpeechRecognitionEventLike) => {
         const currentTranscript = Array.from(event.results)
           .map((result) => result[0].transcript)
           .join("");
-        setInputValue(currentTranscript);
+        if (isMountedRef.current) {
+          setInputValue(currentTranscript);
+        }
         finalCaptured = currentTranscript;
       };
 
-      recognition.onend = () => {
-        stopRecording();
-        if (finalCaptured.trim()) {
-          onSubmit(finalCaptured.trim());
-          setInputValue("");
+      recognition.onerror = (event) => {
+        const wasIntentionalStop = stopIntentRef.current !== "none";
+        const isExpectedStopError =
+          event.error === "aborted" || event.error === "no-speech";
+
+        if (!wasIntentionalStop && !isExpectedStopError) {
+          console.error("Speech recognition error:", event.error);
+          alert("Mic error. Please try again or type instead.");
+        }
+
+        if (!wasIntentionalStop && !isExpectedStopError) {
+          stopIntentRef.current = "teardown";
+          cleanupAfterStop();
         }
       };
 
+      recognition.onend = () => {
+        const captured = finalCaptured.trim();
+        const stopIntent = stopIntentRef.current;
+
+        cleanupAfterStop();
+        stopIntentRef.current = "none";
+
+        if (captured && stopIntent !== "teardown") {
+          onSubmit(captured);
+          if (isMountedRef.current) {
+            setInputValue("");
+          }
+        }
+      };
+
+      isStartPendingRef.current = false;
       recognition.start();
     } catch (error) {
       console.error(error);
       alert("Microphone access is blocked. Please type instead.");
-      setIsListening(false);
+      cleanupAfterStop();
+      stopIntentRef.current = "none";
+      isStartPendingRef.current = false;
     }
-  }, [onSubmit, stopRecording]);
+  }, [cleanupAfterStop, isListening, onSubmit, releaseStream, voiceState]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      stopRecording("teardown");
+    };
+  }, [stopRecording]);
 
   const handleTextInputSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -150,7 +227,7 @@ export function VoiceInputPill({
             {errorMessage}
           </div>
         ) : statusMessage ? (
-          <div className="mb-4 rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-lg font-medium text-blue-900 shadow-sm">
+          <div className="mb-4 rounded-3xl border border-family-accent/15 bg-family-accent/10 px-5 py-4 text-lg font-medium text-family-accent shadow-sm">
             {statusMessage}
           </div>
         ) : null}
@@ -172,7 +249,7 @@ export function VoiceInputPill({
             {inputValue.trim() && !isListening && voiceState === "idle" ? (
               <button
                 type="submit"
-                className="mr-3 min-h-[56px] shrink-0 rounded-full bg-[#1D4ED8] px-5 text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
+                className="mr-3 min-h-[56px] shrink-0 rounded-full bg-family-accent px-5 text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
               >
                 Save
               </button>
@@ -191,7 +268,7 @@ export function VoiceInputPill({
               className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                 isListening
                   ? "scale-105 bg-red-500 text-white shadow-[0_0_18px_rgba(239,68,68,0.35)]"
-                  : "bg-[#6B21A8] text-white shadow-md active:scale-95"
+                  : "bg-senior-primary text-white shadow-md active:scale-95"
               } ${voiceState !== "idle" && !isListening ? "opacity-60" : ""}`}
             >
               {isListening ? (

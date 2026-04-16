@@ -28,7 +28,7 @@ function AssetPreview({
 }) {
   if (asset.assetType === "image") {
     return (
-      <div className="relative h-64 w-full overflow-hidden rounded-3xl">
+      <div className="relative h-64 w-full overflow-hidden rounded-xl">
         <Image
           src={asset.resolvedUrl}
           alt={asset.fileName ?? title}
@@ -41,7 +41,7 @@ function AssetPreview({
   }
 
   if (asset.assetType === "video") {
-    return <video controls src={asset.resolvedUrl} className="w-full rounded-3xl" />;
+    return <video controls src={asset.resolvedUrl} className="w-full rounded-xl" />;
   }
 
   return <audio controls src={asset.resolvedUrl} className="w-full" />;
@@ -128,8 +128,8 @@ export default function OrganiserMemoryEditPage() {
   if (memoryDetail === undefined) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-800" />
-        <p className="text-lg font-medium text-gray-600">Loading this memory...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-family-primary" />
+        <p className="text-lg font-medium text-text-secondary">Loading this memory...</p>
       </div>
     );
   }
@@ -137,9 +137,9 @@ export default function OrganiserMemoryEditPage() {
   if (memoryDetail === null) {
     return (
       <div className="flex w-full flex-col gap-6 px-4 pb-32">
-        <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-xl font-bold text-gray-900">Memory not found</p>
-          <p className="mt-2 text-lg leading-relaxed text-gray-500">
+        <div className="rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-sm">
+          <p className="text-lg font-bold text-text-primary">Memory not found</p>
+          <p className="mt-2 text-lg leading-relaxed text-text-secondary">
             This record is no longer available in the current Circle.
           </p>
         </div>
@@ -282,21 +282,21 @@ export default function OrganiserMemoryEditPage() {
   return (
     <div className="flex min-h-[100dvh] w-full flex-col justify-between px-4 pb-32">
       <div className="space-y-6">
-        <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-800">
+        <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary">
             Edit {formatMemoryRecordTypeLabel(memoryDetail.recordType)}
           </p>
-          <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
             {memoryDetail.title}
           </h1>
-          <p className="mt-2 text-lg leading-relaxed text-gray-600">
+          <p className="mt-2 text-lg leading-relaxed text-text-secondary">
             Keep this Circle record accurate and easy to revisit.
           </p>
         </section>
 
         <FormCard as="section" className="space-y-8">
           <div className="space-y-3">
-            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="memory_title">
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_title">
               Title
             </label>
             <TextInput
@@ -309,8 +309,8 @@ export default function OrganiserMemoryEditPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="memory_date">
-              Date <span className="ml-2 text-sm font-normal italic text-gray-500">(Optional)</span>
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_date">
+              Date <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
             </label>
             <TextInput
               id="memory_date"
@@ -322,8 +322,8 @@ export default function OrganiserMemoryEditPage() {
 
           {memoryDetail.recordType === "audio" ? (
             <div className="space-y-3">
-              <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="memory_link">
-                Link <span className="ml-2 text-sm font-normal italic text-gray-500">(Optional)</span>
+              <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_link">
+                Link <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
               </label>
               <TextInput
                 id="memory_link"
@@ -337,7 +337,7 @@ export default function OrganiserMemoryEditPage() {
 
           {memoryDetail.recordType === "voice" ? (
             <div className="space-y-3">
-              <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="memory_transcript">
+              <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_transcript">
                 Transcript
               </label>
               <textarea
@@ -346,12 +346,12 @@ export default function OrganiserMemoryEditPage() {
                 required
                 value={transcript}
                 onChange={(event) => setTranscript(event.target.value)}
-                className="min-h-[160px] w-full resize-none rounded-3xl border-2 border-gray-200 bg-white p-6 text-lg text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-purple-800 focus:ring-2 focus:ring-purple-800/20"
+                className="min-h-[160px] w-full resize-none rounded-xl border-2 border-border bg-surface p-6 text-lg text-text-primary shadow-sm outline-none transition-all placeholder:text-text-secondary focus:border-family-primary focus:ring-2 focus:ring-family-primary/20"
               />
             </div>
           ) : (
             <div className="space-y-3">
-              <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="memory_story">
+              <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_story">
                 {memoryDetail.recordType === "media" ? "Story" : "Details"}
               </label>
               <textarea
@@ -360,35 +360,35 @@ export default function OrganiserMemoryEditPage() {
                 required={memoryDetail.recordType !== "media"}
                 value={story}
                 onChange={(event) => setStory(event.target.value)}
-                className="min-h-[160px] w-full resize-none rounded-3xl border-2 border-gray-200 bg-white p-6 text-lg text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-purple-800 focus:ring-2 focus:ring-purple-800/20"
+                className="min-h-[160px] w-full resize-none rounded-xl border-2 border-border bg-surface p-6 text-lg text-text-primary shadow-sm outline-none transition-all placeholder:text-text-secondary focus:border-family-primary focus:ring-2 focus:ring-family-primary/20"
               />
             </div>
           )}
         </FormCard>
 
         {acceptsFiles ? (
-          <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
+          <section className="rounded-xl border border-family-accent/15 bg-surface p-6 shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-headline text-2xl font-bold text-gray-900">
+                <h2 className="font-family text-lg font-bold text-text-primary">
                   Asset
                 </h2>
-                <p className="mt-2 text-base leading-relaxed text-gray-500">
+                <p className="mt-2 text-base leading-relaxed text-text-secondary">
                   Replace or remove the primary file attached to this memory.
                 </p>
               </div>
             </div>
 
             {visibleAsset ? (
-              <div className="mt-5 overflow-hidden rounded-3xl border border-gray-100 bg-gray-50 p-3">
+              <div className="mt-5 overflow-hidden rounded-xl border border-border bg-surface-muted p-3">
                 <AssetPreview asset={visibleAsset} title={title || memoryDetail.title} />
               </div>
             ) : removeCurrentAsset ? (
-              <div className="mt-5 rounded-3xl bg-red-50 p-4 text-base font-medium text-red-700">
+              <div className="mt-5 rounded-xl bg-red-50 p-4 text-base font-medium text-red-700">
                 The current asset will be removed when you save.
               </div>
             ) : (
-              <div className="mt-5 rounded-3xl bg-gray-50 p-4 text-base font-medium text-gray-500">
+              <div className="mt-5 rounded-xl bg-surface-muted p-4 text-base font-medium text-text-secondary">
                 No asset attached.
               </div>
             )}
@@ -404,7 +404,7 @@ export default function OrganiserMemoryEditPage() {
 
             <div className="mt-5 space-y-3">
               <label htmlFor="memory_asset_input" className="block">
-                <div className="flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1D4ED8] px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95">
+                <div className="flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-family-accent px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95">
                   <Upload className="h-6 w-6" />
                   {currentAsset || selectedFile ? "Choose replacement file" : "Choose file"}
                 </div>
@@ -414,7 +414,7 @@ export default function OrganiserMemoryEditPage() {
                 <button
                   type="button"
                   onClick={discardNewFile}
-                  className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-gray-100 px-6 text-base font-semibold text-gray-700"
+                  className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-surface-muted px-6 text-base font-semibold text-text-secondary"
                 >
                   <X className="h-5 w-5" />
                   Discard new file
@@ -435,7 +435,7 @@ export default function OrganiserMemoryEditPage() {
       </div>
 
       <div className="mt-8 space-y-3">
-        {error ? <p className="px-1 text-sm font-medium text-red-600">{error}</p> : null}
+        {error ? <p className="px-1 text-sm font-medium text-status-alert">{error}</p> : null}
 
         <PrimaryButton onClick={handleSave} disabled={isSaving || !isFormValid}>
           {isSaving ? (

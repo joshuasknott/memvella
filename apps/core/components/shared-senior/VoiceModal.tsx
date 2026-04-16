@@ -74,7 +74,7 @@ export function VoiceModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="flex w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10">
-        <h2 className="font-headline text-4xl font-bold text-slate-900 md:text-5xl">
+        <h2 className="font-family text-4xl font-bold text-text-primary md:text-5xl">
           <VoiceStateHeadline
             isConnecting={isConnecting}
             isListening={isListening}
@@ -84,7 +84,7 @@ export function VoiceModal({
           />
         </h2>
 
-        <p className="mt-3 max-w-xl text-xl leading-relaxed text-slate-600 md:text-2xl">
+        <p className="mt-3 max-w-xl text-lg leading-relaxed text-text-secondary md:text-lg">
           {combinedError
             ? combinedError
             : isConnecting
@@ -99,8 +99,8 @@ export function VoiceModal({
         <div className="relative mt-10 flex h-48 w-48 items-center justify-center md:h-56 md:w-56">
           {isListening ? (
             <>
-              <div className="absolute inset-0 rounded-full bg-[#6B21A8]/15 animate-ping" style={{ animationDuration: "1.8s" }} />
-              <div className="absolute inset-4 rounded-full bg-[#6B21A8]/20 animate-pulse" />
+              <div className="absolute inset-0 rounded-full bg-senior-primary/15 animate-ping" style={{ animationDuration: "1.8s" }} />
+              <div className="absolute inset-4 rounded-full bg-senior-primary/20 animate-pulse" />
             </>
           ) : null}
 
@@ -109,10 +109,10 @@ export function VoiceModal({
               combinedError
                 ? "bg-red-500 text-white"
                 : isSpeaking
-                  ? "bg-[#1D4ED8] text-white"
+                  ? "bg-family-accent text-white"
                   : isProcessing
-                    ? "bg-slate-800 text-white"
-                    : "bg-[#6B21A8] text-white"
+                    ? "bg-surface-inverse text-white"
+                    : "bg-senior-primary text-white"
             }`}
           >
             {isProcessing ? (
@@ -128,13 +128,13 @@ export function VoiceModal({
         </div>
 
         {(liveTranscript || lastTranscript || lastReply) && !combinedError ? (
-          <div className="mt-8 w-full space-y-4 rounded-[32px] bg-white p-6 text-left shadow-sm">
+          <div className="mt-8 w-full space-y-4 rounded-[32px] bg-surface p-6 text-left shadow-sm">
             {(liveTranscript || lastTranscript) ? (
               <div>
-                <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-slate-500">
+                <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                   You Said
                 </p>
-                <p className="text-2xl leading-relaxed text-slate-900">
+                <p className="text-lg leading-relaxed text-text-primary">
                   {liveTranscript || lastTranscript}
                 </p>
               </div>
@@ -142,10 +142,10 @@ export function VoiceModal({
 
             {lastReply ? (
               <div>
-                <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-slate-500">
+                <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                   Memvella
                 </p>
-                <p className="text-2xl leading-relaxed text-slate-900">
+                <p className="text-lg leading-relaxed text-text-primary">
                   {lastReply}
                 </p>
               </div>
@@ -160,14 +160,14 @@ export function VoiceModal({
               onClick={() => {
                 onRetry?.();
               }}
-              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-[#1D4ED8] px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95"
+              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-family-accent px-8 text-lg font-bold text-white shadow-md transition-transform active:scale-95"
             >
               Reconnect Voice
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-white px-8 text-2xl font-bold text-slate-900 shadow-md transition-transform active:scale-95"
+              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-surface px-8 text-lg font-bold text-text-primary shadow-md transition-transform active:scale-95"
             >
               Close
             </button>
@@ -176,7 +176,7 @@ export function VoiceModal({
           <button
             type="button"
             onClick={onClose}
-            className="mt-10 flex min-h-[72px] w-full items-center justify-center rounded-full bg-[#6B21A8] px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95"
+            className="mt-10 flex min-h-[72px] w-full items-center justify-center rounded-full bg-senior-primary px-8 text-lg font-bold text-white shadow-md transition-transform active:scale-95"
           >
             Stop Voice Loop
           </button>

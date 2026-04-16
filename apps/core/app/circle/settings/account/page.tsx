@@ -132,52 +132,52 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 pb-8">
-      <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 bg-gray-100">
-            <User className="h-8 w-8 text-gray-400" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface-muted">
+            <User className="h-8 w-8 text-text-secondary" />
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-accent">
               {isOrganiser ? "Organiser profile" : "Member profile"}
             </p>
-            <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
               My Account
             </h1>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="rounded-xl bg-surface-muted px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
               Display name
             </p>
-            <p className="mt-2 text-lg font-bold text-gray-900">{organiserName}</p>
+            <p className="mt-2 text-lg font-bold text-text-primary">{organiserName}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="rounded-xl bg-surface-muted px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
               Email
             </p>
-            <p className="mt-2 text-lg font-bold text-gray-900">
+            <p className="mt-2 text-lg font-bold text-text-primary">
               {session?.user?.email ?? "No email available"}
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="rounded-xl bg-surface-muted px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
               Role
             </p>
-            <p className="mt-2 text-lg font-bold text-gray-900">
+            <p className="mt-2 text-lg font-bold text-text-primary">
               {isOrganiser ? "Organiser" : role === "member" ? "Member" : "Family account"}
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="rounded-xl bg-surface-muted px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
               Circle
             </p>
-            <p className="mt-2 text-lg font-bold text-gray-900">
+            <p className="mt-2 text-lg font-bold text-text-primary">
               {seniorDisplayName}
             </p>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-text-secondary">
               Senior mode: {profile?.seniorMode ?? "not linked yet"}
             </p>
           </div>
@@ -185,16 +185,16 @@ export default function AccountSettingsPage() {
       </section>
 
       {isOrganiser ? (
-        <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
             <Shield className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-headline text-2xl font-bold text-gray-900">
+            <h2 className="font-family text-lg font-bold text-text-primary">
               Tablet access
             </h2>
-            <p className="mt-2 text-base leading-relaxed text-gray-600">
+            <p className="mt-2 text-base leading-relaxed text-text-secondary">
               Review the active Tablet User device sessions tied to this Circle and revoke them if a device should no longer stay signed in.
             </p>
           </div>
@@ -202,11 +202,11 @@ export default function AccountSettingsPage() {
 
         <div className="mt-5 space-y-3">
           {isLoadingSessions ? (
-            <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-primary/50" />
+            <div className="flex items-center justify-center rounded-xl bg-surface-muted px-4 py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-family-primary/50" />
             </div>
           ) : resolvedAssistedSessions.length === 0 ? (
-            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
+            <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
               No active Tablet User device sessions are connected right now.
             </div>
           ) : (
@@ -214,17 +214,17 @@ export default function AccountSettingsPage() {
               (sessionItem: (typeof resolvedAssistedSessions)[number]) => (
                 <div
                   key={sessionItem.id}
-                  className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                  className="rounded-xl border border-border bg-surface-muted px-4 py-4"
                 >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-purple-800 shadow-sm">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-family-primary shadow-sm">
                     <Smartphone className="h-5 w-5" />
                   </div>
                     <div>
-                      <p className="text-base font-bold text-gray-900">
+                      <p className="text-base font-bold text-text-primary">
                         Tablet User device
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Last active {formatDateTime(sessionItem.lastValidatedAt)}
                     </p>
                   </div>
@@ -241,7 +241,7 @@ export default function AccountSettingsPage() {
             void handleRevokeAll();
           }}
           disabled={isLoadingSessions || resolvedAssistedSessions.length === 0}
-          className="mt-5 inline-flex min-h-[56px] items-center justify-center rounded-full bg-slate-900 px-5 text-base font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 inline-flex min-h-[56px] items-center justify-center rounded-full bg-surface-inverse px-5 text-base font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Revoke all tablet sessions
         </button>
@@ -249,22 +249,22 @@ export default function AccountSettingsPage() {
       ) : null}
 
       {isIndependentRecoveryMode ? (
-        <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-family-accent/15 bg-surface p-6 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-[#1D4ED8]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
               <KeyRound className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="font-headline text-2xl font-bold text-gray-900">
+              <h2 className="font-family text-lg font-bold text-text-primary">
                 Independent access help
               </h2>
-              <p className="mt-2 text-base leading-relaxed text-gray-600">
+              <p className="mt-2 text-base leading-relaxed text-text-secondary">
                 Help {seniorDisplayName} recover access explicitly. These actions do not sign you in as them.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-relaxed text-slate-700">
+          <div className="mt-5 rounded-xl bg-surface-muted px-4 py-4 text-sm leading-relaxed text-text-secondary">
             Trusted devices: {organiserRecoveryOverview?.trustedDevices.length ?? 0}
             <br />
             Active recovery codes: {organiserRecoveryOverview?.recoveryCodes.activeCount ?? 0}
@@ -272,27 +272,27 @@ export default function AccountSettingsPage() {
 
           <div className="mt-5 space-y-3">
             {organiserRecoveryOverview === undefined ? (
-              <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-6">
-                <Loader2 className="h-5 w-5 animate-spin text-primary/50" />
+              <div className="flex items-center justify-center rounded-xl bg-surface-muted px-4 py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-family-primary/50" />
               </div>
             ) : resolvedTrustedDevices.length === 0 ? (
-              <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
+              <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
                 No trusted devices are active right now.
               </div>
             ) : (
               resolvedTrustedDevices.map((device) => (
                 <div
                   key={device.id}
-                  className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                  className="rounded-xl border border-border bg-surface-muted px-4 py-4"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-base font-bold text-gray-900">
+                      <p className="text-base font-bold text-text-primary">
                         {device.backedUp || device.deviceType === "multiDevice"
                           ? "Synced trusted device"
                           : "Trusted device"}
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Last used {formatDateTime(device.lastUsedAt ?? device.createdAt)}
                       </p>
                     </div>
@@ -302,7 +302,7 @@ export default function AccountSettingsPage() {
                       onClick={() => {
                         void handleRevokeTrustedDevice(device.id);
                       }}
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-red-200 bg-white px-4 text-sm font-semibold text-red-600"
+                      className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-red-200 bg-surface px-4 text-sm font-semibold text-status-alert"
                     >
                       Remove
                     </button>
@@ -318,7 +318,7 @@ export default function AccountSettingsPage() {
               onClick={() => {
                 void handleRotateRecoveryCodes();
               }}
-              className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-[#1D4ED8] px-5 text-base font-semibold text-white transition-transform active:scale-95"
+              className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-family-accent px-5 text-base font-semibold text-white transition-transform active:scale-95"
             >
               Create fresh recovery codes
             </button>
@@ -327,28 +327,28 @@ export default function AccountSettingsPage() {
               onClick={() => {
                 void handleRevokeAllTrustedDevices();
               }}
-              className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-slate-900 px-5 text-base font-semibold text-white transition-transform active:scale-95"
+              className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-surface-inverse px-5 text-base font-semibold text-white transition-transform active:scale-95"
             >
               Revoke all trusted devices
             </button>
           </div>
 
           {generatedRecoveryCodes ? (
-            <div className="mt-5 rounded-3xl border border-[#1D4ED8]/10 bg-blue-50/60 p-5">
-              <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-[#1D4ED8]">
+            <div className="mt-5 rounded-xl border border-family-accent/10 bg-family-accent/10 p-5">
+              <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-family-accent">
                 Share directly with {seniorDisplayName}
               </p>
               <div className="grid gap-3 md:grid-cols-2">
                 {generatedRecoveryCodes.map((code) => (
                   <div
                     key={code}
-                    className="rounded-2xl bg-white px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-slate-900 shadow-sm"
+                    className="rounded-xl bg-surface px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-text-primary shadow-sm"
                   >
                     {code}
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-sm leading-relaxed text-slate-600">
+              <p className="mt-4 text-sm leading-relaxed text-text-secondary">
                 These codes are shown once. The older set no longer works.
               </p>
             </div>

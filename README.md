@@ -23,7 +23,7 @@ Current deferred gaps:
 - there is no dedicated Activity route yet; `/circle` shows current status and a routines-focused timeline instead
 - there is no separate Alerts page yet; alerts are reviewed inside `/circle/insights`
 - People is currently a limited add-person surface, not a full directory
-- there is no end-to-end browser suite yet
+- browser coverage currently focuses on the first deterministic Playwright smoke flows; see `docs/testing.md` for scope and remaining gaps
 
 ## Stack
 
@@ -54,6 +54,9 @@ Current deferred gaps:
 - `pnpm lint`: run lint tasks across the workspace.
 - `pnpm type-check`: run type-check tasks across the workspace.
 - `pnpm test`: run workspace tests.
+- `pnpm test:e2e`: run the Playwright browser suite.
+- `pnpm test:e2e:ui`: open the Playwright UI runner.
+- `pnpm test:e2e:headed`: run Playwright headed.
 - `pnpm verify`: run lint, type-check, test, and build in sequence.
 - `pnpm convex:dev`: run Convex dev for `apps/core`.
 - `pnpm convex:deploy`: deploy the Convex backend for `apps/core`.

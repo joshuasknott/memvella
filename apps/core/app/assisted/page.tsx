@@ -51,17 +51,21 @@ function getGreeting(date: Date) {
 
 function AssistedRecoveryState() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa] p-6">
+    <main
+      className="flex min-h-screen items-center justify-center bg-[#f8f5fa] p-6"
+      data-testid="assisted-recovery-state"
+    >
       <div className="w-full max-w-xl rounded-[32px] bg-white p-8 text-center shadow-lg">
-        <h1 className="mb-3 font-headline text-3xl font-bold text-slate-900">
+        <h1 className="mb-3 font-headline text-3xl font-bold text-text-primary">
           Tablet pairing expired.
         </h1>
-        <p className="mb-6 text-xl leading-relaxed text-slate-600">
+        <p className="mb-6 text-xl leading-relaxed text-text-secondary">
           This Tablet needs a fresh 6-digit code from an Organiser.
         </p>
         <a
           href="/assisted/login"
-          className="inline-flex min-h-[72px] items-center justify-center rounded-full bg-[#6B21A8] px-8 text-xl font-semibold text-white shadow-md"
+          data-testid="assisted-recovery-cta"
+          className="inline-flex min-h-[72px] items-center justify-center rounded-full bg-senior-primary px-8 text-xl font-semibold text-white shadow-md"
         >
           Reconnect Tablet
         </a>
@@ -250,7 +254,7 @@ export default function AssistedHomePage() {
   if (!deviceFingerprint) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
       </main>
     );
   }
@@ -262,7 +266,7 @@ export default function AssistedHomePage() {
   if (!dashboard || dashboard.status === "invalid") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
       </main>
     );
   }
@@ -276,25 +280,25 @@ export default function AssistedHomePage() {
 
         <div className="grow flex flex-col justify-center py-6 md:py-0">
           <div className="sticky top-0 z-40 mb-4 bg-[#f8f5fa] pb-4 pt-4 md:mb-0 md:pb-0 md:pt-0">
-            <p className="mb-2 font-headline text-2xl font-semibold text-slate-500 md:mb-4 md:text-5xl">
+            <p className="mb-2 font-headline text-2xl font-semibold text-text-tertiary md:mb-4 md:text-5xl">
               {`${getGreeting(now)}, ${dashboard.seniorName}`}
             </p>
-            <h1 className="mb-2 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-7xl">
+            <h1 className="mb-2 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-7xl">
               {formatTime(now)}
             </h1>
-            <p className="mb-6 font-headline text-2xl font-bold text-slate-900 md:mb-12 md:text-4xl">
+            <p className="mb-6 font-headline text-2xl font-bold text-text-primary md:mb-12 md:text-4xl">
               {`Today is ${formatDate(now)}`}
             </p>
           </div>
 
           {!hasRoutine ? (
             <div className="inline-block w-fit rounded-3xl border border-white/40 bg-white/70 px-8 py-6 shadow-sm">
-              <p className="font-headline text-2xl font-bold leading-tight text-[#4e0078]">
+              <p className="font-headline text-2xl font-bold leading-tight text-family-primary">
                 No routines scheduled right now. Enjoy your day!
               </p>
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-[32px] border border-slate-200 border-l-12 border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
+            <div className="relative overflow-hidden rounded-[32px] border border-border border-l-12 border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
               <p className="font-headline text-2xl font-bold leading-tight text-on-surface md:text-3xl">
                 {dashboard.nextEvent.time
                   ? `${dashboard.nextEvent.title} at ${dashboard.nextEvent.time}.`
@@ -310,7 +314,7 @@ export default function AssistedHomePage() {
               setVoiceError(null);
               setIsVoiceModalOpen(true);
             }}
-            className="block w-full rounded-full bg-[#6B21A8] px-8 py-6 text-center shadow-xl transition-transform duration-200 hover:scale-[1.02] active:scale-95 md:w-auto md:px-10 md:py-8"
+            className="block w-full rounded-full bg-senior-primary px-8 py-6 text-center shadow-xl transition-transform duration-200 hover:scale-[1.02] active:scale-95 md:w-auto md:px-10 md:py-8"
           >
             <div className="flex items-center justify-center gap-4 md:gap-6">
               <Mic className="h-10 w-10 shrink-0 text-white md:h-12 md:w-12" strokeWidth={2.5} />

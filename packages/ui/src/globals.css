@@ -31,14 +31,13 @@
   --color-senior-warmth: #A64638;
 
   /* ─── Status & Semantic ─── */
-  --color-status-success: #2D6A4F;
-  --color-status-alert: #8C2B2B;
+  --color-status-success: #2D8A4F;
+  --color-status-alert: #BC2B2B;
   --color-status-insight: #676F9D;
 
   /* ─── Typography (values injected by next/font/google in layouts) ─── */
   --font-senior: var(--font-senior);
   --font-family: var(--font-family);
-  --font-headline: var(--font-senior);
   --font-body: var(--font-family);
 
   /* ─── Border Radius ─── */

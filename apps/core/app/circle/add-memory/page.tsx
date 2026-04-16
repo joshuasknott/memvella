@@ -10,10 +10,10 @@ export default function AddMemoryPage() {
   return (
     <div className="flex w-full flex-col gap-6 px-4">
       <div>
-        <h1 className="text-center font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="text-center font-family text-3xl font-extrabold tracking-tight text-text-primary">
           Add a Memory
         </h1>
-        <p className="mb-4 mt-2 text-center text-lg text-gray-500">
+        <p className="mb-4 mt-2 text-center text-lg text-text-secondary">
           Choose a format to capture a moment for {seniorDisplayName}.
         </p>
       </div>
@@ -21,16 +21,17 @@ export default function AddMemoryPage() {
       <section className="space-y-4">
         <Link
           href="/circle/add-memory/voice"
-          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+          data-testid="open-voice-memory-link"
+          className="flex items-center gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary/80">
             <Mic className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
+            <span className="font-family text-lg font-bold text-text-primary">
               Record Voice Note
             </span>
-            <span className="text-base font-medium text-gray-500">
+            <span className="text-base font-medium text-text-secondary">
               Speak naturally and review the transcript before saving
             </span>
           </div>
@@ -38,16 +39,16 @@ export default function AddMemoryPage() {
 
         <Link
           href="/circle/add-memory/media"
-          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+          className="flex items-center gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
             <Camera className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
+            <span className="font-family text-lg font-bold text-text-primary">
               Photo or Video
             </span>
-            <span className="text-base font-medium text-gray-500">
+            <span className="text-base font-medium text-text-secondary">
               Upload from your camera roll
             </span>
           </div>
@@ -55,16 +56,16 @@ export default function AddMemoryPage() {
 
         <Link
           href="/circle/add-memory/audio"
-          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+          className="flex items-center gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-pink-50 text-pink-600">
             <Music className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
+            <span className="font-family text-lg font-bold text-text-primary">
               Favorite Song
             </span>
-            <span className="text-base font-medium text-gray-500">
+            <span className="text-base font-medium text-text-secondary">
               Save the story behind a track or recording
             </span>
           </div>
@@ -72,16 +73,16 @@ export default function AddMemoryPage() {
 
         <Link
           href="/circle/add-memory/text"
-          className="flex items-center gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-transform active:scale-[0.98]"
+          className="flex items-center gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm transition-transform active:scale-[0.98]"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-600">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-muted text-text-secondary">
             <Type className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-lg font-bold text-gray-900">
+            <span className="font-family text-lg font-bold text-text-primary">
               Write a Story
             </span>
-            <span className="text-base font-medium text-gray-500">
+            <span className="text-base font-medium text-text-secondary">
               Add a detailed memory in text
             </span>
           </div>

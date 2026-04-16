@@ -37,6 +37,7 @@ import type * as seniorAccess from "../seniorAccess.js";
 import type * as seniorAccessHelpers from "../seniorAccessHelpers.js";
 import type * as sessions from "../sessions.js";
 import type * as terminology from "../terminology.js";
+import type * as testSupport from "../testSupport.js";
 import type * as uploadValidation from "../uploadValidation.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
@@ -80,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   seniorAccessHelpers: typeof seniorAccessHelpers;
   sessions: typeof sessions;
   terminology: typeof terminology;
+  testSupport: typeof testSupport;
   uploadValidation: typeof uploadValidation;
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;

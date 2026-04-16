@@ -85,7 +85,7 @@ export function HowItWorks() {
               <FadeIn className={`lg:col-span-7 ${card.imageWrapper}`} delay={200}>
                 <div className={`${card.imageAspect} relative w-full`}>
                   <div
-                    className="absolute inset-0 overflow-hidden rounded-[2.5rem] border-[12px] border-white bg-surface-muted shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-[3rem]"
+                    className="absolute inset-0 overflow-hidden rounded-[2.5rem] border-12 border-white bg-surface-muted shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)] lg:rounded-xl"
                   >
                     <Image
                       src={card.imageSrc}

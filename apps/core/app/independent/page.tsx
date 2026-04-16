@@ -118,10 +118,10 @@ function IndependentRecoveryState({ deviceFingerprint }: { deviceFingerprint: st
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa] p-6">
       <div className="w-full max-w-xl rounded-[32px] bg-white p-8 text-center shadow-lg">
-        <h1 className="mb-3 font-headline text-3xl font-bold text-slate-900">
+        <h1 className="mb-3 font-headline text-3xl font-bold text-text-primary">
           Sign back in to Memvella
         </h1>
-        <p className="mb-6 text-xl leading-relaxed text-slate-600">
+        <p className="mb-6 text-xl leading-relaxed text-text-secondary">
           Use the passkey on this device to reopen your Circle. If you can&apos;t use this device, choose the recovery path instead.
         </p>
 
@@ -137,7 +137,7 @@ function IndependentRecoveryState({ deviceFingerprint }: { deviceFingerprint: st
             void handleUsePasskey();
           }}
           disabled={isUsingPasskey}
-          className="inline-flex min-h-[72px] w-full items-center justify-center rounded-full bg-[#6B21A8] px-8 text-xl font-semibold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
+          className="inline-flex min-h-[72px] w-full items-center justify-center rounded-full bg-senior-primary px-8 text-xl font-semibold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
         >
           {isUsingPasskey ? "Checking passkey..." : "Use passkey"}
         </button>
@@ -296,7 +296,7 @@ export default function IndependentHomePage() {
   if (!deviceFingerprint) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
       </main>
     );
   }
@@ -308,7 +308,7 @@ export default function IndependentHomePage() {
   if (!dashboard || dashboard.status === "invalid") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f8f5fa]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
       </main>
     );
   }
@@ -330,25 +330,25 @@ export default function IndependentHomePage() {
 
         <div className="grow flex flex-col justify-center py-6 md:py-0">
           <div className="sticky top-0 z-40 mb-4 bg-[#f8f5fa] pb-4 pt-4 md:mb-0 md:pb-0 md:pt-0">
-            <p className="mb-2 font-headline text-2xl font-semibold text-slate-500 md:mb-4 md:text-5xl">
+            <p className="mb-2 font-headline text-2xl font-semibold text-text-tertiary md:mb-4 md:text-5xl">
               {`${getGreeting(now)}, ${dashboard.seniorName}`}
             </p>
-            <h1 className="mb-2 font-headline text-4xl font-extrabold tracking-tighter text-slate-900 md:text-7xl">
+            <h1 className="mb-2 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-7xl">
               {formatTime(now)}
             </h1>
-            <p className="mb-6 font-headline text-2xl font-bold text-slate-900 md:mb-12 md:text-4xl">
+            <p className="mb-6 font-headline text-2xl font-bold text-text-primary md:mb-12 md:text-4xl">
               {`Today is ${formatDate(now)}`}
             </p>
           </div>
 
           {!hasRoutine ? (
             <div className="inline-block w-fit rounded-3xl border border-white/40 bg-white/70 px-8 py-6 shadow-sm">
-              <p className="font-headline text-2xl font-bold leading-tight text-[#4e0078]">
+              <p className="font-headline text-2xl font-bold leading-tight text-family-primary">
                 No routines scheduled right now. Enjoy your day!
               </p>
             </div>
           ) : (
-            <div className="rounded-[32px] border border-slate-200 border-l-[12px] border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
+            <div className="rounded-[32px] border border-border border-l-[12px] border-l-secondary bg-surface-container-lowest p-6 shadow-md md:p-10">
               <p className="font-headline text-2xl font-bold leading-tight text-on-surface md:text-3xl">
                 {dashboard.nextEvent.time
                   ? `${dashboard.nextEvent.title} at ${dashboard.nextEvent.time}.`
@@ -359,36 +359,36 @@ export default function IndependentHomePage() {
 
           {pendingDraft ? (
             <div className="mt-6 rounded-[32px] bg-white p-6 shadow-md md:p-8">
-              <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-slate-500">
+              <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                 Confirm This Save
               </p>
-              <h2 className="font-headline text-3xl font-bold text-slate-900">
+              <h2 className="font-headline text-3xl font-bold text-text-primary">
                 {pendingDraft.draft.intent === "memory" ? "Log a Memory" : "Create a Routine"}
               </h2>
-              <div className="mt-4 space-y-3 text-left text-xl leading-relaxed text-slate-700">
+              <div className="mt-4 space-y-3 text-left text-xl leading-relaxed text-text-secondary">
                 <p>
-                  <span className="font-bold text-slate-900">Title:</span>{" "}
+                  <span className="font-bold text-text-primary">Title:</span>{" "}
                   {pendingDraft.draft.title}
                 </p>
                 <p>
-                  <span className="font-bold text-slate-900">Details:</span>{" "}
+                  <span className="font-bold text-text-primary">Details:</span>{" "}
                   {pendingDraft.draft.description}
                 </p>
                 {pendingDraft.draft.timeLabel ? (
                   <p>
-                    <span className="font-bold text-slate-900">Time:</span>{" "}
+                    <span className="font-bold text-text-primary">Time:</span>{" "}
                     {pendingDraft.draft.timeLabel}
                   </p>
                 ) : null}
                 {pendingDraft.draft.date ? (
                   <p>
-                    <span className="font-bold text-slate-900">Date:</span>{" "}
+                    <span className="font-bold text-text-primary">Date:</span>{" "}
                     {formatDraftDate(pendingDraft.draft.date)}
                   </p>
                 ) : null}
                 {pendingDraft.draft.intent === "routine" ? (
                   <p>
-                    <span className="font-bold text-slate-900">Schedule:</span>{" "}
+                    <span className="font-bold text-text-primary">Schedule:</span>{" "}
                     {pendingDraft.draft.daysOfWeek.length > 0
                       ? formatDraftDays(pendingDraft.draft.daysOfWeek)
                       : pendingDraft.draft.date
@@ -405,7 +405,7 @@ export default function IndependentHomePage() {
                     void confirmDraft();
                   }}
                   disabled={isSavingDraft}
-                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-[#1D4ED8] px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
+                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-family-accent px-8 text-2xl font-bold text-white shadow-md transition-transform active:scale-95 disabled:opacity-60"
                 >
                   {isSavingDraft ? "Saving..." : "Yes, Save It"}
                 </button>
@@ -415,14 +415,14 @@ export default function IndependentHomePage() {
                     void rejectDraft();
                   }}
                   disabled={isSavingDraft}
-                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-white px-8 text-2xl font-bold text-slate-900 shadow-md transition-transform active:scale-95 disabled:opacity-60"
+                  className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-white px-8 text-2xl font-bold text-text-primary shadow-md transition-transform active:scale-95 disabled:opacity-60"
                 >
                   No, Try Again
                 </button>
               </div>
             </div>
           ) : voiceStatus ? (
-            <div className="mt-6 rounded-3xl border border-blue-100 bg-blue-50 p-5 text-lg leading-relaxed text-blue-900">
+            <div className="mt-6 rounded-3xl border border-family-accent/15 bg-family-accent/10 p-5 text-lg leading-relaxed text-family-accent">
               {voiceStatus}
             </div>
           ) : null}

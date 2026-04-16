@@ -9,7 +9,12 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { buildAssistedLiveConnectConfig } from "@/lib/gemini-live-config";
-import { speakText, stopSpeaking, type VoiceUiState } from "@/lib/browser-speech";
+import {
+  isMemvellaBrowserTestMode,
+  speakText,
+  stopSpeaking,
+  type VoiceUiState,
+} from "@/lib/browser-speech";
 
 type CompletedLiveTurn =
   | {
@@ -44,7 +49,24 @@ type PendingTurnContext =
   | { kind: "soft_check_in_prompt"; checkInId: Id<"routineCheckIns"> }
   | { kind: "soft_check_in_response"; checkInId: Id<"routineCheckIns"> };
 
+type MemvellaTestLiveVoiceControls = {
+  connectError?: string;
+  softCheckInPromptReply?: string;
+  softCheckInResponseTranscript?: string;
+  softCheckInResponseReply?: string;
+};
+
+declare global {
+  interface Window {
+    __memvellaTestLiveVoice?: MemvellaTestLiveVoiceControls;
+  }
+}
+
 const CHECK_IN_RESPONSE_TIMEOUT_MS = 30 * 1000;
+
+function getMemvellaTestLiveVoiceControls() {
+  return window.__memvellaTestLiveVoice ?? {};
+}
 
 function downsampleToPcm16(
   input: Float32Array,
@@ -124,6 +146,11 @@ export function useAssistedLiveVoice({
   const currentTurnRef = useRef<PendingTurnContext | null>(null);
   const pendingCheckInIdRef = useRef<Id<"routineCheckIns"> | null>(null);
   const checkInTimeoutRef = useRef<number | null>(null);
+  const isClosingRef = useRef(false);
+  const openAttemptIdRef = useRef(0);
+  const isActiveRef = useRef(isActive);
+
+  isActiveRef.current = isActive;
 
   async function stopMicrophone() {
     processorRef.current?.disconnect();
@@ -162,19 +189,36 @@ export function useAssistedLiveVoice({
     }, CHECK_IN_RESPONSE_TIMEOUT_MS);
   }
 
-  async function fullyCloseSession() {
-    clearCheckInTimeout();
-    pendingCheckInIdRef.current = null;
-    currentTurnRef.current = null;
-    assistantTextBufferRef.current = "";
-    transcriptBufferRef.current = "";
-    setLiveTranscript("");
-    setIsConnecting(false);
-    setVoiceState("idle");
-    stopSpeaking();
-    await stopMicrophone();
-    sessionRef.current?.close();
-    sessionRef.current = null;
+  async function fullyCloseSession(options?: { skipSessionClose?: boolean }) {
+    if (isClosingRef.current) {
+      return;
+    }
+
+    isClosingRef.current = true;
+    openAttemptIdRef.current += 1;
+
+    try {
+      clearCheckInTimeout();
+      pendingCheckInIdRef.current = null;
+      currentTurnRef.current = null;
+      assistantTextBufferRef.current = "";
+      transcriptBufferRef.current = "";
+      setLiveTranscript("");
+      setIsConnecting(false);
+      setVoiceState("idle");
+      stopSpeaking();
+
+      const activeSession = sessionRef.current;
+      sessionRef.current = null;
+
+      if (!options?.skipSessionClose) {
+        activeSession?.close();
+      }
+
+      await stopMicrophone();
+    } finally {
+      isClosingRef.current = false;
+    }
   }
 
   async function startMicrophone(session: Session) {
@@ -342,15 +386,42 @@ export function useAssistedLiveVoice({
       !sessionToken ||
       !deviceFingerprint ||
       sessionRef.current ||
-      isConnecting
+      isConnecting ||
+      isClosingRef.current
     ) {
       return;
     }
 
     setError(null);
+    const openAttemptId = openAttemptIdRef.current + 1;
+    openAttemptIdRef.current = openAttemptId;
     setIsConnecting(true);
 
+    const isStaleAttempt = () =>
+      openAttemptId !== openAttemptIdRef.current || !isActiveRef.current;
+
     try {
+      if (isMemvellaBrowserTestMode()) {
+        const controls = getMemvellaTestLiveVoiceControls();
+        if (controls.connectError) {
+          throw new Error(controls.connectError);
+        }
+
+        sessionRef.current = {
+          close: () => undefined,
+        } as Session;
+
+        if (isStaleAttempt()) {
+          sessionRef.current = null;
+          setIsConnecting(false);
+          return;
+        }
+
+        setVoiceState("idle");
+        setIsConnecting(false);
+        return;
+      }
+
       const response = await fetch("/api/voice/live/token", {
         method: "POST",
         headers: {
@@ -366,6 +437,11 @@ export function useAssistedLiveVoice({
         throw new Error("Unable to bootstrap the live voice session.");
       }
 
+      if (isStaleAttempt()) {
+        setIsConnecting(false);
+        return;
+      }
+
       const payload = (await response.json()) as {
         token?: string;
         model?: string;
@@ -375,6 +451,11 @@ export function useAssistedLiveVoice({
         typeof payload.model !== "string"
       ) {
         throw new Error("The live voice bootstrap response was malformed.");
+      }
+
+      if (isStaleAttempt()) {
+        setIsConnecting(false);
+        return;
       }
 
       const ai = new GoogleGenAI({
@@ -391,23 +472,33 @@ export function useAssistedLiveVoice({
           onerror: (event) => {
             console.error("Gemini Live error:", event.message);
             setError("The voice loop is unavailable right now. Please try again.");
-            setVoiceState("idle");
+            void fullyCloseSessionRef.current();
           },
           onclose: () => {
-            sessionRef.current = null;
+            void fullyCloseSessionRef.current({ skipSessionClose: true });
           },
         },
       });
 
+      if (isStaleAttempt()) {
+        session.close();
+        setIsConnecting(false);
+        return;
+      }
+
       sessionRef.current = session;
       await startMicrophone(session);
+
+      if (isStaleAttempt()) {
+        await fullyCloseSession();
+        return;
+      }
+
       setVoiceState("idle");
       setIsConnecting(false);
     } catch (connectError) {
       console.error(connectError);
       setError("The voice loop is unavailable right now. Please try again.");
-      setVoiceState("idle");
-      setIsConnecting(false);
       await fullyCloseSession();
     }
   }
@@ -422,6 +513,59 @@ export function useAssistedLiveVoice({
   ) {
     if (!sessionRef.current) {
       return false;
+    }
+
+    if (isMemvellaBrowserTestMode()) {
+      const controls = getMemvellaTestLiveVoiceControls();
+      clearCheckInTimeout();
+      pendingCheckInIdRef.current = null;
+      currentTurnRef.current = {
+        kind: "soft_check_in_prompt",
+        checkInId,
+      };
+      assistantTextBufferRef.current = "";
+      transcriptBufferRef.current = "";
+      setLiveTranscript("");
+      setVoiceState("processing");
+
+      window.setTimeout(() => {
+        const promptReply =
+          controls.softCheckInPromptReply?.trim() ||
+          "Just checking in with you now.";
+        setLastReply(promptReply);
+        setVoiceState("idle");
+        void onTurnComplete?.({
+          kind: "soft_check_in_prompt",
+          checkInId,
+          transcript: "",
+          reply: promptReply,
+        });
+
+        const responseTranscript =
+          typeof controls.softCheckInResponseTranscript === "string"
+            ? controls.softCheckInResponseTranscript.trim()
+            : "Yes";
+
+        if (!responseTranscript) {
+          currentTurnRef.current = null;
+          void onSoftCheckInTimeout?.(checkInId);
+          return;
+        }
+
+        const responseReply =
+          controls.softCheckInResponseReply?.trim() || "Thank you.";
+        setLastTranscript(responseTranscript);
+        setLastReply(responseReply);
+        void onTurnComplete?.({
+          kind: "soft_check_in_response",
+          checkInId,
+          transcript: responseTranscript,
+          reply: responseReply,
+        });
+        currentTurnRef.current = null;
+      }, 0);
+
+      return true;
     }
 
     clearCheckInTimeout();

@@ -50,3 +50,48 @@ jobs:
 
       - name: Run verify
         run: pnpm verify
+
+  e2e-chromium:
+    if: ${{ github.event_name == 'pull_request' && vars.MEMVELLA_E2E_ENABLED == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_TRUSTED_ORIGINS: http://127.0.0.1:3000
+      SITE_URL: http://127.0.0.1:3000
+      CONVEX_DEPLOYMENT: ${{ secrets.MEMVELLA_E2E_CONVEX_DEPLOYMENT }}
+      NEXT_PUBLIC_CONVEX_URL: ${{ secrets.MEMVELLA_E2E_CONVEX_URL }}
+      NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.MEMVELLA_E2E_CONVEX_SITE_URL }}
+      BETTER_AUTH_SECRET: ${{ secrets.MEMVELLA_E2E_BETTER_AUTH_SECRET }}
+      MEMVELLA_AUTH_PEPPER: ${{ secrets.MEMVELLA_E2E_AUTH_PEPPER }}
+      GEMINI_API_KEY: ci-gemini-key
+      GEMINI_LIVE_MODEL: gemini-live-ci
+      NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY: ci-web-push-public-key
+      MEMVELLA_WEB_PUSH_PRIVATE_KEY: ci-web-push-private-key
+      MEMVELLA_WEB_PUSH_SUBJECT: mailto:ci@example.com
+      MEMVELLA_TEST_MODE: 1
+      MEMVELLA_TEST_AUTH_TOKEN: ci-memvella-test-auth-token
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Run Playwright Chromium smoke
+        run: pnpm test:e2e

@@ -5,19 +5,21 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { performMemvellaTestAuth } from "@/lib/test-auth-client";
+import { isMemvellaClientTestMode } from "@/lib/test-mode";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput, PrimaryButton } from "@memvella/ui";
 
 function OrganiserAuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
-      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-surface px-6 py-8 font-body text-text-primary md:py-12">
+      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-family-primary/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
         <Link
           href="/"
-          className="mb-8 flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+          className="mb-8 flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
         </Link>
@@ -35,20 +37,20 @@ export function OrganiserSignInFallback() {
     <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="mb-2 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
             Welcome Back
           </h1>
-          <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
+          <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">
             Sign in to your Memvella account to continue.
           </p>
         </div>
 
         <FormCard className="space-y-6">
           <div className="space-y-4">
-            <div className="h-16 animate-pulse rounded-2xl bg-surface-container-low" />
-            <div className="h-16 animate-pulse rounded-2xl bg-surface-container-low" />
+            <div className="h-12 animate-pulse rounded-xl bg-surface" />
+            <div className="h-12 animate-pulse rounded-xl bg-surface" />
           </div>
-          <div className="h-[72px] animate-pulse rounded-full bg-[#6B21A8]/20" />
+          <div className="h-[72px] animate-pulse rounded-full bg-senior-primary/20" />
         </FormCard>
       </div>
     </OrganiserAuthLayout>
@@ -76,10 +78,22 @@ export default function OrganiserSignInClient() {
     setIsSubmitting(true);
 
     try {
-      const { error: signInError } = await authClient.signIn.email({
-        email: email.trim(),
-        password,
-      });
+      const signInError = isMemvellaClientTestMode()
+        ? await performMemvellaTestAuth("sign-in", {
+            email: email.trim(),
+            password,
+          })
+            .then(() => null)
+            .catch((error: unknown) => ({
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Sign-in failed. Please check your details.",
+            }))
+        : await authClient.signIn.email({
+            email: email.trim(),
+            password,
+          }).then(({ error }) => error);
 
       if (signInError) {
         setError(
@@ -101,23 +115,24 @@ export default function OrganiserSignInClient() {
     <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="mb-2 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
             Welcome Back
           </h1>
-          <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
+          <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">
             Sign in to your Memvella account to continue.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} data-testid="organiser-signin-form">
           <FormCard className="flex flex-col space-y-6">
           <div className="space-y-2">
-            <label className="font-headline text-lg font-bold" htmlFor="email">
+            <label className="font-family text-lg font-bold" htmlFor="email">
               Email Address
             </label>
-            <TextInput
-              id="email"
-              type="email"
+             <TextInput
+               id="email"
+               data-testid="organiser-signin-email-input"
+               type="email"
               placeholder="hello@example.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -126,12 +141,13 @@ export default function OrganiserSignInClient() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-headline text-lg font-bold" htmlFor="password">
+            <label className="font-family text-lg font-bold" htmlFor="password">
               Password
             </label>
-            <TextInput
-              id="password"
-              type="password"
+             <TextInput
+               id="password"
+               data-testid="organiser-signin-password-input"
+               type="password"
               placeholder="........"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -140,12 +156,17 @@ export default function OrganiserSignInClient() {
           </div>
 
           {error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-              <p className="text-sm font-medium text-red-600">{error}</p>
+            <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+              <p className="text-sm font-medium text-status-alert">{error}</p>
             </div>
           ) : null}
 
-          <PrimaryButton type="submit" disabled={isSubmitting} className="mt-10">
+          <PrimaryButton
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-10"
+            data-testid="organiser-signin-submit-button"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -156,11 +177,12 @@ export default function OrganiserSignInClient() {
             )}
           </PrimaryButton>
 
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-text-secondary">
               Need an account?{" "}
               <Link
                 href="/onboarding/organiser"
-                className="font-semibold text-[#4e0078] hover:underline"
+                data-testid="organiser-create-account-link"
+                className="font-semibold text-family-primary hover:underline"
               >
                 Create one
               </Link>

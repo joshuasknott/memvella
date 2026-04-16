@@ -104,38 +104,39 @@ export default function AddRoutinePage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] w-full flex-col justify-between px-4 pb-32">
+    <div className="flex min-h-dvh w-full flex-col justify-between px-4 pb-32">
       <div className="space-y-6">
-        <section className="rounded-3xl border border-purple-100 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-family-primary/15 bg-surface p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-800">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary">
                 Structured Routine
               </p>
-              <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+              <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
                 Add a routine
               </h1>
-              <p className="mt-2 text-lg leading-relaxed text-gray-600">
+              <p className="mt-2 text-lg leading-relaxed text-text-secondary">
                 Build a dependable schedule for {seniorDisplayName} using exact days and times.
               </p>
             </div>
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
               <CalendarDays className="h-7 w-7" />
             </div>
           </div>
 
-          <div className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
+          <div className="mt-4 inline-flex rounded-full bg-family-accent/10 px-4 py-2 text-sm font-semibold text-family-accent">
             Timezone: {timezone}
           </div>
         </section>
 
-        <FormCard as="section" className="space-y-8">
-          <div className="space-y-3">
-            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_title">
+        <FormCard as="section" className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="routine_title">
               Routine title
             </label>
             <TextInput
               id="routine_title"
+              data-testid="routine-title-input"
               type="text"
               required
               placeholder="Morning tea"
@@ -144,12 +145,13 @@ export default function AddRoutinePage() {
             />
           </div>
 
-          <div className="space-y-3">
-            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_time">
+          <div className="space-y-2">
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="routine_time">
               Start time
             </label>
             <TextInput
               id="routine_time"
+              data-testid="routine-time-input"
               type="time"
               required
               value={startTime}
@@ -157,12 +159,12 @@ export default function AddRoutinePage() {
             />
           </div>
 
-          <div className="space-y-4">
-            <label className="font-headline text-2xl font-bold tracking-tight text-gray-900">
+          <div className="space-y-3">
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary">
               Repeat on
             </label>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {DAY_PRESETS.map((preset) => {
                 const isSelected = sameDays(daysOfWeek, [...preset.daysOfWeek]);
 
@@ -171,10 +173,10 @@ export default function AddRoutinePage() {
                     key={preset.label}
                     type="button"
                     onClick={() => setDaysOfWeek([...preset.daysOfWeek])}
-                    className={`min-h-[72px] rounded-3xl border px-4 py-3 text-left text-base font-semibold transition-colors ${
+                    className={`min-h-[48px] rounded-xl border px-3 py-2 text-left text-sm font-semibold transition-colors ${
                       isSelected
-                        ? "border-purple-800 bg-purple-800 text-white"
-                        : "border-blue-100 bg-blue-50 text-blue-800"
+                        ? "border-family-primary bg-family-primary text-white"
+                        : "border-family-accent/15 bg-family-accent/10 text-family-accent"
                     }`}
                   >
                     {preset.label}
@@ -183,7 +185,7 @@ export default function AddRoutinePage() {
               })}
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               {DAY_OPTIONS.map((option) => {
                 const isSelected = daysOfWeek.includes(option.value);
 
@@ -192,10 +194,10 @@ export default function AddRoutinePage() {
                     key={option.value}
                     type="button"
                     onClick={() => toggleDay(option.value)}
-                    className={`min-h-[72px] rounded-3xl border text-lg font-bold transition-colors ${
+                    className={`min-h-[48px] rounded-xl border text-sm font-bold transition-colors ${
                       isSelected
-                        ? "border-purple-800 bg-purple-800 text-white"
-                        : "border-gray-200 bg-white text-gray-700"
+                        ? "border-family-primary bg-family-primary text-white"
+                        : "border-border bg-surface text-text-primary"
                     }`}
                   >
                     {option.label}
@@ -204,49 +206,54 @@ export default function AddRoutinePage() {
               })}
             </div>
 
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-medium text-text-secondary">
               Selected: {selectedDayLabels.length > 0 ? selectedDayLabels.join(", ") : "Choose at least one day."}
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <label className="font-headline text-2xl font-bold tracking-tight text-gray-900" htmlFor="routine_notes">
+              <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="routine_notes">
                 Support notes
               </label>
-              <Sparkles className="h-5 w-5 text-purple-800" />
+              <Sparkles className="h-5 w-5 text-family-primary" />
             </div>
             <textarea
               id="routine_notes"
+              data-testid="routine-notes-input"
               placeholder={`Example: Mention ${seniorDisplayName}'s blue mug when this routine starts.`}
               rows={4}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              className="min-h-[120px] w-full resize-none rounded-3xl border-2 border-gray-200 bg-white p-6 text-lg text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-purple-800 focus:ring-2 focus:ring-purple-800/20"
+              className="min-h-[100px] w-full resize-none rounded-xl border border-border bg-surface p-4 text-base text-text-primary shadow-sm outline-none transition-all placeholder:text-text-secondary focus:border-family-primary focus:ring-2 focus:ring-family-primary/20"
             />
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-medium text-text-secondary">
               Optional context helps Memvella present this routine naturally.
             </p>
           </div>
         </FormCard>
 
-        <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
+        <section className="rounded-xl border border-family-accent/15 bg-family-accent/10 p-5">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-accent">
             Preview
           </p>
-          <p className="mt-3 text-2xl font-bold text-gray-900">
+          <p className="mt-3 text-lg font-bold text-text-primary">
             {title.trim() || "Untitled routine"}
           </p>
-          <p className="mt-1 text-lg font-medium text-gray-700">
+          <p className="mt-1 text-lg font-medium text-text-secondary">
             {startTime} on {selectedDayLabels.length > 0 ? selectedDayLabels.join(", ") : "selected days"}
           </p>
         </section>
       </div>
 
       <div className="mt-8 space-y-3">
-        {error ? <p className="px-1 text-sm font-medium text-red-600">{error}</p> : null}
+        {error ? <p className="px-1 text-sm font-medium text-status-alert">{error}</p> : null}
 
-        <PrimaryButton onClick={handleSaveRoutine} disabled={isSaving || !isFormValid}>
+        <PrimaryButton
+          onClick={handleSaveRoutine}
+          disabled={isSaving || !isFormValid}
+          data-testid="routine-save-button"
+        >
           {isSaving ? (
             <>
               <Loader2 className="h-6 w-6 animate-spin" />

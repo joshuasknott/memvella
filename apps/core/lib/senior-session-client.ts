@@ -11,18 +11,18 @@ export type SeniorSessionState = {
   hasPasskey?: boolean;
 };
 
-function getStorageKey(experience: SeniorExperience) {
+export function getSeniorSessionStorageKey(experience: SeniorExperience) {
   return `memvella_${experience}_senior_session`;
 }
 
-function getRecoveryHintKey(experience: SeniorExperience) {
+export function getSeniorRecoveryHintStorageKey(experience: SeniorExperience) {
   return `memvella_${experience}_senior_recovery_hint`;
 }
 
 export type SeniorRecoveryHint = Omit<SeniorSessionState, "sessionToken">;
 
 export function loadSeniorSession(experience: SeniorExperience) {
-  const raw = localStorage.getItem(getStorageKey(experience));
+  const raw = localStorage.getItem(getSeniorSessionStorageKey(experience));
   if (!raw) {
     return null;
   }
@@ -30,7 +30,7 @@ export function loadSeniorSession(experience: SeniorExperience) {
   try {
     return JSON.parse(raw) as SeniorSessionState;
   } catch {
-    localStorage.removeItem(getStorageKey(experience));
+    localStorage.removeItem(getSeniorSessionStorageKey(experience));
     return null;
   }
 }
@@ -39,15 +39,18 @@ export function saveSeniorSession(
   experience: SeniorExperience,
   sessionState: SeniorSessionState,
 ) {
-  localStorage.setItem(getStorageKey(experience), JSON.stringify(sessionState));
+  localStorage.setItem(
+    getSeniorSessionStorageKey(experience),
+    JSON.stringify(sessionState),
+  );
 }
 
 export function clearSeniorSession(experience: SeniorExperience) {
-  localStorage.removeItem(getStorageKey(experience));
+  localStorage.removeItem(getSeniorSessionStorageKey(experience));
 }
 
 export function loadSeniorRecoveryHint(experience: SeniorExperience) {
-  const raw = localStorage.getItem(getRecoveryHintKey(experience));
+  const raw = localStorage.getItem(getSeniorRecoveryHintStorageKey(experience));
   if (!raw) {
     return null;
   }
@@ -55,7 +58,7 @@ export function loadSeniorRecoveryHint(experience: SeniorExperience) {
   try {
     return JSON.parse(raw) as SeniorRecoveryHint;
   } catch {
-    localStorage.removeItem(getRecoveryHintKey(experience));
+    localStorage.removeItem(getSeniorRecoveryHintStorageKey(experience));
     return null;
   }
 }
@@ -65,11 +68,11 @@ export function saveSeniorRecoveryHint(
   recoveryHint: SeniorRecoveryHint,
 ) {
   localStorage.setItem(
-    getRecoveryHintKey(experience),
+    getSeniorRecoveryHintStorageKey(experience),
     JSON.stringify(recoveryHint),
   );
 }
 
 export function clearSeniorRecoveryHint(experience: SeniorExperience) {
-  localStorage.removeItem(getRecoveryHintKey(experience));
+  localStorage.removeItem(getSeniorRecoveryHintStorageKey(experience));
 }

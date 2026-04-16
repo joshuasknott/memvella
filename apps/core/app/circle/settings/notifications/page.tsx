@@ -80,13 +80,15 @@ export default function NotificationsSettingsPage() {
   if (!isOrganiser) {
     return (
       <div className="flex w-full flex-col gap-6 px-4 pb-8">
-        <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
-          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
-            Notifications
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-gray-600">
-            Circle-wide notification settings are managed by the Organiser.
-          </p>
+        <section className="rounded-xl border border-family-accent/15 bg-surface p-6 shadow-sm">
+          <div data-testid="notifications-settings-restricted">
+            <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
+              Notifications
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-text-secondary">
+              Circle-wide notification settings are managed by the Organiser.
+            </p>
+          </div>
         </section>
       </div>
     );
@@ -193,62 +195,62 @@ export default function NotificationsSettingsPage() {
   if (settings === undefined) {
     return (
       <div className="flex w-full flex-col items-center justify-center gap-6 px-4 pt-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+        <Loader2 className="h-8 w-8 animate-spin text-family-primary/50" />
       </div>
     );
   }
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 pb-8">
-      <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-family-accent/15 bg-surface p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-accent">
               Device Alerts
             </p>
-            <h1 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
               Notifications
             </h1>
-            <p className="mt-2 text-lg leading-relaxed text-gray-600">
+            <p className="mt-2 text-lg leading-relaxed text-text-secondary">
               Manage the alerts that reach your Organiser devices for {seniorDisplayName}&apos;s Circle.
             </p>
           </div>
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
             <Bell className="h-7 w-7" />
           </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-purple-100 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-family-primary/15 bg-surface p-5 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-800">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
             <Smartphone className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-headline text-xl font-bold text-gray-900">
+            <h2 className="font-family text-lg font-bold text-text-primary">
               This device
             </h2>
-            <p className="mt-1 text-base leading-relaxed text-gray-600">
+            <p className="mt-1 text-base leading-relaxed text-text-secondary">
               Turn browser push alerts on or off for the current Organiser device.
             </p>
             {!pushConfigured ? (
-              <p className="mt-3 rounded-2xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
+              <p className="mt-3 rounded-xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
                 Push alerts are not configured for this deployment yet.
               </p>
             ) : !pushSupported ? (
-              <p className="mt-3 rounded-2xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
+              <p className="mt-3 rounded-xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
                 This browser does not support push alerts.
               </p>
             ) : null}
           </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-4">
+        <div className="mt-5 flex items-center justify-between gap-4 rounded-xl bg-surface-muted px-4 py-4">
           <div>
-            <p className="text-base font-bold text-gray-900">
+            <p className="text-base font-bold text-text-primary">
               {currentSubscriptionEndpoint ? "Push alerts enabled" : "Push alerts disabled"}
             </p>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-text-secondary">
               {currentSubscriptionEndpoint
                 ? "Routine reminders, urgent alerts, and daily summaries can reach this device."
                 : "Enable push alerts to receive routine reminders and summaries here."}
@@ -259,7 +261,7 @@ export default function NotificationsSettingsPage() {
             onClick={currentSubscriptionEndpoint ? handleDisablePush : handleEnablePush}
             disabled={isPushBusy || !pushConfigured || !pushSupported}
             className={`inline-flex min-h-[56px] items-center justify-center rounded-full px-5 text-base font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
-              currentSubscriptionEndpoint ? "bg-slate-900" : "bg-[#6B21A8]"
+              currentSubscriptionEndpoint ? "bg-surface-inverse" : "bg-senior-primary"
             }`}
           >
             {isPushBusy ? (
@@ -276,16 +278,16 @@ export default function NotificationsSettingsPage() {
         </div>
       </section>
 
-      <section className="divide-y divide-gray-100 rounded-3xl border border-gray-100 bg-white shadow-sm">
+      <section className="divide-y divide-gray-100 rounded-xl border border-border bg-surface shadow-sm">
         <div className="flex items-center justify-between gap-4 p-5">
           <div className="pr-4">
             <label
               htmlFor="daily_summary"
-              className="font-headline text-lg font-bold text-gray-900"
+              className="font-family text-lg font-bold text-text-primary"
             >
               Daily summary
             </label>
-            <p className="mt-1 text-sm leading-relaxed text-gray-500">
+            <p className="mt-1 text-sm leading-relaxed text-text-secondary">
               Evening recap around {summaryTimeLabel} with queued insights and the next Circle routine.
             </p>
           </div>
@@ -302,11 +304,11 @@ export default function NotificationsSettingsPage() {
           <div className="pr-4">
             <label
               htmlFor="urgent_alerts"
-              className="font-headline text-lg font-bold text-gray-900"
+              className="font-family text-lg font-bold text-text-primary"
             >
               Urgent alerts
             </label>
-            <p className="mt-1 text-sm leading-relaxed text-gray-500">
+            <p className="mt-1 text-sm leading-relaxed text-text-secondary">
               Immediate Organiser notifications when Memvella detects distress markers in a Circle voice session.
             </p>
           </div>
@@ -323,11 +325,11 @@ export default function NotificationsSettingsPage() {
           <div className="pr-4">
             <label
               htmlFor="routine_reminders"
-              className="font-headline text-lg font-bold text-gray-900"
+              className="font-family text-lg font-bold text-text-primary"
             >
               Routine reminders
             </label>
-            <p className="mt-1 text-sm leading-relaxed text-gray-500">
+            <p className="mt-1 text-sm leading-relaxed text-text-secondary">
               Alerts before {seniorDisplayName}&apos;s scheduled Circle routines begin.
             </p>
           </div>
@@ -341,16 +343,16 @@ export default function NotificationsSettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-headline text-xl font-bold text-gray-900">
+            <h2 className="font-family text-lg font-bold text-text-primary">
               Connected Organiser devices
             </h2>
-            <p className="mt-1 text-base leading-relaxed text-gray-600">
+            <p className="mt-1 text-base leading-relaxed text-text-secondary">
               {settings.activeSubscriptions.length} device
               {settings.activeSubscriptions.length === 1 ? "" : "s"} currently linked for push alerts.
             </p>
@@ -359,32 +361,32 @@ export default function NotificationsSettingsPage() {
 
         <div className="mt-5 space-y-3">
           {settings.activeSubscriptions.length === 0 ? (
-            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
+            <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
               No Organiser devices are subscribed for push alerts yet.
             </div>
           ) : (
             settings.activeSubscriptions.map((subscription) => (
               <div
                 key={subscription.id}
-                className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                className="rounded-xl border border-border bg-surface-muted px-4 py-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-base font-bold text-gray-900">
+                    <p className="truncate text-base font-bold text-text-primary">
                       {subscription.deviceLabel}
                     </p>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-text-secondary">
                       Last seen {formatLastSeenLabel(subscription.lastSeenAt)}
                     </p>
                   </div>
                   {subscription.lastDeliveryAt ? (
-                    <span className="rounded-full bg-blue-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-blue-800">
+                    <span className="rounded-full bg-family-accent/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-family-accent">
                       Delivered
                     </span>
                   ) : null}
                 </div>
                 {currentSubscriptionEndpoint ? (
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.15em] text-purple-800">
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.15em] text-family-primary">
                     {subscription.failureCount > 0
                       ? `${subscription.failureCount} recent delivery issue${subscription.failureCount === 1 ? "" : "s"}`
                       : "Active push route"}

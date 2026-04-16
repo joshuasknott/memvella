@@ -186,7 +186,7 @@ export default function IndependentRecoveryPage() {
             <div className="flex items-center justify-between gap-4">
               <Link
                 href="/independent"
-                className="flex items-center gap-2 text-sm font-semibold text-[#4e0078] hover:underline"
+                className="flex items-center gap-2 text-sm font-semibold text-family-primary hover:underline"
               >
                 <ArrowLeft className="h-4 w-4" /> Back
               </Link>
@@ -196,7 +196,7 @@ export default function IndependentRecoveryPage() {
                   void handleUsePasskey();
                 }}
                 disabled={isUsingPasskey || !deviceFingerprint}
-                className="text-sm font-semibold text-[#4e0078] hover:underline disabled:opacity-60"
+                className="text-sm font-semibold text-family-primary hover:underline disabled:opacity-60"
               >
                 {isUsingPasskey ? "Checking passkey..." : "Use a passkey instead"}
               </button>
@@ -268,7 +268,7 @@ export default function IndependentRecoveryPage() {
 
         {step === "passkey" && recoverySession ? (
           <>
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4e0078]/10 text-[#4e0078]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-family-primary/10 text-family-primary">
               <KeyRound className="h-8 w-8" />
             </div>
 

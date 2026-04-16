@@ -58,19 +58,21 @@ export default function InviteMemberPage() {
         <div className="mb-2">
           <Link
             href="/circle/settings"
-            className="inline-flex items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back to Settings
           </Link>
         </div>
 
         <FormCard className="text-center">
-          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
-            Invite Codes
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-gray-600">
-            Only the Organiser can create or revoke invite codes for this Circle.
-          </p>
+          <div data-testid="invite-settings-restricted">
+            <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
+              Invite Codes
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-text-secondary">
+              Only the Organiser can create or revoke invite codes for this Circle.
+            </p>
+          </div>
         </FormCard>
       </div>
     );
@@ -163,7 +165,7 @@ export default function InviteMemberPage() {
       <div className="mb-2">
         <Link
           href="/circle/settings"
-          className="inline-flex items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+          className="inline-flex items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back to Settings
         </Link>
@@ -171,30 +173,30 @@ export default function InviteMemberPage() {
 
       <div>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-[#4e0078]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-family-primary/15 text-family-primary">
             <UserPlus className="h-5 w-5" />
           </div>
-          <h1 className="font-headline text-3xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
             Invite a Member
           </h1>
         </div>
-        <p className="mt-4 text-lg leading-relaxed text-gray-600">
+        <p className="mt-4 text-lg leading-relaxed text-text-secondary">
           Create a short-lived 6-digit code so someone can join this Circle as a
           member.
         </p>
       </div>
 
-      <FormCard className="mt-4 overflow-hidden border-2 border-purple-100 p-0">
-        <div className="bg-purple-50/50 p-6 md:p-8">
+      <FormCard className="mt-4 overflow-hidden border-2 border-family-primary/15 p-0">
+        <div className="bg-family-primary/5 p-6 md:p-8">
           {!hasActiveInvite ? (
             <div className="flex flex-col items-center justify-center py-6 text-center">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
-                <UserPlus className="h-8 w-8 text-purple-600" strokeWidth={1.5} />
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-surface shadow-sm">
+                <UserPlus className="h-8 w-8 text-family-primary/80" strokeWidth={1.5} />
               </div>
-              <h3 className="mb-2 font-headline text-xl font-bold text-gray-900">
+              <h3 className="mb-2 font-family text-lg font-bold text-text-primary">
                 Generate an Invite Code
               </h3>
-              <p className="mb-8 max-w-sm text-gray-600">
+              <p className="mb-8 max-w-sm text-text-secondary">
                 Share this secure 6-digit code with your family member. It expires in
                 10 minutes and can only be used once.
               </p>
@@ -203,6 +205,7 @@ export default function InviteMemberPage() {
                 onClick={handleGenerate}
                 disabled={isGenerating || activeInvites === undefined}
                 className="w-full max-w-xs"
+                data-testid="generate-invite-code-button"
               >
                 {isGenerating || activeInvites === undefined ? (
                   <>
@@ -216,16 +219,19 @@ export default function InviteMemberPage() {
             </div>
           ) : hasVisibleCode ? (
             <div className="flex flex-col items-center justify-center py-4 text-center">
-              <h3 className="mb-2 font-headline text-lg font-semibold uppercase tracking-widest text-gray-600">
+              <h3 className="mb-2 font-family text-lg font-semibold uppercase tracking-widest text-text-secondary">
                 Active Code
               </h3>
 
-              <p className="text-sm font-medium text-purple-700">
+              <p className="text-sm font-medium text-family-primary/80">
                 {formatExpiryLabel(displayedExpiresAt)}
               </p>
 
-              <div className="my-6 w-full max-w-xs rounded-3xl border border-gray-100 bg-white px-8 py-6 shadow-sm">
-                <div className="font-mono text-5xl font-extrabold tracking-widest text-[#4e0078]">
+              <div className="my-6 w-full max-w-xs rounded-xl border border-border bg-surface px-8 py-6 shadow-sm">
+                <div
+                  className="font-mono text-5xl font-extrabold tracking-widest text-family-primary"
+                  data-testid="active-invite-code"
+                >
                   {inviteCode}
                 </div>
               </div>
@@ -236,7 +242,7 @@ export default function InviteMemberPage() {
                 className={`mb-8 flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold transition-all ${
                   copied
                     ? "bg-green-100 text-green-700"
-                    : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    : "bg-family-primary/15 text-family-primary/80 hover:bg-family-primary/20"
                 }`}
               >
                 {copied ? (
@@ -250,12 +256,12 @@ export default function InviteMemberPage() {
                 )}
               </button>
 
-              <div className="mb-6 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-white p-5 text-left">
-                <p className="text-sm font-semibold text-gray-900">How to use this code:</p>
-                <ol className="list-decimal space-y-1 pl-5 text-sm text-gray-600">
+              <div className="mb-6 flex w-full flex-col gap-2 rounded-xl border border-border bg-surface p-5 text-left">
+                <p className="text-sm font-semibold text-text-primary">How to use this code:</p>
+                <ol className="list-decimal space-y-1 pl-5 text-sm text-text-secondary">
                   <li>Ask your member to open Memvella on their phone.</li>
                   <li>
-                    They select <strong className="text-gray-900">Join a Circle</strong>.
+                    They select <strong className="text-text-primary">Join a Circle</strong>.
                   </li>
                   <li>They sign in and enter this 6-digit code.</li>
                 </ol>
@@ -266,7 +272,8 @@ export default function InviteMemberPage() {
                   type="button"
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  className="flex items-center gap-2 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-900"
+                  data-testid="regenerate-invite-code-button"
+                  className="flex items-center gap-2 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
                 >
                   <RefreshCw className={`h-4 w-4 ${isGenerating ? "animate-spin" : ""}`} />
                   Generate new code
@@ -275,7 +282,8 @@ export default function InviteMemberPage() {
                   type="button"
                   onClick={handleRevoke}
                   disabled={isRevoking}
-                  className="text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
+                  data-testid="revoke-invite-code-button"
+                  className="text-sm font-semibold text-status-alert transition-colors hover:text-red-700"
                 >
                   {isRevoking ? "Revoking..." : "Revoke code"}
                 </button>
@@ -283,21 +291,21 @@ export default function InviteMemberPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-4 text-center">
-              <h3 className="mb-2 font-headline text-lg font-semibold uppercase tracking-widest text-gray-600">
+              <h3 className="mb-2 font-family text-lg font-semibold uppercase tracking-widest text-text-secondary">
                 Invite Active
               </h3>
 
-              <p className="max-w-sm text-gray-600">
+              <p className="max-w-sm text-text-secondary">
                 A member invite is already active for this Circle. For security, the
                 plaintext code is only shown when it is generated.
               </p>
 
-              <div className="my-6 w-full max-w-sm rounded-2xl border border-gray-100 bg-white px-6 py-5 text-left shadow-sm">
-                <p className="text-sm font-semibold text-gray-900">Current status</p>
-                <p className="mt-2 text-sm text-gray-600">
+              <div className="my-6 w-full max-w-sm rounded-xl border border-border bg-surface px-6 py-5 text-left shadow-sm">
+                <p className="text-sm font-semibold text-text-primary">Current status</p>
+                <p className="mt-2 text-sm text-text-secondary">
                   {formatExpiryLabel(displayedExpiresAt)}
                 </p>
-                <p className="mt-3 text-sm text-gray-600">
+                <p className="mt-3 text-sm text-text-secondary">
                   Generate a new code if you need to share it again. Doing that will
                   revoke the current invite.
                 </p>
@@ -318,7 +326,7 @@ export default function InviteMemberPage() {
                   type="button"
                   onClick={handleRevoke}
                   disabled={isRevoking}
-                  className="text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
+                  className="text-sm font-semibold text-status-alert transition-colors hover:text-red-700"
                 >
                   {isRevoking ? "Revoking..." : "Revoke active invite"}
                 </button>

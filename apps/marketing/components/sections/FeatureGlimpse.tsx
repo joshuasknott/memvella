@@ -54,7 +54,7 @@ export function FeatureGlimpse() {
                 delay={100}
                 className={row.imagePosition === "right" ? "lg:order-2" : ""}
               >
-                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border border-border/50 shadow-inner">
+                <div className="relative w-full aspect-4/3 overflow-hidden rounded-2xl border border-border/50 shadow-inner">
                   <Image
                     src={row.imageSrc}
                     alt={row.imageAlt}

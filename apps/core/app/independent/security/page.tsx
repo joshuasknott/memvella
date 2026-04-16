@@ -158,11 +158,11 @@ export default function IndependentSecurityPage() {
         <div className="flex items-center justify-between gap-4">
           <Link
             href="/independent"
-            className="flex items-center gap-2 font-semibold text-[#4e0078] hover:underline"
+            className="flex items-center gap-2 font-semibold text-family-primary hover:underline"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#4e0078]/70">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary/70">
             Security
           </p>
         </div>
@@ -178,7 +178,7 @@ export default function IndependentSecurityPage() {
 
         <FormCard className="space-y-5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4e0078]/10 text-[#4e0078]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-family-primary/10 text-family-primary">
               <Smartphone className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
@@ -211,18 +211,18 @@ export default function IndependentSecurityPage() {
 
           <div className="space-y-3">
             {securityOverview === undefined ? (
-              <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-4 py-6">
+              <div className="flex items-center justify-center rounded-2xl bg-surface-muted px-4 py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-primary/50" />
               </div>
             ) : securityOverview.trustedDevices.length === 0 ? (
-              <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600">
+              <div className="rounded-2xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
                 No trusted devices are saved right now.
               </div>
             ) : (
               securityOverview.trustedDevices.map((device) => (
                 <div
                   key={device.id}
-                  className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-4"
+                  className="rounded-2xl border border-gray-100 bg-surface-muted px-4 py-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -258,7 +258,7 @@ export default function IndependentSecurityPage() {
 
         <FormCard className="space-y-5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#1D4ED8]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-family-accent/10 text-family-accent">
               <KeyRound className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
@@ -271,8 +271,8 @@ export default function IndependentSecurityPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="rounded-2xl bg-surface-muted px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
               Active codes
             </p>
             <p className="mt-2 text-lg font-bold text-gray-900">
@@ -304,8 +304,8 @@ export default function IndependentSecurityPage() {
           </PrimaryButton>
 
           {generatedRecoveryCodes ? (
-            <div className="rounded-3xl border border-[#1D4ED8]/10 bg-blue-50/60 p-5">
-              <div className="mb-3 flex items-center gap-2 text-[#1D4ED8]">
+            <div className="rounded-3xl border border-family-accent/10 bg-family-accent/10 p-5">
+              <div className="mb-3 flex items-center gap-2 text-family-accent">
                 <ShieldCheck className="h-5 w-5" />
                 <p className="text-sm font-bold uppercase tracking-[0.2em]">Shown once</p>
               </div>
@@ -313,13 +313,13 @@ export default function IndependentSecurityPage() {
                 {generatedRecoveryCodes.map((code) => (
                   <div
                     key={code}
-                    className="rounded-2xl bg-white px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-slate-900 shadow-sm"
+                    className="rounded-2xl bg-white px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-text-primary shadow-sm"
                   >
                     {code}
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-sm leading-relaxed text-slate-600">
+              <p className="mt-4 text-sm leading-relaxed text-text-secondary">
                 Store these somewhere safe. Your older recovery code set no longer works.
               </p>
             </div>

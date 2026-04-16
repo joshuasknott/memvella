@@ -12,12 +12,11 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "h-16 w-full rounded-2xl border-2 border-border bg-white px-6 text-lg shadow-sm",
-        "outline-none transition-all",
-        "placeholder:text-text-secondary/50",
-        "focus:border-senior-primary focus:ring-2 focus:ring-senior-primary/20",
+        "h-12 w-full rounded-xl border border-border bg-surface px-4 text-base shadow-sm",
+        "outline-none transition-all text-text-primary",
+        "placeholder:text-text-secondary/60",
+        "focus:border-family-primary focus:ring-2 focus:ring-family-primary/20",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "appearance-none",
         className
       )}
       {...props}

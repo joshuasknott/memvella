@@ -133,7 +133,7 @@ These actions do not sign the organiser in as the senior.
 
 1. the configured app origins above
 2. `BETTER_AUTH_TRUSTED_ORIGINS`, parsed as a comma-separated list of additional origins
-3. in non-production only, the current request origin when it is a local-development origin such as `localhost`, `127.0.0.1`, `*.local`, or a private LAN IP
+3. the current request origin when it is a local-development origin such as `localhost`, `127.0.0.1`, `*.local`, or a private LAN IP
 
 ### Passkey Origin
 

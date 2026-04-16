@@ -27,6 +27,9 @@ The local examples live at:
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | `convexBetterAuthNextJs` bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
 | `MEMVELLA_AUTH_PEPPER` | recommended, and required in production if `BETTER_AUTH_SECRET` is absent | server and Convex | hashing and token helpers | Secret value |
+| `MEMVELLA_TEST_MODE` | optional | server and Convex | guarded E2E-only test seams | Must be `1` to enable `/api/test/**` helpers and test-only Convex support |
+| `NEXT_PUBLIC_MEMVELLA_TEST_MODE` | optional | client | browser-only E2E seams | Enables deterministic browser speech behavior in Playwright |
+| `MEMVELLA_TEST_AUTH_TOKEN` | optional | server and Convex | guarded E2E-only test routes and mutations | Shared secret for `/api/test/**` helpers. Defaults to a local-only fallback when unset |
 | `GEMINI_API_KEY` | required for AI and live voice features | server and Convex | live voice token route, AI actions, insights pipeline | Needed for voice and AI paths |
 | `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default live model when omitted |
 | `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push subscription flow | If absent, organiser push setup is unavailable |

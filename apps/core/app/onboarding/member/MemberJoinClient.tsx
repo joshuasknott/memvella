@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
+import { performMemvellaTestAuth } from "@/lib/test-auth-client";
+import { isMemvellaClientTestMode } from "@/lib/test-mode";
 import { BrandLogo, PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
 
@@ -70,15 +72,15 @@ function savePendingInvitePreview(invitePreview: InvitePreview | null) {
 
 function MemberLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
-      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-text-primary md:py-12">
+      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-family-primary/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
         <header className="relative mb-8 flex h-14 items-center justify-between">
           <Link
             href="/"
-            className="z-10 flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+            className="z-10 flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
           </Link>
@@ -101,15 +103,15 @@ export function MemberJoinFallback() {
     <MemberLayout>
       <div className="space-y-8">
         <div>
-          <div className="mx-auto mb-4 h-10 w-48 animate-pulse rounded-2xl bg-surface-container-low" />
-          <div className="mx-auto h-6 w-64 animate-pulse rounded-xl bg-surface-container-low" />
+          <div className="mx-auto mb-4 h-10 w-48 animate-pulse rounded-xl bg-surface" />
+          <div className="mx-auto h-6 w-64 animate-pulse rounded-xl bg-surface" />
         </div>
         <FormCard className="space-y-6">
           <div className="space-y-4">
-            <div className="h-16 animate-pulse rounded-2xl bg-surface-container-low" />
-            <div className="h-16 animate-pulse rounded-2xl bg-surface-container-low" />
+            <div className="h-12 animate-pulse rounded-xl bg-surface" />
+            <div className="h-12 animate-pulse rounded-xl bg-surface" />
           </div>
-          <div className="h-[72px] animate-pulse rounded-full bg-[#6B21A8]/20" />
+          <div className="h-[72px] animate-pulse rounded-full bg-senior-primary/20" />
         </FormCard>
       </div>
     </MemberLayout>
@@ -235,16 +237,16 @@ function CircleCodeStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
           Join a Circle
         </h1>
-        <p className="mx-auto max-w-sm text-center text-lg text-on-surface-variant">
+        <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
           Enter the 6-digit Circle code you were given.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <FormCard className="flex flex-col space-y-8">
+        <FormCard className="flex flex-col space-y-8" data-testid="member-invite-code-form">
         <div className="flex justify-center gap-3" role="group" aria-label="6-digit Circle code">
           {digits.map((digit, index) => (
             <input
@@ -253,6 +255,7 @@ function CircleCodeStep({
                 inputRefs.current[index] = element;
               }}
               type="text"
+              data-testid={`member-code-digit-${index}`}
               inputMode="numeric"
               aria-label={`Digit ${index + 1}`}
               maxLength={1}
@@ -262,20 +265,20 @@ function CircleCodeStep({
               onPaste={handlePaste}
               onFocus={(event) => event.target.select()}
               disabled={isSubmitting}
-              className={`h-16 w-12 rounded-2xl border-2 bg-white text-center text-2xl font-bold text-slate-900 shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#4e0078]/50 disabled:opacity-50 ${
+              className={`h-12 w-12 rounded-xl border-2 bg-surface text-center text-lg font-bold text-text-primary shadow-sm outline-none transition-all focus:ring-2 focus:ring-family-primary/50 disabled:opacity-50 ${
                 message
                   ? "border-red-400"
                   : digit
-                    ? "border-[#6B21A8]"
-                    : "border-gray-200"
+                    ? "border-senior-primary"
+                    : "border-border"
               }`}
             />
           ))}
         </div>
 
         {message ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-red-600">{message}</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+            <p className="text-sm font-medium text-status-alert">{message}</p>
           </div>
         ) : null}
 
@@ -283,6 +286,7 @@ function CircleCodeStep({
             type="submit"
             disabled={!isComplete || isSubmitting}
             className={!isComplete ? "opacity-40" : ""}
+            data-testid="member-code-continue-button"
           >
             {isSubmitting ? (
               <>
@@ -317,24 +321,24 @@ function CircleConfirmationStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
           You&apos;re almost in.
         </h1>
-        <p className="mx-auto max-w-sm text-center text-lg text-on-surface-variant">
+        <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
           You&apos;re joining <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Member.
         </p>
       </div>
 
       <FormCard className="flex flex-col gap-5">
         {error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-red-600">{error}</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+            <p className="text-sm font-medium text-status-alert">{error}</p>
           </div>
         ) : null}
 
         {hasCurrentSession ? (
           <>
-            <p className="text-center text-base leading-relaxed text-on-surface-variant">
+            <p className="text-center text-base leading-relaxed text-text-secondary">
               This account can&apos;t join that Circle. Sign out to use a different Member account.
             </p>
             <SecondaryButton
@@ -348,10 +352,18 @@ function CircleConfirmationStep({
           </>
         ) : (
           <>
-            <PrimaryButton type="button" onClick={onCreateAccount}>
+            <PrimaryButton
+              type="button"
+              onClick={onCreateAccount}
+              data-testid="member-create-account-button"
+            >
               Create account
             </PrimaryButton>
-            <SecondaryButton type="button" onClick={onExistingAccount}>
+            <SecondaryButton
+              type="button"
+              onClick={onExistingAccount}
+              data-testid="member-existing-account-button"
+            >
               I already have an account
             </SecondaryButton>
           </>
@@ -401,20 +413,45 @@ function MemberAuthStep({
 
     try {
       if (isCreate) {
-        const { error: signUpError } = await authClient.signUp.email({
-          name: name.trim(),
-          email: email.trim(),
-          password,
-        });
+        const signUpError = isMemvellaClientTestMode()
+          ? await performMemvellaTestAuth("sign-up", {
+              name: name.trim(),
+              email: email.trim(),
+              password,
+            })
+              .then(() => null)
+              .catch((error: unknown) => ({
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "We could not create your account.",
+              }))
+          : await authClient.signUp.email({
+              name: name.trim(),
+              email: email.trim(),
+              password,
+            }).then(({ error }) => error);
         if (signUpError) {
           setError(signUpError.message ?? "We could not create your account.");
           return;
         }
       } else {
-        const { error: signInError } = await authClient.signIn.email({
-          email: email.trim(),
-          password,
-        });
+        const signInError = isMemvellaClientTestMode()
+          ? await performMemvellaTestAuth("sign-in", {
+              email: email.trim(),
+              password,
+            })
+              .then(() => null)
+              .catch((error: unknown) => ({
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "Please check your email and password.",
+              }))
+          : await authClient.signIn.email({
+              email: email.trim(),
+              password,
+            }).then(({ error }) => error);
         if (signInError) {
           setError(signInError.message ?? "Please check your email and password.");
           return;
@@ -433,26 +470,27 @@ function MemberAuthStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
           {isCreate ? "Create your account" : "Sign in"}
         </h1>
-        <p className="mx-auto max-w-sm text-center text-lg text-on-surface-variant">
+        <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
           {isCreate
             ? `Create your Member account to join ${resolveCircleName(invitePreview.circleName)}.`
             : `Sign in to join ${resolveCircleName(invitePreview.circleName)}.`}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} data-testid="member-auth-form">
         <FormCard className="flex flex-col space-y-6">
         {isCreate ? (
           <div className="space-y-2">
-            <label className="font-headline text-lg font-bold" htmlFor="member-name">
+            <label className="font-family text-lg font-bold" htmlFor="member-name">
               Your name
             </label>
-            <TextInput
-              id="member-name"
-              type="text"
+             <TextInput
+               id="member-name"
+               data-testid="member-name-input"
+               type="text"
               autoComplete="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -463,12 +501,13 @@ function MemberAuthStep({
         ) : null}
 
         <div className="space-y-2">
-          <label className="font-headline text-lg font-bold" htmlFor="member-email">
+          <label className="font-family text-lg font-bold" htmlFor="member-email">
             Email address
           </label>
-          <TextInput
-            id="member-email"
-            type="email"
+           <TextInput
+             id="member-email"
+             data-testid="member-email-input"
+             type="email"
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -478,12 +517,13 @@ function MemberAuthStep({
         </div>
 
         <div className="space-y-2">
-          <label className="font-headline text-lg font-bold" htmlFor="member-password">
+          <label className="font-family text-lg font-bold" htmlFor="member-password">
             Password
           </label>
-          <TextInput
-            id="member-password"
-            type="password"
+           <TextInput
+             id="member-password"
+             data-testid="member-password-input"
+             type="password"
             autoComplete={isCreate ? "new-password" : "current-password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -492,17 +532,21 @@ function MemberAuthStep({
             minLength={8}
           />
           {isCreate ? (
-            <p className="px-1 text-sm text-gray-500">Minimum 8 characters.</p>
+            <p className="px-1 text-sm text-text-secondary">Minimum 8 characters.</p>
           ) : null}
         </div>
 
         {error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-red-600">{error}</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+            <p className="text-sm font-medium text-status-alert">{error}</p>
           </div>
         ) : null}
 
-        <PrimaryButton type="submit" disabled={isSubmitting}>
+        <PrimaryButton
+          type="submit"
+          disabled={isSubmitting}
+          data-testid="member-auth-submit-button"
+        >
           {isSubmitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -518,7 +562,7 @@ function MemberAuthStep({
           <button
             type="button"
             onClick={onBack}
-            className="text-center text-sm font-semibold text-[#4e0078] hover:underline"
+            className="text-center text-sm font-semibold text-family-primary hover:underline"
           >
             Back
           </button>
@@ -531,14 +575,14 @@ function MemberAuthStep({
 function JoiningStep({ invitePreview }: { invitePreview: InvitePreview }) {
   return (
     <FormCard className="flex flex-col items-center gap-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#4e0078]/10">
-        <Loader2 className="h-10 w-10 animate-spin text-[#4e0078]" />
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-family-primary/10">
+        <Loader2 className="h-10 w-10 animate-spin text-family-primary" />
       </div>
       <div>
-        <h1 className="mb-3 font-headline text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:text-4xl">
+        <h1 className="mb-3 font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:text-4xl">
           Joining your Circle
         </h1>
-        <p className="text-lg leading-relaxed text-on-surface-variant">
+        <p className="text-lg leading-relaxed text-text-secondary">
           Adding you to <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Member.
         </p>
       </div>
@@ -559,20 +603,20 @@ function SuccessStep() {
 
   return (
     <div className="flex flex-col items-center gap-8 text-center">
-      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#4e0078]/10">
-        <CheckCircle2 className="h-12 w-12 text-[#4e0078]" strokeWidth={1.5} />
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-family-primary/10">
+        <CheckCircle2 className="h-12 w-12 text-family-primary" strokeWidth={1.5} />
       </div>
 
       <div>
-        <h1 className="mb-3 font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-3 font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
           You&apos;ve joined the Circle.
         </h1>
-        <p className="mx-auto max-w-xs text-lg text-on-surface-variant">
+        <p className="mx-auto max-w-xs text-lg text-text-secondary">
           You can now see updates and help out.
         </p>
       </div>
 
-      <div className="flex h-10 items-center gap-2 text-sm text-gray-400">
+      <div className="flex h-10 items-center gap-2 text-sm text-text-secondary">
         <Loader2 className="h-4 w-4 animate-spin" />
         Taking you to your Circle...
       </div>

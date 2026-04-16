@@ -21,12 +21,43 @@ Before testing auth-sensitive or backend-sensitive changes:
 - `pnpm lint`
 - `pnpm type-check`
 - `pnpm test`
+- `pnpm test:e2e`
+- `pnpm test:e2e:ui`
+- `pnpm test:e2e:headed`
 - `pnpm build`
 - `pnpm verify` to run the full loop in sequence
 
 Current gate:
 
 - GitHub Actions runs `pnpm verify` on pushes to `main` and on pull requests.
+- GitHub Actions can also run the Chromium Playwright smoke on pull requests when `MEMVELLA_E2E_ENABLED=1` is configured with the required Convex deployment secrets.
+
+## Playwright Coverage
+
+The repository now includes a deterministic Playwright Chromium suite under `tests/e2e/`.
+
+Current deterministic coverage:
+
+- organiser onboarding from `/` through `/onboarding/organiser` into `/circle`
+- organiser sign-in through `/organiser/signin`
+- organiser routine creation through `/circle/add-routine`
+- voice memory dictation through `/circle/add-memory/voice` with fake browser speech
+- member join plus organiser-vs-member authorization boundaries on organiser-only settings routes
+- assisted recovery fallback when the stored tablet session is invalid
+
+Deterministic browser scaffolding now included:
+
+- guarded test mode with `MEMVELLA_TEST_MODE=1`
+- guarded `/api/test/**` reset and senior-session bootstrap helpers
+- deterministic Circle bootstrap readiness marker via `data-testid="circle-ready"`
+- stable selectors on the primary organiser, member, routine, invite, pairing, and voice flows
+- fake browser speech recognition and instant speech synthesis for Playwright
+- fake assisted live-voice mode so browser tests do not require a real Gemini session or microphone
+
+Local note:
+
+- `pnpm test:e2e` uses the Playwright dev-server helper to start Convex dev plus the `apps/core` Next dev server in test mode
+- browser-origin-sensitive auth still depends on `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL` matching the Playwright origin
 
 ## Release Principle
 
@@ -56,6 +87,10 @@ Before any rollout, the core product is the priority verification surface.
 - confirm the Member can create, edit, and delete memories
 - confirm the Member can view routines and Circle members without gaining organiser controls
 
+Coverage note:
+
+- deterministic Playwright coverage now covers the member-vs-organiser authorization boundary with deterministic member bootstrap and organiser-only settings denial
+
 ### Circle Home, Insights, And Settings
 
 - verify `/circle` loads `Current Status`, quick actions, and `Today's Updates`
@@ -82,6 +117,10 @@ Current shipped scope note:
 - verify `/circle/add-routine` can create a routine that appears in the list
 - verify assisted routine check-ins still prompt and resolve through the live voice flow
 
+Coverage note:
+
+- deterministic Playwright coverage now covers organiser routine creation and list visibility
+
 ### People
 
 - verify `/circle/add-person` still saves a person for the current Circle context
@@ -105,6 +144,10 @@ Current shipped scope note:
 - verify an expired or revoked session falls back to reconnect messaging
 - verify the assisted dashboard remains low-friction and does not expose family-side navigation
 
+Coverage note:
+
+- deterministic Playwright coverage now covers the invalid-session recovery fallback only
+
 ### Independent User
 
 - complete first-run onboarding at `/onboarding/independent`
@@ -123,6 +166,7 @@ Current shipped scope note:
 
 ## Current Testing Gaps
 
-- There is not yet an end-to-end browser test suite for the onboarding and permissions matrix.
+- The current Playwright suite is still a first smoke layer, not a full product matrix.
+- Media upload, audio upload, memory detail/edit, people creation, insights review, notification toggles, and tablet pairing success are not yet in deterministic browser coverage.
+- Real passkey onboarding, real recovery-code rotation, cross-origin auth, real push-delivery integrations, and real Gemini live-voice behavior still require manual or nightly device coverage.
 - There is not yet a `convex-test` transaction-level suite that seeds auth identities and exercises public Convex functions end-to-end.
-- Manual smoke coverage is still required for origin-sensitive auth, cross-device pairing, real push-delivery integrations, and senior voice flows.

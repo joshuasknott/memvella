@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { performMemvellaTestAuth } from "@/lib/test-auth-client";
+import { isMemvellaClientTestMode } from "@/lib/test-mode";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput, PrimaryButton, BrandLogo } from "@memvella/ui";
 
@@ -32,22 +34,38 @@ export default function OrganiserSetupPage() {
     setIsSubmitting(true);
 
     try {
-      const { error: signUpError } = await authClient.signUp.email({
-        name: name.trim(),
-        email: email.trim(),
-        password,
-      });
+      const signUpError = isMemvellaClientTestMode()
+        ? await performMemvellaTestAuth("sign-up", {
+            name: name.trim(),
+            email: email.trim(),
+            password,
+          })
+            .then(() => null)
+            .catch((error: unknown) => ({
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Sign-up failed. Please try again.",
+            }))
+        : await authClient.signUp.email({
+            name: name.trim(),
+            email: email.trim(),
+            password,
+          }).then(({ error }) => error);
 
       if (signUpError) {
         setError(signUpError.message ?? "Sign-up failed. Please try again.");
         return;
       }
 
-      if (seniorDisplayName.trim()) {
+      const pendingSeniorDisplayName = seniorDisplayName.trim();
+      if (pendingSeniorDisplayName) {
         localStorage.setItem(
           "memvella_pendingSeniorDisplayName",
-          seniorDisplayName.trim(),
+          pendingSeniorDisplayName,
         );
+      } else {
+        localStorage.removeItem("memvella_pendingSeniorDisplayName");
       }
 
       window.location.replace("/circle");
@@ -60,15 +78,15 @@ export default function OrganiserSetupPage() {
   };
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-gray-900 md:py-12">
-      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-[#4e0078]/5 blur-3xl" />
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-text-primary md:py-12">
+      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-family-primary/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
         <header className="mb-8 flex h-14 items-center justify-between relative">
           <Link
             href="/"
-            className="flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80 z-10"
+            className="flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80 z-10"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
           </Link>
@@ -81,22 +99,23 @@ export default function OrganiserSetupPage() {
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-12">
           <div className="space-y-8">
             <div>
-              <h1 className="mb-4 text-center font-headline text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+              <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
                 Organiser Setup
               </h1>
-              <p className="mx-auto mb-6 max-w-sm text-center text-lg text-on-surface-variant">
+              <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">
                 Create your Organiser account and start your Circle.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} data-testid="organiser-onboarding-form">
               <FormCard className="flex flex-col space-y-6">
               <div className="space-y-2">
-                <label className="font-headline text-lg font-bold" htmlFor="name">
+                <label className="font-family text-lg font-bold" htmlFor="name">
                   What is your name?
                 </label>
                 <TextInput
                   id="name"
+                  data-testid="organiser-name-input"
                   type="text"
                   placeholder="e.g. Sarah"
                   value={name}
@@ -107,29 +126,31 @@ export default function OrganiserSetupPage() {
 
               <div className="space-y-2">
                 <label
-                  className="font-headline text-lg font-bold"
+                  className="font-family text-lg font-bold"
                   htmlFor="senior_display_name"
                 >
                   Who should this Circle support?
                 </label>
                 <TextInput
                   id="senior_display_name"
+                  data-testid="organiser-senior-name-input"
                   type="text"
                   placeholder="e.g. David"
                   value={seniorDisplayName}
                   onChange={(event) => setSeniorDisplayName(event.target.value)}
                 />
-                <p className="px-1 text-sm text-gray-500">
+                <p className="px-1 text-sm text-text-secondary">
                   Optional. You can update this from your Organiser dashboard.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="font-headline text-lg font-bold" htmlFor="email">
+                <label className="font-family text-lg font-bold" htmlFor="email">
                   Your Email Address
                 </label>
                 <TextInput
                   id="email"
+                  data-testid="organiser-email-input"
                   type="email"
                   placeholder="hello@example.com"
                   value={email}
@@ -139,11 +160,12 @@ export default function OrganiserSetupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="font-headline text-lg font-bold" htmlFor="password">
+                <label className="font-family text-lg font-bold" htmlFor="password">
                   Create a Password
                 </label>
                 <TextInput
                   id="password"
+                  data-testid="organiser-password-input"
                   type="password"
                   placeholder="........"
                   value={password}
@@ -151,18 +173,23 @@ export default function OrganiserSetupPage() {
                   required
                   minLength={8}
                 />
-                <p className="px-1 text-sm text-gray-500">
+                <p className="px-1 text-sm text-text-secondary">
                   Minimum 8 characters.
                 </p>
               </div>
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-                  <p className="text-sm font-medium text-red-600">{error}</p>
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+                  <p className="text-sm font-medium text-status-alert">{error}</p>
                 </div>
               ) : null}
 
-              <PrimaryButton type="submit" disabled={isSubmitting} className="mt-10">
+              <PrimaryButton
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-10"
+                data-testid="organiser-submit-button"
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -173,11 +200,12 @@ export default function OrganiserSetupPage() {
                 )}
               </PrimaryButton>
 
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-text-secondary">
                   Already have an account?{" "}
                   <Link
                     href="/organiser/signin"
-                    className="font-semibold text-[#4e0078] hover:underline"
+                    data-testid="organiser-signin-link"
+                    className="font-semibold text-family-primary hover:underline"
                   >
                     Sign in
                   </Link>

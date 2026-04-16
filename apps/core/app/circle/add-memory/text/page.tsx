@@ -100,7 +100,7 @@ export default function TextMemoryPage() {
     <div className="flex w-full flex-col gap-8 px-4 pb-32">
       <FormCard as="section" className="mt-4 space-y-8">
         <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_title">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_title">
             Memory Title
           </label>
           <input
@@ -110,29 +110,29 @@ export default function TextMemoryPage() {
             required
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+            className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
 
         <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_date">
-            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </label>
           <input
             id="memory_date"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
-            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+            className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
 
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="memory_story">
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="memory_story">
               The Story
             </label>
-            <Sparkles className="h-5 w-5 fill-primary/20 text-primary" />
+            <Sparkles className="h-5 w-5 fill-family-primary/20 text-family-primary" />
           </div>
           <textarea
             id="memory_story"
@@ -141,29 +141,29 @@ export default function TextMemoryPage() {
             required
             value={story}
             onChange={(event) => setStory(event.target.value)}
-            className="min-h-[120px] w-full resize-none rounded-2xl border border-gray-200 bg-white p-6 text-lg transition-all placeholder:text-outline/50 focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+            className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-surface p-6 text-lg transition-all placeholder:text-text-secondary/50 focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
-          <p className="px-1 text-sm text-outline">
+          <p className="px-1 text-sm text-text-secondary">
             What happened, and why is it meaningful for {seniorDisplayName}?
           </p>
         </div>
       </FormCard>
 
-      <div className="group relative overflow-hidden rounded-3xl bg-primary-fixed/30 p-6">
+      <div className="group relative overflow-hidden rounded-xl bg-family-primary/10 p-6">
         <div className="relative z-10 flex gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <Lightbulb className="h-6 w-6 text-primary" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface shadow-sm">
+            <Lightbulb className="h-6 w-6 text-family-primary" />
           </div>
           <div>
-            <h4 className="font-headline font-bold text-on-primary-fixed">
+            <h4 className="font-family font-bold text-family-primary">
               Memory Curation
             </h4>
-            <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
+            <p className="mt-1 text-sm leading-snug text-family-primary-variant">
               Detailed stories help Memvella bring up the right moments when talking with {seniorDisplayName}.
             </p>
           </div>
         </div>
-        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-primary/5 transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-family-primary/5 transition-transform duration-700 group-hover:scale-110" />
       </div>
 
       <input
@@ -176,7 +176,7 @@ export default function TextMemoryPage() {
       />
 
       {photoPreview ? (
-        <div className="relative h-48 overflow-hidden rounded-3xl shadow-sm">
+        <div className="relative h-48 overflow-hidden rounded-xl shadow-sm">
           <Image
             src={photoPreview}
             alt="Photo preview"
@@ -194,22 +194,22 @@ export default function TextMemoryPage() {
         </div>
       ) : (
         <label htmlFor="photo-input">
-          <div className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-outline-variant/40 bg-white p-6 text-lg font-bold text-primary shadow-sm transition-all active:scale-[0.98] hover:bg-surface-container-lowest">
+          <div className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-surface p-6 text-lg font-bold text-family-primary shadow-sm transition-all active:scale-[0.98] hover:bg-surface">
             <Camera size={26} />
-            Add Photo <span className="ml-1 text-sm font-normal italic text-outline">(Optional)</span>
+            Add Photo <span className="ml-1 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </div>
         </label>
       )}
 
       {error ? (
-        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+        <p className="px-1 text-center text-sm font-medium text-status-alert">{error}</p>
       ) : null}
 
       <button
         type="button"
         onClick={handleSaveMemory}
         disabled={isSaving || !isFormValid}
-        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+        className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSaving ? (
           <>

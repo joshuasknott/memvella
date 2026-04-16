@@ -31,6 +31,17 @@ function parseTrustedOriginsEnv() {
     .filter((value): value is string => value !== null);
 }
 
+function getDefaultLocalDevelopmentOrigins() {
+  return [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    "https://127.0.0.1:3000",
+  ]
+    .map((value) => normalizeOrigin(value))
+    .filter((value): value is string => value !== null);
+}
+
 function isLocalDevelopmentOrigin(origin: string) {
   try {
     const hostname = new URL(origin).hostname.toLowerCase();
@@ -68,7 +79,7 @@ function resolveTrustedOrigins(request?: Request) {
     ...parseTrustedOriginsEnv(),
   ].filter((value): value is string => value !== null);
 
-  if (process.env.NODE_ENV === "production" || !request) {
+  if (!request) {
     return Array.from(new Set(configuredOrigins));
   }
 
@@ -80,7 +91,21 @@ function resolveTrustedOrigins(request?: Request) {
     (value): value is string => value !== null && isLocalDevelopmentOrigin(value),
   );
 
-  return Array.from(new Set([...configuredOrigins, ...requestOrigins]));
+  if (requestOrigins.length === 0) {
+    return Array.from(new Set(configuredOrigins));
+  }
+
+  return Array.from(
+    new Set([
+      ...configuredOrigins,
+      ...getDefaultLocalDevelopmentOrigins(),
+      ...requestOrigins,
+    ]),
+  );
+}
+
+function shouldDisableBetterAuthOriginCheck() {
+  return false;
 }
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -91,6 +116,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     secret,
     database: authComponent.adapter(ctx),
     trustedOrigins: (request) => resolveTrustedOrigins(request),
+    advanced: {
+      disableOriginCheck: shouldDisableBetterAuthOriginCheck(),
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,

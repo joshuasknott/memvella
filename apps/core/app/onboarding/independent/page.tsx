@@ -150,12 +150,12 @@ function IndependentSetupContent() {
   };
 
   return (
-    <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-surface p-6 font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed md:p-12">
+    <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-surface p-6 font-body text-text-primary selection:bg-family-primary-fixed selection:text-family-primary md:p-12">
       <div className="relative z-20 mb-8 flex h-14 w-full max-w-7xl items-center justify-between">
         {step === "details" ? (
           <Link
             href="/"
-            className="z-10 flex w-fit items-center gap-2 font-semibold text-[#4e0078] transition-opacity hover:opacity-80"
+            className="z-10 flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Exit
           </Link>
@@ -168,17 +168,17 @@ function IndependentSetupContent() {
         </div>
 
         <div className="z-10 flex gap-2">
-          <div className="h-2 w-8 rounded-full bg-primary md:w-12" />
+          <div className="h-2 w-8 rounded-full bg-family-primary md:w-12" />
           <div
             className={`h-2 w-8 rounded-full md:w-12 ${
               step === "passkey" || step === "recovery"
-                ? "bg-primary"
+                ? "bg-family-primary"
                 : "bg-outline-variant/30"
             }`}
           />
           <div
             className={`h-2 w-8 rounded-full md:w-12 ${
-              step === "recovery" ? "bg-primary" : "bg-outline-variant/30"
+              step === "recovery" ? "bg-family-primary" : "bg-outline-variant/30"
             }`}
           />
         </div>
@@ -190,14 +190,14 @@ function IndependentSetupContent() {
             <h1 className="mb-4 text-center text-3xl font-bold tracking-tight text-[#1a1a1a] md:text-4xl">
               Set Up My Own Profile
             </h1>
-            <p className="mb-8 text-center text-lg leading-relaxed text-on-surface-variant">
+            <p className="mb-8 text-center text-lg leading-relaxed text-text-secondary">
               Start with your name, then create a passkey on this device using your face, fingerprint, or device screen lock.
             </p>
 
             <form onSubmit={handleStart}>
               <FormCard className="flex flex-col gap-6">
               <div className="space-y-2">
-                <label className="ml-2 text-lg font-medium text-on-surface-variant">
+                <label className="ml-2 text-lg font-medium text-text-secondary">
                   What should Memvella call you?
                 </label>
                 <TextInput
@@ -212,7 +212,7 @@ function IndependentSetupContent() {
               </div>
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-600">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-status-alert">
                   {error}
                 </div>
               ) : null}
@@ -239,7 +239,7 @@ function IndependentSetupContent() {
         {step === "passkey" ? (
           <div className="w-full max-w-xl animate-in slide-in-from-right-8 fade-in duration-500">
             <FormCard className="flex flex-col gap-6 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4e0078]/10 text-[#4e0078]">
+              <div className="mx-auto flex h-12 w-16 items-center justify-center rounded-full bg-family-primary/10 text-family-primary">
                 <ShieldCheck className="h-8 w-8" />
               </div>
 
@@ -247,13 +247,13 @@ function IndependentSetupContent() {
                 <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a] md:text-4xl">
                   Create your passkey
                 </h1>
-                <p className="mt-3 text-lg leading-relaxed text-on-surface-variant">
+                <p className="mt-3 text-lg leading-relaxed text-text-secondary">
                   This keeps sign-in simple on this device. You can use your face, fingerprint, or device screen lock the next time you open Memvella.
                 </p>
               </div>
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-600">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-status-alert">
                   {error}
                 </div>
               ) : null}
@@ -282,7 +282,7 @@ function IndependentSetupContent() {
         {step === "recovery" && readySession ? (
           <div className="w-full max-w-xl animate-in slide-in-from-right-8 fade-in duration-500">
             <FormCard className="flex flex-col gap-6 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-[#1D4ED8]">
+              <div className="mx-auto flex h-12 w-16 items-center justify-center rounded-full bg-family-accent/10 text-family-accent">
                 <KeyRound className="h-8 w-8" />
               </div>
 
@@ -290,34 +290,34 @@ function IndependentSetupContent() {
                 <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a] md:text-4xl">
                   Add recovery codes
                 </h1>
-                <p className="mt-3 text-lg leading-relaxed text-on-surface-variant">
+                <p className="mt-3 text-lg leading-relaxed text-text-secondary">
                   If you ever can&apos;t use this device, recovery codes help you sign in and set up a new passkey.
                 </p>
               </div>
 
               {recoveryCodes ? (
-                <div className="rounded-3xl border border-[#1D4ED8]/10 bg-blue-50/60 p-5 text-left">
-                  <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-[#1D4ED8]">
+                <div className="rounded-xl border border-family-accent/10 bg-family-accent/10 p-5 text-left">
+                  <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-family-accent">
                     Store these somewhere safe
                   </p>
                   <div className="grid gap-3 md:grid-cols-2">
                     {recoveryCodes.map((code) => (
                       <div
                         key={code}
-                        className="rounded-2xl bg-white px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-slate-900 shadow-sm"
+                        className="rounded-xl bg-surface px-4 py-4 text-center text-lg font-bold tracking-[0.12em] text-text-primary shadow-sm"
                       >
                         {code}
                       </div>
                     ))}
                   </div>
-                  <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                  <p className="mt-4 text-sm leading-relaxed text-text-secondary">
                     These codes are shown once. When you create a new set, the older set stops working.
                   </p>
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-600">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-status-alert">
                   {error}
                 </div>
               ) : null}
@@ -360,7 +360,7 @@ function IndependentSetupContent() {
 function IndependentSetupFallback() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-surface p-6">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#6B21A8]/20 border-t-[#6B21A8]" />
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
     </div>
   );
 }

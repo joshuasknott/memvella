@@ -90,7 +90,7 @@ export default function AssistedSetupPage() {
         <header className="mb-8 flex h-14 w-full max-w-lg items-center justify-between relative">
           <button
             onClick={() => router.back()}
-            className="flex w-fit items-center gap-2 font-medium text-[#4e0078] transition-opacity hover:opacity-80 z-10"
+            className="flex w-fit items-center gap-2 font-medium text-family-primary transition-opacity hover:opacity-80 z-10"
           >
             <ArrowLeft size={24} /> Back
           </button>
@@ -101,10 +101,10 @@ export default function AssistedSetupPage() {
         </header>
 
         <div className="mb-12 space-y-4 text-center">
-          <h1 className="font-headline text-5xl font-bold tracking-tight text-slate-900 md:text-6xl">
+          <h1 className="font-headline text-5xl font-bold tracking-tight text-text-primary md:text-6xl">
             Let&apos;s connect your tablet.
           </h1>
-          <p className="font-headline text-2xl font-medium text-slate-600 md:text-3xl">
+          <p className="font-headline text-2xl font-medium text-text-secondary md:text-3xl">
             Ask an Organiser for the 6-digit code on their phone.
           </p>
         </div>
@@ -113,11 +113,11 @@ export default function AssistedSetupPage() {
           {boxes.map((_, index) => (
             <div
               key={index}
-              className={`flex h-20 w-16 items-center justify-center rounded-2xl border-2 bg-white text-5xl font-bold text-slate-900 transition-colors ${
+              className={`flex h-20 w-16 items-center justify-center rounded-2xl border-2 bg-white text-5xl font-bold text-text-primary transition-colors ${
                 error
                   ? "border-red-400"
                   : pin[index]
-                    ? "border-[#6B21A8]"
+                    ? "border-senior-primary"
                     : "border-gray-200"
               }`}
             >
@@ -140,7 +140,7 @@ export default function AssistedSetupPage() {
           <button
             onClick={handleConnect}
             disabled={isPairing}
-            className="mt-8 flex w-full max-w-lg items-center justify-center gap-3 rounded-3xl bg-[#6B21A8] py-6 text-2xl font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-8 flex w-full max-w-lg items-center justify-center gap-3 rounded-3xl bg-senior-primary py-6 text-2xl font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isPairing ? (
               <>

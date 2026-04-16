@@ -8,12 +8,16 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "test": "turbo test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "verify": "pnpm lint && pnpm type-check && pnpm test && pnpm build",
     "clean": "turbo clean",
     "convex:dev": "pnpm --dir apps/core exec convex dev",
     "convex:deploy": "pnpm --dir apps/core exec convex deploy"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.0",
     "turbo": "^2"
   },
   "engines": {

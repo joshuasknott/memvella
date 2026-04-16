@@ -126,7 +126,7 @@ The product is designed to reduce friction, preserve dignity, and keep family-si
 - There is no dedicated `Activity` route or activity feed surface yet.
 - There is no separate `Alerts` page yet.
 - The People surface is still limited.
-- End-to-end browser coverage does not exist yet; see `docs/testing.md`.
+- End-to-end browser coverage now exists for the first deterministic organiser/member/routine/voice smoke flows; see `docs/testing.md` for scope and remaining gaps.
 
 ## Product Rules
 

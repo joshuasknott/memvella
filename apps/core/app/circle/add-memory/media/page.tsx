@@ -102,18 +102,18 @@ export default function MediaMemoryPage() {
           onChange={handleFileSelect}
         />
         <label htmlFor="media-file-input" className="block cursor-pointer">
-          <div className="relative flex aspect-4/3 w-full flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
+          <div className="relative flex aspect-4/3 w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-surface shadow-sm transition-colors hover:bg-surface-muted">
             {preview ? (
               <>
                 {selectedFile?.type.startsWith("video/") ? (
-                  <video src={preview} className="h-full w-full rounded-3xl object-cover" />
+                  <video src={preview} className="h-full w-full rounded-xl object-cover" />
                 ) : (
                   <Image
                     src={preview}
                     alt="Preview"
                     fill
                     unoptimized
-                    className="rounded-3xl object-cover"
+                    className="rounded-xl object-cover"
                   />
                 )}
                 <button
@@ -129,16 +129,16 @@ export default function MediaMemoryPage() {
               </>
             ) : (
               <>
-                <div className="relative z-10 mb-4 rounded-full bg-white p-6 shadow-xl shadow-primary/5 transition-transform group-active:scale-95">
-                  <ImageIcon className="h-10 w-10 text-primary" strokeWidth={1.5} />
+                <div className="relative z-10 mb-4 rounded-full bg-surface p-6 shadow-xl shadow-ambient transition-transform group-active:scale-95">
+                  <ImageIcon className="h-10 w-10 text-family-primary" strokeWidth={1.5} />
                 </div>
-                <p className="relative z-10 font-headline text-xl font-bold text-primary">
+                <p className="relative z-10 font-family text-lg font-bold text-family-primary">
                   Upload File
                 </p>
-                <p className="relative z-10 mt-1 text-sm italic text-outline">
+                <p className="relative z-10 mt-1 text-sm italic text-text-secondary">
                   Tap to select from camera roll
                 </p>
-                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-family-primary/5 blur-3xl" />
                 <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-secondary/5 blur-3xl" />
               </>
             )}
@@ -146,9 +146,9 @@ export default function MediaMemoryPage() {
         </label>
       </section>
 
-      <section className="space-y-8 rounded-4xl border border-white bg-white/80 p-6 shadow-xl shadow-[#4e0078]/5 backdrop-blur-xl md:p-8">
+      <section className="space-y-8 bg-surface rounded-xl p-4 md:p-6 shadow-card border border-border">
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_title">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="media_title">
             Title
           </label>
           <input
@@ -158,26 +158,26 @@ export default function MediaMemoryPage() {
             placeholder="Family reunion 2012"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="h-16 w-full rounded-2xl border-2 border-gray-100 bg-white px-6 text-lg shadow-sm outline-none transition-all placeholder:text-outline/50 focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10"
+            className="h-12 w-full rounded-xl border-2 border-border bg-surface px-6 text-lg shadow-sm outline-none transition-all placeholder:text-text-secondary/50 focus:border-family-primary/50 focus:ring-4 focus:ring-family-primary/10"
           />
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_date">
-            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="media_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </label>
           <input
             id="media_date"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
-            className="h-16 w-full rounded-2xl border-2 border-gray-100 bg-white px-6 text-lg shadow-sm outline-none transition-all placeholder:text-outline/50 focus:border-[#4e0078]/50 focus:ring-4 focus:ring-[#4e0078]/10"
+            className="h-12 w-full rounded-xl border-2 border-border bg-surface px-6 text-lg shadow-sm outline-none transition-all placeholder:text-text-secondary/50 focus:border-family-primary/50 focus:ring-4 focus:ring-family-primary/10"
           />
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="media_story">
-            The Story <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="media_story">
+            The Story <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </label>
           <textarea
             id="media_story"
@@ -185,20 +185,20 @@ export default function MediaMemoryPage() {
             rows={4}
             value={story}
             onChange={(event) => setStory(event.target.value)}
-            className="w-full resize-none rounded-2xl border-none bg-surface-container-highest p-6 text-xl font-medium transition-all placeholder:text-outline/50 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full resize-none rounded-xl border-none bg-surface-muted p-6 text-lg font-medium transition-all placeholder:text-text-secondary/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-family-primary"
           />
         </div>
       </section>
 
       {error ? (
-        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+        <p className="px-1 text-center text-sm font-medium text-status-alert">{error}</p>
       ) : null}
 
       <button
         type="button"
         onClick={handleSave}
         disabled={isSaving || !isFormValid}
-        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white shadow-md transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white shadow-md transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSaving ? (
           <>

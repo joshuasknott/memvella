@@ -41,7 +41,7 @@ export function Hero() {
           </div>
 
           <FadeIn delay={150} className="w-full">
-            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border border-border/50 shadow-inner">
+            <div className="relative w-full aspect-4/3 overflow-hidden rounded-2xl border border-border/50 shadow-inner">
               <Image
                 src="/images/hero-ambient-companion.png"
                 alt="Senior woman relaxing comfortably at home with an ambient tablet"

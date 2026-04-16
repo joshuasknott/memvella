@@ -33,20 +33,20 @@ function getToneClasses(tone: ToastTone) {
     case "success":
       return {
         wrapper:
-          "border-[#1D4ED8]/15 bg-white text-on-surface shadow-[0_16px_36px_rgba(29,78,216,0.12)]",
-        icon: "text-[#1D4ED8]",
+          "border-family-accent/15 bg-surface text-text-primary shadow-[0_16px_36px_rgba(45,50,80,0.10)]",
+        icon: "text-family-accent",
       };
     case "error":
       return {
         wrapper:
-          "border-red-200 bg-white text-on-surface shadow-[0_16px_36px_rgba(186,26,26,0.16)]",
-        icon: "text-error",
+          "border-red-200 bg-surface text-text-primary shadow-[0_16px_36px_rgba(186,26,26,0.16)]",
+        icon: "text-status-alert",
       };
     default:
       return {
         wrapper:
-          "border-purple-200 bg-white text-on-surface shadow-[0_16px_36px_rgba(70,21,153,0.16)]",
-        icon: "text-primary",
+          "border-family-primary/20 bg-surface text-text-primary shadow-[0_16px_36px_rgba(45,50,80,0.12)]",
+        icon: "text-family-primary",
       };
   }
 }
@@ -94,7 +94,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               role={tone === "error" ? "alert" : "status"}
-              className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-3xl border px-4 py-4 ${classes.wrapper}`}
+              className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-4 ${classes.wrapper}`}
             >
               <div className={`mt-0.5 shrink-0 ${classes.icon}`}>
                 <ToneIcon tone={tone} />
@@ -102,7 +102,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="min-w-0 flex-1">
                 <p className="text-base font-bold">{toast.title}</p>
                 {toast.description ? (
-                  <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">
+                  <p className="mt-1 text-sm leading-relaxed text-text-secondary">
                     {toast.description}
                   </p>
                 ) : null}
@@ -114,7 +114,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     currentToasts.filter((item) => item.id !== toast.id),
                   )
                 }
-                className="rounded-full p-1 text-outline transition-colors hover:bg-surface-container-low hover:text-on-surface"
+                className="rounded-full p-1 text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
                 aria-label="Dismiss notification"
               >
                 <X className="h-4 w-4" />

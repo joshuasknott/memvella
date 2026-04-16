@@ -104,19 +104,20 @@ Rules:
 
 The root welcome screen is the highest-priority terminology and hierarchy checkpoint in `apps/core`.
 
+Two real user types arrive at this screen: a family person managing a Circle, or a senior managing their own profile. The screen must resolve that single question with minimum friction.
+
 Required structure:
 
-- Heading: `Welcome to Memvella.`
-- Subheading: `How would you like to begin?`
-- Primary action group using solid purple buttons:
-- `Start a New Circle`
-- `Join a Circle`
-- Visual separation between primary and secondary actions through spacing or a subtle divider
-- Secondary action group using lighter treatment:
-- `Connect a Tablet`
-- `Set Up My Own Profile`
+- `BrandLogo` wordmark (no heading that repeats the brand name)
+- One-line tagline: `Your family's digital wellness companion.`
+- Two primary doors — large, equal weight, `size="senior"`:
+  - `"I'm here for a loved one"` → leads to Start a New Circle / Join a Circle choice
+  - `"I'm setting this up for myself"` → `/onboarding/independent`
+- A quiet tertiary text link below: `"Connecting a tablet? Enter your pairing code"` → `/assisted/login`
 
 Do not reintroduce `Admin`, `Connection Code`, or `Personal Profile` labels on this screen.
+Do not add a heading that repeats "Memvella" — the wordmark is already the name.
+The "Connect a Tablet" action is not a primary onboarding path; it must never be promoted to a primary button.
 
 ## Tablet User Experience
 

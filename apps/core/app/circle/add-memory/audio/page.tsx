@@ -90,15 +90,15 @@ export default function AudioMemoryPage() {
   return (
     <div className="flex w-full flex-col gap-8 px-4 pb-32">
       <section className="mb-4 mt-8 flex justify-center">
-        <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low shadow-xl shadow-primary/5">
-          <Music className="h-12 w-12 text-primary" strokeWidth={1.5} />
-          <div className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-2xl" />
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-border bg-surface shadow-xl shadow-ambient">
+          <Music className="h-12 w-12 text-family-primary" strokeWidth={1.5} />
+          <div className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-family-primary/5 blur-2xl" />
         </div>
       </section>
 
       <FormCard as="section" className="space-y-8">
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="audio_title">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="audio_title">
             Memory Title
           </label>
           <TextInput
@@ -112,8 +112,8 @@ export default function AudioMemoryPage() {
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="audio_date">
-            When was this? <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="audio_date">
+            When was this? <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </label>
           <TextInput
             id="audio_date"
@@ -124,8 +124,8 @@ export default function AudioMemoryPage() {
         </div>
 
         <div className="space-y-3">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="song_link">
-            Link <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="song_link">
+            Link <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
           </label>
           <TextInput
             id="song_link"
@@ -137,7 +137,7 @@ export default function AudioMemoryPage() {
         </div>
 
         <div className="space-y-4">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="song_context">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="song_context">
             Why does {seniorDisplayName} love this?
           </label>
           <textarea
@@ -147,7 +147,7 @@ export default function AudioMemoryPage() {
             required
             value={story}
             onChange={(event) => setStory(event.target.value)}
-            className="w-full resize-none rounded-2xl bg-surface-container-highest p-6 text-xl font-medium transition-all placeholder:text-outline/50 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full resize-none rounded-xl bg-surface-muted p-6 text-lg font-medium transition-all placeholder:text-text-secondary/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-family-primary"
           />
         </div>
       </FormCard>
@@ -162,22 +162,22 @@ export default function AudioMemoryPage() {
       />
 
       <section className="space-y-3 pt-2">
-        <h3 className="text-center font-headline text-xl font-bold tracking-tight text-on-surface">
+        <h3 className="text-center font-family text-lg font-bold tracking-tight text-text-primary">
           Optional audio file
         </h3>
         {selectedAudio ? (
-          <div className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-family-accent/15 bg-surface p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-lg font-bold text-gray-900">{selectedAudio.name}</p>
-                <p className="mt-1 text-sm font-medium text-gray-500">
+                <p className="text-lg font-bold text-text-primary">{selectedAudio.name}</p>
+                <p className="mt-1 text-sm font-medium text-text-secondary">
                   {selectedAudio.type || "Audio file"}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={clearAudioSelection}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-700"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-text-secondary"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -185,7 +185,7 @@ export default function AudioMemoryPage() {
           </div>
         ) : null}
         <label htmlFor="audio-file-input" className="block">
-          <div className="flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[#1D4ED8]/15 bg-white px-6 text-lg font-semibold text-[#1D4ED8] shadow-sm transition-transform active:scale-95">
+          <div className="flex min-h-[72px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-family-accent/15 bg-surface px-6 text-lg font-semibold text-family-accent shadow-sm transition-transform active:scale-95">
             <Upload className="h-6 w-6" />
             {selectedAudio ? "Replace audio file" : "Choose audio file"}
           </div>
@@ -193,7 +193,7 @@ export default function AudioMemoryPage() {
       </section>
 
       {error ? (
-        <p className="px-1 text-center text-sm font-medium text-red-500">{error}</p>
+        <p className="px-1 text-center text-sm font-medium text-status-alert">{error}</p>
       ) : null}
 
       <PrimaryButton onClick={handleSave} disabled={isSaving || !isFormValid} className="mb-8">

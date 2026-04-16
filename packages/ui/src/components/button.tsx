@@ -12,13 +12,13 @@ const buttonVariants = cva(
         default:
           "bg-family-primary text-white shadow-md hover:bg-family-primary/90",
         secondary:
-          "border-2 border-family-primary bg-white text-family-primary shadow-sm hover:bg-canvas",
+          "border-2 border-family-primary bg-surface text-family-primary shadow-sm hover:bg-canvas",
         ghost:
           "text-text-primary hover:bg-canvas",
         destructive:
           "bg-status-alert text-white shadow-md hover:bg-status-alert/90",
         outline:
-          "border-2 border-border bg-white text-text-primary shadow-sm hover:bg-canvas",
+          "border border-border bg-surface text-text-primary shadow-sm hover:bg-canvas",
         link:
           "text-family-primary underline-offset-4 hover:underline",
         senior:
@@ -28,7 +28,7 @@ const buttonVariants = cva(
         familyAccent:
           "bg-family-accent text-white shadow-md hover:bg-family-accent/90",
         highContrast:
-          "border-2 border-family-primary bg-white text-family-primary shadow-sm hover:bg-canvas",
+          "border-2 border-family-primary bg-surface text-family-primary shadow-sm hover:bg-canvas",
       },
       size: {
         default: "h-10 px-5 text-sm",

@@ -25,7 +25,7 @@ const CARD_OFFSETS = ["", "md:translate-y-8", "", "md:-translate-y-8", ""];
 function PolaroidSkeleton({ className }: { className: string }) {
   return (
     <div className={`transform ${className}`}>
-      <div className="rounded-[30px] bg-white p-4 shadow-md">
+      <div className="rounded-[30px] bg-surface p-4 shadow-md">
         <div className="rounded-[24px] border border-[#eadfca] bg-[#f6f1e7] p-4">
           <div className="mb-3 h-4 w-28 animate-pulse rounded-full bg-[#e8dfcf]" />
           <div className="aspect-[4/3] animate-pulse rounded-[18px] bg-[#e8dfcf]" />
@@ -70,10 +70,10 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
   return (
     <div className="h-full w-full max-w-5xl overflow-y-auto rounded-[32px] border border-white/50 bg-[#fffdfa]/80 p-6 shadow-xl backdrop-blur-md md:p-8">
       <header className="mb-8 flex flex-col gap-3 md:mb-10">
-        <h2 className="font-headline text-4xl font-extrabold text-on-surface md:text-5xl">
+        <h2 className="font-family text-4xl font-extrabold text-text-primary md:text-5xl">
           Memory Gallery
         </h2>
-        <p className="max-w-2xl text-lg leading-relaxed text-on-surface-variant md:text-xl">
+        <p className="max-w-2xl text-lg leading-relaxed text-text-secondary md:text-lg">
           Photos and videos stay fully in frame, with each memory note shown right below.
         </p>
       </header>
@@ -95,11 +95,11 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
               CARD_OFFSETS[index % CARD_OFFSETS.length]
             }`}
           >
-            <div className="rounded-[30px] bg-white p-4 shadow-md">
+            <div className="rounded-[30px] bg-surface p-4 shadow-md">
               <div className="rounded-[24px] border border-[#eadfca] bg-[#f6f1e7] p-4">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#7b6d58]">
                   <span>{item.dateLabel}</span>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs text-[#5f4c8d] shadow-sm">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1 text-xs text-[#5f4c8d] shadow-sm">
                     {item.mediaAssetType === "video" ? (
                       <Film className="h-3.5 w-3.5" />
                     ) : (
@@ -118,10 +118,10 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
                 </div>
 
                 <div className="mt-4 space-y-3 px-1 pb-1">
-                  <h3 className="font-headline text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+                  <h3 className="font-family text-lg font-bold tracking-tight text-text-primary md:text-3xl">
                     {item.caption}
                   </h3>
-                  <p className="text-lg leading-relaxed text-slate-700 md:text-xl">
+                  <p className="text-lg leading-relaxed text-text-secondary md:text-lg">
                     {item.excerpt}
                   </p>
                 </div>
@@ -131,11 +131,11 @@ export function MemoryGallery({ gallery }: MemoryGalleryProps) {
         ))}
 
         {gallery !== undefined && gallery.length === 0 ? (
-          <div className="col-span-full rounded-[32px] border border-dashed border-[#d8ccb7] bg-white/90 p-10 text-center shadow-sm">
-            <p className="font-headline text-2xl font-bold text-slate-900 md:text-3xl">
+          <div className="col-span-full rounded-[32px] border border-dashed border-[#d8ccb7] bg-surface/90 p-10 text-center shadow-sm">
+            <p className="font-family text-lg font-bold text-text-primary md:text-3xl">
               No photos or videos yet
             </p>
-            <p className="mt-3 text-lg leading-relaxed text-slate-600 md:text-xl">
+            <p className="mt-3 text-lg leading-relaxed text-text-secondary md:text-lg">
               Add a memory with a photo or video from the Organiser app to fill this gallery.
             </p>
           </div>

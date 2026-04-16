@@ -113,7 +113,7 @@ export default function AddPersonPage() {
         />
 
         <label htmlFor="person-photo-input" className="block">
-          <div className="relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low shadow-sm transition-colors hover:bg-surface-container-high">
+          <div className="relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-surface shadow-sm transition-colors hover:bg-surface-muted">
             {photoPreview ? (
               <>
                 <Image
@@ -136,16 +136,16 @@ export default function AddPersonPage() {
               </>
             ) : (
               <>
-                <div className="relative z-10 mb-4 rounded-full bg-white p-6 shadow-xl shadow-primary/5 transition-transform group-active:scale-90">
-                  <Camera className="h-10 w-10 text-primary" strokeWidth={1.5} />
+                <div className="relative z-10 mb-4 rounded-full bg-surface p-6 shadow-xl shadow-ambient transition-transform group-active:scale-90">
+                  <Camera className="h-10 w-10 text-family-primary" strokeWidth={1.5} />
                 </div>
-                <p className="relative z-10 font-headline text-xl font-bold text-primary">
-                  Add Photo <span className="ml-1 text-sm font-normal italic text-outline">(Optional)</span>
+                <p className="relative z-10 font-family text-lg font-bold text-family-primary">
+                  Add Photo <span className="ml-1 text-sm font-normal italic text-text-secondary">(Optional)</span>
                 </p>
-                <p className="relative z-10 mt-1 text-sm italic text-outline">
+                <p className="relative z-10 mt-1 text-sm italic text-text-secondary">
                   Make it a favorite memory
                 </p>
-                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+                <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-family-primary/5 blur-3xl" />
                 <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-secondary/5 blur-3xl" />
               </>
             )}
@@ -155,7 +155,7 @@ export default function AddPersonPage() {
 
       <FormCard as="section" className="space-y-8">
         <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="person_name">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="person_name">
             What is their name?
           </label>
           <input
@@ -165,12 +165,12 @@ export default function AddPersonPage() {
             required
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="h-16 w-full rounded-2xl border border-gray-200 bg-white px-6 text-lg transition-all focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+            className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
 
         <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary">
             Relationship to {seniorDisplayName}
           </label>
           <div className="flex flex-wrap gap-3">
@@ -181,8 +181,8 @@ export default function AddPersonPage() {
                 onClick={() => setRelationship(option)}
                 className={`flex h-12 items-center gap-2 rounded-full px-6 font-medium transition-colors ${
                   relationship === option
-                    ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
-                    : "bg-secondary-fixed text-on-secondary-container hover:bg-secondary-container/30"
+                    ? "bg-family-primary text-on-primary shadow-lg shadow-ambient"
+                    : "bg-family-primary/10 text-text-secondary hover:bg-surface-muted"
                 }`}
               >
                 {relationship === option ? (
@@ -193,13 +193,13 @@ export default function AddPersonPage() {
             ))}
 
             {isAddingCustom ? (
-              <div className="flex h-12 items-center gap-2 rounded-full bg-surface-container-high pl-4 pr-1">
+              <div className="flex h-12 items-center gap-2 rounded-full bg-surface-muted pl-4 pr-1">
                 <input
                   type="text"
                   placeholder="Custom..."
                   value={customRelationship}
                   onChange={(event) => setCustomRelationship(event.target.value)}
-                  className="w-24 bg-transparent text-sm font-medium text-on-surface outline-none placeholder:text-outline-variant"
+                  className="w-24 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary"
                   autoFocus
                 />
                 <button
@@ -211,7 +211,7 @@ export default function AddPersonPage() {
                     setIsAddingCustom(false);
                     setCustomRelationship("");
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-on-primary transition-colors hover:bg-primary/90"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-family-primary text-on-primary transition-colors hover:bg-family-primary/90"
                 >
                   <Check className="h-4 w-4 text-white" />
                 </button>
@@ -220,7 +220,7 @@ export default function AddPersonPage() {
               <button
                 type="button"
                 onClick={() => setIsAddingCustom(true)}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface transition-colors hover:bg-surface-container-highest"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-text-primary transition-colors hover:bg-surface-muted"
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -229,17 +229,17 @@ export default function AddPersonPage() {
         </div>
 
         <div className="space-y-6">
-          <label className="font-headline text-2xl font-bold tracking-tight text-on-surface">
+          <label className="font-family text-lg font-bold tracking-tight text-text-primary">
             Status
           </label>
           <div className="flex gap-4">
             <button
               type="button"
               onClick={() => setIsLiving(true)}
-              className={`h-14 flex-1 rounded-2xl border-2 text-lg font-medium transition-all ${
+              className={`h-14 flex-1 rounded-xl border-2 text-lg font-medium transition-all ${
                 isLiving
-                  ? "border-primary bg-primary/10 text-primary shadow-sm"
-                  : "border-transparent bg-surface-container-highest text-outline hover:bg-surface-container-highest/80"
+                  ? "border-primary bg-family-primary/10 text-family-primary shadow-sm"
+                  : "border-transparent bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
               }`}
             >
               Living
@@ -247,26 +247,26 @@ export default function AddPersonPage() {
             <button
               type="button"
               onClick={() => setIsLiving(false)}
-              className={`h-14 flex-1 rounded-2xl border-2 text-lg font-medium transition-all ${
+              className={`h-14 flex-1 rounded-xl border-2 text-lg font-medium transition-all ${
                 !isLiving
-                  ? "border-primary bg-primary/10 text-primary shadow-sm"
-                  : "border-transparent bg-surface-container-highest text-outline hover:bg-surface-container-highest/80"
+                  ? "border-primary bg-family-primary/10 text-family-primary shadow-sm"
+                  : "border-transparent bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
               }`}
             >
               In Memory
             </button>
           </div>
-          <p className="px-1 text-sm text-outline">
+          <p className="px-1 text-sm text-text-secondary">
             This helps Memvella speak about this person with the right context.
           </p>
         </div>
 
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <label className="font-headline text-2xl font-bold tracking-tight text-on-surface" htmlFor="ai_context">
-              Key Facts and Context <span className="ml-2 text-sm font-normal italic text-outline">(Optional)</span>
+            <label className="font-family text-lg font-bold tracking-tight text-text-primary" htmlFor="ai_context">
+              Key Facts and Context <span className="ml-2 text-sm font-normal italic text-text-secondary">(Optional)</span>
             </label>
-            <Sparkles className="h-5 w-5 fill-primary/20 text-primary" />
+            <Sparkles className="h-5 w-5 fill-family-primary/20 text-family-primary" />
           </div>
           <textarea
             id="ai_context"
@@ -274,38 +274,38 @@ export default function AddPersonPage() {
             rows={4}
             value={aiContext}
             onChange={(event) => setAiContext(event.target.value)}
-            className="min-h-[120px] w-full resize-none rounded-2xl border border-gray-200 bg-white p-6 text-lg transition-all placeholder:text-outline/50 focus:border-[#4e0078] focus:outline-none focus:ring-2 focus:ring-[#4e0078]/30"
+            className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-surface p-6 text-lg transition-all placeholder:text-text-secondary/50 focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
-          <p className="px-1 text-sm text-outline">
+          <p className="px-1 text-sm text-text-secondary">
             What should Memvella know about them to help {seniorDisplayName} remember?
           </p>
         </div>
       </FormCard>
 
-      <div className="group relative overflow-hidden rounded-3xl bg-primary-fixed/30 p-6">
+      <div className="group relative overflow-hidden rounded-xl bg-family-primary/10 p-6">
         <div className="relative z-10 flex gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <Lightbulb className="h-6 w-6 text-primary" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface shadow-sm">
+            <Lightbulb className="h-6 w-6 text-family-primary" />
           </div>
           <div>
-            <h4 className="font-headline font-bold text-on-primary-fixed">
+            <h4 className="font-family font-bold text-family-primary">
               People Context
             </h4>
-            <p className="mt-1 text-sm leading-snug text-on-primary-fixed-variant">
+            <p className="mt-1 text-sm leading-snug text-family-primary-variant">
               Adding context helps Memvella bring up the right memories during {seniorDisplayName}&apos;s wellness check-in.
             </p>
           </div>
         </div>
-        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-primary/5 transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 scale-150 rounded-full bg-family-primary/5 transition-transform duration-700 group-hover:scale-110" />
       </div>
 
-      {error ? <p className="-mt-4 px-1 text-sm font-medium text-red-500">{error}</p> : null}
+      {error ? <p className="-mt-4 px-1 text-sm font-medium text-status-alert">{error}</p> : null}
 
       <button
         type="button"
         onClick={handleSavePerson}
         disabled={isSaving || !isFormValid}
-        className="mb-8 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-[#6B21A8] text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+        className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSaving ? (
           <>
