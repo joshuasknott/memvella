@@ -13,8 +13,8 @@
     "test:e2e:headed": "playwright test --headed",
     "verify": "pnpm lint && pnpm type-check && pnpm test && pnpm build",
     "clean": "turbo clean",
-    "convex:dev": "pnpm --dir apps/core exec convex dev",
-    "convex:deploy": "pnpm --dir apps/core exec convex deploy"
+    "convex:dev": "pnpm --dir apps/backend-convex exec convex dev",
+    "convex:deploy": "pnpm --dir apps/backend-convex exec convex deploy"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
