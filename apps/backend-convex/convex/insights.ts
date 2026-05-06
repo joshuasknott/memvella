@@ -146,7 +146,7 @@ export const listOrganiserInsights = query({
   handler: async (ctx) => {
     const circleContext = await getOptionalCircleMembership(
       ctx,
-      "family_side",
+      "organiser",
     );
     if (!circleContext) {
       return {
@@ -210,7 +210,7 @@ export const getQueuedOrganiserInsightCount = query({
   handler: async (ctx) => {
     const circleContext = await getOptionalCircleMembership(
       ctx,
-      "family_side",
+      "organiser",
     );
     if (!circleContext) {
       return 0;
@@ -248,7 +248,7 @@ export const reviewOrganiserInsight = mutation({
   handler: async (ctx, args) => {
     const { circleMembership, circle } = await requireCircleMembership(
       ctx,
-      "family_side",
+      "organiser",
     );
     const membershipId = circleMembership?._id;
     const membershipCircleId = circleMembership?.circleId ?? circle?._id;

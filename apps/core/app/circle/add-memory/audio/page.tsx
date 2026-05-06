@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Loader2, Music, Upload, X } from "lucide-react";
+import type { Id } from "@memvella/backend/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
 import { api } from "@memvella/backend";
 import { TextInput, PrimaryButton } from "@memvella/ui";
@@ -50,9 +51,14 @@ export default function AudioMemoryPage() {
     setIsSaving(true);
 
     try {
-      const audioStorageId = selectedAudio
-        ? await uploadFileToConvex(generateUploadUrl, selectedAudio, "audio")
-        : undefined;
+      let audioStorageId: Id<"_storage"> | undefined;
+      let uploadIntentId: Id<"uploadIntents"> | undefined;
+
+      if (selectedAudio) {
+        const uploadResult = await uploadFileToConvex(generateUploadUrl, selectedAudio, "audio");
+        audioStorageId = uploadResult.storageId;
+        uploadIntentId = uploadResult.uploadIntentId ?? undefined;
+      }
 
       await addMemoryAudio({
         title: title.trim(),
@@ -62,6 +68,7 @@ export default function AudioMemoryPage() {
         audioStorageId,
         audioMimeType: selectedAudio?.type || undefined,
         audioFileName: selectedAudio?.name || undefined,
+        uploadIntentId,
       });
 
       toast({

@@ -4,6 +4,7 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 export const PASSKEY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
+export const PASSKEY_AUTH_PROOF_TTL_MS = 5 * 60 * 1000;
 export const INDEPENDENT_ONBOARDING_TTL_MS = 15 * 60 * 1000;
 export const INDEPENDENT_RECOVERY_CODE_COUNT = 6;
 
@@ -127,6 +128,105 @@ export function normalizeOptionalEmail(value: string | null | undefined) {
   return trimmed ? trimmed : undefined;
 }
 
+function isPrivateHostname(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+
+  if (
+    lower === "localhost" ||
+    lower === "localhost.localdomain" ||
+    lower.endsWith(".localhost")
+  ) {
+    return true;
+  }
+
+  if (lower === "0.0.0.0" || lower === "[::]" || lower === "[::1]") {
+    return true;
+  }
+
+  const ipv4Match = lower.match(
+    /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/,
+  );
+  if (ipv4Match) {
+    const octets = [
+      Number(ipv4Match[1]),
+      Number(ipv4Match[2]),
+      Number(ipv4Match[3]),
+      Number(ipv4Match[4]),
+    ];
+    if (octets.some((octet) => octet > 255)) {
+      return false;
+    }
+    if (octets[0] === 0) return true;
+    if (octets[0] === 127) return true;
+    if (octets[0] === 10) return true;
+    if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) return true;
+    if (octets[0] === 192 && octets[1] === 168) return true;
+    if (octets[0] === 169 && octets[1] === 254) return true;
+  }
+
+  if (lower.startsWith("[") && lower.endsWith("]")) {
+    const inner = lower.slice(1, -1);
+    if (
+      inner.startsWith("fc") ||
+      inner.startsWith("fd") ||
+      inner.startsWith("fe80")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function sanitizeExternalUrl(
+  value: string | null | undefined,
+): string | null {
+  const trimmed = normalizeOptionalText(value);
+  if (!trimmed) {
+    return null;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return null;
+  }
+
+  if (parsed.protocol !== "https:") {
+    return null;
+  }
+  if (parsed.username || parsed.password) {
+    return null;
+  }
+  if (isPrivateHostname(parsed.hostname)) {
+    return null;
+  }
+
+  return parsed.href;
+}
+
+export function isAllowedPushEndpoint(endpoint: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(endpoint);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== "https:") {
+    return false;
+  }
+  if (parsed.username || parsed.password) {
+    return false;
+  }
+  if (isPrivateHostname(parsed.hostname)) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function hashAssistedPin(pinCode: string) {
   return createNamespacedHmac("assisted-pin", pinCode);
 }
@@ -219,4 +319,53 @@ export function formatIndependentRecoveryCode(value: string) {
 
 export function generateOpaqueToken(byteLength = 32) {
   return bytesToBase64Url(randomBytes(byteLength));
+}
+
+type PasskeyAuthProofPayload = {
+  version: 1;
+  credentialId: string;
+  nextCounter: number;
+  deviceFingerprint: string;
+  issuedAt: number;
+};
+
+export async function parsePasskeyAuthProof(
+  proof: string,
+): Promise<PasskeyAuthProofPayload | null> {
+  const [encodedPayload, providedSignature, ...rest] = proof.split(".");
+  if (!encodedPayload || !providedSignature || rest.length > 0) {
+    return null;
+  }
+
+  const expectedSignature = await createNamespacedHmac(
+    "passkey-auth-proof",
+    encodedPayload,
+  );
+  if (!timingSafeEqual(providedSignature, expectedSignature)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(
+      textDecoder.decode(base64UrlToBytes(encodedPayload)),
+    ) as Partial<PasskeyAuthProofPayload>;
+    if (
+      parsed.version !== 1 ||
+      typeof parsed.credentialId !== "string" ||
+      typeof parsed.nextCounter !== "number" ||
+      typeof parsed.deviceFingerprint !== "string" ||
+      typeof parsed.issuedAt !== "number"
+    ) {
+      return null;
+    }
+
+    const now = Date.now();
+    if (now - parsed.issuedAt > PASSKEY_AUTH_PROOF_TTL_MS || parsed.issuedAt > now) {
+      return null;
+    }
+
+    return parsed as PasskeyAuthProofPayload;
+  } catch {
+    return null;
+  }
 }

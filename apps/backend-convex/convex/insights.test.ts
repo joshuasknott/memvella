@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { familySideRoleHasCapability } from "./circleAuth";
 import type { Id } from "./_generated/dataModel";
 import { resolveReviewableInsightTarget } from "./insights";
 
@@ -72,5 +73,10 @@ describe("resolveReviewableInsightTarget", () => {
     });
 
     expect(result).toBeNull();
+  });
+
+  it("denies members from organiser insight capabilities", () => {
+    expect(familySideRoleHasCapability("member", "manage_circle_admin")).toBe(false);
+    expect(familySideRoleHasCapability("organiser", "manage_circle_admin")).toBe(true);
   });
 });

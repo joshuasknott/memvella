@@ -5,7 +5,6 @@ import { getPairingFailureStatus } from "@/lib/pairing-rate-limit";
 import {
   appendDeviceBindingCookie,
   buildDeviceFingerprint,
-  buildNetworkThrottleFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -39,14 +38,12 @@ export async function POST(request: NextRequest) {
     }
 
     const binding = getOrCreateDeviceBindingSeed(request);
-    const networkScopeKey = buildNetworkThrottleFingerprint(binding.seed, request);
 
     const deviceFingerprint = buildDeviceFingerprint(binding.seed, "assisted");
     const convex = createConvexHttpClient();
     const result = await convex.mutation(api.kiosk.pairTabletSession, {
       pinCode: pinCode.trim(),
       deviceFingerprint,
-      networkScopeKey,
     });
 
     const response = result.success

@@ -9,7 +9,7 @@ import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
 } from "./circleAuth";
-import { assertValidStoredUpload } from "./uploadValidation";
+import { assertValidStoredUpload, consumeUploadIntent } from "./uploadValidation";
 
 type DbCtx = MutationCtx | QueryCtx;
 
@@ -75,12 +75,20 @@ export const addPerson = mutation({
     isLiving: v.boolean(),
     aiContext: v.string(),
     photoStorageId: v.optional(v.id("_storage")),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireFamilySideCapability(
       ctx,
       "manage_people",
     );
+    if (args.photoStorageId && args.uploadIntentId && circleMembership) {
+      await consumeUploadIntent(ctx, {
+        uploadIntentId: args.uploadIntentId,
+        storageId: args.photoStorageId,
+        circleMembershipId: circleMembership._id,
+      });
+    }
     if (args.photoStorageId) {
       await assertValidStoredUpload(ctx, {
         storageId: args.photoStorageId,

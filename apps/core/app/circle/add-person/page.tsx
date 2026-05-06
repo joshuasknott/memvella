@@ -60,13 +60,16 @@ export default function AddPersonPage() {
 
     try {
       let photoStorageId: Id<"_storage"> | undefined;
+      let uploadIntentId: Id<"uploadIntents"> | undefined;
 
       if (selectedPhoto) {
-        photoStorageId = await uploadFileToConvex(
+        const uploadResult = await uploadFileToConvex(
           generateUploadUrl,
           selectedPhoto,
           "image",
         );
+        photoStorageId = uploadResult.storageId;
+        uploadIntentId = uploadResult.uploadIntentId ?? undefined;
       }
 
       await addPerson({
@@ -75,6 +78,7 @@ export default function AddPersonPage() {
         isLiving,
         aiContext: aiContext.trim(),
         photoStorageId,
+        uploadIntentId,
       });
 
       toast({

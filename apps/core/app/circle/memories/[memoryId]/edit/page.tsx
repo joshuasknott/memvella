@@ -198,9 +198,14 @@ export default function OrganiserMemoryEditPage() {
             : selectedFile
               ? "image"
               : undefined;
-      const uploadedStorageId = selectedFile
-        ? await uploadFileToConvex(generateUploadUrl, selectedFile, uploadKind)
-        : undefined;
+      let uploadedStorageId: Id<"_storage"> | undefined;
+      let uploadIntentId: Id<"uploadIntents"> | undefined;
+
+      if (selectedFile && uploadKind) {
+        const uploadResult = await uploadFileToConvex(generateUploadUrl, selectedFile, uploadKind);
+        uploadedStorageId = uploadResult.storageId;
+        uploadIntentId = uploadResult.uploadIntentId ?? undefined;
+      }
 
       switch (memoryDetail.recordType) {
         case "text":
@@ -213,6 +218,7 @@ export default function OrganiserMemoryEditPage() {
             replacePhotoMimeType: selectedFile?.type || undefined,
             replacePhotoFileName: selectedFile?.name || undefined,
             removePhoto: removeCurrentAsset && !selectedFile ? true : undefined,
+            uploadIntentId,
           });
           break;
         case "audio":
@@ -226,6 +232,7 @@ export default function OrganiserMemoryEditPage() {
             replaceAudioMimeType: selectedFile?.type || undefined,
             replaceAudioFileName: selectedFile?.name || undefined,
             removeAudio: removeCurrentAsset && !selectedFile ? true : undefined,
+            uploadIntentId,
           });
           break;
         case "voice":
@@ -252,6 +259,7 @@ export default function OrganiserMemoryEditPage() {
                   ? "image"
                   : undefined,
             removeMedia: removeCurrentAsset && !selectedFile ? true : undefined,
+            uploadIntentId,
           });
           break;
       }

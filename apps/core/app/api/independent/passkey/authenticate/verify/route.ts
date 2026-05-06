@@ -8,6 +8,7 @@ import {
   readIndependentPasskeyChallenge,
 } from "@/lib/independent-auth-server";
 import { base64UrlToUint8Array, getPasskeyConfig } from "@/lib/passkey";
+import { createPasskeyAuthProof } from "@/lib/server-device-binding";
 
 export const runtime = "nodejs";
 
@@ -72,13 +73,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const authProof = createPasskeyAuthProof({
+      credentialId: passkey.credentialId,
+      nextCounter: verification.authenticationInfo.newCounter,
+      deviceFingerprint,
+    });
+
     const session = await convex.mutation(
       api.independentAccess.completeDiscoverablePasskeyAuthentication,
-      {
-        credentialId: passkey.credentialId,
-        nextCounter: verification.authenticationInfo.newCounter,
-        deviceFingerprint,
-      },
+      { authProof },
     );
 
     const response = NextResponse.json(

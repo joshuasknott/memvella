@@ -411,7 +411,6 @@ export const generateMemberInviteCode = mutation({
 export const previewMemberInviteCode = mutation({
   args: {
     inviteCode: v.string(),
-    previewScopeKey: v.string(),
   },
   handler: async (ctx, args): Promise<PreviewMemberInviteCodeResult> => {
     const normalizedInviteCode = args.inviteCode.trim();
@@ -422,23 +421,39 @@ export const previewMemberInviteCode = mutation({
       };
     }
 
-    const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
-      scopeKey: args.previewScopeKey,
-      actionKey: "previewMemberInviteCode",
+    const globalRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: "invite-preview-global",
+      actionKey: "previewMemberInviteCodeGlobal",
+      maxHits: 50,
+      windowMs: INVITE_PREVIEW_WINDOW_MS,
+      blockDurationMs: INVITE_PREVIEW_BLOCK_MS,
+    });
+
+    if (!globalRateLimit.allowed) {
+      return {
+        status: "rate_limited",
+        retryAfterMs: globalRateLimit.retryAfterMs,
+        message: buildRateLimitMessage(globalRateLimit.retryAfterMs),
+      };
+    }
+
+    const inviteCodeHash = await hashCircleInviteCode(normalizedInviteCode);
+    const codeRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: `invite-preview-code:${inviteCodeHash}`,
+      actionKey: "previewMemberInviteCodeByCode",
       maxHits: INVITE_PREVIEW_MAX_HITS,
       windowMs: INVITE_PREVIEW_WINDOW_MS,
       blockDurationMs: INVITE_PREVIEW_BLOCK_MS,
     });
 
-    if (!rateLimit.allowed) {
+    if (!codeRateLimit.allowed) {
       return {
         status: "rate_limited",
-        retryAfterMs: rateLimit.retryAfterMs,
-        message: buildRateLimitMessage(rateLimit.retryAfterMs),
+        retryAfterMs: codeRateLimit.retryAfterMs,
+        message: buildRateLimitMessage(codeRateLimit.retryAfterMs),
       };
     }
 
-    const inviteCodeHash = await hashCircleInviteCode(normalizedInviteCode);
     const lookup = await getInviteLookupByHash(ctx, inviteCodeHash);
     if (lookup.state !== "active") {
       return {

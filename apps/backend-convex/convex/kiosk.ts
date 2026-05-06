@@ -84,31 +84,28 @@ export const pairTabletSession = mutation({
   args: {
     pinCode: v.string(),
     deviceFingerprint: v.string(),
-    networkScopeKey: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<PairTabletSessionResult> => {
-    const networkRateLimit = await ctx.runMutation(
+    const globalRateLimit = await ctx.runMutation(
       internal.rateLimits.consumeRateLimit,
       {
-        scopeKey:
-          normalizeOptionalText(args.networkScopeKey) ??
-          `assisted-pairing-network:${await hashDeviceFingerprint(args.deviceFingerprint)}`,
-        actionKey: "pairTabletSessionNetwork",
-        maxHits: 5,
+        scopeKey: "assisted-pairing-global",
+        actionKey: "pairTabletSessionGlobal",
+        maxHits: 30,
         windowMs: 10 * 60 * 1000,
         blockDurationMs: 20 * 60 * 1000,
       },
     );
 
-    if (!networkRateLimit.allowed) {
+    if (!globalRateLimit.allowed) {
       return {
         success: false as const,
-        error: buildPairingRetryMessage(networkRateLimit.retryAfterMs),
+        error: buildPairingRetryMessage(globalRateLimit.retryAfterMs),
       };
     }
 
     const deviceScopeKey = await hashDeviceFingerprint(args.deviceFingerprint);
-    const rateLimit = await ctx.runMutation(
+    const deviceRateLimit = await ctx.runMutation(
       internal.rateLimits.consumeRateLimit,
       {
         scopeKey: `assisted-pairing:${deviceScopeKey}`,
@@ -119,14 +116,32 @@ export const pairTabletSession = mutation({
       },
     );
 
-    if (!rateLimit.allowed) {
+    if (!deviceRateLimit.allowed) {
       return {
         success: false as const,
-        error: buildPairingRetryMessage(rateLimit.retryAfterMs),
+        error: buildPairingRetryMessage(deviceRateLimit.retryAfterMs),
       };
     }
 
     const pinHash = await hashAssistedPin(args.pinCode);
+    const pinRateLimit = await ctx.runMutation(
+      internal.rateLimits.consumeRateLimit,
+      {
+        scopeKey: `assisted-pairing-pin:${pinHash}`,
+        actionKey: "pairTabletSessionPin",
+        maxHits: 3,
+        windowMs: 10 * 60 * 1000,
+        blockDurationMs: 20 * 60 * 1000,
+      },
+    );
+
+    if (!pinRateLimit.allowed) {
+      return {
+        success: false as const,
+        error: buildPairingRetryMessage(pinRateLimit.retryAfterMs),
+      };
+    }
+
     const activePin = await getActivePinByHash(ctx, pinHash);
 
     if (!activePin) {

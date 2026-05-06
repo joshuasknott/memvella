@@ -6,7 +6,6 @@ import {
 } from "@/lib/independent-auth-server";
 import {
   appendDeviceBindingCookie,
-  buildRequestThrottleFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -28,11 +27,6 @@ export async function POST(request: NextRequest) {
     const convex = createConvexHttpClient();
     const result = await convex.mutation(api.independentAccess.beginIndependentOnboarding, {
       displayName,
-      throttleScopeKey: buildRequestThrottleFingerprint(
-        binding.seed,
-        request,
-        "independent-onboarding-start",
-      ),
     });
 
     if (result.status !== "ready") {

@@ -17,7 +17,7 @@ export const processOnboardingAction = internalMutation({
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
       ctx,
-      "family_side",
+      "organiser",
     );
     const payload = args.actionPayload as Record<string, unknown>;
     const action = payload.action as string | undefined;

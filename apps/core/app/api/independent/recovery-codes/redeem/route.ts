@@ -3,7 +3,6 @@ import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import {
   appendDeviceBindingCookie,
-  buildRequestThrottleFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -28,11 +27,6 @@ export async function POST(request: NextRequest) {
     const result = await convex.mutation(api.independentAccess.redeemIndependentRecoveryCode, {
       recoveryCode,
       deviceFingerprint,
-      throttleScopeKey: buildRequestThrottleFingerprint(
-        binding.seed,
-        request,
-        "independent-recovery-code",
-      ),
     });
 
     const response = NextResponse.json(result, {

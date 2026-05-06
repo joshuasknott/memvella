@@ -131,3 +131,20 @@ export function buildNetworkThrottleFingerprint(
     "assisted-pairing-network",
   );
 }
+
+export function createPasskeyAuthProof(args: {
+  credentialId: string;
+  nextCounter: number;
+  deviceFingerprint: string;
+}) {
+  const payload = JSON.stringify({
+    version: 1,
+    credentialId: args.credentialId,
+    nextCounter: args.nextCounter,
+    deviceFingerprint: args.deviceFingerprint,
+    issuedAt: Date.now(),
+  });
+  const encodedPayload = toBase64Url(Buffer.from(payload));
+  const signature = signValue("passkey-auth-proof", encodedPayload);
+  return `${encodedPayload}.${signature}`;
+}

@@ -10,8 +10,8 @@ import {
   type MemoryAssetInput,
   replaceMemoryAssets,
 } from "./memoryHelpers";
-import { normalizeOptionalText } from "./security";
-import { assertValidStoredUpload } from "./uploadValidation";
+import { normalizeOptionalText, sanitizeExternalUrl } from "./security";
+import { assertValidStoredUpload, consumeUploadIntent } from "./uploadValidation";
 
 function normalizeOptionalDate(value: string | undefined) {
   const trimmed = value?.trim();
@@ -102,6 +102,7 @@ export const addMemoryText = mutation({
     photoStorageId: v.optional(v.id("_storage")),
     photoMimeType: v.optional(v.string()),
     photoFileName: v.optional(v.string()),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -111,6 +112,14 @@ export const addMemoryText = mutation({
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
       throw new Error("No senior profile is linked to this Circle.");
+    }
+
+    if (args.photoStorageId && args.uploadIntentId && circleMembership) {
+      await consumeUploadIntent(ctx, {
+        uploadIntentId: args.uploadIntentId,
+        storageId: args.photoStorageId,
+        circleMembershipId: circleMembership._id,
+      });
     }
 
     const assets = await buildValidatedStorageAsset(
@@ -142,6 +151,7 @@ export const addMemoryAudio = mutation({
     audioStorageId: v.optional(v.id("_storage")),
     audioMimeType: v.optional(v.string()),
     audioFileName: v.optional(v.string()),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -151,6 +161,14 @@ export const addMemoryAudio = mutation({
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
       throw new Error("No senior profile is linked to this Circle.");
+    }
+
+    if (args.audioStorageId && args.uploadIntentId && circleMembership) {
+      await consumeUploadIntent(ctx, {
+        uploadIntentId: args.uploadIntentId,
+        storageId: args.audioStorageId,
+        circleMembershipId: circleMembership._id,
+      });
     }
 
     const assets = await buildValidatedStorageAsset(
@@ -168,7 +186,7 @@ export const addMemoryAudio = mutation({
       title: args.title.trim(),
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      externalUrl: normalizeOptionalText(args.songLink) ?? null,
+      externalUrl: sanitizeExternalUrl(args.songLink),
       assets,
     });
   },
@@ -210,6 +228,7 @@ export const addMemoryMedia = mutation({
     mediaMimeType: v.optional(v.string()),
     mediaFileName: v.optional(v.string()),
     mediaAssetType: v.optional(v.union(v.literal("image"), v.literal("video"))),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -219,6 +238,14 @@ export const addMemoryMedia = mutation({
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
       throw new Error("No senior profile is linked to this Circle.");
+    }
+
+    if (args.uploadIntentId && circleMembership) {
+      await consumeUploadIntent(ctx, {
+        uploadIntentId: args.uploadIntentId,
+        storageId: args.mediaStorageId,
+        circleMembershipId: circleMembership._id,
+      });
     }
 
     const assets = await buildValidatedStorageAsset(
@@ -251,6 +278,7 @@ export const updateTextMemory = mutation({
     replacePhotoMimeType: v.optional(v.string()),
     replacePhotoFileName: v.optional(v.string()),
     removePhoto: v.optional(v.boolean()),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -275,6 +303,17 @@ export const updateTextMemory = mutation({
     });
 
     if (args.removePhoto || args.replacePhotoStorageId) {
+      if (
+        args.replacePhotoStorageId &&
+        args.uploadIntentId &&
+        circleMembership
+      ) {
+        await consumeUploadIntent(ctx, {
+          uploadIntentId: args.uploadIntentId,
+          storageId: args.replacePhotoStorageId,
+          circleMembershipId: circleMembership._id,
+        });
+      }
       const assets = args.replacePhotoStorageId
         ? await buildValidatedStorageAsset(
             ctx,
@@ -306,6 +345,7 @@ export const updateAudioMemory = mutation({
     replaceAudioMimeType: v.optional(v.string()),
     replaceAudioFileName: v.optional(v.string()),
     removeAudio: v.optional(v.boolean()),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -325,12 +365,23 @@ export const updateAudioMemory = mutation({
       title: args.title.trim(),
       story: args.story.trim(),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
-      externalUrl: normalizeOptionalText(args.songLink) ?? null,
+      externalUrl: sanitizeExternalUrl(args.songLink),
       updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
     });
 
     if (args.removeAudio || args.replaceAudioStorageId) {
+      if (
+        args.replaceAudioStorageId &&
+        args.uploadIntentId &&
+        circleMembership
+      ) {
+        await consumeUploadIntent(ctx, {
+          uploadIntentId: args.uploadIntentId,
+          storageId: args.replaceAudioStorageId,
+          circleMembershipId: circleMembership._id,
+        });
+      }
       const assets = args.replaceAudioStorageId
         ? await buildValidatedStorageAsset(
             ctx,
@@ -395,6 +446,7 @@ export const updateMediaMemory = mutation({
     replaceMediaFileName: v.optional(v.string()),
     replaceMediaAssetType: v.optional(v.union(v.literal("image"), v.literal("video"))),
     removeMedia: v.optional(v.boolean()),
+    uploadIntentId: v.optional(v.id("uploadIntents")),
   },
   handler: async (ctx, args) => {
     const { membership, circleMembership } = await requireCircleMembership(
@@ -419,6 +471,17 @@ export const updateMediaMemory = mutation({
     });
 
     if (args.removeMedia || args.replaceMediaStorageId) {
+      if (
+        args.replaceMediaStorageId &&
+        args.uploadIntentId &&
+        circleMembership
+      ) {
+        await consumeUploadIntent(ctx, {
+          uploadIntentId: args.uploadIntentId,
+          storageId: args.replaceMediaStorageId,
+          circleMembershipId: circleMembership._id,
+        });
+      }
       const assets = args.replaceMediaStorageId
         ? await buildValidatedStorageAsset(
             ctx,
@@ -458,7 +521,27 @@ export const deleteMemoryRecord = mutation({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireCircleMembership(ctx, "family_side");
-    return await ctx.storage.generateUploadUrl();
+    const { membership, circleMembership } = await requireCircleMembership(
+      ctx,
+      "family_side",
+    );
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) {
+      throw new Error("No senior profile is linked to this Circle.");
+    }
+
+    const uploadUrl = await ctx.storage.generateUploadUrl();
+    const now = Date.now();
+    const uploadIntentId = await ctx.db.insert("uploadIntents", {
+      circleMembershipId: circleMembership._id,
+      circleId: circleMembership.circleId,
+      seniorProfileId,
+      storageId: null,
+      expiresAt: now + 60 * 60 * 1000,
+      consumedAt: null,
+      createdAt: now,
+    });
+
+    return { uploadUrl, uploadIntentId };
   },
 });

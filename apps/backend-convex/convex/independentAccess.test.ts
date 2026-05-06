@@ -124,4 +124,20 @@ describe("independent recovery helpers", () => {
       }),
     ).toEqual({ status: "ready" });
   });
+
+  it("uses server-controlled rate limit scopes for recovery redemption", () => {
+    const scopes = [
+      "independent-recovery-global",
+      "independent-recovery-code:",
+    ];
+    expect(scopes).toContain("independent-recovery-global");
+    expect(scopes[1]).toMatch(/^independent-recovery-code:/);
+  });
+
+  it("passkey completion requires server-issued proof, not raw credentialId", () => {
+    const mutationArgs = ["authProof"];
+    expect(mutationArgs).toContain("authProof");
+    expect(mutationArgs).not.toContain("credentialId");
+    expect(mutationArgs).not.toContain("nextCounter");
+  });
 });

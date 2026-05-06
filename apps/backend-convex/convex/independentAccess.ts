@@ -24,6 +24,7 @@ import {
   INDEPENDENT_ONBOARDING_TTL_MS,
   INDEPENDENT_RECOVERY_CODE_COUNT,
   normalizeOptionalText,
+  parsePasskeyAuthProof,
   PASSKEY_CHALLENGE_TTL_MS,
 } from "./security";
 import {
@@ -445,11 +446,10 @@ async function rotateRecoveryCodes(
 export const beginIndependentOnboarding = mutation({
   args: {
     displayName: v.string(),
-    throttleScopeKey: v.string(),
   },
   handler: async (ctx, args): Promise<BeginIndependentOnboardingResult> => {
     const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
-      scopeKey: args.throttleScopeKey,
+      scopeKey: "independent-onboarding-global",
       actionKey: "beginIndependentOnboarding",
       maxHits: INDEPENDENT_ONBOARDING_MAX_HITS,
       windowMs: INDEPENDENT_ONBOARDING_WINDOW_MS,
@@ -744,14 +744,17 @@ export const getIndependentAuthenticationCredential = query({
 
 export const completeDiscoverablePasskeyAuthentication = mutation({
   args: {
-    credentialId: v.string(),
-    nextCounter: v.number(),
-    deviceFingerprint: v.string(),
+    authProof: v.string(),
   },
   handler: async (ctx, args) => {
+    const proof = await parsePasskeyAuthProof(args.authProof);
+    if (!proof) {
+      throw new Error("Invalid or expired passkey authentication proof.");
+    }
+
     const passkey = await ctx.db
       .query("independentSeniorPasskeys")
-      .withIndex("by_credentialId", (query) => query.eq("credentialId", args.credentialId))
+      .withIndex("by_credentialId", (query) => query.eq("credentialId", proof.credentialId))
       .unique();
 
     if (!passkey || passkey.revokedAt !== null) {
@@ -770,7 +773,7 @@ export const completeDiscoverablePasskeyAuthentication = mutation({
     );
 
     await ctx.db.patch(passkey._id, {
-      counter: args.nextCounter,
+      counter: proof.nextCounter,
       lastUsedAt: Date.now(),
     });
 
@@ -784,7 +787,7 @@ export const completeDiscoverablePasskeyAuthentication = mutation({
       circleId: passkey.circleId,
       seniorProfileId: passkey.seniorProfileId,
       sessionType: "independent_web",
-      deviceFingerprint: args.deviceFingerprint,
+      deviceFingerprint: proof.deviceFingerprint,
       sourcePinId: null,
       sourceCircleMembershipId: membership?._id ?? null,
       sourcePasskeyId: passkey._id,
@@ -801,22 +804,21 @@ export const redeemIndependentRecoveryCode = mutation({
   args: {
     recoveryCode: v.string(),
     deviceFingerprint: v.string(),
-    throttleScopeKey: v.string(),
   },
   handler: async (ctx, args): Promise<RedeemIndependentRecoveryCodeResult> => {
-    const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
-      scopeKey: args.throttleScopeKey,
-      actionKey: "redeemIndependentRecoveryCode",
+    const globalRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: "independent-recovery-global",
+      actionKey: "redeemIndependentRecoveryCodeGlobal",
       maxHits: INDEPENDENT_RECOVERY_MAX_HITS,
       windowMs: INDEPENDENT_RECOVERY_WINDOW_MS,
       blockDurationMs: INDEPENDENT_RECOVERY_BLOCK_MS,
     });
 
-    if (!rateLimit.allowed) {
+    if (!globalRateLimit.allowed) {
       return {
         status: "rate_limited",
-        retryAfterMs: rateLimit.retryAfterMs,
-        message: buildRateLimitMessage(rateLimit.retryAfterMs, "recovery"),
+        retryAfterMs: globalRateLimit.retryAfterMs,
+        message: buildRateLimitMessage(globalRateLimit.retryAfterMs, "recovery"),
       };
     }
 
@@ -835,6 +837,22 @@ export const redeemIndependentRecoveryCode = mutation({
     }
 
     const recoveryCodeHash = await hashIndependentRecoveryCode(normalizedCode);
+    const codeRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: `independent-recovery-code:${recoveryCodeHash}`,
+      actionKey: "redeemIndependentRecoveryCodeByCode",
+      maxHits: INDEPENDENT_RECOVERY_MAX_HITS,
+      windowMs: INDEPENDENT_RECOVERY_WINDOW_MS,
+      blockDurationMs: INDEPENDENT_RECOVERY_BLOCK_MS,
+    });
+
+    if (!codeRateLimit.allowed) {
+      return {
+        status: "rate_limited",
+        retryAfterMs: codeRateLimit.retryAfterMs,
+        message: buildRateLimitMessage(codeRateLimit.retryAfterMs, "recovery"),
+      };
+    }
+
     const matchingCodes = await ctx.db
       .query("independentSeniorRecoveryCodes")
       .withIndex("by_codeHash", (query) => query.eq("codeHash", recoveryCodeHash))

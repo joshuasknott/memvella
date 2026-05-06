@@ -51,17 +51,27 @@ function getRequestOrigin(request: Request) {
 export function getPasskeyConfig(request: Request) {
   const requestOrigin = getRequestOrigin(request);
   const configuredBaseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? request.url;
-  const configuredOrigin = normalizeOrigin(configuredBaseUrl) ?? requestOrigin;
-  const origin =
-    process.env.NODE_ENV === "production"
-      ? configuredOrigin
-      : requestOrigin;
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? null;
+  const configuredOrigin = configuredBaseUrl
+    ? normalizeOrigin(configuredBaseUrl)
+    : null;
+
+  if (process.env.NODE_ENV === "production") {
+    if (!configuredOrigin) {
+      throw new Error(
+        "NEXT_PUBLIC_SITE_URL or BETTER_AUTH_URL must be set and valid in production.",
+      );
+    }
+
+    return {
+      origin: configuredOrigin,
+      rpID: new URL(configuredOrigin).hostname,
+      rpName: "Memvella",
+    };
+  }
+
+  const origin = requestOrigin;
   const rpID = new URL(origin).hostname;
 
-  return {
-    origin,
-    rpID,
-    rpName: "Memvella",
-  };
+  return { origin, rpID, rpName: "Memvella" };
 }

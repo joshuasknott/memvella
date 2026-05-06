@@ -7,6 +7,22 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { performMemvellaTestAuth } from "@/lib/test-auth-client";
 import { isMemvellaClientTestMode } from "@/lib/test-mode";
+
+function sanitizeNextPath(value: string | null): string {
+  if (!value) return "/circle";
+
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return "/circle";
+  if (trimmed.includes("\\")) return "/circle";
+
+  try {
+    const resolved = new URL(trimmed, "https://x");
+    if (resolved.origin !== "https://x") return "/circle";
+    return resolved.pathname + resolved.search + resolved.hash || "/circle";
+  } catch {
+    return "/circle";
+  }
+}
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput, PrimaryButton } from "@memvella/ui";
 
@@ -59,7 +75,7 @@ export function OrganiserSignInFallback() {
 
 export default function OrganiserSignInClient() {
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") ?? "/circle";
+  const nextPath = sanitizeNextPath(searchParams.get("next"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -47,6 +47,7 @@ export function saveSeniorSession(
 
 export function clearSeniorSession(experience: SeniorExperience) {
   localStorage.removeItem(getSeniorSessionStorageKey(experience));
+  localStorage.removeItem(getSeniorRecoveryHintStorageKey(experience));
 }
 
 export function loadSeniorRecoveryHint(experience: SeniorExperience) {

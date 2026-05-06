@@ -55,13 +55,16 @@ export default function TextMemoryPage() {
 
     try {
       let photoStorageId: Id<"_storage"> | undefined;
+      let uploadIntentId: Id<"uploadIntents"> | undefined;
 
       if (selectedPhoto) {
-        photoStorageId = await uploadFileToConvex(
+        const uploadResult = await uploadFileToConvex(
           generateUploadUrl,
           selectedPhoto,
           "image",
         );
+        photoStorageId = uploadResult.storageId;
+        uploadIntentId = uploadResult.uploadIntentId ?? undefined;
       }
 
       await addMemoryText({
@@ -71,6 +74,7 @@ export default function TextMemoryPage() {
         photoStorageId,
         photoMimeType: selectedPhoto?.type || undefined,
         photoFileName: selectedPhoto?.name || undefined,
+        uploadIntentId,
       });
 
       toast({

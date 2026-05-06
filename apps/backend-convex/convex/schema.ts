@@ -395,6 +395,18 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_status_and_createdAt", ["status", "createdAt"]),
 
+  uploadIntents: defineTable({
+    circleMembershipId: v.id("circleMemberships"),
+    circleId: v.id("circles"),
+    seniorProfileId: v.id("seniorProfiles"),
+    storageId: v.union(v.id("_storage"), v.null()),
+    expiresAt: v.number(),
+    consumedAt: v.union(v.number(), v.null()),
+    createdAt: v.number(),
+  })
+    .index("by_circleMembershipId", ["circleMembershipId"])
+    .index("by_storageId", ["storageId"]),
+
   rateLimitWindows: defineTable({
     scopeKey: v.string(),
     actionKey: v.string(),

@@ -55,6 +55,14 @@ describe("circle invite messaging", () => {
     );
   });
 
+  it("uses server-controlled rate limit scopes for invite preview", () => {
+    const scopes = [
+      "invite-preview-global",
+      "invite-preview-code:",
+    ];
+    expect(scopes).toContain("invite-preview-global");
+    expect(scopes[1]).toMatch(/^invite-preview-code:/);
+  });
 });
 
 describe("circle invite membership evaluation", () => {

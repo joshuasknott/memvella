@@ -64,16 +64,31 @@ export function validateUploadFile(file: File, kind: UploadKind) {
   }
 }
 
+export type UploadUrlResult = {
+  uploadUrl: string;
+  uploadIntentId: Id<"uploadIntents"> | null;
+};
+
+export type UploadResult = {
+  storageId: Id<"_storage">;
+  uploadIntentId: Id<"uploadIntents"> | null;
+};
+
 export async function uploadFileToConvex(
-  getUploadUrl: () => Promise<string>,
+  getUploadUrl: () => Promise<string | UploadUrlResult>,
   file: File,
   kind?: UploadKind,
-) {
+): Promise<UploadResult> {
   if (kind) {
     validateUploadFile(file, kind);
   }
 
-  const postUrl = await getUploadUrl();
+  const urlResult = await getUploadUrl();
+  const postUrl =
+    typeof urlResult === "string" ? urlResult : urlResult.uploadUrl;
+  const uploadIntentId =
+    typeof urlResult === "string" ? null : urlResult.uploadIntentId;
+
   const response = await fetch(postUrl, {
     method: "POST",
     headers: { "Content-Type": file.type || "application/octet-stream" },
@@ -85,7 +100,7 @@ export async function uploadFileToConvex(
   }
 
   const { storageId } = (await response.json()) as { storageId: Id<"_storage"> };
-  return storageId;
+  return { storageId, uploadIntentId };
 }
 
 export function inferMemoryAssetType(file: File) {

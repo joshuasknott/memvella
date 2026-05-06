@@ -53,7 +53,7 @@ export default function MediaMemoryPage() {
     try {
       const assetKind =
         inferMemoryAssetType(selectedFile) === "video" ? "video" : "image";
-      const storageId = await uploadFileToConvex(
+      const uploadResult = await uploadFileToConvex(
         generateUploadUrl,
         selectedFile,
         assetKind,
@@ -62,10 +62,11 @@ export default function MediaMemoryPage() {
         title: title.trim(),
         date: date.trim() || undefined,
         story: story.trim(),
-        mediaStorageId: storageId as Id<"_storage">,
+        mediaStorageId: uploadResult.storageId as Id<"_storage">,
         mediaMimeType: selectedFile.type || undefined,
         mediaFileName: selectedFile.name || undefined,
         mediaAssetType: assetKind,
+        uploadIntentId: uploadResult.uploadIntentId ?? undefined,
       });
       toast({
         tone: "success",

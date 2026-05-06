@@ -53,4 +53,31 @@ describe("getPasskeyConfig", () => {
     expect(config.origin).toBe("https://memvella.me");
     expect(config.rpID).toBe("memvella.me");
   });
+
+  it("fails closed in production when site URL env is missing", () => {
+    env.NODE_ENV = "production";
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.BETTER_AUTH_URL;
+
+    expect(() =>
+      getPasskeyConfig(
+        new Request("http://localhost:3000/api/independent/passkey/register/options"),
+      ),
+    ).toThrow(
+      "NEXT_PUBLIC_SITE_URL or BETTER_AUTH_URL must be set and valid in production.",
+    );
+  });
+
+  it("fails closed in production when site URL is malformed", () => {
+    env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_SITE_URL = "not-a-valid-url";
+
+    expect(() =>
+      getPasskeyConfig(
+        new Request("http://localhost:3000/api/independent/passkey/register/options"),
+      ),
+    ).toThrow(
+      "NEXT_PUBLIC_SITE_URL or BETTER_AUTH_URL must be set and valid in production.",
+    );
+  });
 });

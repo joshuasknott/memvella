@@ -75,7 +75,11 @@ function getExpectedTestAuthToken() {
     : DEFAULT_MEMVELLA_TEST_AUTH_TOKEN;
 }
 
-function ensureTestSupportAccess(authToken: string) {
+export function ensureTestSupportAccess(authToken: string) {
+  if (process.env.MEMVELLA_TEST_MODE !== "1") {
+    throw new Error("Test support is not available outside test mode.");
+  }
+
   if (authToken !== getExpectedTestAuthToken()) {
     throw new Error("Invalid Memvella test auth token.");
   }

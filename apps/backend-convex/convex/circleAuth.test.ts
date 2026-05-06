@@ -91,6 +91,15 @@ describe("family-side capabilities", () => {
     );
   });
 
+  it("denies members access to organiser-only actions (insights, AI onboarding)", () => {
+    expect(familySideRoleHasCapability("member", "manage_circle_admin")).toBe(false);
+    expect(familySideRoleHasCapability("organiser", "manage_circle_admin")).toBe(true);
+    expect(() => assertFamilySideCapability("member", "manage_circle_admin")).toThrow();
+    expect(assertFamilySideCapability("organiser", "manage_circle_admin")).toBe(
+      "organiser",
+    );
+  });
+
   it("deterministically picks one membership when duplicates exist", () => {
     const result = pickDeterministicMembership([
       makeMembership("membership-z", 10),

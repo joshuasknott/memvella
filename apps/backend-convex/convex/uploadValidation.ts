@@ -1,6 +1,14 @@
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
+type UploadIntent = {
+  _id: Id<"uploadIntents">;
+  circleMembershipId: Id<"circleMemberships">;
+  storageId: Id<"_storage"> | null;
+  expiresAt: number;
+  consumedAt: number | null;
+};
+
 type UploadAssetKind = "image" | "audio" | "video";
 
 type UploadRule = {
@@ -105,4 +113,32 @@ export async function assertValidStoredUpload(
     contentType: normalizedMimeType,
     size: metadata.size,
   };
+}
+
+export async function consumeUploadIntent(
+  ctx: MutationCtx,
+  args: {
+    uploadIntentId: Id<"uploadIntents">;
+    storageId: Id<"_storage">;
+    circleMembershipId: Id<"circleMemberships">;
+  },
+) {
+  const intent = (await ctx.db.get(args.uploadIntentId)) as UploadIntent | null;
+  if (!intent) {
+    throw new Error("This upload is no longer available.");
+  }
+
+  if (intent.circleMembershipId !== args.circleMembershipId) {
+    throw new Error("This upload does not belong to your Circle.");
+  }
+
+  const now = Date.now();
+  if (intent.consumedAt !== null || intent.expiresAt < now) {
+    throw new Error("This upload has expired.");
+  }
+
+  await ctx.db.patch(intent._id, {
+    storageId: args.storageId,
+    consumedAt: now,
+  });
 }

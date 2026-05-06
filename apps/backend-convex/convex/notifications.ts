@@ -14,7 +14,10 @@ import {
   getNextRoutineEventForCircle,
   resolveCircleRuntimeDetails,
 } from "./routineHelpers";
-import { normalizeOptionalText } from "./security";
+import {
+  isAllowedPushEndpoint,
+  normalizeOptionalText,
+} from "./security";
 import {
   CIRCLE_LABEL,
   normalizeUserFacingText,
@@ -367,6 +370,10 @@ export const upsertPushSubscription = mutation({
     );
     if (!circleMembership) {
       throw new Error("The linked Circle could not be found.");
+    }
+
+    if (!isAllowedPushEndpoint(args.endpoint)) {
+      throw new Error("The push subscription endpoint is not allowed.");
     }
 
     const existing = await ctx.db

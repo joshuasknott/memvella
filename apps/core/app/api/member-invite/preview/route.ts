@@ -3,7 +3,6 @@ import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import {
   appendDeviceBindingCookie,
-  buildRequestThrottleFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -25,11 +24,6 @@ export async function POST(request: NextRequest) {
     const convex = createConvexHttpClient();
     const result = await convex.mutation(api.circleInvites.previewMemberInviteCode, {
       inviteCode,
-      previewScopeKey: buildRequestThrottleFingerprint(
-        binding.seed,
-        request,
-        "member-invite-preview",
-      ),
     });
 
     const response = NextResponse.json(result, {
