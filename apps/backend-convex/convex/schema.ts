@@ -395,6 +395,42 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_status_and_createdAt", ["status", "createdAt"]),
 
+  appEvents: defineTable({
+    eventType: v.union(
+      v.literal("waitlist_submission"),
+      v.literal("backend_error"),
+      v.literal("route_health"),
+      v.literal("notification_worker"),
+      v.literal("voice_ai"),
+      v.literal("test_support"),
+    ),
+    sourceApp: v.union(
+      v.literal("core"),
+      v.literal("marketing"),
+      v.literal("internal"),
+      v.literal("backend"),
+    ),
+    sourceRoute: v.union(v.string(), v.null()),
+    severity: v.union(
+      v.literal("info"),
+      v.literal("warning"),
+      v.literal("error"),
+    ),
+    status: v.union(
+      v.literal("received"),
+      v.literal("processed"),
+      v.literal("failed"),
+      v.literal("skipped"),
+    ),
+    messageCode: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
+    .index("by_sourceApp_and_createdAt", ["sourceApp", "createdAt"])
+    .index("by_severity_and_createdAt", ["severity", "createdAt"])
+    .index("by_status_and_createdAt", ["status", "createdAt"]),
+
   uploadIntents: defineTable({
     circleMembershipId: v.id("circleMemberships"),
     circleId: v.id("circles"),
@@ -505,6 +541,7 @@ export default defineSchema({
       "status",
       "createdAt",
     ])
+    .index("by_status_and_createdAt", ["status", "createdAt"])
     .index("by_sourceVoiceInteractionId", ["sourceVoiceInteractionId"]),
 
   alerts: defineTable({
@@ -540,6 +577,7 @@ export default defineSchema({
       "status",
       "createdAt",
     ])
+    .index("by_status_and_createdAt", ["status", "createdAt"])
     .index("by_alertType_and_status_and_createdAt", [
       "alertType",
       "status",

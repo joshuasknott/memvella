@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation } from "./_generated/server";
+import { insertSanitizedAppEvent } from "./appEvents";
 import { normalizeOptionalEmail, normalizeOptionalText } from "./security";
 
 export const joinWaitlist = mutation({
@@ -41,6 +42,14 @@ export const joinWaitlist = mutation({
       await ctx.db.patch(existingEntry._id, {
         updatedAt: now,
       });
+      await insertSanitizedAppEvent(ctx, {
+        eventType: "waitlist_submission",
+        sourceApp: "marketing",
+        sourceRoute: args.sourcePath,
+        severity: "info",
+        status: "processed",
+        messageCode: "waitlist.rejoined",
+      });
       return { status: "joined" } as const;
     }
 
@@ -52,6 +61,15 @@ export const joinWaitlist = mutation({
       status: "active",
       createdAt: now,
       updatedAt: now,
+    });
+
+    await insertSanitizedAppEvent(ctx, {
+      eventType: "waitlist_submission",
+      sourceApp: "marketing",
+      sourceRoute: args.sourcePath,
+      severity: "info",
+      status: "received",
+      messageCode: "waitlist.joined",
     });
 
     return { status: "joined" } as const;

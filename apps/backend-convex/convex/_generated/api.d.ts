@@ -10,10 +10,12 @@
 
 import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
+import type * as appEvents from "../appEvents.js";
 import type * as auth from "../auth.js";
 import type * as circleAuth from "../circleAuth.js";
 import type * as circleInvites from "../circleInvites.js";
 import type * as crons from "../crons.js";
+import type * as hq from "../hq.js";
 import type * as http from "../http.js";
 import type * as independentAccess from "../independentAccess.js";
 import type * as insights from "../insights.js";
@@ -55,10 +57,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   agent: typeof agent;
   aiActions: typeof aiActions;
+  appEvents: typeof appEvents;
   auth: typeof auth;
   circleAuth: typeof circleAuth;
   circleInvites: typeof circleInvites;
   crons: typeof crons;
+  hq: typeof hq;
   http: typeof http;
   independentAccess: typeof independentAccess;
   insights: typeof insights;
