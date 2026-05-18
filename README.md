@@ -7,7 +7,7 @@ Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex b
 - `apps/core`: the product frontend. Contains the shared `/circle` family-side workspace, the assisted tablet flow, the independent senior flow, and the Next.js frontend.
 - `apps/backend-convex`: the Convex backend. Owns all server-side functions, schema, auth config, and AI actions. Exports `@memvella/backend` for frontend consumers.
 - `apps/marketing`: the marketing and waitlist app.
-- `apps/internal`: internal operations, support, and QA tools (scaffold).
+- `apps/internal`: Memvella HQ, the founder-only internal operating system and mission-control app.
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`).
 - `packages/config-typescript`: shared TypeScript base configs.
 - `packages/config-eslint`: shared ESLint configs.
@@ -51,8 +51,9 @@ Current deferred gaps:
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
 3. Create `apps/backend-convex/.env.local` from `apps/backend-convex/.env.example` with your `CONVEX_DEPLOYMENT` value.
 4. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
-5. Start the Convex dev backend with `pnpm convex:dev`.
-6. Start the monorepo dev processes with `pnpm dev`.
+5. If you are working on Memvella HQ, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
+6. Start the Convex dev backend with `pnpm convex:dev`.
+7. Start the monorepo dev processes with `pnpm dev`.
 
 ## Common Commands
 

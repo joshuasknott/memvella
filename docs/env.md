@@ -13,6 +13,7 @@ The local examples live at:
 
 - `apps/core/.env.example`
 - `apps/marketing/.env.example`
+- `apps/internal/.env.example`
 
 ## Variable Contract
 
@@ -36,6 +37,10 @@ The local examples live at:
 | `MEMVELLA_WEB_PUSH_PRIVATE_KEY` | optional | Convex | push delivery worker | Secret value |
 | `MEMVELLA_WEB_PUSH_SUBJECT` | optional | Convex | push delivery worker | Usually a `mailto:` value |
 | `CONVEX_URL` | required only for the marketing waitlist server route | server | `apps/marketing` waitlist submission route | Marketing-only variable |
+| `MEMVELLA_HQ_ENABLED` | required to enable HQ | server | `apps/internal` | Set to `1` to enable Memvella HQ |
+| `MEMVELLA_HQ_ACCESS_KEY` | required when HQ enabled | server | `apps/internal` | Founder access key; secret value |
+| `MEMVELLA_HQ_COOKIE_SECRET` | required when HQ enabled | server | `apps/internal` | Signing secret for the HTTP-only HQ session cookie; secret value |
+| `MEMVELLA_HQ_READ_TOKEN` | required when HQ enabled | server and Convex | `apps/internal`, `apps/backend-convex/convex/hq.ts` | Shared read-token for HQ read models; secret value and must also be configured in Convex runtime |
 
 ## Local Auth Rule
 
@@ -44,6 +49,8 @@ If you are testing auth on a phone, tablet, or another machine, set the site URL
 ## Convex Rule
 
 If a variable is read inside Convex functions, configure it for the Convex runtime as well. A value existing only in the Next.js environment is not enough for server-side Convex code.
+
+`MEMVELLA_HQ_READ_TOKEN` is read by Convex HQ read-model queries and must be set in Convex. It must also be set in `apps/internal` so the server-side HQ Convex client can call those read models. The browser must never receive this token.
 
 For `apps/core`, prefer `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` in `.env.local`. Avoid also defining `CONVEX_SITE_URL` there, because the Convex CLI treats the site URL aliases as the same setting and will skip automatic updates when more than one is present.
 

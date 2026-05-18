@@ -12,7 +12,7 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core`: Next.js product frontend
 - `apps/backend-convex`: Convex backend (exports `@memvella/backend` and `@memvella/backend/dataModel`)
 - `apps/marketing`: Next.js marketing app
-- `apps/internal`: internal operations, support, and QA tools (scaffold)
+- `apps/internal`: Memvella HQ, the founder-only internal operating system and mission-control app
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`)
 - `packages/config-typescript`: shared TypeScript base configs
 - `packages/config-eslint`: shared ESLint configs
@@ -32,6 +32,28 @@ Depends on: docs/product.md, docs/data-model.md
 - Frontend apps import types as `import type { Id } from "@memvella/backend/dataModel"`
 
 ## Routing Model
+
+### Internal HQ Routes
+
+`apps/internal` is a separate internal app. It is not wired to product `Organiser` or `Member` auth.
+
+- `/`: Mission Control
+- `/company`
+- `/product`
+- `/product/circles`
+- `/product/circles/[circleId]`
+- `/growth`
+- `/research`
+- `/operations`
+- `/trust-safety`
+- `/voice-ai`
+- `/observability`
+- `/qa`
+- `/automation`
+- `/runbooks`
+- `/runbooks/[slug]`
+
+HQ routes are founder-only in v1 and read from server-side Convex HQ read models with a server-only read token. See `docs/internal-hq.md`.
 
 ### Family-Side Routes
 
@@ -106,6 +128,7 @@ Current route facts:
 - Better Auth routes are registered into the Convex HTTP router in `apps/backend-convex/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
 - Convex functions implement family-side auth, member invites, assisted sessions, independent passkeys and recovery, routines, memories, notifications, and live voice.
+- HQ read models live in `apps/backend-convex/convex/hq.ts`. They are read-only, require `MEMVELLA_HQ_READ_TOKEN`, and return redacted DTOs.
 
 ## Auth Architecture
 
@@ -127,6 +150,7 @@ Current tables:
 - `notificationSettings`
 - `pushSubscriptions`
 - `notificationDeliveries`
+- `appEvents`
 
 ### Senior-Scoped Data
 
@@ -148,6 +172,7 @@ Current tables:
 Current omissions and deferred work:
 
 - there is no shipped `activityEvents` table yet
+- `appEvents` is a sanitized internal observability table, not a product activity feed
 - there is no dedicated activity route yet
 - alerts exist as their own table, but the UI reviews alerts and insights together inside `/circle/insights`
 

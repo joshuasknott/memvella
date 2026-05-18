@@ -14,6 +14,8 @@ Memvella uses two auth families:
 - Better Auth for family-side account sessions
 - Convex-managed senior access sessions for assisted and independent device access
 
+Memvella HQ in `apps/internal` uses a separate founder-only access gate. Product `Organiser` and `Member` sessions do not grant HQ access, and HQ does not impersonate product users.
+
 ## Current Flows
 
 | Experience | Entry route | Auth bootstrap | Recovery path | Lands in |

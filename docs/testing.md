@@ -27,6 +27,17 @@ Before testing auth-sensitive or backend-sensitive changes:
 - `pnpm build`
 - `pnpm verify` to run the full loop in sequence
 
+For Memvella HQ changes, also manually verify:
+
+- HQ is inaccessible unless `MEMVELLA_HQ_ENABLED=1`
+- founder login requires `MEMVELLA_HQ_ACCESS_KEY`
+- the HQ session cookie is HTTP-only and same-site
+- `MEMVELLA_HQ_READ_TOKEN` is used only by server-side internal app code and Convex
+- Convex HQ queries reject missing or wrong read tokens
+- dashboards show aggregate, bounded, or redacted metadata only
+- QA/dev actions remain disabled outside `MEMVELLA_TEST_MODE=1`
+- static company, research, automation, and runbook content is clearly static and not presented as live analytics
+
 Current gate:
 
 - GitHub Actions runs `pnpm verify` on pushes to `main` and on pull requests.

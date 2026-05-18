@@ -54,10 +54,12 @@ Primary entities:
 - `rateLimitWindows`
 - `voiceInteractions`
 - `waitlistEntries`
+- `appEvents`
 
 Current omission:
 
 - there is no shipped `activityEvents` table yet
+- `appEvents` stores sanitized internal observability signals only and is not a user activity feed
 
 ## Key Invariants
 
@@ -117,6 +119,26 @@ These tables anchor on `circleId`:
 - `notificationSettings`
 - `pushSubscriptions`
 - `notificationDeliveries`
+
+### Internal Observability Data
+
+`appEvents` stores sanitized first-party operational signals for HQ observability.
+
+Allowed fields:
+
+- `eventType`
+- `sourceApp`
+- `sourceRoute`
+- `severity`
+- `status`
+- `messageCode`
+- `createdAt`
+
+Rules:
+
+- Do not store emails, names, IP addresses, request bodies, transcripts, evidence, tokens, hashes, secrets, or arbitrary metadata.
+- Use `appEvents` for sanitized internal signals such as waitlist submission metadata, not for product user content.
+- Do not treat `appEvents` as a replacement for a future product `activityEvents` table.
 
 ### Senior-Scoped Data
 
