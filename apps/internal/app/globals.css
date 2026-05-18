@@ -1,0 +1,28 @@
+@import "@memvella/ui/globals.css";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+@layer base {
+  html {
+    background: #f7f7f3;
+  }
+
+  body {
+    min-height: 100dvh;
+    background:
+      linear-gradient(180deg, rgba(251, 251, 249, 0.94), rgba(245, 245, 247, 0.98)),
+      var(--color-canvas);
+    color: var(--color-text-primary);
+  }
+
+  * {
+    letter-spacing: 0;
+  }
+}
+
+@layer utilities {
+  .hq-panel {
+    border: 1px solid rgba(216, 220, 227, 0.9);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 16px 38px -28px rgba(15, 23, 42, 0.45);
+  }
+}
