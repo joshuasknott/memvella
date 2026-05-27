@@ -52,7 +52,7 @@ jobs:
         run: pnpm verify
 
   e2e-chromium:
-    if: ${{ github.event_name == 'pull_request' && vars.MEMVELLA_E2E_ENABLED == '1' }}
+    if: ${{ vars.MEMVELLA_E2E_ENABLED == '1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
