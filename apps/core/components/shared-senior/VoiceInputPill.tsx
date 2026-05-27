@@ -202,7 +202,7 @@ export function VoiceInputPill({
       stopIntentRef.current = "none";
       isStartPendingRef.current = false;
     }
-  }, [cleanupAfterStop, isListening, onSubmit, releaseStream, voiceState]);
+  }, [cleanupAfterStop, isListening, onVoiceError, onSubmit, releaseStream, voiceState]);
 
   useEffect(() => {
     return () => {
