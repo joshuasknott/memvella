@@ -4,6 +4,10 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { buildTranscriptExcerpt, scanVoiceSafety } from "./voiceSafety";
 
+const LIVE_VOICE_MAX_HITS = 30;
+const LIVE_VOICE_WINDOW_MS = 5 * 60 * 1000;
+const LIVE_VOICE_BLOCK_MS = 10 * 60 * 1000;
+
 type SeniorAiContext = {
   circleName: string;
   timeZone: string;
@@ -181,6 +185,19 @@ export const logAssistedLiveTurn = mutation({
         expectedSessionType: "assisted_device",
       },
     );
+
+    const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: `senior-session:${session.sessionId}`,
+      actionKey: "logAssistedLiveTurn",
+      maxHits: LIVE_VOICE_MAX_HITS,
+      windowMs: LIVE_VOICE_WINDOW_MS,
+      blockDurationMs: LIVE_VOICE_BLOCK_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return null;
+    }
+
     const safety = scanVoiceSafety(transcript);
 
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(

@@ -7,20 +7,19 @@ export type DeviceExperience = "assisted" | "independent";
 
 const DEVICE_BINDING_COOKIE = "memvella_device_binding";
 const DEVICE_BINDING_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
-const LOCAL_DEV_BINDING_SECRET = "memvella-local-dev-pepper";
 
 function getTrimmedEnvValue(name: string) {
   const value = process.env[name]?.trim();
   return value && value.length > 0 ? value : null;
 }
 
-function isProductionRuntime() {
-  if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
-    return true;
+function isLocalDevelopmentRuntime() {
+  if (getTrimmedEnvValue("CONVEX_DEPLOYMENT") !== null) {
+    return false;
   }
 
-  const deployment = getTrimmedEnvValue("CONVEX_DEPLOYMENT")?.toLowerCase();
-  return deployment?.startsWith("prod:") ?? false;
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
+  return nodeEnv === "development" || !nodeEnv;
 }
 
 function getBindingSecret() {
@@ -31,13 +30,13 @@ function getBindingSecret() {
     return configuredSecret;
   }
 
-  if (isProductionRuntime()) {
-    throw new Error(
-      "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
-    );
+  if (isLocalDevelopmentRuntime()) {
+    return "memvella-local-dev-pepper";
   }
 
-  return LOCAL_DEV_BINDING_SECRET;
+  throw new Error(
+    "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
+  );
 }
 
 function toBase64Url(buffer: Buffer) {

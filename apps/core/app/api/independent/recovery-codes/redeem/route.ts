@@ -3,6 +3,7 @@ import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import {
   appendDeviceBindingCookie,
+  buildDeviceFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -10,12 +11,11 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const { recoveryCode, deviceFingerprint } = (await request.json()) as {
+    const { recoveryCode } = (await request.json()) as {
       recoveryCode?: string;
-      deviceFingerprint?: string;
     };
 
-    if (typeof recoveryCode !== "string" || typeof deviceFingerprint !== "string") {
+    if (typeof recoveryCode !== "string") {
       return NextResponse.json(
         { error: "A recovery code is required to continue." },
         { status: 400 },
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const binding = getOrCreateDeviceBindingSeed(request);
+    const deviceFingerprint = buildDeviceFingerprint(binding.seed, "independent");
     const convex = createConvexHttpClient();
     const result = await convex.mutation(api.independentAccess.redeemIndependentRecoveryCode, {
       recoveryCode,

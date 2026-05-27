@@ -4,8 +4,6 @@ import { issueSeniorAccessSession } from "./seniorAccessHelpers";
 import { generateOpaqueToken, normalizeOptionalText } from "./security";
 import { buildCircleName, MEMBER_LABEL } from "./terminology";
 
-const DEFAULT_MEMVELLA_TEST_AUTH_TOKEN = "memvella-local-test-token";
-
 const testSupportAuthValidator = {
   authToken: v.string(),
 } as const;
@@ -68,11 +66,28 @@ const RESET_TABLES: ReadonlyArray<ResettableTableName> = [
   "circles",
 ];
 
+function isLocalOrTestRuntime() {
+  if (process.env.CONVEX_DEPLOYMENT) {
+    return false;
+  }
+
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
+  return !nodeEnv || nodeEnv === "development" || nodeEnv === "test";
+}
+
 function getExpectedTestAuthToken() {
   const configuredToken = process.env.MEMVELLA_TEST_AUTH_TOKEN?.trim();
-  return configuredToken && configuredToken.length > 0
-    ? configuredToken
-    : DEFAULT_MEMVELLA_TEST_AUTH_TOKEN;
+  if (configuredToken && configuredToken.length > 0) {
+    return configuredToken;
+  }
+
+  if (isLocalOrTestRuntime()) {
+    return "memvella-local-test-token";
+  }
+
+  throw new Error(
+    "MEMVELLA_TEST_AUTH_TOKEN must be explicitly set when test mode is enabled outside local development.",
+  );
 }
 
 export function ensureTestSupportAccess(authToken: string) {

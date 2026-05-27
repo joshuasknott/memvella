@@ -153,6 +153,10 @@ export const pairTabletSession = mutation({
 
     const seniorProfile = await ctx.db.get(activePin.seniorProfileId);
     if (!seniorProfile) {
+      await ctx.db.patch(activePin._id, {
+        failedAttempts: activePin.failedAttempts + 1,
+      });
+
       return {
         success: false as const,
         error: `This ${TABLET_PROFILE_LABEL} is no longer available.`,

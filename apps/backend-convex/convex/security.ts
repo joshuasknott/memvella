@@ -20,20 +20,18 @@ export const SENIOR_SESSION_TTL_MS = {
 
 export type SeniorSessionType = keyof typeof SENIOR_IDLE_TIMEOUT_MS;
 
-const LOCAL_DEV_SECURITY_PEPPER = "memvella-local-dev-pepper";
-
 function getTrimmedEnvValue(name: string) {
   const value = process.env[name]?.trim();
   return value && value.length > 0 ? value : null;
 }
 
-function isProductionRuntime() {
-  if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
-    return true;
+function isLocalDevelopmentRuntime() {
+  if (getTrimmedEnvValue("CONVEX_DEPLOYMENT") !== null) {
+    return false;
   }
 
-  const deployment = getTrimmedEnvValue("CONVEX_DEPLOYMENT")?.toLowerCase();
-  return deployment?.startsWith("prod:") ?? false;
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
+  return nodeEnv === "development" || !nodeEnv;
 }
 
 function getSecurityPepper() {
@@ -44,13 +42,13 @@ function getSecurityPepper() {
     return configuredPepper;
   }
 
-  if (isProductionRuntime()) {
-    throw new Error(
-      "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
-    );
+  if (isLocalDevelopmentRuntime()) {
+    return "memvella-local-dev-pepper";
   }
 
-  return LOCAL_DEV_SECURITY_PEPPER;
+  throw new Error(
+    "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
+  );
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {

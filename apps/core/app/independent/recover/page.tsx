@@ -105,7 +105,6 @@ export default function IndependentRecoveryPage() {
         },
         body: JSON.stringify({
           recoveryCode: normalizedCode,
-          deviceFingerprint,
         }),
       });
       const payload = (await response.json()) as {

@@ -448,6 +448,26 @@ export const beginIndependentOnboarding = mutation({
     displayName: v.string(),
   },
   handler: async (ctx, args): Promise<BeginIndependentOnboardingResult> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity) {
+      const existingMembership = await ctx.db
+        .query("circleMemberships")
+        .withIndex("by_authIdentityToken", (query) =>
+          query.eq("authIdentityToken", identity.tokenIdentifier),
+        )
+        .first();
+
+      if (existingMembership) {
+        return {
+          status: "rate_limited" as const,
+          retryAfterMs: 0,
+          message:
+            "This account is already linked to a Circle. " +
+            "Sign out first if you want to set up an independent profile.",
+        };
+      }
+    }
+
     const rateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
       scopeKey: "independent-onboarding-global",
       actionKey: "beginIndependentOnboarding",
@@ -469,17 +489,17 @@ export const beginIndependentOnboarding = mutation({
       throw new Error("Please tell Memvella what to call you.");
     }
 
-    const circleId = await ctx.db.insert("circles", {
-      displayName: buildCircleName(displayName),
-      timezone: undefined,
-      locale: undefined,
-    });
-
-    const seniorProfile = await upsertIndependentSeniorProfile(ctx, {
-      circleId,
+    const seniorProfileId = await ctx.db.insert("seniorProfiles", {
+      circleId: null,
       displayName,
+      seniorMode: "independent",
+      accessStatus: "active",
+      timezone: null,
+      locale: null,
+      lastSessionAt: undefined,
     });
 
+    const seniorProfile = await ctx.db.get(seniorProfileId);
     if (!seniorProfile) {
       throw new Error(`Unable to create the ${INDEPENDENT_PROFILE_LABEL}.`);
     }
