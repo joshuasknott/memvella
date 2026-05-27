@@ -15,6 +15,7 @@ interface VoiceInputPillProps {
   voiceState?: VoiceUiState;
   statusMessage?: string | null;
   errorMessage?: string | null;
+  onVoiceError?: (message: string) => void;
 }
 
 function resolvePlaceholder(isListening: boolean, voiceState: VoiceUiState) {
@@ -38,6 +39,7 @@ export function VoiceInputPill({
   voiceState = "idle",
   statusMessage,
   errorMessage,
+  onVoiceError,
 }: VoiceInputPillProps) {
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -109,7 +111,7 @@ export function VoiceInputPill({
     const RecognitionApi = resolveSpeechRecognitionCtor();
 
     if (!RecognitionApi) {
-      alert("Voice recognition is not available in this browser. Please type instead.");
+      onVoiceError?.("Voice recognition is not available in this browser. Please type instead.");
       return;
     }
 
@@ -167,7 +169,7 @@ export function VoiceInputPill({
 
         if (!wasIntentionalStop && !isExpectedStopError) {
           console.error("Speech recognition error:", event.error);
-          alert("Mic error. Please try again or type instead.");
+          onVoiceError?.("Mic error. Please try again or type instead.");
         }
 
         if (!wasIntentionalStop && !isExpectedStopError) {
@@ -195,7 +197,7 @@ export function VoiceInputPill({
       recognition.start();
     } catch (error) {
       console.error(error);
-      alert("Microphone access is blocked. Please type instead.");
+      onVoiceError?.("Microphone access is blocked. Please type instead.");
       cleanupAfterStop();
       stopIntentRef.current = "none";
       isStartPendingRef.current = false;

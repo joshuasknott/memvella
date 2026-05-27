@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
@@ -76,17 +77,15 @@ export default function OrganiserMemoryDetailPage() {
   const memoryRecordId = params.memoryId as Id<"memoryRecords">;
   const memoryDetail = useQuery(api.memories.getMemoryRecordDetail, { memoryRecordId });
   const deleteMemoryRecord = useMutation(api.memories.deleteMemoryRecord);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!memoryDetail) {
+    if (!memoryDetail || isDeleting) {
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${memoryDetail.title}" from this Circle?`);
-    if (!confirmed) {
-      return;
-    }
-
+    setIsDeleting(true);
     try {
       await deleteMemoryRecord({ memoryRecordId });
       toast({
@@ -104,6 +103,9 @@ export default function OrganiserMemoryDetailPage() {
             ? error.message
             : "Please try again in a moment.",
       });
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -217,14 +219,44 @@ export default function OrganiserMemoryDetailPage() {
           Edit memory
         </PrimaryButton>
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="flex h-[72px] w-full items-center justify-center gap-2 rounded-full bg-[#B91C1C] px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95"
-        >
-          <Trash2 className="h-5 w-5" />
-          Delete memory
-        </button>
+        {showDeleteConfirm ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 space-y-3">
+            <p className="text-base font-bold text-red-700">
+              Delete &ldquo;{memoryDetail.title}&rdquo;?
+            </p>
+            <p className="text-sm text-red-600">
+              This cannot be undone. The memory will be permanently removed from this Circle.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex h-[48px] items-center justify-center gap-2 rounded-full bg-[#B91C1C] px-5 text-sm font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-60"
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex h-[48px] items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-semibold text-text-secondary disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex h-[72px] w-full items-center justify-center gap-2 rounded-full bg-[#B91C1C] px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95"
+          >
+            <Trash2 className="h-5 w-5" />
+            Delete memory
+          </button>
+        )}
 
         <SecondaryButton href="/circle/memories">
           Back to memories
