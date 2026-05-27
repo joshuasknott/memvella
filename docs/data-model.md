@@ -37,6 +37,7 @@ Primary entities:
 - `people`
 - `memoryRecords`
 - `memoryAssets`
+- `uploadIntents`
 
 ### Routines And Scheduling
 
@@ -168,16 +169,9 @@ Rules:
 
 ## Remaining Legacy Surfaces
 
-These still exist in the schema and should not receive net-new product work:
+These still exist and should not receive net-new product work:
 
-- legacy `routines`
-- legacy `memories`
-
-Current facts about those legacy tables:
-
-- they remain transitional compatibility tables in `apps/core/convex/schema.ts`
-- they still use `familySpaceId` index naming
-- the active product surfaces use `routineSchedules`, `routineOccurrences`, `routineCheckIns`, `memoryRecords`, and `memoryAssets` instead
+(None remaining. All legacy compatibility tables have been removed.)
 
 ## Authoring Rules
 

@@ -43,16 +43,7 @@ Completed changes:
 
 ### Schema Debt
 
-These legacy tables still exist in `apps/core/convex/schema.ts` and should not receive new product work:
-
-- `routines`
-- `memories`
-
-Current facts:
-
-- both are transitional compatibility tables
-- both still use `familySpaceId` index naming
-- the shipped product uses `routineSchedules`, `routineOccurrences`, `routineCheckIns`, `memoryRecords`, and `memoryAssets` instead
+(None remaining. The legacy `routines` and `memories` compatibility tables have been fully removed.)
 
 ### Auth And Environment Compatibility
 
@@ -65,7 +56,7 @@ Current facts:
 
 ### Module Shape Still Deferred
 
-- `apps/core/convex/organiser.ts` still acts as a mixed family-side dashboard and settings module
+- `apps/backend-convex/convex/organiser.ts` still acts as a mixed family-side dashboard and settings module
 - splitting that file by domain is still deferred work, not completed cleanup
 
 ### Activity Still Deferred

@@ -20,7 +20,8 @@ The product is designed to reduce friction, preserve dignity, and keep family-si
 
 ## Applications
 
-- `apps/core`: the product application and Convex backend
+- `apps/core`: the product application frontend
+- `apps/backend-convex`: the Convex backend
 - `apps/marketing`: the marketing and waitlist application
 
 ## Shipped Experience Model

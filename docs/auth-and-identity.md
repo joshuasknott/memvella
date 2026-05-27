@@ -123,7 +123,7 @@ These actions do not sign the organiser in as the senior.
 
 ### Better Auth Base URL
 
-`apps/core/convex/auth.ts` derives the Better Auth base URL from:
+`apps/backend-convex/convex/auth.ts` derives the Better Auth base URL from:
 
 1. `BETTER_AUTH_URL`
 2. `SITE_URL`
@@ -131,7 +131,7 @@ These actions do not sign the organiser in as the senior.
 
 ### Better Auth Trusted Origins
 
-`apps/core/convex/auth.ts` derives trusted origins from:
+`apps/backend-convex/convex/auth.ts` derives trusted origins from:
 
 1. the configured app origins above
 2. `BETTER_AUTH_TRUSTED_ORIGINS`, parsed as a comma-separated list of additional origins

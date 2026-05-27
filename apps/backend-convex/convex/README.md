@@ -1,17 +1,17 @@
 # Memvella Convex Backend
 
-This directory contains the Convex backend for `apps/core`.
+This directory contains the Convex backend, exported as `@memvella/backend`.
 
 ## Before Editing
 
-1. Read `apps/core/convex/_generated/ai/guidelines.md`.
+1. Read `apps/backend-convex/convex/_generated/ai/guidelines.md`.
 2. Read `docs/auth-and-identity.md` if you are touching auth, onboarding, passkeys, or senior sessions.
 3. Read `docs/data-model.md` if you are touching schema, tables, or migrations.
 4. Read `docs/legacy-removal.md` if you are renaming routes, modules, tables, or compatibility surfaces.
 
 ## What Lives Here
 
-- `schema.ts`: the current database schema, including canonical tables and legacy compatibility tables that are still present during migration.
+- `schema.ts`: the current database schema.
 - `auth.ts`, `auth.config.ts`, `http.ts`: Better Auth and Convex auth integration.
 - `organiser.ts`: organiser-side mutations and queries for the shared Circle workspace.
 - `independentAccess.ts`: independent onboarding, recovery, and passkey enrollment.
@@ -32,7 +32,7 @@ From the repo root:
 - `pnpm convex:dev`
 - `pnpm convex:deploy`
 
-From `apps/core` directly:
+From `apps/backend-convex` directly:
 
 - `pnpm exec convex dev`
 - `pnpm exec convex deploy`
