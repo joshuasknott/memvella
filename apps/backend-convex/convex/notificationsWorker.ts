@@ -53,7 +53,7 @@ function getDeliveryErrorMessage(error: unknown) {
   return "Push delivery failed.";
 }
 
-async function getActiveSubscriptionsForFamilySpace(
+async function getActiveSubscriptionsForCircle(
   ctx: ActionCtx,
   args: {
     circleId: Id<"circles">;
@@ -167,7 +167,7 @@ export const sweepRoutineReminderNotifications = internalAction({
     let queued = 0;
 
     for (const candidate of candidates) {
-      const subscriptions = await getActiveSubscriptionsForFamilySpace(
+      const subscriptions = await getActiveSubscriptionsForCircle(
         ctx,
         {
           circleId: candidate.circleId,
@@ -224,7 +224,7 @@ export const sweepDailySummaryNotifications = internalAction({
 
     for (const candidate of candidates) {
       const [subscriptions, payload] = await Promise.all([
-        getActiveSubscriptionsForFamilySpace(
+        getActiveSubscriptionsForCircle(
           ctx,
           {
             circleId: candidate.circleId,
