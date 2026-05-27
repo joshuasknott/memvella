@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderCircle, Mic, MicOff, Volume2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface VoiceModalProps {
   isOpen: boolean;
@@ -66,14 +67,82 @@ export function VoiceModal({
   errorMessage,
 }: VoiceModalProps) {
   const combinedError = errorMessage;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const panel = panelRef.current;
+    if (panel) {
+      const firstButton = panel.querySelector<HTMLElement>("button");
+      firstButton?.focus();
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panel) {
+        return;
+      }
+
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+        previousFocusRef.current = null;
+      }
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Voice conversation"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+    >
+      <div
+        ref={panelRef}
+        className="flex w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10"
+      >
         <h2 className="font-family text-4xl font-bold text-text-primary md:text-5xl">
           <VoiceStateHeadline
             isConnecting={isConnecting}

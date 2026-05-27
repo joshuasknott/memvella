@@ -53,6 +53,58 @@ function getDeliveryErrorMessage(error: unknown) {
   return "Push delivery failed.";
 }
 
+const TRANSIENT_PUSH_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
+
+function isTransientPushError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const statusCode = (error as any).statusCode;
+  if (typeof statusCode === "number") {
+    return TRANSIENT_PUSH_STATUS_CODES.has(statusCode);
+  }
+
+  const msg = error.message.toLowerCase();
+  return msg.includes("timeout") || msg.includes("econnreset") || msg.includes("econnrefused");
+}
+
+const MAX_PUSH_RETRIES = 2;
+const PUSH_RETRY_DELAY_MS = 3_000;
+
+async function sendPushWithRetry(
+  delivery: DueDelivery,
+  webPushReady: boolean,
+  attempt = 1,
+): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  if (!webPushReady) {
+    return { ok: false, error: new Error("Web push not configured") };
+  }
+
+  try {
+    await webPush.sendNotification(
+      {
+        endpoint: delivery.endpoint,
+        expirationTime: delivery.expirationTime,
+        keys: { p256dh: delivery.p256dh, auth: delivery.auth },
+      },
+      JSON.stringify({
+        title: delivery.title,
+        body: delivery.body,
+        deepLink: delivery.deepLink,
+        tag: delivery.payloadTag,
+      }),
+    );
+    return { ok: true };
+  } catch (error) {
+    if (attempt < MAX_PUSH_RETRIES && isTransientPushError(error)) {
+      await new Promise((resolve) => setTimeout(resolve, PUSH_RETRY_DELAY_MS));
+      return sendPushWithRetry(delivery, webPushReady, attempt + 1);
+    }
+    return { ok: false, error };
+  }
+}
+
 async function getActiveSubscriptionsForCircle(
   ctx: ActionCtx,
   args: {
@@ -103,36 +155,21 @@ async function deliverDueNotifications(
       continue;
     }
 
-    try {
-      await webPush.sendNotification(
-        {
-          endpoint: delivery.endpoint,
-          expirationTime: delivery.expirationTime,
-          keys: {
-            p256dh: delivery.p256dh,
-            auth: delivery.auth,
-          },
-        },
-        JSON.stringify({
-          title: delivery.title,
-          body: delivery.body,
-          deepLink: delivery.deepLink,
-          tag: delivery.payloadTag,
-        }),
-      );
+    const result = await sendPushWithRetry(delivery, webPushReady);
 
+    if (result.ok) {
       await ctx.runMutation(internal.notifications.markNotificationDeliveryResult, {
         deliveryId: delivery.deliveryId,
         pushSubscriptionId: delivery.pushSubscriptionId,
         status: "sent",
       });
       delivered += 1;
-    } catch (error) {
+    } else {
       await ctx.runMutation(internal.notifications.markNotificationDeliveryResult, {
         deliveryId: delivery.deliveryId,
         pushSubscriptionId: delivery.pushSubscriptionId,
         status: "failed",
-        errorMessage: getDeliveryErrorMessage(error),
+        errorMessage: getDeliveryErrorMessage(result.error),
       });
       failed += 1;
     }

@@ -68,59 +68,6 @@ function getMemvellaTestLiveVoiceControls() {
   return window.__memvellaTestLiveVoice ?? {};
 }
 
-function downsampleToPcm16(
-  input: Float32Array,
-  inputSampleRate: number,
-  outputSampleRate = 16_000,
-) {
-  if (input.length === 0) {
-    return new ArrayBuffer(0);
-  }
-
-  const ratio = inputSampleRate / outputSampleRate;
-  if (ratio <= 1) {
-    const output = new Int16Array(input.length);
-    for (let index = 0; index < input.length; index += 1) {
-      const sample = Math.max(-1, Math.min(1, input[index] ?? 0));
-      output[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-    }
-    return output.buffer;
-  }
-
-  const outputLength = Math.max(1, Math.round(input.length / ratio));
-  const output = new Int16Array(outputLength);
-  let outputIndex = 0;
-  let inputIndex = 0;
-
-  while (outputIndex < outputLength) {
-    const nextInputIndex = Math.min(
-      input.length,
-      Math.round((outputIndex + 1) * ratio),
-    );
-    let accumulator = 0;
-    let count = 0;
-
-    for (let index = inputIndex; index < nextInputIndex; index += 1) {
-      accumulator += input[index] ?? 0;
-      count += 1;
-    }
-
-    const averagedSample = Math.max(
-      -1,
-      Math.min(1, accumulator / Math.max(count, 1)),
-    );
-    output[outputIndex] =
-      averagedSample < 0
-        ? averagedSample * 0x8000
-        : averagedSample * 0x7fff;
-
-    outputIndex += 1;
-    inputIndex = nextInputIndex;
-  }
-
-  return output.buffer;
-}
-
 export function useAssistedLiveVoice({
   sessionToken,
   deviceFingerprint,
@@ -140,7 +87,7 @@ export function useAssistedLiveVoice({
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const processorRef = useRef<AudioWorkletNode | null>(null);
   const assistantTextBufferRef = useRef("");
   const transcriptBufferRef = useRef("");
   const currentTurnRef = useRef<PendingTurnContext | null>(null);
@@ -237,22 +184,27 @@ export function useAssistedLiveVoice({
     await audioContext.resume();
 
     const mediaSource = audioContext.createMediaStreamSource(mediaStream);
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
     mediaSourceRef.current = mediaSource;
+
+    try {
+      await audioContext.audioWorklet.addModule("/pcm16-processor.worklet.js");
+    } catch {
+      throw new Error("Audio worklet failed to load.");
+    }
+
+    const processor = new AudioWorkletNode(audioContext, "pcm16-processor");
     processorRef.current = processor;
 
-    processor.onaudioprocess = (event) => {
+    processor.port.onmessage = (event) => {
       if (!sessionRef.current) {
         return;
       }
 
-      const chunk = downsampleToPcm16(
-        event.inputBuffer.getChannelData(0),
-        event.inputBuffer.sampleRate,
-      );
-      if (chunk.byteLength === 0) {
+      const chunk = event.data as ArrayBuffer;
+      if (!chunk || chunk.byteLength === 0) {
         return;
       }
+
       const audioChunk = new Blob([chunk], {
         type: "audio/pcm;rate=16000",
       }) as unknown as NonNullable<

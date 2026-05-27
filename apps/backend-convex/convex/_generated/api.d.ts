@@ -14,6 +14,7 @@ import type * as appEvents from "../appEvents.js";
 import type * as auth from "../auth.js";
 import type * as circleAuth from "../circleAuth.js";
 import type * as circleInvites from "../circleInvites.js";
+import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
 import type * as hq from "../hq.js";
 import type * as http from "../http.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   circleAuth: typeof circleAuth;
   circleInvites: typeof circleInvites;
+  cleanup: typeof cleanup;
   crons: typeof crons;
   hq: typeof hq;
   http: typeof http;

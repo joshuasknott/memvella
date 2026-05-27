@@ -31,4 +31,11 @@ crons.interval(
   {},
 );
 
+crons.interval(
+  "purge expired upload intents and stale rate limits",
+  { hours: 6 },
+  internal.cleanup.runCleanupSweep,
+  {},
+);
+
 export default crons;

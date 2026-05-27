@@ -413,6 +413,14 @@ export const previewMemberInviteCode = mutation({
     inviteCode: v.string(),
   },
   handler: async (ctx, args): Promise<PreviewMemberInviteCodeResult> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return {
+        status: "invalid_code",
+        message: "You must be signed in to preview a Circle code.",
+      };
+    }
+
     const normalizedInviteCode = args.inviteCode.trim();
     if (!/^\d{6}$/.test(normalizedInviteCode)) {
       return {
