@@ -98,17 +98,9 @@ export const handleOnboardingInput = action({
 
     const actionType = parsed.actionPayload.action;
     if (actionType && actionType !== "none") {
-      try {
-        await ctx.runMutation(internal.aiActions.processOnboardingAction, {
-          actionPayload: parsed.actionPayload,
-        });
-      } catch {
-        return {
-          reply: parsed.reply,
-          actionPayload: parsed.actionPayload,
-          __mutationError: true,
-        };
-      }
+      await ctx.runMutation(internal.aiActions.processOnboardingAction, {
+        actionPayload: parsed.actionPayload,
+      });
     }
 
     return {

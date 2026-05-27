@@ -385,36 +385,40 @@ export const handleAssistedVoiceTurn = action({
     await enforceVoiceRateLimit(ctx, session, "handleAssistedVoiceTurn");
     const safety = scanVoiceSafety(transcript);
 
-    const reply: string = safety.medicalRejected
-      ? buildMedicalBoundaryReply()
-      : (
-          await (async () => {
-            const context = (await ctx.runQuery(
-              internal.voiceHelpers.gatherSeniorContext,
-              {
-                seniorProfileId: session.seniorProfileId,
-                recentInteractionLimit: 5,
-              },
-            )) as SeniorAiContext;
+    let reply: string;
+    if (safety.medicalRejected) {
+      reply = buildMedicalBoundaryReply();
+    } else {
+      try {
+        const context = (await ctx.runQuery(
+          internal.voiceHelpers.gatherSeniorContext,
+          {
+            seniorProfileId: session.seniorProfileId,
+            recentInteractionLimit: 5,
+          },
+        )) as SeniorAiContext;
 
-            return await getAiClient().models.generateContent({
-              model: FAST_VOICE_MODEL,
-              contents: transcript,
-              config: {
-                systemInstruction: buildAssistedSystemPrompt(
-                  session.seniorName,
-                  context,
-                  safety.distressDetected,
-                ),
-                temperature: 0.3,
-                maxOutputTokens: 96,
-                thinkingConfig: {
-                  thinkingBudget: 0,
-                },
-              },
-            });
-          })()
-        ).text ?? buildSpeechRetryReply();
+        const aiResponse = await getAiClient().models.generateContent({
+          model: FAST_VOICE_MODEL,
+          contents: transcript,
+          config: {
+            systemInstruction: buildAssistedSystemPrompt(
+              session.seniorName,
+              context,
+              safety.distressDetected,
+            ),
+            temperature: 0.3,
+            maxOutputTokens: 96,
+            thinkingConfig: {
+              thinkingBudget: 0,
+            },
+          },
+        });
+        reply = aiResponse.text ?? buildSpeechRetryReply();
+      } catch {
+        reply = buildSpeechRetryReply();
+      }
+    }
 
     const interactionId: Id<"voiceInteractions"> = await ctx.runMutation(
       internal.voiceHelpers.saveVoiceInteraction,

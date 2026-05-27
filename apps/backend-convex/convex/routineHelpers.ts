@@ -301,6 +301,33 @@ export async function replaceRoutineOccurrences(
     .take(200);
 
   for (const occurrence of existingOccurrences) {
+    const checkIns = await ctx.db
+      .query("routineCheckIns")
+      .withIndex("by_routineOccurrenceId", (query) =>
+        query.eq("routineOccurrenceId", occurrence._id),
+      )
+      .take(10);
+
+    const now = Date.now();
+    for (const checkIn of checkIns) {
+      if (
+        checkIn.status === "live_prompt_ready" ||
+        checkIn.status === "live_prompt_sent"
+      ) {
+        await ctx.db.patch(checkIn._id, {
+          status: "canceled",
+          resolvedAt: now,
+          updatedAt: now,
+        });
+      } else if (
+        checkIn.status !== "confirmed" &&
+        checkIn.status !== "unconfirmed" &&
+        checkIn.status !== "canceled"
+      ) {
+        await ctx.db.delete(checkIn._id);
+      }
+    }
+
     await ctx.db.delete(occurrence._id);
   }
 
