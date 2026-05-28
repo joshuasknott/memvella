@@ -2,45 +2,39 @@ import { FadeIn } from "@/components/ui/FadeIn";
 
 export function OriginStory() {
   return (
-    <section id="origin-story" className="bg-surface-muted py-32 lg:py-48">
+    <section id="origin-story" className="bg-surface-muted py-24 lg:py-32">
       <div className="mx-auto max-w-3xl px-6 text-center">
-
-        {/* Overline */}
         <FadeIn>
-          <p className="text-base font-extrabold tracking-widest text-text-secondary uppercase">
-            Why We Built This
+          <p className="text-base font-extrabold uppercase tracking-widest text-text-secondary">
+            Why we built this
           </p>
         </FadeIn>
 
-        {/* Pull-quote headline */}
         <FadeIn delay={100}>
-          <h2 className="mt-8 font-headline text-4xl font-extrabold tracking-tighter text-text-primary md:text-5xl lg:text-6xl text-balance leading-[1.05]">
-            No family should have to choose between caregiving and living.
+          <h2 className="mt-8 font-headline text-4xl font-extrabold leading-[1.05] text-text-primary text-balance md:text-5xl">
+            Families need coordination tools that still feel human.
           </h2>
         </FadeIn>
 
-        {/* Two condensed paragraphs */}
         <FadeIn delay={200}>
-          <div className="mt-12 space-y-6 text-left">
+          <div className="mt-10 space-y-6 text-left">
             <p className="text-xl leading-relaxed text-text-secondary">
-              When my grandmother was diagnosed with dementia, my mother became her full-time caregiver. She answered the same questions on a loop, managed medications, and carried a weight that never let up. She wasn&apos;t just tired; she was drowning in logistics.
+              Memvella started from a simple observation: the small repeated moments of daily support can take over a family&apos;s attention, even when everyone is trying to help with care and respect.
             </p>
             <p className="text-xl leading-relaxed text-text-secondary">
-              And then there was the rest of the family. Siblings needed constant updates. Group chats ran endlessly. Every day she became the liaison, relaying what the doctor said, what Nan ate, and how the night went on top of everything else she was already doing.
+              A senior-facing companion should be calm and familiar. The family-side workspace should be clear, shared, and quick to use on a phone.
             </p>
             <p className="text-xl leading-relaxed text-text-secondary">
-              I built Memvella to carry that repetitive weight, and Circles to solve the communication overhead. It automatically keeps the whole family on the same page so no one has to be the go-between.
+              Memvella brings those two needs together through voice, routines, memories, and Circles, without turning family coordination into another complicated system.
             </p>
           </div>
         </FadeIn>
 
-        {/* Signature */}
         <FadeIn delay={300}>
-          <span className="mt-12 block font-headline text-lg font-semibold tracking-tight text-text-primary">
-            — Joshua Knott, Founder of Memvella
+          <span className="mt-10 block font-headline text-lg font-semibold tracking-tight text-text-primary">
+            Joshua Knott, Founder of Memvella
           </span>
         </FadeIn>
-
       </div>
     </section>
   );

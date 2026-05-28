@@ -78,12 +78,12 @@ export default function OrganiserSetupPage() {
   };
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-text-primary md:py-12">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-6 font-body text-text-primary md:py-12">
       <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-family-primary/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
-        <header className="mb-8 flex h-14 items-center justify-between relative">
+        <header className="relative mb-5 flex h-14 items-center justify-between md:mb-8">
           <Link
             href="/"
             className="flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80 z-10"
@@ -96,21 +96,21 @@ export default function OrganiserSetupPage() {
           <div className="w-[84px]" aria-hidden="true" />
         </header>
 
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-12">
-          <div className="space-y-8">
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-start pb-6 md:justify-center md:pb-12">
+          <div className="space-y-5 md:space-y-8">
             <div>
-              <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+              <h1 className="mb-2 text-center font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:mb-4 md:text-5xl">
                 Organiser Setup
               </h1>
-              <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">
+              <p className="mx-auto mb-4 max-w-sm text-center text-base text-text-secondary md:mb-6 md:text-lg">
                 Create your Organiser account and start your Circle.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} data-testid="organiser-onboarding-form">
-              <FormCard className="flex flex-col space-y-6">
-              <div className="space-y-2">
-                <label className="font-family text-lg font-bold" htmlFor="name">
+              <FormCard className="flex flex-col space-y-4 md:space-y-6">
+              <div className="space-y-1 md:space-y-2">
+                <label className="font-family text-base font-bold md:text-lg" htmlFor="name">
                   What is your name?
                 </label>
                 <TextInput
@@ -124,9 +124,9 @@ export default function OrganiserSetupPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1 md:space-y-2">
                 <label
-                  className="font-family text-lg font-bold"
+                  className="font-family text-base font-bold md:text-lg"
                   htmlFor="senior_display_name"
                 >
                   Who should this Circle support?
@@ -144,8 +144,8 @@ export default function OrganiserSetupPage() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label className="font-family text-lg font-bold" htmlFor="email">
+              <div className="space-y-1 md:space-y-2">
+                <label className="font-family text-base font-bold md:text-lg" htmlFor="email">
                   Your Email Address
                 </label>
                 <TextInput
@@ -159,8 +159,8 @@ export default function OrganiserSetupPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="font-family text-lg font-bold" htmlFor="password">
+              <div className="space-y-1 md:space-y-2">
+                <label className="font-family text-base font-bold md:text-lg" htmlFor="password">
                   Create a Password
                 </label>
                 <TextInput
@@ -187,7 +187,7 @@ export default function OrganiserSetupPage() {
               <PrimaryButton
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-10"
+                className="mt-4 md:mt-10"
                 data-testid="organiser-submit-button"
               >
                 {isSubmitting ? (

@@ -17,3 +17,13 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+@keyframes memvella-fade-in {
+  from {
+    transform: translateY(1rem);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}

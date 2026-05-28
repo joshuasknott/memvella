@@ -9,7 +9,7 @@ export function Footer() {
           <div className="max-w-xs">
             <BrandLogo />
             <p className="mt-4 text-base leading-relaxed text-text-secondary">
-              A digital wellness companion for families caring for seniors. Not a medical device.
+              A digital wellness companion for seniors and their Circles. Not a medical device.
             </p>
           </div>
 
@@ -21,7 +21,7 @@ export function Footer() {
               <ul className="mt-4 flex flex-col gap-3">
                 <li>
                   <Link href="#how-it-works" className="text-base font-medium text-text-secondary transition-colors hover:text-text-primary">
-                    How it Works
+                    How it works
                   </Link>
                 </li>
                 <li>
@@ -68,7 +68,7 @@ export function Footer() {
 
         <div className="mt-16 border-t border-border pt-8">
           <p className="text-sm text-text-tertiary">
-            © {new Date().getFullYear()} Memvella. Memvella is a digital wellness companion and is not a medical device.
+            &copy; {new Date().getFullYear()} Memvella. Memvella is a digital wellness companion and is not a medical device.
           </p>
         </div>
       </div>

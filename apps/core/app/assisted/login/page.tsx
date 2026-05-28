@@ -85,9 +85,9 @@ export default function AssistedSetupPage() {
   const boxes = Array.from({ length: 6 });
 
   return (
-    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-white p-6 font-body">
+    <main className="relative flex min-h-dvh w-full flex-col items-center justify-start overflow-x-hidden bg-white p-4 font-body md:justify-center md:p-6">
       <div className="flex w-full flex-col items-center">
-        <header className="mb-8 flex h-14 w-full max-w-lg items-center justify-between relative">
+        <header className="relative mb-5 flex h-14 w-full max-w-lg items-center justify-between md:mb-8">
           <button
             onClick={() => router.back()}
             className="flex w-fit items-center gap-2 font-medium text-family-primary transition-opacity hover:opacity-80 z-10"
@@ -100,20 +100,20 @@ export default function AssistedSetupPage() {
           <div className="w-[84px]" aria-hidden="true" />
         </header>
 
-        <div className="mb-12 space-y-4 text-center">
-          <h1 className="font-headline text-5xl font-bold tracking-tight text-text-primary md:text-6xl">
+        <div className="mb-6 space-y-3 text-center md:mb-12 md:space-y-4">
+          <h1 className="font-headline text-4xl font-bold tracking-tight text-text-primary md:text-6xl">
             Let&apos;s connect your tablet.
           </h1>
-          <p className="font-headline text-2xl font-medium text-text-secondary md:text-3xl">
+          <p className="font-headline text-xl font-medium text-text-secondary md:text-3xl">
             Ask an Organiser for the 6-digit code on their phone.
           </p>
         </div>
 
-        <div className="mb-6 flex gap-4">
+        <div className="mb-3 grid w-full max-w-[342px] grid-cols-6 gap-2 md:mb-6 md:max-w-lg md:gap-4">
           {boxes.map((_, index) => (
             <div
               key={index}
-              className={`flex h-20 w-16 items-center justify-center rounded-2xl border-2 bg-white text-5xl font-bold text-text-primary transition-colors ${
+              className={`flex h-14 w-full items-center justify-center rounded-2xl border-2 bg-white text-4xl font-bold text-text-primary transition-colors md:h-20 md:text-5xl ${
                 error
                   ? "border-red-400"
                   : pin[index]
@@ -126,7 +126,7 @@ export default function AssistedSetupPage() {
           ))}
         </div>
 
-        <div className="mb-8 flex h-10 items-center justify-center">
+        <div className="mb-4 flex h-8 items-center justify-center md:mb-8 md:h-10">
           {error ? (
             <p className="text-center font-headline text-xl font-semibold text-red-500">
               {error}
@@ -140,7 +140,7 @@ export default function AssistedSetupPage() {
           <button
             onClick={handleConnect}
             disabled={isPairing}
-            className="mt-8 flex w-full max-w-lg items-center justify-center gap-3 rounded-3xl bg-senior-primary py-6 text-2xl font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-4 flex w-full max-w-lg items-center justify-center gap-3 rounded-3xl bg-senior-primary py-5 text-2xl font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 md:mt-8 md:py-6"
           >
             {isPairing ? (
               <>

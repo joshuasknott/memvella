@@ -1,4 +1,4 @@
-import { Delete } from 'lucide-react';
+import { Delete } from "lucide-react";
 
 interface NumpadProps {
   onInput: (num: string) => void;
@@ -7,35 +7,35 @@ interface NumpadProps {
 }
 
 export function Numpad({ onInput, onDelete, disabled }: NumpadProps) {
+  const buttonClassName =
+    "flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-3xl font-bold text-text-primary shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50 md:h-24 md:w-24";
+
   return (
-    <div className="grid grid-cols-3 gap-4 md:gap-6 w-fit mx-auto mb-10 place-items-center">
+    <div className="mx-auto mb-4 grid w-fit grid-cols-3 place-items-center gap-3 md:mb-10 md:gap-6">
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
         <button
           key={num}
           onClick={() => onInput(num.toString())}
           disabled={disabled}
-          className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-text-primary rounded-xl bg-surface shadow-md hover:shadow-lg active:scale-95 transition-all border border-border flex items-center justify-center disabled:opacity-50"
+          className={buttonClassName}
         >
           {num}
         </button>
       ))}
-      {/* Empty Space */}
-      <div className="h-20 w-20 md:h-24 md:w-24"></div>
+      <div className="h-[72px] w-[72px] md:h-24 md:w-24" />
 
-      {/* Zero */}
       <button
-        onClick={() => onInput('0')}
+        onClick={() => onInput("0")}
         disabled={disabled}
-        className="h-20 w-20 md:h-24 md:w-24 text-3xl font-bold text-text-primary rounded-xl bg-surface shadow-md hover:shadow-lg active:scale-95 transition-all border border-border flex items-center justify-center disabled:opacity-50"
+        className={buttonClassName}
       >
         0
       </button>
 
-      {/* Delete / Backspace */}
       <button
         onClick={onDelete}
         disabled={disabled}
-        className="h-20 w-20 md:h-24 md:w-24 text-text-secondary rounded-xl bg-surface shadow-md hover:shadow-lg active:scale-95 transition-all border border-border flex items-center justify-center disabled:opacity-50"
+        className="flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-text-secondary shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50 md:h-24 md:w-24"
       >
         <Delete size={32} strokeWidth={2.5} />
       </button>

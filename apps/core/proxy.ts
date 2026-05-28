@@ -7,6 +7,24 @@ const protectedPrefix = "/circle";
 const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const CSRF_EXEMPT_PATHS = new Set(["/api/auth"]);
 
+function isLocalDevelopmentOrigin(origin: string) {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+
+  try {
+    const { hostname } = new URL(origin);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname.endsWith(".local")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getAllowedOrigins(): Set<string> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const origins = new Set<string>();
@@ -43,7 +61,7 @@ function checkCsrf(request: NextRequest): NextResponse | null {
   }
 
   const allowed = getAllowedOrigins();
-  if (!allowed.has(origin)) {
+  if (!allowed.has(origin) && !isLocalDevelopmentOrigin(origin)) {
     return NextResponse.json({ error: "Invalid Origin" }, { status: 403 });
   }
 
