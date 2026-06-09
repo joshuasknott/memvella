@@ -44,3 +44,18 @@ If you touch auth, sessions, onboarding, or the data model, also read `docs/auth
 
 Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
 <!-- convex-ai-end -->
+
+## Design Workflow
+
+When designing, redesigning, implementing, or reviewing UI, use this sequence:
+
+1. Define UX intent first: user role, mindset, page purpose, primary action, required states, hierarchy, trust risks, and what must be visible immediately.
+2. Use references only when they sharpen a decision:
+   - Mobbin for health, family sharing, permissions, notifications, onboarding, settings, account recovery.
+   - Refero for organiser dashboards, memory libraries, insights, marketing, and internal HQ.
+   - Godly only for public marketing direction.
+3. Turn the UX brief into a build-ready frontend plan: layout, components, responsive behavior, states, accessibility, and QA.
+4. Use motion only for gentle confirmations or orientation. Avoid surprise motion and decorative complexity.
+5. Run desktop and mobile visual QA before considering UI work complete.
+
+Memvella design must prioritize trust, accessibility, emotional safety, and low cognitive load. Critical alerts, routines, people states, and family actions must be obvious.
