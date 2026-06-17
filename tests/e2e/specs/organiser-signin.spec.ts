@@ -6,7 +6,7 @@ import {
 } from "../helpers/auth";
 import { waitForCircleReady } from "../helpers/test-support";
 
-test("organiser can sign back into an existing Circle", async ({ page }) => {
+test("account holder can sign back into an existing Workspace", async ({ page }) => {
   const credentials = buildOrganiserCredentials("organiser-signin");
 
   await bootstrapOrganiserSession(page, credentials);

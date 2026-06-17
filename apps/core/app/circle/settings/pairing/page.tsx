@@ -52,10 +52,10 @@ export default function PairingSettingsPage() {
         <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
           <div data-testid="pairing-settings-restricted">
             <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
-              Tablet Access
+              Companion tablet
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-text-secondary">
-              Only the Organiser can pair or revoke Tablet User devices for this Circle.
+              Only the Workspace owner can connect or revoke companion tablets.
             </p>
           </div>
         </section>
@@ -71,13 +71,13 @@ export default function PairingSettingsPage() {
       setPinExpiresAt(result.expiresAt);
       toast({
         tone: "success",
-        title: "New pairing code generated",
-        description: `Share the 6-digit code with ${seniorDisplayName} to connect the Tablet User device.`,
+        title: "Tablet code ready",
+        description: `Enter this 6-digit tablet code on the companion tablet for ${seniorDisplayName}.`,
       });
     } catch (error) {
       toast({
         tone: "error",
-        title: "Pairing code was not generated",
+        title: "Tablet code was not generated",
         description:
           error instanceof Error
             ? error.message
@@ -96,13 +96,13 @@ export default function PairingSettingsPage() {
       setPinExpiresAt(null);
       toast({
         tone: "success",
-        title: "Assisted device access cleared",
-        description: "All outstanding pairing codes and active Tablet User device sessions were revoked.",
+        title: "Companion tablet access cleared",
+        description: "All outstanding tablet codes and active companion tablet sessions were revoked.",
       });
     } catch (error) {
       toast({
         tone: "error",
-        title: "Assisted device access did not clear",
+        title: "Companion tablet access did not clear",
         description:
           error instanceof Error
             ? error.message
@@ -119,13 +119,13 @@ export default function PairingSettingsPage() {
       await revokeSession({ sessionId });
       toast({
         tone: "success",
-        title: "Assisted device session revoked",
-        description: "That tablet must pair again before it can reopen the Circle.",
+        title: "Companion tablet session revoked",
+        description: "That tablet needs a new tablet code before it can reopen the companion.",
       });
     } catch (error) {
       toast({
         tone: "error",
-        title: "Assisted device session did not revoke",
+        title: "Companion tablet session did not revoke",
         description:
           error instanceof Error
             ? error.message
@@ -142,13 +142,13 @@ export default function PairingSettingsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary">
-              Assisted device pairing
+              Companion tablet
             </p>
             <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
-              Pairing
+              Tablet access
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-              Generate a secure pairing code for {seniorDisplayName} and manage every active Tablet User device session linked to this Circle.
+              Generate a secure tablet code for {seniorDisplayName} and manage every active companion tablet session linked to this Workspace.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
@@ -177,10 +177,10 @@ export default function PairingSettingsPage() {
           ) : (
             <>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-text-tertiary">
-                Ready to pair
+                Ready to connect
               </p>
               <p className="mt-4 text-lg font-medium text-text-secondary">
-                Generate a fresh 6-digit code to connect a tablet.
+                Generate a fresh 6-digit tablet code to connect the companion tablet.
               </p>
             </>
           )}
@@ -239,7 +239,7 @@ export default function PairingSettingsPage() {
           </div>
           <div>
             <h2 className="font-family text-lg font-bold text-text-primary">
-              Active Tablet User devices
+              Active companion tablets
             </h2>
             <p className="mt-2 text-base leading-relaxed text-text-secondary">
               Revoke an individual tablet if it is replaced, shared, or no longer trusted.
@@ -254,7 +254,7 @@ export default function PairingSettingsPage() {
             </div>
           ) : assistedSessions.length === 0 ? (
             <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
-              No active Tablet User device sessions are connected right now.
+              No active companion tablet sessions are connected right now.
             </div>
           ) : (
             assistedSessions.map(
@@ -270,7 +270,7 @@ export default function PairingSettingsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-base font-bold text-text-primary">
-                        Tablet User device
+                        Companion tablet
                       </p>
                       <p className="mt-1 text-sm text-text-secondary">
                         Last active {formatDateTime(sessionItem.lastValidatedAt)}

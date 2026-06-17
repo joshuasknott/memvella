@@ -57,12 +57,7 @@ async function getPrimarySeniorProfileForCircle(
     return assistedSenior;
   }
 
-  return await ctx.db
-    .query("seniorProfiles")
-    .withIndex("by_circleId_and_seniorMode", (query) =>
-      query.eq("circleId", circleId).eq("seniorMode", "independent"),
-    )
-    .first();
+  return null;
 }
 
 function getFormatter(timeZone: string) {
@@ -231,7 +226,7 @@ export async function resolveCircleRuntimeDetails(
   if (!circleId) {
     return {
       circle: null,
-      circleName: "Circle",
+      circleName: "Workspace",
       timeZone: "UTC",
       locale: "en-US",
     } satisfies CircleRuntimeDetails;
@@ -241,7 +236,7 @@ export async function resolveCircleRuntimeDetails(
   if (!circle) {
     return {
       circle: null,
-      circleName: "Circle",
+      circleName: "Workspace",
       timeZone: "UTC",
       locale: "en-US",
     } satisfies CircleRuntimeDetails;
@@ -250,7 +245,7 @@ export async function resolveCircleRuntimeDetails(
   if (circle.timezone) {
     return {
       circle,
-      circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
+      circleName: normalizeUserFacingText(circle.displayName) ?? "Workspace",
       timeZone: circle.timezone,
       locale: circle.locale ?? "en-US",
     } satisfies CircleRuntimeDetails;
@@ -260,7 +255,7 @@ export async function resolveCircleRuntimeDetails(
   if (!primarySenior) {
     return {
       circle,
-      circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
+      circleName: normalizeUserFacingText(circle.displayName) ?? "Workspace",
       timeZone: "UTC",
       locale: circle.locale ?? "en-US",
     } satisfies CircleRuntimeDetails;
@@ -275,7 +270,7 @@ export async function resolveCircleRuntimeDetails(
 
   return {
     circle,
-    circleName: normalizeUserFacingText(circle.displayName) ?? "Circle",
+    circleName: normalizeUserFacingText(circle.displayName) ?? "Workspace",
     timeZone: activeSchedule?.timezone ?? "UTC",
     locale: circle.locale ?? "en-US",
   } satisfies CircleRuntimeDetails;

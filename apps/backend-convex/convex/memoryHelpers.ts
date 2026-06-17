@@ -257,9 +257,7 @@ export async function listMemoryCardsForCircle(
   ctx: QueryCtx,
   circleId: Id<"circles">,
 ) {
-  const seniorProfile =
-    (await getSeniorProfileByMode(ctx, circleId, "assisted")) ??
-    (await getSeniorProfileByMode(ctx, circleId, "independent"));
+  const seniorProfile = await getSeniorProfileByMode(ctx, circleId, "assisted");
   if (!seniorProfile) {
     return [];
   }
@@ -274,9 +272,11 @@ export async function getMemoryDetailForCircle(
     memoryRecordId: Id<"memoryRecords">;
   },
 ) {
-  const seniorProfile =
-    (await getSeniorProfileByMode(ctx, args.circleId, "assisted")) ??
-    (await getSeniorProfileByMode(ctx, args.circleId, "independent"));
+  const seniorProfile = await getSeniorProfileByMode(
+    ctx,
+    args.circleId,
+    "assisted",
+  );
   if (!seniorProfile) {
     return null;
   }

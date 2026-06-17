@@ -6,10 +6,10 @@ import {
 
 export const runtime = "nodejs";
 
-type SeniorExperience = "assisted" | "independent";
+type SeniorExperience = "assisted";
 
 function isSeniorExperience(value: unknown): value is SeniorExperience {
-  return value === "assisted" || value === "independent";
+  return value === "assisted";
 }
 
 export async function POST(request: NextRequest) {

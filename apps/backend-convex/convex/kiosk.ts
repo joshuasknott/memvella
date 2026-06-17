@@ -86,24 +86,6 @@ export const pairTabletSession = mutation({
     deviceFingerprint: v.string(),
   },
   handler: async (ctx, args): Promise<PairTabletSessionResult> => {
-    const globalRateLimit = await ctx.runMutation(
-      internal.rateLimits.consumeRateLimit,
-      {
-        scopeKey: "assisted-pairing-global",
-        actionKey: "pairTabletSessionGlobal",
-        maxHits: 30,
-        windowMs: 10 * 60 * 1000,
-        blockDurationMs: 20 * 60 * 1000,
-      },
-    );
-
-    if (!globalRateLimit.allowed) {
-      return {
-        success: false as const,
-        error: buildPairingRetryMessage(globalRateLimit.retryAfterMs),
-      };
-    }
-
     const deviceScopeKey = await hashDeviceFingerprint(args.deviceFingerprint);
     const deviceRateLimit = await ctx.runMutation(
       internal.rateLimits.consumeRateLimit,
@@ -147,7 +129,7 @@ export const pairTabletSession = mutation({
     if (!activePin) {
       return {
         success: false as const,
-        error: "Invalid code. Ask your Organiser for a new 6-digit code.",
+        error: "Invalid code. Ask a Supporter for a new 6-digit tablet code.",
       };
     }
 
@@ -195,7 +177,6 @@ export const pairTabletSession = mutation({
       deviceFingerprint: args.deviceFingerprint,
       sourcePinId: activePin._id,
       sourceCircleMembershipId: activePin.createdByCircleMembershipId,
-      sourcePasskeyId: null,
     });
 
     return {
@@ -218,7 +199,7 @@ export const generateKioskPin = mutation({
       "manage_tablet_access",
     );
     if (!circle || !circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     const organiserSeniorName =

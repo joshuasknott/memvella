@@ -3,24 +3,24 @@ import { ProductMockup } from "@/components/ui/ProductMockup";
 
 const cards = [
   {
-    label: "For the senior",
-    headline: "Their day, their voice, their pace.",
+    label: "Paired tablet",
+    headline: "The senior experience stays simple.",
     bullets: [
-      'A simple "good morning" can start the day.',
-      "Routines and familiar memories are surfaced through calm conversation.",
-      "The tablet experience stays predictable, spacious, and low-friction.",
+      "A family pairs the tablet with a short setup code.",
+      "The tablet shows time, the next routine, familiar memories, and live voice.",
+      "No family-side navigation, account settings, or setup work appears on the senior surface.",
     ],
     visual: "senior" as const,
     imagePosition: "right" as const,
     imageWrapper: "w-full",
   },
   {
-    label: "For the Circle",
-    headline: "Family coordination without the overhead.",
+    label: "Shared Workspace",
+    headline: "The support setup work happens in one place.",
     bullets: [
-      "See routines, memories, and review items in one shared workspace.",
-      "Invite Members without handing over organiser-only controls.",
-      "Add context once, then let Memvella reuse it across the experience.",
+      "Someone creates an account, sets up a Workspace, and invites trusted Supporters.",
+      "Routines, memories, People, insights, and alerts live in the shared workspace.",
+      "Supporters can contribute and stay informed while key controls stay with the Workspace owner.",
     ],
     visual: "circle" as const,
     imagePosition: "left" as const,
@@ -38,7 +38,7 @@ export function HowItWorks() {
               How it works
             </p>
             <h2 className="mt-4 font-headline text-4xl font-extrabold leading-[1.05] text-text-primary text-balance md:text-5xl">
-              One calm senior surface. One practical family workspace.
+              One calm tablet surface. One practical support workspace.
             </h2>
           </div>
         </FadeIn>

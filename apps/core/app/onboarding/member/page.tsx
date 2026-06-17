@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import MemberJoinClient, { MemberJoinFallback } from "./MemberJoinClient";
 
 export const metadata = {
-  title: "Join a Circle — Memvella",
+  title: "Join a Workspace - Memvella",
 };
 
 export default function MemberJoinPage() {

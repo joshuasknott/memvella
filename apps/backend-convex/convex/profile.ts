@@ -9,7 +9,6 @@ import {
   normalizeFamilySideMembershipRole,
   requireFamilySideCapability,
   upsertAssistedSeniorProfile,
-  upsertIndependentSeniorProfile,
 } from "./circleAuth";
 import {
   normalizeOptionalEmail,
@@ -22,27 +21,17 @@ import {
   ORGANISER_LABEL,
 } from "./terminology";
 
-const organiserProfileRoleValidator = v.optional(
-  v.union(v.literal("organiser"), v.literal("assisted_senior"), v.literal("independent")),
-);
-
 async function getPreferredSeniorProfile(
   circleId: Id<"circles">,
   ctx: QueryCtx,
 ) {
-  const assistedSenior = await getSeniorProfileByMode(ctx, circleId, "assisted");
-  if (assistedSenior) {
-    return assistedSenior;
-  }
-
-  return await getSeniorProfileByMode(ctx, circleId, "independent");
+  return await getSeniorProfileByMode(ctx, circleId, "assisted");
 }
 
 export const createOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
-    role: organiserProfileRoleValidator,
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -61,20 +50,18 @@ export const createOrganiserProfile = mutation({
 
     const organiserName = normalizeOptionalText(args.organiserName) ?? ORGANISER_LABEL;
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
-    const seniorMode = args.role === "independent" ? "independent" : "assisted";
-
     if (existingMembership) {
       if (!isFamilySideRole(existingMembership.role)) {
         throw new Error("This account is already linked to a different experience.");
       }
 
       if (normalizeFamilySideMembershipRole(existingMembership.role) !== "organiser") {
-        throw new Error("This account does not have access to that Circle setting.");
+        throw new Error("This account does not have access to that Workspace setting.");
       }
 
       const circle = await ctx.db.get(existingMembership.circleId);
       if (!circle) {
-        throw new Error("The linked Circle could not be found.");
+        throw new Error("The linked Workspace could not be found.");
       }
 
       await ctx.db.patch(existingMembership._id, {
@@ -85,25 +72,14 @@ export const createOrganiserProfile = mutation({
       });
 
       if (seniorDisplayName) {
-        if (seniorMode === "independent") {
-          const independentSenior = await upsertIndependentSeniorProfile(ctx, {
-            circleId: existingMembership.circleId,
-            displayName: seniorDisplayName,
-          });
+        const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
+          circleId: existingMembership.circleId,
+          displayName: seniorDisplayName,
+        });
 
-          await ctx.db.patch(existingMembership._id, {
-            seniorProfileId: independentSenior?._id ?? null,
-          });
-        } else {
-          const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
-            circleId: existingMembership.circleId,
-            displayName: seniorDisplayName,
-          });
-
-          await ctx.db.patch(existingMembership._id, {
-            seniorProfileId: assistedSenior?._id ?? null,
-          });
-        }
+        await ctx.db.patch(existingMembership._id, {
+          seniorProfileId: assistedSenior?._id ?? null,
+        });
 
         await ctx.db.patch(circle._id, {
           displayName: buildCircleName(seniorDisplayName),
@@ -123,16 +99,10 @@ export const createOrganiserProfile = mutation({
 
     let linkedSeniorProfileId: Id<"seniorProfiles"> | null = null;
     if (seniorDisplayName) {
-      const seniorProfile =
-        seniorMode === "independent"
-          ? await upsertIndependentSeniorProfile(ctx, {
-              circleId,
-              displayName: seniorDisplayName,
-            })
-          : await upsertAssistedSeniorProfile(ctx, {
-              circleId,
-              displayName: seniorDisplayName,
-            });
+      const seniorProfile = await upsertAssistedSeniorProfile(ctx, {
+        circleId,
+        displayName: seniorDisplayName,
+      });
 
       linkedSeniorProfileId = seniorProfile?._id ?? null;
     }
@@ -156,7 +126,6 @@ export const patchOrganiserProfile = mutation({
   args: {
     organiserName: v.optional(v.string()),
     seniorDisplayName: v.optional(v.string()),
-    role: organiserProfileRoleValidator,
     onboardingStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -166,8 +135,6 @@ export const patchOrganiserProfile = mutation({
     );
     const organiserName = normalizeOptionalText(args.organiserName);
     const seniorDisplayName = normalizeOptionalText(args.seniorDisplayName);
-    const seniorMode = args.role === "independent" ? "independent" : "assisted";
-
     if (organiserName || args.onboardingStep !== undefined) {
       await ctx.db.patch(membership._id, {
         ...(organiserName ? { displayName: organiserName } : {}),
@@ -179,25 +146,14 @@ export const patchOrganiserProfile = mutation({
     }
 
     if (seniorDisplayName) {
-      if (seniorMode === "independent") {
-        const independentSenior = await upsertIndependentSeniorProfile(ctx, {
-          circleId: membership.circleId,
-          displayName: seniorDisplayName,
-        });
+      const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
+        circleId: membership.circleId,
+        displayName: seniorDisplayName,
+      });
 
-        await ctx.db.patch(membership._id, {
-          seniorProfileId: independentSenior?._id ?? null,
-        });
-      } else {
-        const assistedSenior = await upsertAssistedSeniorProfile(ctx, {
-          circleId: membership.circleId,
-          displayName: seniorDisplayName,
-        });
-
-        await ctx.db.patch(membership._id, {
-          seniorProfileId: assistedSenior?._id ?? null,
-        });
-      }
+      await ctx.db.patch(membership._id, {
+        seniorProfileId: assistedSenior?._id ?? null,
+      });
 
       await ctx.db.patch(membership.circleId, {
         displayName: buildCircleName(seniorDisplayName),

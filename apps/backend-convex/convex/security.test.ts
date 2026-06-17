@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   hashCircleInviteCode,
   isAllowedPushEndpoint,
-  parsePasskeyAuthProof,
   sanitizeExternalUrl,
 } from "./security";
 
@@ -65,47 +64,6 @@ describe("convex security secret behavior", () => {
     await expect(hashCircleInviteCode("123456")).rejects.toThrow(
       "Missing required crypto secret. Set MEMVELLA_AUTH_PEPPER or BETTER_AUTH_SECRET.",
     );
-  });
-});
-
-describe("passkey auth proof verification", () => {
-  it("rejects malformed proof strings", async () => {
-    delete process.env.MEMVELLA_AUTH_PEPPER;
-    delete process.env.BETTER_AUTH_SECRET;
-    env.NODE_ENV = "development";
-    delete process.env.CONVEX_DEPLOYMENT;
-
-    expect(await parsePasskeyAuthProof("")).toBeNull();
-    expect(await parsePasskeyAuthProof("no-dots")).toBeNull();
-    expect(await parsePasskeyAuthProof("a.b.c")).toBeNull();
-  });
-
-  it("rejects proof with invalid signature", async () => {
-    delete process.env.MEMVELLA_AUTH_PEPPER;
-    delete process.env.BETTER_AUTH_SECRET;
-    env.NODE_ENV = "development";
-    delete process.env.CONVEX_DEPLOYMENT;
-
-    const payload = btoa(
-      JSON.stringify({
-        version: 1,
-        credentialId: "cred-1",
-        nextCounter: 5,
-        deviceFingerprint: "fp-1",
-        issuedAt: Date.now(),
-      }),
-    );
-    expect(await parsePasskeyAuthProof(`${payload}.invalid-signature`)).toBeNull();
-  });
-
-  it("rejects proof with missing required fields", async () => {
-    delete process.env.MEMVELLA_AUTH_PEPPER;
-    delete process.env.BETTER_AUTH_SECRET;
-    env.NODE_ENV = "development";
-    delete process.env.CONVEX_DEPLOYMENT;
-
-    const payload = btoa(JSON.stringify({ version: 1 }));
-    expect(await parsePasskeyAuthProof(`${payload}.sig`)).toBeNull();
   });
 });
 

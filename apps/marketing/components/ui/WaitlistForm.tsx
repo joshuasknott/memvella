@@ -96,20 +96,20 @@ export default function WaitlistForm() {
                         {status === 'loading' ? (
                             <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" aria-label="Submitting, please wait" role="status" />
                         ) : (
-                            'Request Early Access'
+                            'Request early access'
                         )}
                     </div>
                 </button>
             </form>
 
-            {/* Validation error — below the pill */}
+            {/* Validation error below the pill. */}
             {emailError && (
                 <p id="waitlist-email-error" className="text-sm text-status-alert mt-2 px-4">
                     {emailError}
                 </p>
             )}
 
-            {/* API error — below the pill */}
+            {/* API error below the pill. */}
             {status === 'error' && message && (
                 <p className="text-sm text-status-alert mt-2 px-4">{message}</p>
             )}

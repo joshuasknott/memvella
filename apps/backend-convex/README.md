@@ -5,7 +5,7 @@ This workspace contains the Convex backend for the Memvella product.
 ## Before Editing
 
 1. Read `apps/backend-convex/convex/_generated/ai/guidelines.md`.
-2. Read `docs/auth-and-identity.md` if you are touching auth, onboarding, passkeys, or senior sessions.
+2. Read `docs/auth-and-identity.md` if you are touching auth, onboarding, or senior sessions.
 3. Read `docs/data-model.md` if you are touching schema, tables, or migrations.
 4. Read `docs/legacy-removal.md` if you are renaming routes, modules, tables, or compatibility surfaces.
 
@@ -13,9 +13,8 @@ This workspace contains the Convex backend for the Memvella product.
 
 - `convex/schema.ts`: the current database schema, including canonical tables and legacy compatibility tables that are still present during migration.
 - `convex/auth.ts`, `convex/auth.config.ts`, `convex/http.ts`: Better Auth and Convex auth integration.
-- `convex/organiser.ts`: organiser-side mutations and queries for the shared Circle workspace.
-- `convex/independentAccess.ts`: independent onboarding, recovery, and passkey enrollment.
-- `convex/kiosk.ts`, `convex/seniorAccessHelpers.ts`: Assisted Senior pairing and device-bound session handling.
+- `convex/organiser.ts`: internal owner-side mutations and queries for the shared Workspace.
+- `convex/kiosk.ts`, `convex/seniorAccessHelpers.ts`: companion tablet connection and device-bound session handling.
 - `convex/voice*.ts`, `convex/aiActions.ts`, `convex/insights*.ts`: voice orchestration, AI processing, and insight generation.
 
 ## Data Model Guidance
@@ -49,5 +48,7 @@ From `apps/backend-convex` directly:
 ## Environment
 
 Create `apps/backend-convex/.env.local` with `CONVEX_DEPLOYMENT=<your deployment>` for local development.
+
+Account email verification and password reset are sent from the Convex runtime. Configure the Better Auth and Resend values from `apps/backend-convex/.env.example` in the Convex deployment as well as the frontend app environment.
 
 Frontend env vars like `NEXT_PUBLIC_CONVEX_URL` remain in `apps/core/.env.local`.

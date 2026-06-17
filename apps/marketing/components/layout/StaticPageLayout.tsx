@@ -11,7 +11,7 @@ export function StaticPageLayout({ title, children }: StaticPageLayoutProps) {
     <div className="flex min-h-screen flex-col bg-canvas text-text-primary selection:bg-family-primary/10 selection:text-family-primary">
       <Header />
 
-      {/* Page title band — full width */}
+      {/* Page title band. */}
       <div className="w-full bg-surface-muted border-b border-border py-16 mb-12">
         <div className="mx-auto max-w-3xl px-6">
           <h1 className="font-headline text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">

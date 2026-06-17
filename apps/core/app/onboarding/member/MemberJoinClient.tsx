@@ -9,6 +9,7 @@ import { api } from "@memvella/backend";
 import { authClient } from "@/lib/auth-client";
 import { performMemvellaTestAuth } from "@/lib/test-auth-client";
 import { isMemvellaClientTestMode } from "@/lib/test-mode";
+import { buildVerifyEmailPath, isEmailNotVerifiedError } from "@/lib/family-auth";
 import { BrandLogo, PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
 import { FormCard } from "@/components/ui/FormCard";
 
@@ -24,7 +25,7 @@ const PENDING_MEMBER_INVITE_STORAGE_KEY = "memvella_pendingMemberInvite";
 
 function resolveCircleName(circleName: string | null) {
   const trimmed = circleName?.trim();
-  return trimmed ? trimmed : "this Circle";
+  return trimmed ? trimmed : "this Workspace";
 }
 
 function loadPendingInvitePreview() {
@@ -216,7 +217,7 @@ function CircleCodeStep({
       };
 
       if (!response.ok || payload.status !== "ready") {
-        setLocalError(payload.message ?? payload.error ?? "We could not check that Circle code.");
+        setLocalError(payload.message ?? payload.error ?? "We could not check that invite code.");
         clearInputs();
         return;
       }
@@ -227,7 +228,7 @@ function CircleCodeStep({
       });
     } catch (previewError) {
       console.error(previewError);
-      setLocalError("We could not check that Circle code.");
+      setLocalError("We could not check that invite code.");
       clearInputs();
     } finally {
       setIsSubmitting(false);
@@ -238,16 +239,16 @@ function CircleCodeStep({
     <div className="space-y-8">
       <div>
         <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
-          Join a Circle
+          Join a Workspace
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
-          Enter the 6-digit Circle code you were given.
+          Enter the 6-digit invite code you were given.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <FormCard className="flex flex-col space-y-8" data-testid="member-invite-code-form">
-        <div className="flex justify-center gap-3" role="group" aria-label="6-digit Circle code">
+        <div className="flex justify-center gap-3" role="group" aria-label="6-digit invite code">
           {digits.map((digit, index) => (
             <input
               key={index}
@@ -325,7 +326,7 @@ function CircleConfirmationStep({
           You&apos;re almost in.
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
-          You&apos;re joining <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Member.
+          You&apos;re joining <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Supporter.
         </p>
       </div>
 
@@ -339,7 +340,7 @@ function CircleConfirmationStep({
         {hasCurrentSession ? (
           <>
             <p className="text-center text-base leading-relaxed text-text-secondary">
-              This account can&apos;t join that Circle. Sign out to use a different Member account.
+              This account can&apos;t join that Workspace. Sign out to use a different account.
             </p>
             <SecondaryButton
               type="button"
@@ -430,9 +431,16 @@ function MemberAuthStep({
               name: name.trim(),
               email: email.trim(),
               password,
+              callbackURL: "/onboarding/member?verified=1",
             }).then(({ error }) => error);
         if (signUpError) {
           setError(signUpError.message ?? "We could not create your account.");
+          return;
+        }
+        if (!isMemvellaClientTestMode()) {
+          window.location.replace(
+            buildVerifyEmailPath(email, "/onboarding/member"),
+          );
           return;
         }
       } else {
@@ -453,6 +461,12 @@ function MemberAuthStep({
               password,
             }).then(({ error }) => error);
         if (signInError) {
+          if (isEmailNotVerifiedError(signInError)) {
+            window.location.replace(
+              buildVerifyEmailPath(email, "/onboarding/member"),
+            );
+            return;
+          }
           setError(signInError.message ?? "Please check your email and password.");
           return;
         }
@@ -475,7 +489,7 @@ function MemberAuthStep({
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
           {isCreate
-            ? `Create your Member account to join ${resolveCircleName(invitePreview.circleName)}.`
+            ? `Create your account to join ${resolveCircleName(invitePreview.circleName)} as a Supporter.`
             : `Sign in to join ${resolveCircleName(invitePreview.circleName)}.`}
         </p>
       </div>
@@ -580,10 +594,10 @@ function JoiningStep({ invitePreview }: { invitePreview: InvitePreview }) {
       </div>
       <div>
         <h1 className="mb-3 font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:text-4xl">
-          Joining your Circle
+          Joining the Workspace
         </h1>
         <p className="text-lg leading-relaxed text-text-secondary">
-          Adding you to <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Member.
+          Adding you to <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Supporter.
         </p>
       </div>
     </FormCard>
@@ -609,7 +623,7 @@ function SuccessStep() {
 
       <div>
         <h1 className="mb-3 font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
-          You&apos;ve joined the Circle.
+          You&apos;ve joined the Workspace.
         </h1>
         <p className="mx-auto max-w-xs text-lg text-text-secondary">
           You can now see updates and help out.
@@ -618,7 +632,7 @@ function SuccessStep() {
 
       <div className="flex h-10 items-center gap-2 text-sm text-text-secondary">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Taking you to your Circle...
+        Taking you to the Workspace...
       </div>
     </div>
   );
@@ -628,9 +642,8 @@ export default function MemberJoinClient() {
   const { data: session } = authClient.useSession();
   const redeemMemberInviteCode = useMutation(api.circleInvites.redeemMemberInviteCode);
 
-  const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(() =>
-    loadPendingInvitePreview(),
-  );
+  const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(null);
+  const [hasLoadedPendingInvite, setHasLoadedPendingInvite] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -638,10 +651,20 @@ export default function MemberJoinClient() {
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoinedSuccessfully, setHasJoinedSuccessfully] = useState(false);
+  const redeemInFlightRef = useRef(false);
 
   useEffect(() => {
+    setInvitePreview(loadPendingInvitePreview());
+    setHasLoadedPendingInvite(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedPendingInvite) {
+      return;
+    }
+
     savePendingInvitePreview(invitePreview);
-  }, [invitePreview]);
+  }, [hasLoadedPendingInvite, invitePreview]);
 
   useEffect(() => {
     if (isSwitchingAccount && !session) {
@@ -655,7 +678,7 @@ export default function MemberJoinClient() {
     if (
       !invitePreview ||
       !session ||
-      isJoining ||
+      redeemInFlightRef.current ||
       hasJoinedSuccessfully ||
       joinError ||
       isSwitchingAccount
@@ -666,6 +689,7 @@ export default function MemberJoinClient() {
     let isCancelled = false;
 
     const redeemInvite = async () => {
+      redeemInFlightRef.current = true;
       setIsJoining(true);
       setJoinError(null);
       setCodeError(null);
@@ -704,9 +728,10 @@ export default function MemberJoinClient() {
         setJoinError(
           redeemError instanceof Error
             ? redeemError.message
-            : "We could not join that Circle right now.",
+            : "We could not join that Workspace right now.",
         );
       } finally {
+        redeemInFlightRef.current = false;
         if (!isCancelled) {
           setIsJoining(false);
           setIsAwaitingAccountSession(false);
@@ -722,7 +747,6 @@ export default function MemberJoinClient() {
   }, [
     hasJoinedSuccessfully,
     invitePreview,
-    isJoining,
     isSwitchingAccount,
     joinError,
     redeemMemberInviteCode,
@@ -741,6 +765,10 @@ export default function MemberJoinClient() {
     (isJoining ||
       isAwaitingAccountSession ||
       (!!session && joinError === null && !isSwitchingAccount));
+
+  if (!hasLoadedPendingInvite) {
+    return <MemberJoinFallback />;
+  }
 
   return (
     <MemberLayout>

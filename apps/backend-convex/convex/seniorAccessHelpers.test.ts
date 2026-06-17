@@ -11,7 +11,7 @@ const sessionId = "session-1" as Id<"seniorAccessSessions">;
 function makeSession() {
   return {
     _id: sessionId,
-    sessionType: "independent_web" as const,
+    sessionType: "assisted_device" as const,
     revokedAt: null,
     expiresAt: 2_000,
     idleExpiresAt: 1_500,
@@ -30,24 +30,10 @@ describe("evaluateSeniorSessionRecord", () => {
     ).toEqual({ status: "invalid", reason: "not_found", sessionId: null });
   });
 
-  it("flags wrong experience sessions", () => {
-    const result = evaluateSeniorSessionRecord({
-      session: makeSession(),
-      expectedSessionType: "assisted_device",
-      now: 1_000,
-      deviceFingerprintHash: "hash-device-a",
-    });
-
-    expect(result.status).toBe("invalid");
-    if (result.status === "invalid") {
-      expect(result.reason).toBe("wrong_experience");
-    }
-  });
-
   it("flags device mismatch sessions", () => {
     const result = evaluateSeniorSessionRecord({
       session: makeSession(),
-      expectedSessionType: "independent_web",
+      expectedSessionType: "assisted_device",
       now: 1_000,
       deviceFingerprintHash: "hash-device-b",
     });
@@ -85,7 +71,7 @@ describe("evaluateSeniorSessionRecord", () => {
     expect(
       evaluateSeniorSessionRecord({
         session: makeSession(),
-        expectedSessionType: "independent_web",
+        expectedSessionType: "assisted_device",
         now: 1_000,
         deviceFingerprintHash: "hash-device-a",
       }),

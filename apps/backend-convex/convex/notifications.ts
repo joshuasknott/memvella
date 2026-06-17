@@ -265,7 +265,7 @@ async function buildDailySummaryBody(
   }
 
   if (queuedCount > 0) {
-    return `${queuedCount} insight${queuedCount === 1 ? "" : "s"} are waiting for review in your Circle.`;
+    return `${queuedCount} insight${queuedCount === 1 ? "" : "s"} are waiting for review in your Workspace.`;
   }
 
   if (nextRoutine) {
@@ -283,7 +283,7 @@ export const getOrganiserNotificationSettings = query({
       "manage_circle_notifications",
     );
     if (!circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     const circleId = circleMembership.circleId;
@@ -324,7 +324,7 @@ export const updateOrganiserNotificationSettings = mutation({
       "manage_circle_notifications",
     );
     if (!circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     const existing = await getNotificationSettingsRecord(ctx, circleMembership.circleId);
@@ -369,7 +369,7 @@ export const upsertPushSubscription = mutation({
       "manage_circle_notifications",
     );
     if (!circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     if (!isAllowedPushEndpoint(args.endpoint)) {
@@ -433,7 +433,7 @@ export const revokePushSubscription = mutation({
       "manage_circle_notifications",
     );
     if (!circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     const existing = await ctx.db

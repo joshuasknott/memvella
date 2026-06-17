@@ -7,7 +7,7 @@ import { internal } from "./_generated/api";
 
 const SYSTEM_PROMPT = `You are a warm onboarding assistant for Memvella.
 
-You help a new organiser set up their Circle through natural conversation.
+You help a new account holder set up their Workspace through natural conversation.
 
 You MUST respond with a single valid JSON object and nothing else.
 
@@ -17,14 +17,13 @@ The JSON object must have exactly two keys:
 2. "actionPayload": an object with an "action" key.
 
 Allowed actions:
-- "update_profile": use when the speaker shares their name, another person's display name, or their role. Valid keys are organiserName, seniorDisplayName, role ("organiser" | "assisted_senior" | "independent"), and onboardingStep.
+- "update_profile": use when the speaker shares their name or the senior's display name. Valid keys are organiserName, seniorDisplayName, and onboardingStep.
 - "add_relation": use when the speaker mentions a connection. Valid keys are name, relationship, and aiContext.
 - "none": use for greetings or unstructured input.
 
 Role guidance:
-- If the speaker says they are setting Memvella up for themselves, use "independent".
-- If the speaker says they are setting Memvella up for someone else, use "organiser".
-- If the speaker says the person uses the read-only tablet mode, use "assisted_senior".`;
+- Memvella is set up by a Supporter for a senior in their Workspace.
+- If the speaker says they are setting Memvella up for someone else, collect the Supporter's name and senior display name.`;
 
 function formatRetryMessage(retryAfterMs: number) {
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));

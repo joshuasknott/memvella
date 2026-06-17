@@ -23,7 +23,7 @@ test("member access stays inside member permissions", async ({ browser, page }) 
   await joinMemberViaInvite(memberPage, inviteCode, memberCredentials);
   await memberPage.goto("/circle/settings/members");
   await expect(
-    memberPage.getByRole("heading", { name: "Circle Members" }),
+    memberPage.getByRole("heading", { name: "Supporters" }),
   ).toBeVisible();
 
   await memberPage.goto("/circle/settings/invite");

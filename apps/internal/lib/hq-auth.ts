@@ -3,21 +3,8 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export type HqRole = "founder" | "operator" | "viewer";
-
-export type HqCapability =
-  | "view_company"
-  | "view_product"
-  | "view_growth"
-  | "view_operations"
-  | "view_trust_safety"
-  | "view_observability"
-  | "view_qa"
-  | "view_automation";
-
 export type HqSession = {
   role: "founder";
-  capabilities: HqCapability[];
   issuedAt: number;
   expiresAt: number;
 };
@@ -26,17 +13,6 @@ export type HqEnvironment = "local" | "development" | "staging" | "production";
 
 const COOKIE_NAME = "memvella_hq_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
-
-const FOUNDER_CAPABILITIES: HqCapability[] = [
-  "view_company",
-  "view_product",
-  "view_growth",
-  "view_operations",
-  "view_trust_safety",
-  "view_observability",
-  "view_qa",
-  "view_automation",
-];
 
 function base64UrlEncode(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
@@ -137,7 +113,6 @@ function decodeSession(cookieValue: string | undefined): HqSession | null {
     const parsed = JSON.parse(base64UrlDecode(payload)) as Partial<HqSession>;
     if (
       parsed.role !== "founder" ||
-      !Array.isArray(parsed.capabilities) ||
       typeof parsed.issuedAt !== "number" ||
       typeof parsed.expiresAt !== "number" ||
       parsed.expiresAt <= Date.now()
@@ -147,7 +122,6 @@ function decodeSession(cookieValue: string | undefined): HqSession | null {
 
     return {
       role: "founder",
-      capabilities: FOUNDER_CAPABILITIES,
       issuedAt: parsed.issuedAt,
       expiresAt: parsed.expiresAt,
     };
@@ -189,7 +163,6 @@ export async function createFounderSession(accessKey: string) {
   const now = Date.now();
   const session: HqSession = {
     role: "founder",
-    capabilities: FOUNDER_CAPABILITIES,
     issuedAt: now,
     expiresAt: now + SESSION_TTL_MS,
   };

@@ -111,7 +111,7 @@ export const addMemoryText = mutation({
     );
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     if (args.photoStorageId && args.uploadIntentId && circleMembership) {
@@ -160,7 +160,7 @@ export const addMemoryAudio = mutation({
     );
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     if (args.audioStorageId && args.uploadIntentId && circleMembership) {
@@ -205,7 +205,7 @@ export const addMemoryVoice = mutation({
     );
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     return await createMemoryRecord(ctx, {
@@ -237,7 +237,7 @@ export const addMemoryMedia = mutation({
     );
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     if (args.uploadIntentId && circleMembership) {
@@ -291,7 +291,7 @@ export const updateTextMemory = mutation({
       record.seniorProfileId !== membership.seniorProfileId ||
       record.recordType !== "text"
     ) {
-      throw new Error("This memory record does not belong to your Circle.");
+      throw new Error("This memory record does not belong to your Workspace.");
     }
 
     await ctx.db.patch(record._id, {
@@ -358,7 +358,7 @@ export const updateAudioMemory = mutation({
       record.seniorProfileId !== membership.seniorProfileId ||
       record.recordType !== "audio"
     ) {
-      throw new Error("This memory record does not belong to your Circle.");
+      throw new Error("This memory record does not belong to your Workspace.");
     }
 
     await ctx.db.patch(record._id, {
@@ -420,7 +420,7 @@ export const updateVoiceMemory = mutation({
       record.seniorProfileId !== membership.seniorProfileId ||
       record.recordType !== "voice"
     ) {
-      throw new Error("This memory record does not belong to your Circle.");
+      throw new Error("This memory record does not belong to your Workspace.");
     }
 
     await ctx.db.patch(record._id, {
@@ -459,7 +459,7 @@ export const updateMediaMemory = mutation({
       record.seniorProfileId !== membership.seniorProfileId ||
       record.recordType !== "media"
     ) {
-      throw new Error("This memory record does not belong to your Circle.");
+      throw new Error("This memory record does not belong to your Workspace.");
     }
 
     await ctx.db.patch(record._id, {
@@ -510,7 +510,7 @@ export const deleteMemoryRecord = mutation({
     const { membership } = await requireCircleMembership(ctx, "family_side");
     const record = await ctx.db.get(args.memoryRecordId);
     if (!record || record.seniorProfileId !== membership.seniorProfileId) {
-      throw new Error("This memory record does not belong to your Circle.");
+      throw new Error("This memory record does not belong to your Workspace.");
     }
 
     await deleteMemoryRecordCascade(ctx, record._id);
@@ -527,7 +527,7 @@ export const generateUploadUrl = mutation({
     );
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     const uploadUrl = await ctx.storage.generateUploadUrl();

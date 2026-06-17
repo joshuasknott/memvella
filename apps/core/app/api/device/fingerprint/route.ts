@@ -9,7 +9,7 @@ import {
 export const runtime = "nodejs";
 
 function isDeviceExperience(value: unknown): value is DeviceExperience {
-  return value === "assisted" || value === "independent";
+  return value === "assisted";
 }
 
 export async function POST(request: NextRequest) {

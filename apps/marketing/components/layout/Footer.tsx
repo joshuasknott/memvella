@@ -9,7 +9,7 @@ export function Footer() {
           <div className="max-w-xs">
             <BrandLogo />
             <p className="mt-4 text-base leading-relaxed text-text-secondary">
-              A digital wellness companion for seniors and their Circles. Not a medical device.
+              A digital wellness companion for family and trusted supporter senior care. Not a medical device.
             </p>
           </div>
 
@@ -36,7 +36,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link href="#waitlist" className="text-base font-medium text-text-secondary transition-colors hover:text-text-primary">
-                    Get Early Access
+                    Request early access
                   </Link>
                 </li>
               </ul>

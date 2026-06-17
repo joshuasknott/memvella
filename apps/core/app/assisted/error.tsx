@@ -16,9 +16,9 @@ export default function AssistedError({
 
   return (
     <ErrorState
-      title="The Tablet User screen needs a retry"
-      description="This Tablet User route stopped rendering unexpectedly. Retry to bring the session back without a blank screen."
-      actionLabel="Retry Assisted screen"
+      title="The companion tablet needs a retry"
+      description="This companion tablet screen stopped rendering unexpectedly. Retry to bring the session back without a blank screen."
+      actionLabel="Retry companion screen"
       onRetry={unstable_retry}
     />
   );

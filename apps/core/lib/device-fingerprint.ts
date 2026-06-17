@@ -1,6 +1,6 @@
 "use client";
 
-export type DeviceExperience = "assisted" | "independent";
+export type DeviceExperience = "assisted";
 
 function getBindingStorageKey(experience: DeviceExperience) {
   return `memvella_${experience}_device_binding`;

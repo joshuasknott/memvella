@@ -51,12 +51,7 @@ export const logAssistedLiveTurn = mutation({
     deviceFingerprint: v.string(),
     transcript: v.string(),
     assistantResponse: v.string(),
-    channel: v.optional(
-      v.union(
-        v.literal("assisted_voice_loop"),
-        v.literal("independent_voice_loop"),
-      ),
-    ),
+    channel: v.optional(v.literal("assisted_voice_loop")),
   },
   handler: async (ctx, args) => {
     const transcript = args.transcript.trim();

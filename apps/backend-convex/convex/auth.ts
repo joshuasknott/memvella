@@ -5,12 +5,18 @@ import { query } from "./_generated/server";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
+import {
+  isFamilyEmailVerificationRequired,
+  sendMemvellaAuthEmail,
+} from "./authEmail";
+import {
+  resolveBetterAuthSecret,
+  resolveBetterAuthSiteUrl,
+  resolveTrustedOriginsEnv,
+} from "./authEnv";
 
-const siteUrl =
-  process.env.BETTER_AUTH_URL ??
-  process.env.SITE_URL ??
-  process.env.NEXT_PUBLIC_SITE_URL!;
-const secret = process.env.BETTER_AUTH_SECRET!;
+const siteUrl = resolveBetterAuthSiteUrl();
+const secret = resolveBetterAuthSecret();
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) {
@@ -25,7 +31,7 @@ function normalizeOrigin(value: string | undefined | null) {
 }
 
 function parseTrustedOriginsEnv() {
-  return (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
+  return resolveTrustedOriginsEnv()
     .split(",")
     .map((value) => normalizeOrigin(value.trim()))
     .filter((value): value is string => value !== null);
@@ -108,6 +114,10 @@ function shouldDisableBetterAuthOriginCheck() {
   return false;
 }
 
+function shouldRequireEmailVerification() {
+  return isFamilyEmailVerificationRequired();
+}
+
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
@@ -121,7 +131,30 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     },
     emailAndPassword: {
       enabled: true,
-        requireEmailVerification: true,
+      requireEmailVerification: shouldRequireEmailVerification(),
+      autoSignIn: !shouldRequireEmailVerification(),
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }) => {
+        await sendMemvellaAuthEmail({
+          kind: "password_reset",
+          recipientEmail: user.email,
+          recipientName: user.name,
+          url,
+        });
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: shouldRequireEmailVerification(),
+      sendOnSignIn: shouldRequireEmailVerification(),
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendMemvellaAuthEmail({
+          kind: "verification",
+          recipientEmail: user.email,
+          recipientName: user.name,
+          url,
+        });
+      },
     },
     plugins: [convex({ authConfig })],
   });

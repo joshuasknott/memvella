@@ -16,9 +16,9 @@ export default function OrganiserError({
 
   return (
     <ErrorState
-      title="Organiser tools are temporarily unavailable"
-      description="The Organiser workspace hit an unexpected error while loading this route. Retry to restore the latest Circle data."
-      actionLabel="Retry Organiser view"
+      title="Workspace tools are temporarily unavailable"
+      description="The Workspace hit an unexpected error while loading this route. Retry to restore the latest data."
+      actionLabel="Retry Workspace"
       onRetry={unstable_retry}
     />
   );

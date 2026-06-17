@@ -12,14 +12,12 @@ describe("kiosk pairing throttle behavior", () => {
 
   it("uses server-controlled rate limit scopes that cannot be rotated by callers", () => {
     const scopes = [
-      "assisted-pairing-global",
       "assisted-pairing:",
       "assisted-pairing-pin:",
     ];
     for (const prefix of scopes) {
       expect(prefix.startsWith("assisted-pairing")).toBe(true);
     }
-    expect(scopes).toContain("assisted-pairing-global");
   });
 });
 

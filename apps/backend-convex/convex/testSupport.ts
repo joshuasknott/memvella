@@ -8,10 +8,7 @@ const testSupportAuthValidator = {
   authToken: v.string(),
 } as const;
 
-const seniorExperienceValidator = v.union(
-  v.literal("assisted"),
-  v.literal("independent"),
-);
+const seniorExperienceValidator = v.literal("assisted");
 
 type ResettableTableName =
   | "alerts"
@@ -26,13 +23,9 @@ type ResettableTableName =
   | "routineOccurrences"
   | "routineSchedules"
   | "people"
-  | "seniorAuthChallenges"
-  | "independentSeniorRecoveryCodes"
-  | "independentSeniorPasskeys"
   | "seniorAccessSessions"
   | "circleInviteCodes"
   | "assistedDevicePins"
-  | "independentOnboardingSessions"
   | "circleMemberships"
   | "seniorProfiles"
   | "rateLimitWindows"
@@ -52,13 +45,9 @@ const RESET_TABLES: ReadonlyArray<ResettableTableName> = [
   "routineOccurrences",
   "routineSchedules",
   "people",
-  "seniorAuthChallenges",
-  "independentSeniorRecoveryCodes",
-  "independentSeniorPasskeys",
   "seniorAccessSessions",
   "circleInviteCodes",
   "assistedDevicePins",
-  "independentOnboardingSessions",
   "circleMemberships",
   "seniorProfiles",
   "rateLimitWindows",
@@ -161,15 +150,12 @@ export const createSeniorSessionFixture = mutation({
 
     const seniorName = normalizeOptionalText(args.seniorName) ?? MEMBER_LABEL;
     const experience = args.experience;
-    const circleId =
-      experience === "assisted"
-        ? await ctx.db.insert("circles", {
-            displayName:
-              normalizeOptionalText(args.circleName) ?? buildCircleName(seniorName),
-            timezone: undefined,
-            locale: undefined,
-          })
-        : null;
+    const circleId = await ctx.db.insert("circles", {
+      displayName:
+        normalizeOptionalText(args.circleName) ?? buildCircleName(seniorName),
+      timezone: undefined,
+      locale: undefined,
+    });
 
     const seniorProfileId = await ctx.db.insert("seniorProfiles", {
       circleId,
@@ -185,12 +171,10 @@ export const createSeniorSessionFixture = mutation({
     const session = await issueSeniorAccessSession(ctx, {
       circleId,
       seniorProfileId,
-      sessionType:
-        experience === "assisted" ? "assisted_device" : "independent_web",
+      sessionType: "assisted_device",
       deviceFingerprint,
       sourcePinId: null,
       sourceCircleMembershipId: null,
-      sourcePasskeyId: null,
     });
 
     return {

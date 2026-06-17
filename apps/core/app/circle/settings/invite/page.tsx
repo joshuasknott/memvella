@@ -70,7 +70,7 @@ export default function InviteMemberPage() {
               Invite Codes
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-text-secondary">
-              Only the Organiser can create or revoke invite codes for this Circle.
+              Only the Workspace owner can create or revoke invite codes.
             </p>
           </div>
         </FormCard>
@@ -177,12 +177,12 @@ export default function InviteMemberPage() {
             <UserPlus className="h-5 w-5" />
           </div>
           <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
-            Invite a Member
+            Invite a Supporter
           </h1>
         </div>
         <p className="mt-4 text-lg leading-relaxed text-text-secondary">
-          Create a short-lived 6-digit code so someone can join this Circle as a
-          member.
+          Create a short-lived 6-digit code so someone trusted can join this Workspace as a
+          Supporter.
         </p>
       </div>
 
@@ -194,10 +194,10 @@ export default function InviteMemberPage() {
                 <UserPlus className="h-8 w-8 text-family-primary/80" strokeWidth={1.5} />
               </div>
               <h3 className="mb-2 font-family text-lg font-bold text-text-primary">
-                Generate an Invite Code
+                Generate an invite code
               </h3>
               <p className="mb-8 max-w-sm text-text-secondary">
-                Share this secure 6-digit code with your family member. It expires in
+                Share this secure 6-digit code with a trusted Supporter. It expires in
                 10 minutes and can only be used once.
               </p>
 
@@ -213,7 +213,7 @@ export default function InviteMemberPage() {
                     Generating...
                   </>
                 ) : (
-                  "Create Code"
+                    "Create code"
                 )}
               </PrimaryButton>
             </div>
@@ -259,11 +259,11 @@ export default function InviteMemberPage() {
               <div className="mb-6 flex w-full flex-col gap-2 rounded-xl border border-border bg-surface p-5 text-left">
                 <p className="text-sm font-semibold text-text-primary">How to use this code:</p>
                 <ol className="list-decimal space-y-1 pl-5 text-sm text-text-secondary">
-                  <li>Ask your member to open Memvella on their phone.</li>
+                  <li>Ask the Supporter to open Memvella on their phone.</li>
                   <li>
-                    They select <strong className="text-text-primary">Join a Circle</strong>.
+                    They select <strong className="text-text-primary">Join a Workspace</strong>.
                   </li>
-                  <li>They sign in and enter this 6-digit code.</li>
+                  <li>They enter this 6-digit code, then create an account or sign in.</li>
                 </ol>
               </div>
 
@@ -296,7 +296,7 @@ export default function InviteMemberPage() {
               </h3>
 
               <p className="max-w-sm text-text-secondary">
-                A member invite is already active for this Circle. For security, the
+                A Supporter invite is already active for this Workspace. For security, the
                 plaintext code is only shown when it is generated.
               </p>
 
@@ -319,7 +319,7 @@ export default function InviteMemberPage() {
                       Generating...
                     </>
                   ) : (
-                    "Generate New Code"
+                    "Generate new code"
                   )}
                 </PrimaryButton>
                 <button

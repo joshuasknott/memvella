@@ -3,19 +3,12 @@ import type { Id } from "./_generated/dataModel";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-export const PASSKEY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
-export const PASSKEY_AUTH_PROOF_TTL_MS = 5 * 60 * 1000;
-export const INDEPENDENT_ONBOARDING_TTL_MS = 15 * 60 * 1000;
-export const INDEPENDENT_RECOVERY_CODE_COUNT = 6;
-
 export const SENIOR_IDLE_TIMEOUT_MS = {
   assisted_device: 45 * 60 * 1000,
-  independent_web: 30 * 60 * 1000,
 } as const;
 
 export const SENIOR_SESSION_TTL_MS = {
   assisted_device: 12 * 60 * 60 * 1000,
-  independent_web: 7 * 24 * 60 * 60 * 1000,
 } as const;
 
 export type SeniorSessionType = keyof typeof SENIOR_IDLE_TIMEOUT_MS;
@@ -233,14 +226,6 @@ export async function hashCircleInviteCode(inviteCode: string) {
   return createNamespacedHmac("family-invite", inviteCode);
 }
 
-export async function hashIndependentOnboardingToken(token: string) {
-  return createNamespacedHmac("independent-onboarding", token);
-}
-
-export async function hashIndependentRecoveryCode(recoveryCode: string) {
-  return createNamespacedHmac("independent-recovery-code", recoveryCode);
-}
-
 export async function hashSeniorSessionToken(sessionToken: string) {
   return createNamespacedHmac("senior-session", sessionToken);
 }
@@ -311,59 +296,6 @@ export function generateNumericCode(length = 6) {
   return code;
 }
 
-export function formatIndependentRecoveryCode(value: string) {
-  return value.match(/.{1,4}/g)?.join("-") ?? value;
-}
-
 export function generateOpaqueToken(byteLength = 32) {
   return bytesToBase64Url(randomBytes(byteLength));
-}
-
-type PasskeyAuthProofPayload = {
-  version: 1;
-  credentialId: string;
-  nextCounter: number;
-  deviceFingerprint: string;
-  issuedAt: number;
-};
-
-export async function parsePasskeyAuthProof(
-  proof: string,
-): Promise<PasskeyAuthProofPayload | null> {
-  const [encodedPayload, providedSignature, ...rest] = proof.split(".");
-  if (!encodedPayload || !providedSignature || rest.length > 0) {
-    return null;
-  }
-
-  const expectedSignature = await createNamespacedHmac(
-    "passkey-auth-proof",
-    encodedPayload,
-  );
-  if (!timingSafeEqual(providedSignature, expectedSignature)) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(
-      textDecoder.decode(base64UrlToBytes(encodedPayload)),
-    ) as Partial<PasskeyAuthProofPayload>;
-    if (
-      parsed.version !== 1 ||
-      typeof parsed.credentialId !== "string" ||
-      typeof parsed.nextCounter !== "number" ||
-      typeof parsed.deviceFingerprint !== "string" ||
-      typeof parsed.issuedAt !== "number"
-    ) {
-      return null;
-    }
-
-    const now = Date.now();
-    if (now - parsed.issuedAt > PASSKEY_AUTH_PROOF_TTL_MS || parsed.issuedAt > now) {
-      return null;
-    }
-
-    return parsed as PasskeyAuthProofPayload;
-  } catch {
-    return null;
-  }
 }

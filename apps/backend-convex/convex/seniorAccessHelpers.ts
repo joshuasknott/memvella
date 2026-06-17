@@ -208,9 +208,7 @@ export async function validateSeniorSession(
     return { status: "invalid", reason: "not_found" };
   }
 
-  const expectedSeniorMode =
-    session.sessionType === "assisted_device" ? "assisted" : "independent";
-  if (seniorProfile.seniorMode !== expectedSeniorMode) {
+  if (seniorProfile.seniorMode !== "assisted") {
     return {
       status: "invalid",
       reason: "wrong_experience",
@@ -234,7 +232,6 @@ export async function issueSeniorAccessSession(
     deviceFingerprint: string;
     sourcePinId?: Id<"assistedDevicePins"> | null;
     sourceCircleMembershipId?: Id<"circleMemberships"> | null;
-    sourcePasskeyId?: Id<"independentSeniorPasskeys"> | null;
   },
 ) {
   const now = Date.now();
@@ -264,7 +261,6 @@ export async function issueSeniorAccessSession(
     revokedReason: null,
     sourcePinId: args.sourcePinId ?? null,
     sourceCircleMembershipId: args.sourceCircleMembershipId ?? null,
-    sourcePasskeyId: args.sourcePasskeyId ?? null,
   });
 
   await ctx.db.patch(args.seniorProfileId, {

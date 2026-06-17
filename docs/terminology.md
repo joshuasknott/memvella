@@ -15,15 +15,14 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 
 | Concept | Preferred term | Notes |
 | --- | --- | --- |
-| Shared family-side workspace | `Circle` | The shared workspace for Organisers and Members |
-| Human participant in a Circle | `Circle participant` | Generic label when the role does not matter |
-| Administrative Circle role | `Organiser` | Can manage invite codes, pairing, notifications, people, and routines |
-| Lightweight Circle role | `Member` | Helps with memories and stays informed without owning organiser-only settings |
-| Senior-grounding person | `Person` | Used for memory context and companion grounding, not for Circle membership |
-| Assisted senior using a linked tablet | `Tablet User` | Senior-facing assisted experience |
-| Self-managing senior | `Independent User` | Standalone senior experience |
+| Shared support workspace | `Workspace` | The shared area created by one account for the person being supported |
+| Human participant in a Workspace | `Supporter` | A signed-in trusted person helping with memories, reminders, companion setup, or updates |
+| Workspace creator with admin capability | `Workspace owner` | Use only where permission differences matter; prefer `you` in ordinary UI |
+| Invited participant role | `Supporter` | Can help inside the Workspace without owning owner-only settings |
+| Senior-grounding person | `Person` | Someone the senior knows; used for memory and companion context, not a signed-in Supporter |
+| Senior-facing tablet experience | `Companion tablet` | The tablet connected by a Supporter for the senior-facing companion |
 | Urgent actionable item | `Alert` | Stored separately from insights, but currently reviewed inside `/circle/insights` |
-| Non-urgent summary or follow-up | `Insight` | Organiser-facing review queue item |
+| Non-urgent summary or follow-up | `Insight` | Supporter-facing review queue item |
 | Shared event history | `Activity` | Reserved term; no dedicated shipped activity surface yet |
 | Memvella itself | `digital wellness companion` or `companion` | Avoid medical framing |
 
@@ -31,15 +30,14 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 
 - Use `circle` instead of `familySpace`.
 - Use `circleMembership` instead of `familySpaceMembership`.
-- Use `organiser` instead of `supporter` or `admin`.
-- Use `people` for senior-grounding people.
+- Internal roles remain `organiser` and `member` until a schema migration changes them; product copy maps these to Workspace owner and Supporter.
+- Use `people` for senior-grounding People the senior knows.
 - Use `alerts` and `insights` for the stored awareness tables.
 - `family_side` is still used in some internal helper code as a shorthand for the organiser/member role family. It is not product copy and should not become a route, table, or visible label.
 
 ## Retired Terms
 
 - `Admin`
-- `Supporter`
 - `FamilySpace`
 - `familyMembers`
 - `Personal Profile`
@@ -50,10 +48,11 @@ These terms should appear only when documenting legacy cleanup or historical imp
 ## Product Copy Rules
 
 - Prefer direct, concrete phrasing over sentimental phrasing.
-- Use `Circle` consistently instead of mixing `family space`, `group`, and `network`.
-- Use `Organiser`, `Member`, `Tablet User`, and `Independent User` consistently in product UI and docs.
+- Use `Workspace` consistently for the shared support area.
+- Use `Supporter` for signed-in trusted people who help inside a Workspace.
+- Use `Companion tablet` for the senior-facing tablet flow.
 - Keep role names stable across onboarding, settings, auth, and error states.
-- Do not describe senior-grounding `People` as Circle participants.
+- Do not describe senior-grounding `People` as Supporters or Workspace participants.
 - Do not label the combined `/circle/insights` queue as an `Activity` feed.
 
 ## Product Copy To Avoid
@@ -64,5 +63,6 @@ These terms should appear only when documenting legacy cleanup or historical imp
 - `patient`
 - `sufferer`
 - `dementia` as a broad product label
+- `support team` as a primary nav or entity label
 
 These terms may appear only when legally, clinically, or historically necessary.

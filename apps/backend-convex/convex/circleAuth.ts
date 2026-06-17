@@ -94,7 +94,7 @@ export function assertFamilySideCapability(
   }
 
   if (!familySideRoleHasCapability(familySideRole, capability)) {
-    throw new Error("This account does not have access to that Circle setting.");
+    throw new Error("This account does not have access to that Workspace setting.");
   }
 
   return familySideRole;
@@ -227,7 +227,7 @@ export async function requireCircleMembership(
   );
 
   if (!membership) {
-    throw new Error("No Circle membership is linked to this account.");
+    throw new Error("No Workspace membership is linked to this account.");
   }
 
   if (!membershipMatchesRequirement(membership, expectedRole)) {
@@ -240,7 +240,7 @@ export async function requireCircleMembership(
     membership,
   );
   if (!circleContext) {
-    throw new Error("The linked Circle could not be found.");
+    throw new Error("The linked Workspace could not be found.");
   }
 
   return circleContext;
@@ -305,27 +305,6 @@ export async function getSeniorProfileById(
   return await ctx.db.get(seniorProfileId);
 }
 
-export async function getIndependentMembershipForSeniorProfile(
-  ctx: DbCtx,
-  circleId: Id<"circles"> | null,
-  seniorProfileId: Id<"seniorProfiles">,
-) {
-  if (!circleId) {
-    return null;
-  }
-
-  const candidates = await ctx.db
-    .query("circleMemberships")
-    .withIndex("by_seniorProfileId", (query) =>
-      query.eq("seniorProfileId", seniorProfileId),
-    )
-    .take(20);
-
-  return pickDeterministicCircleMembership(
-    candidates.filter((candidate) => candidate.circleId === circleId),
-  );
-}
-
 export async function upsertAssistedSeniorProfile(
   ctx: MutationCtx,
   args: {
@@ -335,7 +314,7 @@ export async function upsertAssistedSeniorProfile(
 ) {
   const circle = await ctx.db.get(args.circleId);
   if (!circle) {
-    throw new Error("The linked Circle could not be found.");
+    throw new Error("The linked Workspace could not be found.");
   }
 
   const assistedSenior = await getSeniorProfileByMode(ctx, args.circleId, "assisted");
@@ -361,45 +340,4 @@ export async function upsertAssistedSeniorProfile(
   });
 
   return await ctx.db.get(assistedSenior._id);
-}
-
-export async function upsertIndependentSeniorProfile(
-  ctx: MutationCtx,
-  args: {
-    circleId: Id<"circles">;
-    displayName: string;
-  },
-) {
-  const circle = await ctx.db.get(args.circleId);
-  if (!circle) {
-    throw new Error("The linked Circle could not be found.");
-  }
-
-  const independentSenior = await getSeniorProfileByMode(
-    ctx,
-    args.circleId,
-    "independent",
-  );
-  const displayName = normalizeOptionalText(args.displayName) ?? MEMBER_LABEL;
-
-  if (!independentSenior) {
-    const seniorProfileId = await ctx.db.insert("seniorProfiles", {
-      circleId: circle._id,
-      displayName,
-      seniorMode: "independent",
-      accessStatus: "active",
-      timezone: null,
-      locale: null,
-      lastSessionAt: undefined,
-    });
-
-    return await ctx.db.get(seniorProfileId);
-  }
-
-  await ctx.db.patch(independentSenior._id, {
-    displayName,
-    accessStatus: "active",
-  });
-
-  return await ctx.db.get(independentSenior._id);
 }

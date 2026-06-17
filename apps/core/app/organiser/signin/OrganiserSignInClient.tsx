@@ -7,22 +7,12 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { performMemvellaTestAuth } from "@/lib/test-auth-client";
 import { isMemvellaClientTestMode } from "@/lib/test-mode";
+import {
+  buildVerifyEmailPath,
+  isEmailNotVerifiedError,
+  sanitizeFamilyNextPath,
+} from "@/lib/family-auth";
 
-function sanitizeNextPath(value: string | null): string {
-  if (!value) return "/circle";
-
-  const trimmed = value.trim();
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return "/circle";
-  if (trimmed.includes("\\")) return "/circle";
-
-  try {
-    const resolved = new URL(trimmed, "https://x");
-    if (resolved.origin !== "https://x") return "/circle";
-    return resolved.pathname + resolved.search + resolved.hash || "/circle";
-  } catch {
-    return "/circle";
-  }
-}
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput, PrimaryButton } from "@memvella/ui";
 
@@ -75,7 +65,7 @@ export function OrganiserSignInFallback() {
 
 export default function OrganiserSignInClient() {
   const searchParams = useSearchParams();
-  const nextPath = sanitizeNextPath(searchParams.get("next"));
+  const nextPath = sanitizeFamilyNextPath(searchParams.get("next"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,6 +102,10 @@ export default function OrganiserSignInClient() {
           }).then(({ error }) => error);
 
       if (signInError) {
+        if (isEmailNotVerifiedError(signInError)) {
+          window.location.replace(buildVerifyEmailPath(email, nextPath));
+          return;
+        }
         setError(
           signInError.message ?? "Sign-in failed. Please check your details.",
         );
@@ -154,6 +148,14 @@ export default function OrganiserSignInClient() {
               onChange={(event) => setEmail(event.target.value)}
               required
             />
+            <div className="text-right">
+              <Link
+                href="/organiser/forgot-password"
+                className="text-sm font-semibold text-family-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-2">

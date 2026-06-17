@@ -5,10 +5,10 @@ export function WaitlistCTA() {
     <section id="waitlist" className="bg-surface-inverse py-20 md:py-28">
       <div className="mx-auto max-w-2xl px-6 text-center md:px-8">
         <h2 className="font-headline text-4xl font-extrabold tracking-tight text-white text-balance md:text-5xl">
-          Bring Memvella to your Circle early.
+          Bring Memvella to your care routine early.
         </h2>
         <p className="mx-auto mb-8 mt-6 max-w-2xl text-lg leading-relaxed text-text-inverse-muted md:text-xl">
-          Early access is for families who want a calmer way to coordinate routines, memories, and senior-facing voice support before the wider release.
+          Early access is for families and trusted supporters who want a calmer way to set up routines, memories, People context, and a companion tablet before the wider release.
         </p>
 
         <div className="mt-10 text-left">

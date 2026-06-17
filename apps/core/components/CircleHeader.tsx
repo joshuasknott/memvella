@@ -23,9 +23,9 @@ const SUB_ROUTE_TITLES: Record<string, string> = {
   insights: "Insights",
   "settings/account": "Account",
   "settings/invite": "Invite Code",
-  "settings/members": "Members",
+  "settings/members": "Supporters",
   "settings/notifications": "Notifications",
-  "settings/pairing": "Device Pairing",
+  "settings/pairing": "Companion Tablet",
 };
 
 function getTitleFromPath(pathname: string): string {

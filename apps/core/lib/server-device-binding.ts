@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
 import type { NextRequest, NextResponse } from "next/server";
 
-export type DeviceExperience = "assisted" | "independent";
+export type DeviceExperience = "assisted";
 
 const DEVICE_BINDING_COOKIE = "memvella_device_binding";
 const DEVICE_BINDING_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
@@ -131,19 +131,3 @@ export function buildNetworkThrottleFingerprint(
   );
 }
 
-export function createPasskeyAuthProof(args: {
-  credentialId: string;
-  nextCounter: number;
-  deviceFingerprint: string;
-}) {
-  const payload = JSON.stringify({
-    version: 1,
-    credentialId: args.credentialId,
-    nextCounter: args.nextCounter,
-    deviceFingerprint: args.deviceFingerprint,
-    issuedAt: Date.now(),
-  });
-  const encodedPayload = toBase64Url(Buffer.from(payload));
-  const signature = signValue("passkey-auth-proof", encodedPayload);
-  return `${encodedPayload}.${signature}`;
-}

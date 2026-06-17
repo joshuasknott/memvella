@@ -86,7 +86,7 @@ export default function NotificationsSettingsPage() {
               Notifications
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-text-secondary">
-              Circle-wide notification settings are managed by the Organiser.
+              Workspace notification settings are managed by the Workspace owner.
             </p>
           </div>
         </section>
@@ -113,7 +113,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Notification settings updated",
-        description: "Your Organiser alert preferences are now saved.",
+        description: "Your alert preferences are now saved.",
       });
     } catch (error) {
       toast({
@@ -145,7 +145,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts enabled",
-        description: "This Organiser device will now receive Circle alerts.",
+        description: "This device will now receive Workspace alerts.",
       });
     } catch (error) {
       toast({
@@ -176,7 +176,7 @@ export default function NotificationsSettingsPage() {
       toast({
         tone: "success",
         title: "Push alerts disabled",
-        description: "This Organiser device will stop receiving push alerts.",
+        description: "This device will stop receiving push alerts.",
       });
     } catch (error) {
       toast({
@@ -212,7 +212,7 @@ export default function NotificationsSettingsPage() {
               Notifications
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-              Manage the alerts that reach your Organiser devices for {seniorDisplayName}&apos;s Circle.
+              Manage the alerts that reach your devices for {seniorDisplayName}&apos;s Workspace.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-accent/10 text-family-accent">
@@ -231,7 +231,7 @@ export default function NotificationsSettingsPage() {
               This device
             </h2>
             <p className="mt-1 text-base leading-relaxed text-text-secondary">
-              Turn browser push alerts on or off for the current Organiser device.
+              Turn browser push alerts on or off for the current device.
             </p>
             {!pushConfigured ? (
               <p className="mt-3 rounded-xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
@@ -288,7 +288,7 @@ export default function NotificationsSettingsPage() {
               Daily summary
             </label>
             <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-              Evening recap around {summaryTimeLabel} with queued insights and the next Circle routine.
+              Evening recap around {summaryTimeLabel} with queued insights and the next routine.
             </p>
           </div>
           <Toggle
@@ -309,7 +309,7 @@ export default function NotificationsSettingsPage() {
               Urgent alerts
             </label>
             <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-              Immediate Organiser notifications when Memvella detects distress markers in a Circle voice session.
+              Immediate notifications when Memvella detects distress markers in a companion voice session.
             </p>
           </div>
           <Toggle
@@ -330,7 +330,7 @@ export default function NotificationsSettingsPage() {
               Routine reminders
             </label>
             <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-              Alerts before {seniorDisplayName}&apos;s scheduled Circle routines begin.
+              Alerts before {seniorDisplayName}&apos;s scheduled routines begin.
             </p>
           </div>
           <Toggle
@@ -350,7 +350,7 @@ export default function NotificationsSettingsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-family text-lg font-bold text-text-primary">
-              Connected Organiser devices
+              Connected devices
             </h2>
             <p className="mt-1 text-base leading-relaxed text-text-secondary">
               {settings.activeSubscriptions.length} device
@@ -362,7 +362,7 @@ export default function NotificationsSettingsPage() {
         <div className="mt-5 space-y-3">
           {settings.activeSubscriptions.length === 0 ? (
             <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
-              No Organiser devices are subscribed for push alerts yet.
+              No devices are subscribed for push alerts yet.
             </div>
           ) : (
             settings.activeSubscriptions.map((subscription) => (

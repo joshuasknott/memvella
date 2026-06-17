@@ -40,7 +40,7 @@ function TimelineSkeleton() {
 }
 
 export default function OrganiserDashboard() {
-  const { isAuthenticated, isLoading, seniorDisplayName } = useCircleProfile();
+  const { isAuthenticated, isLoading, isOrganiser, seniorDisplayName } = useCircleProfile();
   const summary = useQuery(
     api.organiser.getOrganiserDashboardSummary,
     isAuthenticated ? undefined : "skip",
@@ -79,7 +79,7 @@ export default function OrganiserDashboard() {
             </span>
           </div>
           <h2 className="mb-2 font-family text-lg font-bold leading-tight text-text-primary">
-            {summary?.statusSummary ?? "Preparing your Circle..."}
+            {summary?.statusSummary ?? "Preparing your Workspace..."}
           </h2>
           <p className="text-lg leading-relaxed text-text-secondary">
             Memvella is ready to support {seniorDisplayName} today.
@@ -91,15 +91,15 @@ export default function OrganiserDashboard() {
       <section className="relative z-10">
         <div className="flex justify-between gap-4">
           <Link
-            href="/circle/add-person"
-            data-testid="circle-add-person-action"
+            href={isOrganiser ? "/circle/add-person" : "/circle/people"}
+            data-testid={isOrganiser ? "circle-add-person-action" : "circle-people-action"}
             className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-surface p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-family-primary/10">
               <UserPlus className="h-6 w-6 text-family-primary" />
             </div>
             <span className="text-center text-base font-bold text-text-primary">
-              Add Person
+              {isOrganiser ? "Add Person" : "People"}
             </span>
           </Link>
 
@@ -117,15 +117,15 @@ export default function OrganiserDashboard() {
           </Link>
 
           <Link
-            href="/circle/add-routine"
-            data-testid="circle-add-routine-action"
+            href={isOrganiser ? "/circle/add-routine" : "/circle/routines"}
+            data-testid={isOrganiser ? "circle-add-routine-action" : "circle-routines-action"}
             className="flex min-h-[100px] flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-surface p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-transform active:scale-95"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-family-accent/15">
               <Calendar className="h-6 w-6 text-family-accent" />
             </div>
             <span className="text-center text-base font-bold text-text-primary">
-              Add Routine
+              {isOrganiser ? "Add Routine" : "Routines"}
             </span>
           </Link>
         </div>
@@ -220,7 +220,11 @@ export default function OrganiserDashboard() {
           </div>
         )}
 
-        <div className="group cursor-pointer overflow-hidden rounded-xl bg-surface shadow-sm transition-colors hover:bg-surface-muted">
+        <Link
+          href="/circle/people"
+          className="group block cursor-pointer overflow-hidden rounded-xl bg-surface shadow-sm transition-colors hover:bg-surface-muted"
+          data-testid="circle-people-summary-link"
+        >
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-family-primary/10">
@@ -234,7 +238,7 @@ export default function OrganiserDashboard() {
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-text-secondary transition-colors group-hover:text-family-primary" />
           </div>
-        </div>
+        </Link>
       </section>
     </div>
   );

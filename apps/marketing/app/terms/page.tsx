@@ -4,7 +4,7 @@ import { StaticPageLayout } from "@/components/layout/StaticPageLayout";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The ground rules for using the Memvella website and waitlist — simple, fair, and human.",
+    "The ground rules for using the Memvella website and waitlist - simple, fair, and human.",
 };
 
 export default function TermsOfServicePage() {
@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
       <h2>What you&apos;re agreeing to</h2>
       <p>
         By using this website or signing up for our waitlist, you agree to these
-        terms. If something doesn&apos;t sit right with you, please reach out — we&apos;re
+        terms. If something doesn&apos;t sit right with you, please reach out - we&apos;re
         happy to chat.
       </p>
 
@@ -64,8 +64,8 @@ export default function TermsOfServicePage() {
 
       <h2>Our content</h2>
       <p>
-        Everything on this website — the text, design, illustrations, and brand
-        — belongs to Memvella. Please don&apos;t copy or redistribute it without
+        Everything on this website - the text, design, illustrations, and brand
+        - belongs to Memvella. Please don&apos;t copy or redistribute it without
         asking.
       </p>
 

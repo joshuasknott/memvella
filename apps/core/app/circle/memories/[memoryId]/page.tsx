@@ -91,7 +91,7 @@ export default function OrganiserMemoryDetailPage() {
       toast({
         tone: "success",
         title: "Memory deleted",
-        description: `"${memoryDetail.title}" was removed from this Circle.`,
+        description: `"${memoryDetail.title}" was removed from this Workspace.`,
       });
       router.push("/circle/memories");
     } catch (error) {
@@ -124,7 +124,7 @@ export default function OrganiserMemoryDetailPage() {
         <div className="rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-sm">
           <p className="text-lg font-bold text-text-primary">Memory not found</p>
           <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-            This record is no longer available in the current Circle.
+            This record is no longer available in the current Workspace.
           </p>
         </div>
         <SecondaryButton href="/circle/memories">
@@ -225,7 +225,7 @@ export default function OrganiserMemoryDetailPage() {
               Delete &ldquo;{memoryDetail.title}&rdquo;?
             </p>
             <p className="text-sm text-red-600">
-              This cannot be undone. The memory will be permanently removed from this Circle.
+              This cannot be undone. The memory will be permanently removed from this Workspace.
             </p>
             <div className="flex gap-3">
               <button

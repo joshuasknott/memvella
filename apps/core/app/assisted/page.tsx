@@ -57,17 +57,17 @@ function AssistedRecoveryState() {
     >
       <div className="w-full max-w-xl rounded-[32px] bg-white p-8 text-center shadow-lg">
         <h1 className="mb-3 font-headline text-3xl font-bold text-text-primary">
-          Tablet pairing expired.
+          Tablet code expired.
         </h1>
         <p className="mb-6 text-xl leading-relaxed text-text-secondary">
-          This Tablet needs a fresh 6-digit code from an Organiser.
+          This companion tablet needs a fresh 6-digit tablet code from a Supporter.
         </p>
         <a
           href="/assisted/login"
           data-testid="assisted-recovery-cta"
           className="inline-flex min-h-[72px] items-center justify-center rounded-full bg-senior-primary px-8 text-xl font-semibold text-white shadow-md"
         >
-          Reconnect Tablet
+          Reconnect tablet
         </a>
       </div>
     </main>

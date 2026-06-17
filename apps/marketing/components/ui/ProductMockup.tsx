@@ -112,7 +112,7 @@ function CircleMockup() {
   return (
     <PhoneFrame>
       <div className="flex items-center justify-between">
-        <p className="text-lg font-extrabold text-family-primary">Circle</p>
+        <p className="text-lg font-extrabold text-family-primary">Workspace</p>
         <Users className="h-5 w-5 text-family-primary" />
       </div>
       <div className="mt-6 rounded-2xl bg-surface p-5 shadow-card">

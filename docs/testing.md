@@ -32,11 +32,8 @@ For Memvella HQ changes, also manually verify:
 - HQ is inaccessible unless `MEMVELLA_HQ_ENABLED=1`
 - founder login requires `MEMVELLA_HQ_ACCESS_KEY`
 - the HQ session cookie is HTTP-only and same-site
-- `MEMVELLA_HQ_READ_TOKEN` is used only by server-side internal app code and Convex
-- Convex HQ queries reject missing or wrong read tokens
-- dashboards show aggregate, bounded, or redacted metadata only
-- QA/dev actions remain disabled outside `MEMVELLA_TEST_MODE=1`
-- static company, research, automation, and runbook content is clearly static and not presented as live analytics
+- the authenticated internal home page stays intentionally minimal
+- no product dashboards, QA/dev actions, runbooks, or sensitive product data are exposed
 
 Current gate:
 
@@ -49,19 +46,23 @@ The repository now includes a deterministic Playwright Chromium suite under `tes
 
 Current deterministic coverage:
 
-- organiser onboarding from `/` through `/onboarding/organiser` into `/circle`
-- organiser sign-in through `/organiser/signin`
-- organiser routine creation through `/circle/add-routine`
+- account and Workspace creation from `/` through `/onboarding/organiser` into `/circle`
+- account sign-in through `/organiser/signin`
+- pre-auth Workspace invite preview and the full shipped Supporter join UI
+- account password-recovery request without account enumeration
+- account sign-out and protected-route redirect
+- Workspace owner routine creation through `/circle/add-routine`
+- Workspace owner People creation, edit, delete, and Supporter read-only People permissions
 - voice memory dictation through `/circle/add-memory/voice` with fake browser speech
-- member join plus organiser-vs-member authorization boundaries on organiser-only settings routes
+- Supporter join plus owner-vs-Supporter authorization boundaries on owner-only settings routes
 - assisted recovery fallback when the stored tablet session is invalid
 
 Deterministic browser scaffolding now included:
 
 - guarded test mode with `MEMVELLA_TEST_MODE=1`
 - guarded `/api/test/**` reset and senior-session bootstrap helpers
-- deterministic Circle bootstrap readiness marker via `data-testid="circle-ready"`
-- stable selectors on the primary organiser, member, routine, invite, pairing, and voice flows
+- deterministic Workspace bootstrap readiness marker via `data-testid="circle-ready"`
+- stable selectors on the primary owner, Supporter, routine, invite, tablet connection, and voice flows
 - fake browser speech recognition and instant speech synthesis for Playwright
 - fake assisted live-voice mode so browser tests do not require a real Gemini session or microphone
 
@@ -80,35 +81,36 @@ Before any rollout, the core product is the priority verification surface.
 
 ## Manual Smoke Tests
 
-### Root Entry And Organiser Setup
+### Root Entry And Workspace Setup
 
 - open `/` and confirm the four entry actions are present
-- create a new organiser account from `/onboarding/organiser`
+- create a new account and Workspace from `/onboarding/organiser`
 - confirm the new account lands in `/circle`
 - sign out and sign back in through `/organiser/signin`
-- confirm the Circle workspace resolves a Circle membership and settings load
+- confirm the Workspace resolves a membership and settings load
 
-### Member Join Flow
+### Supporter Join Flow
 
 - enter a valid invite code at `/onboarding/member`
-- confirm the target Circle name is shown before auth
-- create or sign in to a family-side account without re-entering the code
+- confirm the target Workspace name is shown before auth
+- confirm invite preview works without an existing account session
+- create or sign in to an account without re-entering the code
 - confirm the account lands in `/circle`
-- confirm organiser-only settings remain unavailable to the Member account
-- confirm the Member can create, edit, and delete memories
-- confirm the Member can view routines and Circle members without gaining organiser controls
+- confirm owner-only settings remain unavailable to the Supporter account
+- confirm the Supporter can create, edit, and delete memories
+- confirm the Supporter can view routines and Supporters without gaining owner controls
 
 Coverage note:
 
-- deterministic Playwright coverage now covers the member-vs-organiser authorization boundary with deterministic member bootstrap and organiser-only settings denial
+- deterministic Playwright coverage now covers the Supporter-vs-owner authorization boundary with deterministic Supporter bootstrap and owner-only settings denial
 
-### Circle Home, Insights, And Settings
+### Workspace Home, Insights, And Settings
 
 - verify `/circle` loads `Current Status`, quick actions, and `Today's Updates`
-- verify `/circle/insights` loads the combined organiser queue for alerts and insights
+- verify `/circle/insights` loads the combined review queue for alerts and insights
 - verify reviewing or dismissing an item updates the queue
 - verify `/circle/settings/account` loads the current profile and session information
-- verify `/circle/settings/members` lists current Circle participants
+- verify `/circle/settings/members` lists current Supporters
 
 Current shipped scope note:
 
@@ -120,7 +122,7 @@ Current shipped scope note:
 - verify `/circle/memories` loads the memory library
 - verify each add flow still works: text, media, audio, and voice
 - verify memory detail and edit pages still load
-- verify organiser and member memory CRUD still works
+- verify owner and Supporter memory CRUD still works
 
 ### Routines
 
@@ -134,40 +136,31 @@ Coverage note:
 
 ### People
 
-- verify `/circle/add-person` still saves a person for the current Circle context
-
-Current shipped scope note:
-
-- the People UI is still limited to add-person; there is no dedicated people list, edit, or delete surface to smoke test yet
+- verify `/circle/people` loads the People directory
+- verify `/circle/add-person` saves a Person for the current Workspace context and returns to `/circle/people`
+- verify `/circle/people/[personId]` shows Person details
+- verify `/circle/people/[personId]/edit` lets a Workspace owner update the Person
+- verify deleting a Person removes it from the directory
+- verify Supporters can view People but cannot add, edit, or delete People
 
 ### Notifications
 
-- verify `/circle/settings/notifications` loads for an Organiser
+- verify `/circle/settings/notifications` loads for a Workspace owner
 - if web push keys are configured, verify browser subscription can be enabled and disabled
 - verify notification toggles save correctly
-- verify active organiser device subscriptions appear in the settings page
+- verify active device subscriptions appear in the settings page
 
-### Tablet User
+### Companion Tablet
 
-- generate a pairing code from `/circle/settings/pairing`
+- generate a tablet code from `/circle/settings/pairing`
 - pair a tablet or browser session through `/assisted/login`
 - verify `/assisted` loads and the session survives a refresh
 - verify an expired or revoked session falls back to reconnect messaging
-- verify the assisted dashboard remains low-friction and does not expose family-side navigation
+- verify the companion dashboard remains low-friction and does not expose Workspace navigation
 
 Coverage note:
 
 - deterministic Playwright coverage now covers the invalid-session recovery fallback only
-
-### Independent User
-
-- complete first-run onboarding at `/onboarding/independent`
-- verify passkey creation succeeds on a compatible browser
-- verify onboarding lands in `/independent` without requiring a Circle
-- verify recovery codes can be created and are shown once
-- verify repeat sign-in works with the device passkey
-- verify `/independent/security` can add or revoke trusted devices and rotate recovery codes
-- verify `/independent/recover` can redeem a recovery code and set up a fresh passkey
 
 ### Cross-Device And Origin
 
@@ -175,9 +168,16 @@ Coverage note:
 - test the intended phone or tablet origin explicitly
 - if testing from a different host fails with `invalid origin`, treat that as an auth configuration issue, not as a data issue
 
+### Account Verification And Recovery
+
+- create an account outside test mode and confirm no usable session exists before email verification
+- confirm the verification email arrives and its link returns to the intended local Memvella route
+- request a password reset for both an existing and unknown email and confirm the UI does not reveal which exists
+- reset the password and confirm older sessions no longer work
+
 ## Current Testing Gaps
 
 - The current Playwright suite is still a first smoke layer, not a full product matrix.
-- Media upload, audio upload, memory detail/edit, people creation, insights review, notification toggles, and tablet pairing success are not yet in deterministic browser coverage.
-- Real passkey onboarding, real recovery-code rotation, cross-origin auth, real push-delivery integrations, and real Gemini live-voice behavior still require manual or nightly device coverage.
+- Media upload, audio upload, memory detail/edit, insights review, notification toggles, and tablet pairing success are not yet in deterministic browser coverage.
+- Real email delivery, cross-origin auth, real push-delivery integrations, and real Gemini live-voice behavior still require manual or nightly device coverage.
 - There is not yet a `convex-test` transaction-level suite that seeds auth identities and exercises public Convex functions end-to-end.

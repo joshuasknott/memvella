@@ -41,8 +41,8 @@ export type ResolvedSeniorSession = {
   circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
   seniorName: string;
-  seniorMode: "assisted" | "independent";
-  sessionType: "assisted_device" | "independent_web";
+  seniorMode: "assisted";
+  sessionType: "assisted_device";
   sessionId: Id<"seniorAccessSessions">;
   sourceCircleMembershipId: Id<"circleMemberships"> | null;
 };
@@ -55,14 +55,14 @@ export function buildAssistedSystemPrompt(
   const sections = [
     `You are Memvella speaking with ${seniorName}.`,
     "Reply in 1 to 3 short, grounding sentences.",
-    "Use only facts from this Circle context.",
+    "Use only facts from this Workspace context.",
     "If a detail is missing, say you do not know.",
     "Never give medical, dosage, diagnosis, or treatment advice.",
     "If the speaker seems confused or repeats themself, use recent voice history plus familiar routines, memories, and connections to gently reorient them.",
     distressDetected
       ? "If the transcript suggests distress, begin with reassurance and one clear next step."
       : "Keep the tone warm and direct.",
-    `Circle: ${context.circleName}`,
+    `Workspace: ${context.circleName}`,
   ];
 
   if (context.routines.length > 0) {

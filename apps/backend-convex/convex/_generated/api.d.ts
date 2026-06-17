@@ -12,13 +12,13 @@ import type * as agent from "../agent.js";
 import type * as aiActions from "../aiActions.js";
 import type * as appEvents from "../appEvents.js";
 import type * as auth from "../auth.js";
+import type * as authEmail from "../authEmail.js";
+import type * as authEnv from "../authEnv.js";
 import type * as circleAuth from "../circleAuth.js";
 import type * as circleInvites from "../circleInvites.js";
 import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
-import type * as hq from "../hq.js";
 import type * as http from "../http.js";
-import type * as independentAccess from "../independentAccess.js";
 import type * as insights from "../insights.js";
 import type * as insightsEngine from "../insightsEngine.js";
 import type * as kiosk from "../kiosk.js";
@@ -46,7 +46,7 @@ import type * as uploadValidation from "../uploadValidation.js";
 import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
 import type * as voiceSafety from "../voiceSafety.js";
-import type * as voiceSession from "../voiceSession.js";
+import type * as voiceShared from "../voiceShared.js";
 import type * as waitlist from "../waitlist.js";
 
 import type {
@@ -60,13 +60,13 @@ declare const fullApi: ApiFromModules<{
   aiActions: typeof aiActions;
   appEvents: typeof appEvents;
   auth: typeof auth;
+  authEmail: typeof authEmail;
+  authEnv: typeof authEnv;
   circleAuth: typeof circleAuth;
   circleInvites: typeof circleInvites;
   cleanup: typeof cleanup;
   crons: typeof crons;
-  hq: typeof hq;
   http: typeof http;
-  independentAccess: typeof independentAccess;
   insights: typeof insights;
   insightsEngine: typeof insightsEngine;
   kiosk: typeof kiosk;
@@ -94,7 +94,7 @@ declare const fullApi: ApiFromModules<{
   voice: typeof voice;
   voiceHelpers: typeof voiceHelpers;
   voiceSafety: typeof voiceSafety;
-  voiceSession: typeof voiceSession;
+  voiceShared: typeof voiceShared;
   waitlist: typeof waitlist;
 }>;
 

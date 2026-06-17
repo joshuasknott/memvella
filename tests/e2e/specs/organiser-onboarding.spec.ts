@@ -2,7 +2,7 @@ import { test, expect } from "../fixtures/e2e";
 import { buildOrganiserCredentials } from "../helpers/auth";
 import { waitForCircleReady } from "../helpers/test-support";
 
-test("organiser onboarding creates a Circle", async ({ page }) => {
+test("account onboarding creates a Workspace", async ({ page }) => {
   const credentials = buildOrganiserCredentials("organiser-onboarding");
 
   await page.goto("/");

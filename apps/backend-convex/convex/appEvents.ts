@@ -36,7 +36,7 @@ export function sanitizeAppEventRoute(value: string | null | undefined) {
     return null;
   }
 
-  if (/token|secret|hash|password|passkey|transcript|evidence/i.test(normalized)) {
+  if (/token|secret|hash|password|transcript|evidence/i.test(normalized)) {
     return null;
   }
 

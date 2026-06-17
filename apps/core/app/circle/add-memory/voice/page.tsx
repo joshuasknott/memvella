@@ -205,7 +205,7 @@ export default function VoiceMemoryPage() {
       toast({
         tone: "success",
         title: "Voice memory saved",
-        description: `${title.trim()} was added to the Circle.`,
+        description: `${title.trim()} was added to the Workspace.`,
       });
       router.push("/circle/memories");
     } catch (saveError) {

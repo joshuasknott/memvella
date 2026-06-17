@@ -140,7 +140,7 @@ export default function OrganiserMemoryEditPage() {
         <div className="rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-sm">
           <p className="text-lg font-bold text-text-primary">Memory not found</p>
           <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-            This record is no longer available in the current Circle.
+            This record is no longer available in the current Workspace.
           </p>
         </div>
         <SecondaryButton href="/circle/memories">
@@ -267,7 +267,7 @@ export default function OrganiserMemoryEditPage() {
       toast({
         tone: "success",
         title: "Memory updated",
-        description: `${title.trim()} was updated in the Circle.`,
+        description: `${title.trim()} was updated in the Workspace.`,
       });
       router.push(`/circle/memories/${memoryRecordId}`);
     } catch (saveError) {
@@ -298,7 +298,7 @@ export default function OrganiserMemoryEditPage() {
             {memoryDetail.title}
           </h1>
           <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-            Keep this Circle record accurate and easy to revisit.
+            Keep this Workspace record accurate and easy to revisit.
           </p>
         </section>
 

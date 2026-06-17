@@ -4,7 +4,6 @@ import {
   getSeniorProfileByMode,
   requireCircleMembership,
   upsertAssistedSeniorProfile,
-  upsertIndependentSeniorProfile,
 } from "./circleAuth";
 import { createPersonRecord } from "./people";
 import { normalizeOptionalText } from "./security";
@@ -34,9 +33,6 @@ export const processOnboardingAction = internalMutation({
             ? payload.seniorDisplayName
             : undefined,
         );
-        const incomingRole =
-          typeof payload.role === "string" ? payload.role : "assisted_senior";
-
         if (organiserName || typeof payload.onboardingStep === "number") {
           await ctx.db.patch(membership._id, {
             ...(organiserName ? { displayName: organiserName } : {}),
@@ -48,23 +44,14 @@ export const processOnboardingAction = internalMutation({
         }
 
         if (seniorDisplayName) {
-          const seniorProfile =
-            incomingRole === "independent"
-              ? await upsertIndependentSeniorProfile(ctx, {
-                  circleId: membership.circleId,
-                  displayName: seniorDisplayName,
-                })
-              : await upsertAssistedSeniorProfile(ctx, {
-                  circleId: membership.circleId,
-                  displayName: seniorDisplayName,
-                });
+          const seniorProfile = await upsertAssistedSeniorProfile(ctx, {
+            circleId: membership.circleId,
+            displayName: seniorDisplayName,
+          });
 
           if (seniorProfile) {
             await ctx.db.patch(membership._id, {
-              seniorProfileId:
-                incomingRole === "independent"
-                  ? seniorProfile._id
-                  : membership.seniorProfileId,
+              seniorProfileId: seniorProfile._id,
             });
             await ctx.db.patch(membership.circleId, {
               displayName: buildCircleName(seniorDisplayName),
@@ -94,10 +81,9 @@ export const processOnboardingAction = internalMutation({
           (membership.seniorProfileId
             ? await ctx.db.get(membership.seniorProfileId)
             : null) ??
-          (await getSeniorProfileByMode(ctx, membership.circleId, "assisted")) ??
-          (await getSeniorProfileByMode(ctx, membership.circleId, "independent"));
+          (await getSeniorProfileByMode(ctx, membership.circleId, "assisted"));
         if (!seniorProfile) {
-          throw new Error("No senior profile is linked to this Circle.");
+          throw new Error("No senior profile is linked to this Workspace.");
         }
 
         await createPersonRecord(ctx, {

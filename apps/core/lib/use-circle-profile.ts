@@ -20,7 +20,7 @@ export function useCircleProfile() {
     role,
     isOrganiser,
     isMember,
-    organiserName: profile?.organiserName?.trim() || "Organiser",
+    organiserName: profile?.organiserName?.trim() || "Your account",
     seniorDisplayName: profile?.seniorDisplayName?.trim() || "your senior",
   };
 }

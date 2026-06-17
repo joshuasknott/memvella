@@ -50,8 +50,7 @@ export const getOrganiserDashboardSummary = query({
       (circleContext.membership.seniorProfileId
         ? await ctx.db.get(circleContext.membership.seniorProfileId)
         : null) ??
-      (await getSeniorProfileByMode(ctx, circleContext.membership.circleId, "assisted")) ??
-      (await getSeniorProfileByMode(ctx, circleContext.membership.circleId, "independent"));
+      (await getSeniorProfileByMode(ctx, circleContext.membership.circleId, "assisted"));
     if (!seniorProfile) {
       return {
         totalPeople: 0,

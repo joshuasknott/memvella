@@ -48,14 +48,11 @@ function draftConfirmationStatusValidator() {
 }
 
 function sessionTypeValidator() {
-  return v.union(v.literal("assisted_device"), v.literal("independent_web"));
+  return v.literal("assisted_device");
 }
 
 function channelValidator() {
-  return v.union(
-    v.literal("assisted_voice_loop"),
-    v.literal("independent_voice_loop"),
-  );
+  return v.literal("assisted_voice_loop");
 }
 
 function truncateInsightText(value: string, maxLength = 240) {
@@ -110,7 +107,7 @@ export const gatherSeniorContext = internalQuery({
       ]);
 
     if (seniorProfile.seniorMode !== "assisted") {
-      throw new Error("The assisted voice context is not linked to this Circle.");
+      throw new Error("The assisted voice context is not linked to this Workspace.");
     }
 
     const people = await listPeopleForSeniorProfile(ctx, seniorProfile._id, 8);
@@ -265,7 +262,7 @@ export const saveVoiceInteraction = internalMutation({
         priority: "normal",
         title: `Review a medical question from ${seniorName}`,
         summary: truncateInsightText(
-          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Circle review.`,
+          `${seniorName} asked for medical guidance. The voice assistant refused the request and logged it for Workspace review.`,
         ),
         suggestedAction:
           "Follow up directly or route the question to a licensed clinician.",

@@ -129,7 +129,7 @@ export async function consumeUploadIntent(
   }
 
   if (intent.circleMembershipId !== args.circleMembershipId) {
-    throw new Error("This upload does not belong to your Circle.");
+    throw new Error("This upload does not belong to your Workspace.");
   }
 
   const now = Date.now();

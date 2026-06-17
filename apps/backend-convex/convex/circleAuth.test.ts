@@ -84,7 +84,7 @@ describe("family-side capabilities", () => {
 
   it("throws deterministic denial errors for capability checks", () => {
     expect(() => assertFamilySideCapability("member", "manage_routines")).toThrow(
-      "This account does not have access to that Circle setting.",
+      "This account does not have access to that Workspace setting.",
     );
     expect(assertFamilySideCapability("organiser", "manage_routines")).toBe(
       "organiser",

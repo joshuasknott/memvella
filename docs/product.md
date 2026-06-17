@@ -9,14 +9,13 @@ Depends on: docs/terminology.md, docs/architecture.md
 
 ## Summary
 
-Memvella is a voice-first digital wellness companion built around four shipped experiences:
+Memvella is a voice-first digital wellness companion built around three shipped experiences:
 
-- an `Organiser` experience for the person managing a Circle
-- a `Member` experience for additional Circle participants helping inside that same Circle
-- a `Tablet User` experience for an assisted senior using a paired device
-- an `Independent User` experience for a senior managing their own profile directly
+- an account and Workspace setup experience for the person starting support
+- a Supporter invite experience for trusted people helping in that Workspace
+- a companion tablet experience connected by a Supporter for the senior
 
-The product is designed to reduce friction, preserve dignity, and keep family-side coordination lightweight without turning Memvella into a medical product.
+The product is designed for home and family-led senior support: a Workspace holds routines, memories, People context, companion tablet access, and review workflows without turning Memvella into a medical product.
 
 ## Applications
 
@@ -26,59 +25,54 @@ The product is designed to reduce friction, preserve dignity, and keep family-si
 
 ## Shipped Experience Model
 
-### Circle
+### Workspace
 
-`Circle` is the shipped family-side workspace.
+`Workspace` is the shipped support-side area.
 
-- A Circle contains authenticated `circleMemberships` with role `organiser` or `member`.
-- A Circle can have multiple Organisers.
-- Organisers and Members use the same `/circle` shell, but organiser-only actions are capability-gated.
-- Family-side routes and copy should use `Circle`, not `FamilySpace`, `supporter`, or `admin` terminology.
+- A Workspace contains authenticated `circleMemberships` with internal role `organiser` or `member`.
+- Product copy should refer to signed-in participants as Supporters.
+- The person who creates the Workspace has owner capabilities for invite codes, companion tablet pairing, notifications, People, and routines.
+- Supporters use the same `/circle` shell, but owner-only actions are capability-gated.
+- Family-side routes may still use `/circle` internally, but visible copy should use `Workspace`.
 
-### Organiser
+### Workspace Owner
 
 - Primary device: phone
-- Main jobs: create a Circle, manage account details, invite members, pair tablets, manage notification settings, add people, manage routines, manage memories, and review the combined alerts and insights queue
+- Main jobs: create a Workspace, manage account details, invite Supporters, connect companion tablets, manage notification settings, manage People, manage routines, manage memories, and review the combined alerts and insights queue
 - Permission level: administrative
-- Current organiser-only surfaces: invite codes, tablet pairing, push notification settings, people creation, routine management, and independent recovery help from account settings when relevant
+- Current owner-only surfaces: invite codes, companion tablet pairing, push notification settings, People creation, and routine management
 
-### Member
+### Supporter
 
 - Primary device: phone
-- Main jobs: join an existing Circle with an invite code, contribute memories, review Circle updates, and stay informed without taking over admin controls
+- Main jobs: join an existing Workspace with an invite code, contribute memories, review updates, and stay informed without taking over admin controls
 - Permission level: lightweight but actionable
-- Current member access: the shared `/circle` shell, memory CRUD, routines visibility, Circle members visibility, and account settings
-- Current restrictions: no invite management, no pairing, no notification admin, no Circle admin, and no organiser-only capability surfaces
+- Current Supporter access: the shared `/circle` shell, memory CRUD, routines visibility, People visibility, Supporter visibility, and account settings
+- Current restrictions: no invite management, no pairing, no notification admin, no Workspace admin, no People mutation, and no owner-only capability surfaces
 
-### Tablet User
+### Companion Tablet
 
 - Primary device: tablet
 - Main jobs: open a paired dashboard, use live voice, see memory rotation, and receive soft routine check-ins
 - Permission level: senior-facing, low-friction surface only
-
-### Independent User
-
-- Primary device: phone or tablet
-- Main jobs: complete passkey-first onboarding, use live voice, save memories and routines through conversation, manage trusted devices, and recover with recovery codes
-- Permission level: standalone senior experience
 
 ## Shipped Product Surfaces
 
 ### Root Entry
 
 - `/` is the role-selection entry point.
-- It offers `Start a New Circle`, `Join a Circle`, `Connect a Tablet`, and `Set Up My Own Profile`.
+- It offers sign-up, login, and a quiet companion tablet connection link.
 
-### Circle Home
+### Workspace Home
 
 - `/circle` is the shared family-side home.
-- It currently shows `Current Status`, quick actions, an organiser insights card, and `Today's Updates` based on routine timeline data.
+- It currently shows `Current Status`, quick actions, a Supporter insights card, and `Today's Updates` based on routine timeline data.
 - It is the closest thing to a current status feed, but it is not a general activity history surface.
 
 ### Routines
 
 - `/circle/routines` is the shipped routines view.
-- Organiser capability gates routine creation and mutation.
+- Workspace owner capability gates routine creation and mutation.
 - `/circle/add-routine` is the current add flow.
 
 ### Memories
@@ -86,12 +80,12 @@ The product is designed to reduce friction, preserve dignity, and keep family-si
 - `/circle/memories` is the shared memory library.
 - `/circle/add-memory` branches into `text`, `media`, `audio`, and `voice` creation flows.
 - `/circle/memories/[memoryId]` and `/circle/memories/[memoryId]/edit` are the detail and edit flows.
-- Organisers and Members both use the memory surface.
+- Workspace owners and Supporters both use the memory surface.
 
 ### Insights And Alerts
 
-- `/circle/insights` is the shipped organiser review queue.
-- It combines queued `insights` and queued `alerts` into one organiser-facing list.
+- `/circle/insights` is the shipped owner review queue.
+- It combines queued `insights` and queued `alerts` into one owner-facing list.
 - Reviewed items also appear there in a recent history section.
 
 ### Settings
@@ -106,36 +100,36 @@ The product is designed to reduce friction, preserve dignity, and keep family-si
 
 ### People
 
-- `People` are senior-grounding people, not Circle participants.
-- The shipped People UI is currently limited to `/circle/add-person`.
-- There is not yet a dedicated People index, edit flow, or delete flow in the family-side UI.
+- `People` are senior-grounding people the senior knows, not signed-in Supporters.
+- `/circle/people` is the shipped People directory.
+- `/circle/people/[personId]` and `/circle/people/[personId]/edit` are the detail and edit flows.
+- `/circle/add-person` is the add flow.
+- Workspace owners can create, edit, and delete People.
+- Supporters can view People context but cannot create, edit, or delete People.
 
-### Tablet User
+### Account Recovery
+
+- `/organiser/verify-email` completes or resends account email verification.
+- `/organiser/forgot-password` requests a password-reset email without revealing whether an account exists.
+- `/organiser/reset-password` accepts a valid reset token and revokes existing account sessions after the password changes.
+
+### Companion Tablet
 
 - `/assisted/login` handles 6-digit pairing code entry.
 - `/assisted` is the paired tablet dashboard with time, greeting, next routine, memory gallery, and live voice.
-
-### Independent User
-
-- `/onboarding/independent` is the passkey-first setup flow.
-- `/independent` is the independent home surface.
-- `/independent/security` manages trusted devices and recovery codes.
-- `/independent/recover` handles recovery-code sign-in and passkey reset.
 
 ## Explicit Deferred Work
 
 - There is no dedicated `Activity` route or activity feed surface yet.
 - There is no separate `Alerts` page yet.
-- The People surface is still limited.
 - End-to-end browser coverage now exists for the first deterministic organiser/member/routine/voice smoke flows; see `docs/testing.md` for scope and remaining gaps.
 
 ## Product Rules
 
-- New work must treat `Circle` as the family-side workspace.
-- New work must keep `Organiser` and `Member` as the only family-side roles.
-- New work must keep independent users standalone until an explicit transition flow is intentionally built.
-- New work must separate Circle participants from senior-grounding `People`.
-- New work must not reintroduce retired `supporter`, `admin`, or `FamilySpace` concepts.
+- New visible copy must treat `Workspace` as the shared support area.
+- New visible copy must use `Supporter` for signed-in trusted people who help.
+- New visible copy must separate Supporters from senior-grounding `People`.
+- New work must not reintroduce retired `admin` or `FamilySpace` concepts.
 
 ## Product Goals
 

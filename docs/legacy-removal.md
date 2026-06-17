@@ -35,7 +35,7 @@ Completed changes:
 - replaced legacy auth and invite modules with canonical modules:
 - `apps/core/convex/familySpaceAuth.ts` -> `apps/core/convex/circleAuth.ts`
 - `apps/core/convex/familyInvites.ts` -> `apps/core/convex/circleInvites.ts`
-- removed `independent_senior` from Circle participant roles
+- removed `independent_senior` from Workspace participant roles
 - removed active runtime `legacyFamily*` auth and invite paths
 - migrated frontend callsites from `api.familyInvites.*` to `api.circleInvites.*`
 

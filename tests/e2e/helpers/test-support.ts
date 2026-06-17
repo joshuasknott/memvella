@@ -10,13 +10,9 @@ export const MEMVELLA_TEST_AUTH_TOKEN =
 export const ASSISTED_SESSION_STORAGE_KEY = "memvella_assisted_senior_session";
 export const ASSISTED_DEVICE_BINDING_STORAGE_KEY =
   "memvella_assisted_device_binding";
-export const INDEPENDENT_SESSION_STORAGE_KEY =
-  "memvella_independent_senior_session";
-export const INDEPENDENT_DEVICE_BINDING_STORAGE_KEY =
-  "memvella_independent_device_binding";
 
 type InitScriptTarget = BrowserContext | Page;
-type SeniorExperience = "assisted" | "independent";
+type SeniorExperience = "assisted";
 
 type SeniorSessionBootstrapResult = {
   experience: SeniorExperience;
@@ -30,6 +26,13 @@ type SeniorSessionBootstrapResult = {
 export function buildMemvellaTestHeaders() {
   return {
     [MEMVELLA_TEST_AUTH_TOKEN_HEADER]: MEMVELLA_TEST_AUTH_TOKEN,
+  };
+}
+
+export function buildMemvellaTestApiHeaders() {
+  return {
+    ...buildMemvellaTestHeaders(),
+    Origin: PLAYWRIGHT_BASE_URL,
   };
 }
 
@@ -60,7 +63,7 @@ export async function createTestContext(browser: Browser) {
 
 export async function resetApp(request: APIRequestContext) {
   const response = await request.post(`${PLAYWRIGHT_BASE_URL}/api/test/reset`, {
-    headers: buildMemvellaTestHeaders(),
+    headers: buildMemvellaTestApiHeaders(),
   });
 
   expect(response.ok()).toBeTruthy();
@@ -111,24 +114,12 @@ export async function bootstrapSeniorSession(
         deviceFingerprint,
       };
 
-      if (experience === "assisted") {
-        localStorage.setItem(
-          "memvella_assisted_senior_session",
-          JSON.stringify(sessionState),
-        );
-        localStorage.setItem(
-          "memvella_assisted_device_binding",
-          deviceFingerprint,
-        );
-        return;
-      }
-
       localStorage.setItem(
-        "memvella_independent_senior_session",
+        "memvella_assisted_senior_session",
         JSON.stringify(sessionState),
       );
       localStorage.setItem(
-        "memvella_independent_device_binding",
+        "memvella_assisted_device_binding",
         deviceFingerprint,
       );
     },

@@ -17,7 +17,7 @@ const RELATIONSHIP_OPTIONS = ["Son", "Daughter", "Grandchild", "Friend"];
 export default function AddPersonPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { seniorDisplayName } = useCircleProfile();
+  const { isLoading, isOrganiser, profile, seniorDisplayName } = useCircleProfile();
   const addPerson = useMutation(api.people.addPerson);
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
 
@@ -84,9 +84,9 @@ export default function AddPersonPage() {
       toast({
         tone: "success",
         title: "Person saved",
-        description: `${name.trim()} is now available in this Circle.`,
+        description: `${name.trim()} is now available in this Workspace.`,
       });
-      router.push("/circle/memories");
+      router.push("/circle/people");
     } catch (saveError) {
       console.error(saveError);
       const message =
@@ -103,6 +103,43 @@ export default function AddPersonPage() {
       setIsSaving(false);
     }
   };
+
+  if (isLoading || profile === undefined) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
+        <Loader2 className="h-8 w-8 animate-spin text-family-primary" />
+        <p className="text-lg font-medium text-text-secondary">
+          Loading People access...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isOrganiser) {
+    return (
+      <div className="flex w-full flex-col gap-6 px-4 pb-32">
+        <div
+          className="rounded-xl border border-border bg-surface p-8 text-center shadow-sm"
+          data-testid="add-person-restricted"
+        >
+          <p className="text-lg font-bold text-text-primary">
+            Only Workspace owners can add People
+          </p>
+          <p className="mt-2 text-lg leading-relaxed text-text-secondary">
+            Supporters can view People context, but the Workspace owner manages these
+            records.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/circle/people")}
+          className="flex h-[72px] w-full items-center justify-center rounded-full border-2 border-family-primary bg-surface px-6 text-lg font-semibold text-family-primary shadow-sm"
+        >
+          Back to People
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col gap-8 px-4 pb-32">
@@ -169,6 +206,7 @@ export default function AddPersonPage() {
             required
             value={name}
             onChange={(event) => setName(event.target.value)}
+            data-testid="person-name-input"
             className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
@@ -203,6 +241,7 @@ export default function AddPersonPage() {
                   placeholder="Custom..."
                   value={customRelationship}
                   onChange={(event) => setCustomRelationship(event.target.value)}
+                  data-testid="person-custom-relationship-input"
                   className="w-24 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary"
                   autoFocus
                 />
@@ -215,6 +254,7 @@ export default function AddPersonPage() {
                     setIsAddingCustom(false);
                     setCustomRelationship("");
                   }}
+                  data-testid="person-custom-relationship-confirm"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-family-primary text-on-primary transition-colors hover:bg-family-primary/90"
                 >
                   <Check className="h-4 w-4 text-white" />
@@ -278,6 +318,7 @@ export default function AddPersonPage() {
             rows={4}
             value={aiContext}
             onChange={(event) => setAiContext(event.target.value)}
+            data-testid="person-context-input"
             className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-surface p-6 text-lg transition-all placeholder:text-text-secondary/50 focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
           <p className="px-1 text-sm text-text-secondary">
@@ -309,6 +350,7 @@ export default function AddPersonPage() {
         type="button"
         onClick={handleSavePerson}
         disabled={isSaving || !isFormValid}
+        data-testid="person-save-button"
         className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSaving ? (

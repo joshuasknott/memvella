@@ -14,7 +14,7 @@ export function NoHardwareFlex() {
               <span className="text-family-primary">Nothing new to learn.</span>
             </h2>
             <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed text-text-secondary">
-              Memvella runs on the iPads, tablets, and smartphones your family already owns. Pair a device, send an invite to your Circle, and it&apos;s ready in minutes. No instruction manual, no IT degree, no extra trip to the electronics store.
+              Memvella runs on the iPads, tablets, and smartphones your family already owns. Connect a companion tablet for the senior, invite trusted Supporters into the Workspace, and keep setup work away from the senior surface.
             </p>
           </div>
         </FadeIn>

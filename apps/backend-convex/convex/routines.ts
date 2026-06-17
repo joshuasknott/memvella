@@ -22,12 +22,7 @@ async function getPrimarySeniorProfileForCircleContext(
   ctx: Parameters<typeof getSeniorProfileByMode>[0],
   circleId: Parameters<typeof getSeniorProfileByMode>[1],
 ) {
-  const assistedSenior = await getSeniorProfileByMode(ctx, circleId, "assisted");
-  if (assistedSenior) {
-    return assistedSenior;
-  }
-
-  return await getSeniorProfileByMode(ctx, circleId, "independent");
+  return await getSeniorProfileByMode(ctx, circleId, "assisted");
 }
 
 export const createRoutineSchedule = mutation({
@@ -53,7 +48,7 @@ export const createRoutineSchedule = mutation({
       membership.circleId,
     );
     if (!seniorProfile) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     if (!title) {
@@ -169,12 +164,12 @@ export const updateRoutineSchedule = mutation({
       membership.circleId,
     );
     if (!seniorProfile) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.seniorProfileId !== seniorProfile._id) {
-      throw new Error("This routine schedule does not belong to your Circle.");
+      throw new Error("This routine schedule does not belong to your Workspace.");
     }
 
     const title = normalizeOptionalText(args.title);
@@ -229,12 +224,12 @@ export const deleteRoutineSchedule = mutation({
       membership.circleId,
     );
     if (!seniorProfile) {
-      throw new Error("No senior profile is linked to this Circle.");
+      throw new Error("No senior profile is linked to this Workspace.");
     }
 
     const schedule = await ctx.db.get(args.routineScheduleId);
     if (!schedule || schedule.seniorProfileId !== seniorProfile._id) {
-      throw new Error("This routine schedule does not belong to your Circle.");
+      throw new Error("This routine schedule does not belong to your Workspace.");
     }
 
     const occurrences = await ctx.db

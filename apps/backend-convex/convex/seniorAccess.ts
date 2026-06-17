@@ -49,9 +49,7 @@ export const resolveSeniorSession = internalQuery({
   args: {
     sessionToken: v.string(),
     deviceFingerprint: v.string(),
-    expectedSessionType: v.optional(
-      v.union(v.literal("assisted_device"), v.literal("independent_web")),
-    ),
+    expectedSessionType: v.optional(v.literal("assisted_device")),
   },
   handler: async (ctx, args) => {
     const validation = await validateSeniorSession(ctx, {

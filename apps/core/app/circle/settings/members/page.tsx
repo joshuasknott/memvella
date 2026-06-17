@@ -38,18 +38,18 @@ export default function CircleMembersPage() {
               <Users className="h-5 w-5" />
             </div>
             <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
-              Circle Members
+              Supporters
             </h1>
           </div>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-text-secondary">
-            See who currently has family-side access to this Circle and what role each person holds.
+            See who currently has access to this Workspace and what each person can do.
           </p>
         </div>
 
         {isOrganiser ? (
           <PrimaryButton href="/circle/settings/invite">
             <UserPlus className="mr-2 h-5 w-5" />
-            Invite a Member
+            Invite a Supporter
           </PrimaryButton>
         ) : null}
       </div>
@@ -57,11 +57,11 @@ export default function CircleMembersPage() {
       <FormCard className="flex flex-col gap-4">
         {members === undefined ? (
           <div className="rounded-xl bg-surface-muted px-4 py-6 text-center text-sm font-medium text-text-secondary">
-            Loading your Circle members...
+            Loading Supporters...
           </div>
         ) : members.length === 0 ? (
           <div className="rounded-xl bg-surface-muted px-4 py-6 text-center text-sm font-medium text-text-secondary">
-            No family-side members are linked to this Circle yet.
+            No Supporters are linked to this Workspace yet.
           </div>
         ) : (
           members.map((member) => (

@@ -56,7 +56,7 @@ export default function OrganiserMemoriesPage() {
               Memories
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-              Review, edit, and organize the stories, photos, voice notes, and recordings that shape {seniorDisplayName}&apos;s Circle.
+              Review, edit, and organize the stories, photos, voice notes, and recordings that shape {seniorDisplayName}&apos;s companion.
             </p>
           </div>
           <Link
@@ -69,7 +69,7 @@ export default function OrganiserMemoriesPage() {
         </div>
 
         <div className="mt-5 inline-flex rounded-full bg-family-primary/10 px-4 py-2 text-sm font-semibold text-family-primary">
-          {memoryRecords === undefined ? "Loading memories..." : `${memoryRecords.length} record${memoryRecords.length === 1 ? "" : "s"} in this Circle`}
+          {memoryRecords === undefined ? "Loading memories..." : `${memoryRecords.length} record${memoryRecords.length === 1 ? "" : "s"} in this Workspace`}
         </div>
       </section>
 
@@ -86,7 +86,7 @@ export default function OrganiserMemoriesPage() {
           </div>
           <p className="mt-4 text-lg font-bold text-text-primary">No memories yet</p>
           <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-            Add the first record so the Organiser dashboard and Senior gallery have meaningful moments to surface.
+            Add the first record so the Workspace and companion gallery have meaningful moments to surface.
           </p>
           <div className="mt-6">
             <PrimaryButton href="/circle/add-memory">

@@ -71,7 +71,7 @@ export default function MediaMemoryPage() {
       toast({
         tone: "success",
         title: "Media memory saved",
-        description: `${title.trim()} was added to the Circle.`,
+        description: `${title.trim()} was added to the Workspace.`,
       });
       router.push("/circle/memories");
     } catch (saveError) {

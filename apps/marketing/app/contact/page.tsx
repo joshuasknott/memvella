@@ -41,15 +41,15 @@ export default function ContactPage() {
             <p>
                 We&apos;re a small team building something we care deeply about. Whether
                 you&apos;re a family member exploring options for a parent, have questions
-                about how Memvella works, or just want to say hello — we&apos;d love to
+                about how Memvella works, or just want to say hello - we&apos;d love to
                 hear from you. A real person will get back to you.
             </p>
 
-            {/* Contact form — not-prose escapes Tailwind Typography's input overrides */}
+            {/* Contact form: not-prose escapes Tailwind Typography's input overrides. */}
             <div className="not-prose mt-10">
                 {status === 'success' ? (
                     <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-6 py-8 text-center">
-                        <p className="text-lg font-semibold text-status-success">Message received — thank you.</p>
+                        <p className="text-lg font-semibold text-status-success">Message received - thank you.</p>
                         <p className="mt-1 text-sm text-status-success">We&apos;ll get back to you as soon as we can.</p>
                     </div>
                 ) : (
@@ -119,7 +119,7 @@ export default function ContactPage() {
                             {status === 'loading' ? (
                                 <span className="flex items-center gap-2">
                                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true" />
-                                    Sending…
+                                    Sending...
                                 </span>
                             ) : (
                                 'Send Message'

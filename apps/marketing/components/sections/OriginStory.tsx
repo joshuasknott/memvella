@@ -25,7 +25,7 @@ export function OriginStory() {
               A senior-facing companion should be calm and familiar. The family-side workspace should be clear, shared, and quick to use on a phone.
             </p>
             <p className="text-xl leading-relaxed text-text-secondary">
-              Memvella brings those two needs together through voice, routines, memories, and Circles, without turning family coordination into another complicated system.
+              Memvella now does one job clearly: help family members and trusted supporters care for a senior through voice, routines, memories, People context, and a companion tablet.
             </p>
           </div>
         </FadeIn>

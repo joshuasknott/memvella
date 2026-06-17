@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-function getSeniorSessionStorageKey(experience: "assisted" | "independent") {
+function getSeniorSessionStorageKey(experience: "assisted") {
   return `memvella_${experience}_senior_session`;
 }
 
-function getSeniorRecoveryHintStorageKey(
-  experience: "assisted" | "independent",
-) {
+function getSeniorRecoveryHintStorageKey(experience: "assisted") {
   return `memvella_${experience}_senior_recovery_hint`;
 }
 
@@ -20,15 +18,6 @@ describe("senior session key isolation", () => {
     );
     expect(getSeniorSessionStorageKey("assisted")).not.toBe(
       getSeniorRecoveryHintStorageKey("assisted"),
-    );
-  });
-
-  it("uses distinct keys per experience type", () => {
-    expect(getSeniorSessionStorageKey("assisted")).not.toBe(
-      getSeniorSessionStorageKey("independent"),
-    );
-    expect(getSeniorRecoveryHintStorageKey("assisted")).not.toBe(
-      getSeniorRecoveryHintStorageKey("independent"),
     );
   });
 });

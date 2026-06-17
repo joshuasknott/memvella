@@ -4,10 +4,10 @@ Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex b
 
 ## Workspace
 
-- `apps/core`: the product frontend. Contains the shared `/circle` family-side workspace, the assisted tablet flow, the independent senior flow, and the Next.js frontend.
+- `apps/core`: the product frontend. Contains the shared `/circle` Workspace shell, the companion tablet flow, and the Next.js frontend.
 - `apps/backend-convex`: the Convex backend. Owns all server-side functions, schema, auth config, and AI actions. Exports `@memvella/backend` for frontend consumers.
 - `apps/marketing`: the marketing and waitlist app.
-- `apps/internal`: Memvella HQ, the founder-only internal operating system and mission-control app.
+- `apps/internal`: a minimal founder-only internal placeholder with an access gate.
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`).
 - `packages/config-typescript`: shared TypeScript base configs.
 - `packages/config-eslint`: shared ESLint configs.
@@ -16,19 +16,18 @@ Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex b
 ## Current Product Surface
 
 - `/`: role-selection entry screen
-- `/circle`: shared family-side workspace for Organisers and Members
+- `/circle`: shared Workspace for Supporters
 - `/circle/routines`: routine list and timeline
 - `/circle/memories`: memory library, detail, edit, and add flows
-- `/circle/insights`: combined organiser review queue for alerts and insights
-- `/circle/settings`: account, members, invite codes, notifications, and tablet pairing
-- `/assisted/login` and `/assisted`: paired tablet experience
-- `/onboarding/independent`, `/independent`, `/independent/security`, `/independent/recover`: independent senior flow
+- `/circle/people`: senior-grounding People directory, detail, edit, and add flows
+- `/circle/insights`: combined review queue for alerts and insights
+- `/circle/settings`: account, Supporters, invite codes, notifications, and companion tablet access
+- `/assisted/login` and `/assisted`: companion tablet experience
 
 Current deferred gaps:
 
 - there is no dedicated Activity route yet; `/circle` shows current status and a routines-focused timeline instead
 - there is no separate Alerts page yet; alerts are reviewed inside `/circle/insights`
-- People is currently a limited add-person surface, not a full directory
 - browser coverage currently focuses on the first deterministic Playwright smoke flows; see `docs/testing.md` for scope and remaining gaps
 
 ## Stack
@@ -51,7 +50,7 @@ Current deferred gaps:
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
 3. Create `apps/backend-convex/.env.local` from `apps/backend-convex/.env.example` with your `CONVEX_DEPLOYMENT` value.
 4. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
-5. If you are working on Memvella HQ, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
+5. If you are working on the minimal internal app, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
 6. Start the Convex dev backend with `pnpm convex:dev`.
 7. Start the monorepo dev processes with `pnpm dev`.
 

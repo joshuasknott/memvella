@@ -102,10 +102,10 @@ export default function AssistedSetupPage() {
 
         <div className="mb-6 space-y-3 text-center md:mb-12 md:space-y-4">
           <h1 className="font-headline text-4xl font-bold tracking-tight text-text-primary md:text-6xl">
-            Let&apos;s connect your tablet.
+            Connect the companion tablet.
           </h1>
           <p className="font-headline text-xl font-medium text-text-secondary md:text-3xl">
-            Ask an Organiser for the 6-digit code on their phone.
+            Ask a Supporter for the 6-digit tablet code on their phone.
           </p>
         </div>
 
@@ -148,7 +148,7 @@ export default function AssistedSetupPage() {
                 Connecting...
               </>
             ) : (
-              "Connect to Memvella"
+              "Connect companion"
             )}
           </button>
         ) : null}

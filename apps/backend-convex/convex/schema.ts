@@ -32,7 +32,7 @@ export default defineSchema({
   seniorProfiles: defineTable({
     circleId: v.union(v.id("circles"), v.null()),
     displayName: v.string(),
-    seniorMode: v.union(v.literal("assisted"), v.literal("independent")),
+    seniorMode: v.literal("assisted"),
     accessStatus: v.union(
       v.literal("pending"),
       v.literal("active"),
@@ -45,17 +45,6 @@ export default defineSchema({
   })
     .index("by_circleId", ["circleId"])
     .index("by_circleId_and_seniorMode", ["circleId", "seniorMode"]),
-
-  independentOnboardingSessions: defineTable({
-    seniorProfileId: v.id("seniorProfiles"),
-    sourceCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
-    tokenHash: v.string(),
-    expiresAt: v.number(),
-    consumedAt: v.union(v.number(), v.null()),
-    revokedAt: v.union(v.number(), v.null()),
-  })
-    .index("by_tokenHash", ["tokenHash"])
-    .index("by_seniorProfileId", ["seniorProfileId"]),
 
   assistedDevicePins: defineTable({
     circleId: v.id("circles"),
@@ -89,10 +78,7 @@ export default defineSchema({
   seniorAccessSessions: defineTable({
     circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
-    sessionType: v.union(
-      v.literal("assisted_device"),
-      v.literal("independent_web"),
-    ),
+    sessionType: v.literal("assisted_device"),
     sessionTokenHash: v.string(),
     deviceFingerprintHash: v.string(),
     issuedAt: v.number(),
@@ -103,7 +89,6 @@ export default defineSchema({
     revokedReason: v.union(v.string(), v.null()),
     sourcePinId: v.union(v.id("assistedDevicePins"), v.null()),
     sourceCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
-    sourcePasskeyId: v.union(v.id("independentSeniorPasskeys"), v.null()),
   })
     .index("by_sessionTokenHash", ["sessionTokenHash"])
     .index("by_seniorProfileId", ["seniorProfileId"])
@@ -112,48 +97,6 @@ export default defineSchema({
       "seniorProfileId",
       "sessionType",
     ]),
-
-  independentSeniorPasskeys: defineTable({
-    circleId: v.union(v.id("circles"), v.null()),
-    seniorProfileId: v.id("seniorProfiles"),
-    credentialId: v.string(),
-    credentialPublicKey: v.string(),
-    counter: v.number(),
-    deviceType: v.string(),
-    backedUp: v.boolean(),
-    transports: v.array(v.string()),
-    lastUsedAt: v.union(v.number(), v.null()),
-    revokedAt: v.union(v.number(), v.null()),
-  })
-    .index("by_credentialId", ["credentialId"])
-    .index("by_seniorProfileId", ["seniorProfileId"]),
-
-  independentSeniorRecoveryCodes: defineTable({
-    circleId: v.union(v.id("circles"), v.null()),
-    seniorProfileId: v.id("seniorProfiles"),
-    codeHash: v.string(),
-    codeSuffix: v.string(),
-    createdAt: v.number(),
-    createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
-    createdBySource: v.union(v.literal("independent"), v.literal("organiser")),
-    consumedAt: v.union(v.number(), v.null()),
-    revokedAt: v.union(v.number(), v.null()),
-  })
-    .index("by_codeHash", ["codeHash"])
-    .index("by_seniorProfileId", ["seniorProfileId"]),
-
-  seniorAuthChallenges: defineTable({
-    seniorProfileId: v.id("seniorProfiles"),
-    purpose: v.union(
-      v.literal("passkey_registration"),
-      v.literal("passkey_authentication"),
-    ),
-    challenge: v.string(),
-    expiresAt: v.number(),
-    consumedAt: v.union(v.number(), v.null()),
-  })
-    .index("by_challenge", ["challenge"])
-    .index("by_seniorProfileId_and_purpose", ["seniorProfileId", "purpose"]),
 
   people: defineTable({
     seniorProfileId: v.id("seniorProfiles"),
@@ -455,14 +398,8 @@ export default defineSchema({
   voiceInteractions: defineTable({
     circleId: v.union(v.id("circles"), v.null()),
     seniorProfileId: v.id("seniorProfiles"),
-    sessionType: v.union(
-      v.literal("assisted_device"),
-      v.literal("independent_web"),
-    ),
-    channel: v.union(
-      v.literal("assisted_voice_loop"),
-      v.literal("independent_voice_loop"),
-    ),
+    sessionType: v.literal("assisted_device"),
+    channel: v.literal("assisted_voice_loop"),
     transcript: v.string(),
     assistantResponse: v.union(v.string(), v.null()),
     medicalRejected: v.boolean(),

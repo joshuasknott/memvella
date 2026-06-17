@@ -253,7 +253,7 @@ export const reviewOrganiserInsight = mutation({
     const membershipId = circleMembership?._id;
     const membershipCircleId = circleMembership?.circleId ?? circle?._id;
     if (!membershipId || !membershipCircleId) {
-      throw new Error("This insight is not available in your Circle.");
+      throw new Error("This insight is not available in your Workspace.");
     }
 
     const now = Date.now();
@@ -276,7 +276,7 @@ export const reviewOrganiserInsight = mutation({
       return reviewTarget.id;
     }
 
-    throw new Error("This insight is not available in your Circle.");
+    throw new Error("This insight is not available in your Workspace.");
   },
 });
 

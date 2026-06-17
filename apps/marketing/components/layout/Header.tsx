@@ -15,7 +15,7 @@ export function Header() {
           <BrandLogo />
         </Link>
 
-        {/* Desktop nav — hidden on mobile */}
+        {/* Desktop nav hidden on mobile. */}
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
@@ -28,12 +28,12 @@ export function Header() {
           ))}
         </nav>
 
-        {/* CTA — visible on all screen sizes */}
+        {/* CTA visible on all screen sizes. */}
         <Link
           href="#waitlist"
           className="inline-flex h-10 items-center justify-center rounded-full bg-family-primary px-5 text-sm font-semibold text-white transition-all duration-300 ease-out hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-family-primary focus-visible:ring-offset-2 md:h-11 md:px-7 md:text-base"
         >
-          Get Early Access
+          Request early access
         </Link>
       </div>
     </header>

@@ -29,8 +29,8 @@ export default function OrganiserSettingsPage() {
         </h1>
         <p className="mt-2 text-lg text-text-secondary">
           {isOrganiser
-            ? "Manage your account, people, and Circle access."
-            : "Manage your account and stay in sync with your Circle."}
+            ? "Manage your account, People, Supporters, and companion tablet access."
+            : "Manage your account and stay in sync with this Workspace."}
         </p>
       </div>
 
@@ -58,7 +58,7 @@ export default function OrganiserSettingsPage() {
               <Users className="h-5 w-5 text-text-secondary" />
             </div>
             <span className="text-lg font-semibold text-text-primary">
-              Circle Members
+              Supporters
             </span>
           </div>
           <ChevronRight className="h-5 w-5 text-text-secondary" />
@@ -114,7 +114,7 @@ export default function OrganiserSettingsPage() {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-lg font-semibold text-text-primary">
-                Pair Tablet User Device
+                Companion tablet
               </span>
               <span className="mt-1 text-sm font-medium text-family-primary/70">
                 {activeSessionCount > 0

@@ -4,6 +4,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 export default defineConfig({
   testDir: "./tests/e2e/specs",
+  globalTeardown: "./tests/e2e/helpers/global-teardown.mjs",
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,

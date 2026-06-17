@@ -30,6 +30,7 @@ const INVITE_REDEEM_BLOCK_MS = 10 * 60 * 1000;
 const INVITE_PREVIEW_MAX_HITS = 10;
 const INVITE_PREVIEW_WINDOW_MS = 10 * 60 * 1000;
 const INVITE_PREVIEW_BLOCK_MS = 10 * 60 * 1000;
+const INVITE_PREVIEW_REQUEST_MAX_HITS = 20;
 
 type InviteLookupState =
   | { state: "active"; invite: Doc<"circleInviteCodes"> }
@@ -94,7 +95,7 @@ type PreviewMemberInviteCodeResult =
     };
 
 const CIRCLE_CONFLICT_MESSAGE =
-  "This account is already linked to a different Circle. Use a different email to join this one.";
+  "This account is already linked to a different Workspace. Use a different email to join this one.";
 
 function isCircleInviteActive(invite: Doc<"circleInviteCodes">, now: number) {
   return (
@@ -208,15 +209,15 @@ export function getInviteLookupMessage(
 ) {
   const previewMessages = {
     invalid_code:
-      "We couldn't find that Circle. Please double-check the code and try again.",
-    expired: "This Circle code has expired. Ask for a new one.",
-    revoked: "This Circle code is no longer active. Ask for a new one.",
-    already_used: "This Circle code has already been used. Ask for a new one.",
+      "We couldn't find that Workspace. Please double-check the invite code and try again.",
+    expired: "This invite code has expired. Ask for a new one.",
+    revoked: "This invite code is no longer active. Ask for a new one.",
+    already_used: "This invite code has already been used. Ask for a new one.",
   } satisfies Record<InviteTerminalLookupState, string>;
 
   const redeemMessages = {
     invalid_code:
-      "We couldn't find that Circle. Please double-check the code and try again.",
+      "We couldn't find that Workspace. Please double-check the invite code and try again.",
     expired: "This invite code has expired. Ask for a new one.",
     revoked: "This invite code is no longer active. Ask for a new one.",
     already_used: "This invite code has already been used. Ask for a new one.",
@@ -379,7 +380,7 @@ export const generateMemberInviteCode = mutation({
       "manage_invite_codes",
     );
     if (!circleMembership) {
-      throw new Error("The linked Circle could not be found.");
+      throw new Error("The linked Workspace could not be found.");
     }
 
     const now = Date.now();
@@ -411,37 +412,31 @@ export const generateMemberInviteCode = mutation({
 export const previewMemberInviteCode = mutation({
   args: {
     inviteCode: v.string(),
+    requestScopeKey: v.string(),
   },
   handler: async (ctx, args): Promise<PreviewMemberInviteCodeResult> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return {
-        status: "invalid_code",
-        message: "You must be signed in to preview a Circle code.",
-      };
-    }
-
     const normalizedInviteCode = args.inviteCode.trim();
     if (!/^\d{6}$/.test(normalizedInviteCode)) {
       return {
         status: "invalid_code",
-        message: "Enter a valid 6-digit Circle code.",
+        message: "Enter a valid 6-digit invite code.",
       };
     }
 
-    const globalRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
-      scopeKey: "invite-preview-global",
-      actionKey: "previewMemberInviteCodeGlobal",
-      maxHits: 50,
+    const requestScopeKey = args.requestScopeKey.trim().slice(0, 200) || "unknown";
+    const requestRateLimit = await ctx.runMutation(internal.rateLimits.consumeRateLimit, {
+      scopeKey: `invite-preview-request:${requestScopeKey}`,
+      actionKey: "previewMemberInviteCodeByRequest",
+      maxHits: INVITE_PREVIEW_REQUEST_MAX_HITS,
       windowMs: INVITE_PREVIEW_WINDOW_MS,
       blockDurationMs: INVITE_PREVIEW_BLOCK_MS,
     });
 
-    if (!globalRateLimit.allowed) {
+    if (!requestRateLimit.allowed) {
       return {
         status: "rate_limited",
-        retryAfterMs: globalRateLimit.retryAfterMs,
-        message: buildRateLimitMessage(globalRateLimit.retryAfterMs),
+        retryAfterMs: requestRateLimit.retryAfterMs,
+        message: buildRateLimitMessage(requestRateLimit.retryAfterMs),
       };
     }
 

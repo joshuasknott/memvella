@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
+    "dev:convex": "pnpm -C apps/backend-convex exec convex dev",
+    "dev:core": "pnpm -C apps/core dev",
+    "dev:marketing": "pnpm -C apps/marketing dev",
+    "dev:internal": "pnpm -C apps/internal dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "type-check": "turbo type-check",

@@ -3,6 +3,7 @@ import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
 import {
   appendDeviceBindingCookie,
+  buildRequestThrottleFingerprint,
   getOrCreateDeviceBindingSeed,
 } from "@/lib/server-device-binding";
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     };
     if (typeof inviteCode !== "string") {
       return NextResponse.json(
-        { error: "A 6-digit Circle code is required." },
+        { error: "A 6-digit invite code is required." },
         { status: 400 },
       );
     }
@@ -24,6 +25,11 @@ export async function POST(request: NextRequest) {
     const convex = createConvexHttpClient();
     const result = await convex.mutation(api.circleInvites.previewMemberInviteCode, {
       inviteCode,
+      requestScopeKey: buildRequestThrottleFingerprint(
+        binding.seed,
+        request,
+        "member-invite-preview",
+      ),
     });
 
     const response = NextResponse.json(result, {
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Member invite preview failed:", error);
     return NextResponse.json(
-      { error: "Memvella could not check that Circle code." },
+      { error: "Memvella could not check that invite code." },
       { status: 500 },
     );
   }

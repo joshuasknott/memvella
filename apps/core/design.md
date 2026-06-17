@@ -39,7 +39,7 @@ Do **not** re-introduce a `tailwind.config.ts` — the CSS-first approach is can
 |-------|-----|-------|
 | `--color-senior-primary` | `#185C60` | Senior pathway actions, "Mem" wordmark |
 | `--color-senior-accent` | `#D4A574` | Warm accent for senior surfaces |
-| `--color-family-primary` | `#2D3250` | Organiser/family actions, "vella" wordmark |
+| `--color-family-primary` | `#2D3250` | Workspace/supporter actions, "vella" wordmark |
 | `--color-family-accent` | `#1D4ED8` | Blue accent for family-side CTAs |
 | `--color-canvas` | `#FAF9F6` | Page background (off-white) |
 | `--color-surface-*` | various | Layered surface hierarchy |
@@ -75,7 +75,7 @@ import { Button, PrimaryButton, TextInput, BrandLogo } from "@memvella/ui";
 > **Do not** create new components in `apps/core/components/ui/`. All shared primitives belong in `packages/ui/`.
 > App-specific composites (e.g. `FormCard`, `ToastProvider`) may remain local until promoted.
 
-## Circle Experience
+## Workspace Experience
 
 Target user:
 
@@ -88,7 +88,7 @@ Current shell facts:
 - `/circle` uses a fixed top header and fixed bottom navigation
 - top-level nav items are `Home`, `Routines`, `Memories`, and `Settings`
 - `Insights` is reached from the home screen, not from the bottom nav
-- `People` is currently reached through the `Add Person` action, not through a dedicated tab or directory
+- `People` is reached through the Workspace home People summary and owner Add Person action, not through a bottom-nav tab
 - there is no shipped `Activity` or `Alerts` tab
 
 Rules:
@@ -97,29 +97,29 @@ Rules:
 - Put setup context before credential entry during onboarding.
 - Dense cards and lists are acceptable if hierarchy is clear.
 - Destructive actions must be explicit and easy to back out of.
-- Do not imply a full People management surface where only add-person exists.
-- Do not imply separate alerts and insights destinations when the current UI uses one combined organiser queue.
+- Keep People distinct from Supporters: People are senior-grounding context, while Supporters are signed-in participants.
+- Do not imply separate alerts and insights destinations when the current UI uses one combined owner queue.
 
 ## Root Onboarding Entry Screen
 
 The root welcome screen is the highest-priority terminology and hierarchy checkpoint in `apps/core`.
 
-Two real user types arrive at this screen: a family person managing a Circle, or a senior managing their own profile. The screen must resolve that single question with minimum friction.
+The product is support-led. The screen must get someone to sign up, log in, or connect a companion tablet with minimum friction.
 
 Required structure:
 
 - `BrandLogo` wordmark (no heading that repeats the brand name)
-- One-line tagline: `Your family's digital wellness companion.`
-- Two primary doors — large, equal weight, `size="senior"`:
-  - `"I'm here for a loved one"` → leads to Start a New Circle / Join a Circle choice
-  - `"I'm setting this up for myself"` → `/onboarding/independent`
-- A quiet tertiary text link below: `"Connecting a tablet? Enter your pairing code"` → `/assisted/login`
+- One-line tagline: `Digital wellness support for someone you care about.`
+- Two primary actions — large, equal weight, `size="senior"`:
+  - `"Sign up"` -> `/onboarding/organiser`
+  - `"Log in"` -> `/organiser/signin`
+- A quiet tertiary text link below: `"Connect a companion tablet"` -> `/assisted/login`
 
-Do not reintroduce `Admin`, `Connection Code`, or `Personal Profile` labels on this screen.
+Do not reintroduce `Admin`, `Connection Code`, `Circle`, or `Personal Profile` labels on this screen.
 Do not add a heading that repeats "Memvella" — the wordmark is already the name.
-The "Connect a Tablet" action is not a primary onboarding path; it must never be promoted to a primary button.
+The companion tablet action is not a primary onboarding path; it must never be promoted to a primary button.
 
-## Tablet User Experience
+## Companion Tablet Experience
 
 Target user:
 
@@ -134,23 +134,6 @@ Rules:
 - Keep time, date, and name visible enough to act as orientation anchors.
 - The main voice action must have distinct idle, listening, processing, and speaking states.
 - Do not rely on native keyboard entry except for the constrained pairing flow.
-
-## Independent User Experience
-
-Target user:
-
-- phone or tablet
-- should be autonomous without being overloaded
-- should be able to create through conversation instead of complex forms
-
-Rules:
-
-- Keep the experience passwordless.
-- Use a device passkey as the primary auth method.
-- Copy should work for face, fingerprint, or device screen lock without Apple-only wording.
-- Offer recovery codes clearly after passkey setup and inside security or recovery flows.
-- Voice should remain the preferred creation path for memories and routines.
-- AI-extracted actions must present explicit confirmation and rejection states.
 
 ## Shipping Checklist
 

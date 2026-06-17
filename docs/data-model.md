@@ -9,13 +9,13 @@ Depends on: docs/architecture.md, docs/auth-and-identity.md
 
 ## Canonical Model
 
-New work should be built on the `circle` model, not the retired `familySpace` model.
+New work should be built on the internal `circle` model, not the retired `familySpace` model. User-facing product copy calls a circle a Workspace.
 
 Primary entities:
 
-- `circles`: top-level shared workspace for family-side coordination
-- `circleMemberships`: authenticated human participants in a Circle, with role `organiser` or `member`
-- `seniorProfiles`: canonical senior identity records for both assisted and independent experiences
+- `circles`: top-level shared Workspace for supporter coordination
+- `circleMemberships`: authenticated human participants in a Workspace, with internal role `organiser` or `member`
+- `seniorProfiles`: canonical senior identity records for Workspace-linked companion tablet experiences
 
 ## Current Table Families
 
@@ -26,11 +26,7 @@ Primary entities:
 - `circleInviteCodes`
 - `seniorProfiles`
 - `assistedDevicePins`
-- `independentOnboardingSessions`
 - `seniorAccessSessions`
-- `independentSeniorPasskeys`
-- `independentSeniorRecoveryCodes`
-- `seniorAuthChallenges`
 
 ### Senior Grounding And Memories
 
@@ -64,7 +60,7 @@ Current omission:
 
 ## Key Invariants
 
-### Circles And Memberships
+### Workspaces And Memberships
 
 - `circleMemberships.role` is `organiser` or `member` only.
 - `circleMemberships` are keyed to Better Auth identities through `authIdentityToken`.
@@ -72,21 +68,21 @@ Current omission:
 
 ### Senior Profiles
 
-- `seniorProfiles.seniorMode` is `assisted` or `independent`.
-- `seniorProfiles.circleId` may be `null` for standalone independent seniors.
+- `seniorProfiles.seniorMode` is `assisted`.
+- `seniorProfiles.circleId` points to the Workspace that manages the senior profile.
 - `seniorProfiles.accessStatus` tracks whether access is pending, active, recovery-required, or revoked.
 
 ### Invite And Session Records
 
 - `circleInviteCodes.role` is always `member`.
-- `seniorAccessSessions.sessionType` is `assisted_device` or `independent_web`.
+- `seniorAccessSessions.sessionType` is `assisted_device`.
 - `assistedDevicePins` and `circleInviteCodes` both store hashes rather than plaintext secrets.
 
 ### Memory Records
 
 - `memoryRecords.recordType` is `text`, `media`, `audio`, or `voice`.
 - `memoryAssets.assetType` is `image`, `video`, or `audio`.
-- Memory content belongs to the senior profile first and records the creating or updating Circle membership when relevant.
+- Memory content belongs to the senior profile first and records the creating or updating Workspace membership when relevant.
 
 ### Routine Records
 
@@ -98,19 +94,19 @@ Current omission:
 
 - `insights` and `alerts` are separate tables.
 - Both tables use `status` of `queued`, `reviewed`, or `dismissed`.
-- `notificationSettings` are Circle-scoped.
+- `notificationSettings` are Workspace-scoped.
 - `notificationDeliveries.notificationType` is `routine_reminder`, `urgent_alert`, or `daily_summary`.
 
 ## Entity Boundaries
 
-### Circle Participants Versus People
+### Supporters Versus People
 
-- `circleMemberships` represent actual authenticated participants in a Circle.
-- `people` represent senior-grounding people used for memories and companion grounding.
-- A `Person` is not automatically a Circle participant.
-- A Circle participant is not automatically a `Person` in the senior's grounding data.
+- `circleMemberships` represent actual authenticated Supporters in a Workspace.
+- `people` represent people the senior knows, used for memories and companion grounding.
+- A `Person` is not automatically a Supporter.
+- A Supporter is not automatically a `Person` in the senior's grounding data.
 
-### Circle-Scoped Data
+### Workspace-Scoped Data
 
 These tables anchor on `circleId`:
 
@@ -158,13 +154,12 @@ These tables anchor on `seniorProfileId`:
 Rules:
 
 - Senior-facing data belongs to the senior profile first.
-- Circle-facing visibility is derived from the senior's Circle relationship when one exists.
-- Independent seniors remain valid without a Circle.
+- Workspace-facing visibility is derived from the senior's Workspace relationship when one exists.
+- Senior profiles are Workspace-linked in the simplified family-led care product.
 
 ## Locale And Time Rules
 
-- Circle-linked family-side experiences use Circle-level timezone and locale defaults where available.
-- Independent senior profiles can carry their own timezone and locale until linked to a Circle.
+- Workspace-linked experiences use Workspace-level timezone and locale defaults where available.
 - Do not introduce competing locale layers without a concrete product need.
 
 ## Remaining Legacy Surfaces

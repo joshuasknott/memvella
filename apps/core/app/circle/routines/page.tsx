@@ -37,7 +37,7 @@ export default function OrganiserRoutinesPage() {
               Routines
             </h1>
             <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-              Structured schedules power the Senior dashboards and today&apos;s timeline.
+              Structured schedules power the companion tablet and today&apos;s timeline.
             </p>
           </div>
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
@@ -144,7 +144,7 @@ export default function OrganiserRoutinesPage() {
             All schedules
           </h2>
           <p className="mt-1 text-base text-text-secondary">
-            Every routine anchored to this Circle.
+            Every routine anchored to this Workspace.
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export default function OrganiserRoutinesPage() {
           <div className="rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-sm">
             <p className="text-lg font-bold text-text-primary">No routine schedules yet</p>
             <p className="mt-2 text-lg leading-relaxed text-text-secondary">
-              Add your first schedule to create dependable daily structure for this Circle.
+              Add your first schedule to create dependable daily structure for this Workspace.
             </p>
           </div>
         )}

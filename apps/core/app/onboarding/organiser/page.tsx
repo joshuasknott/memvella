@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { performMemvellaTestAuth } from "@/lib/test-auth-client";
 import { isMemvellaClientTestMode } from "@/lib/test-mode";
+import { buildVerifyEmailPath } from "@/lib/family-auth";
 import { FormCard } from "@/components/ui/FormCard";
 import { TextInput, PrimaryButton, BrandLogo } from "@memvella/ui";
 
@@ -51,6 +52,7 @@ export default function OrganiserSetupPage() {
             name: name.trim(),
             email: email.trim(),
             password,
+            callbackURL: "/organiser/verify-email?verified=1&next=/circle",
           }).then(({ error }) => error);
 
       if (signUpError) {
@@ -68,7 +70,11 @@ export default function OrganiserSetupPage() {
         localStorage.removeItem("memvella_pendingSeniorDisplayName");
       }
 
-      window.location.replace("/circle");
+      window.location.replace(
+        isMemvellaClientTestMode()
+          ? "/circle"
+          : buildVerifyEmailPath(email, "/circle"),
+      );
     } catch (signUpError) {
       console.error("Sign-up error:", signUpError);
       setError("Something went wrong. Please try again.");
@@ -100,10 +106,10 @@ export default function OrganiserSetupPage() {
           <div className="space-y-5 md:space-y-8">
             <div>
               <h1 className="mb-2 text-center font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:mb-4 md:text-5xl">
-                Organiser Setup
+                Create your account
               </h1>
               <p className="mx-auto mb-4 max-w-sm text-center text-base text-text-secondary md:mb-6 md:text-lg">
-                Create your Organiser account and start your Circle.
+                Set up a Workspace for someone you support.
               </p>
             </div>
 
@@ -129,7 +135,7 @@ export default function OrganiserSetupPage() {
                   className="font-family text-base font-bold md:text-lg"
                   htmlFor="senior_display_name"
                 >
-                  Who should this Circle support?
+                  Who are you supporting?
                 </label>
                 <TextInput
                   id="senior_display_name"
@@ -140,7 +146,7 @@ export default function OrganiserSetupPage() {
                   onChange={(event) => setSeniorDisplayName(event.target.value)}
                 />
                 <p className="px-1 text-sm text-text-secondary">
-                  Optional. You can update this from your Organiser dashboard.
+                  Optional. You can update this from your Workspace.
                 </p>
               </div>
 
@@ -193,10 +199,10 @@ export default function OrganiserSetupPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Creating Account...
+                    Creating account...
                   </>
                 ) : (
-                  "Create Organiser Account"
+                  "Create account"
                 )}
               </PrimaryButton>
 

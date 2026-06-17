@@ -83,7 +83,7 @@ export default function AddRoutinePage() {
       toast({
         tone: "success",
         title: "Routine saved",
-        description: `${title.trim()} is now scheduled in this Circle.`,
+        description: `${title.trim()} is now scheduled in this Workspace.`,
       });
       router.push("/circle/routines");
     } catch (saveError) {

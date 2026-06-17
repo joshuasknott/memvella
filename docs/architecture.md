@@ -12,7 +12,7 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core`: Next.js product frontend
 - `apps/backend-convex`: Convex backend (exports `@memvella/backend` and `@memvella/backend/dataModel`)
 - `apps/marketing`: Next.js marketing app
-- `apps/internal`: Memvella HQ, the founder-only internal operating system and mission-control app
+- `apps/internal`: minimal founder-only internal app placeholder
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`)
 - `packages/config-typescript`: shared TypeScript base configs
 - `packages/config-eslint`: shared ESLint configs
@@ -33,35 +33,24 @@ Depends on: docs/product.md, docs/data-model.md
 
 ## Routing Model
 
-### Internal HQ Routes
+### Internal Routes
 
-`apps/internal` is a separate internal app. It is not wired to product `Organiser` or `Member` auth.
+`apps/internal` is a separate internal app. It is not wired to product Supporter auth.
 
-- `/`: Mission Control
-- `/company`
-- `/product`
-- `/product/circles`
-- `/product/circles/[circleId]`
-- `/growth`
-- `/research`
-- `/operations`
-- `/trust-safety`
-- `/voice-ai`
-- `/observability`
-- `/qa`
-- `/automation`
-- `/runbooks`
-- `/runbooks/[slug]`
+- `/`: founder-gated minimal HQ placeholder
 
-HQ routes are founder-only in v1 and read from server-side Convex HQ read models with a server-only read token. See `docs/internal-hq.md`.
+The internal app intentionally does not expose product dashboards, runbooks, QA tooling, or Convex read models yet. See `docs/internal-hq.md`.
 
-### Family-Side Routes
+### Workspace Routes
 
 - `/`: role-selection entry point
-- `/onboarding/organiser`: organiser account creation
-- `/organiser/signin`: family-side sign-in page currently used for organiser sign-in
-- `/onboarding/member`: member invite-code preview, sign-up, sign-in, and join flow
-- `/circle`: shared family-side home
+- `/onboarding/organiser`: account and Workspace creation
+- `/organiser/signin`: account sign-in page
+- `/organiser/verify-email`: account verification status and resend flow
+- `/organiser/forgot-password`: account password recovery request
+- `/organiser/reset-password`: account password reset
+- `/onboarding/member`: Supporter invite-code preview, sign-up, sign-in, and join flow
+- `/circle`: shared Workspace home
 - `/circle/routines`
 - `/circle/add-routine`
 - `/circle/memories`
@@ -72,6 +61,9 @@ HQ routes are founder-only in v1 and read from server-side Convex HQ read models
 - `/circle/add-memory/media`
 - `/circle/add-memory/audio`
 - `/circle/add-memory/voice`
+- `/circle/people`
+- `/circle/people/[personId]`
+- `/circle/people/[personId]/edit`
 - `/circle/add-person`
 - `/circle/insights`
 - `/circle/settings`
@@ -83,33 +75,22 @@ HQ routes are founder-only in v1 and read from server-side Convex HQ read models
 
 Current route facts:
 
-- `/circle` is the canonical family-side workspace.
-- Organisers and Members share the same `/circle` shell.
+- `/circle` is the canonical Workspace shell. The route name remains internal for now.
+- Workspace owners and Supporters share the same `/circle` shell.
 - There is no dedicated `/circle/activity` route.
 - There is no separate `/circle/alerts` route.
 
 ### Senior Routes
 
-- `/assisted/login`: tablet pairing flow
-- `/assisted`: assisted tablet dashboard
-- `/onboarding/independent`: independent onboarding
-- `/onboarding/independent/verify`: redirect shim back to `/onboarding/independent`
-- `/independent`: independent home
-- `/independent/security`: trusted-device and recovery-code management
-- `/independent/recover`: recovery-code sign-in and passkey reset
+- `/assisted/login`: companion tablet connection flow
+- `/assisted`: companion tablet dashboard
 
 ### Product API Routes
 
 - `/api/auth/[...all]`: Better Auth handler exposed through Next.js
-- `/api/member-invite/preview`: preview a 6-digit member invite code before auth
-- `/api/assisted/pairing`: redeem a 6-digit tablet pairing code
+- `/api/member-invite/preview`: preview a 6-digit Supporter invite code before auth
+- `/api/assisted/pairing`: redeem a 6-digit tablet code
 - `/api/device/fingerprint`: device fingerprint helper
-- `/api/independent/onboarding/start`: bootstrap independent onboarding
-- `/api/independent/passkey/register/options`
-- `/api/independent/passkey/register/verify`
-- `/api/independent/passkey/authenticate/options`
-- `/api/independent/passkey/authenticate/verify`
-- `/api/independent/recovery-codes/redeem`
 - `/api/voice/live/token`: live voice token route
 
 ## Runtime Architecture
@@ -118,7 +99,7 @@ Current route facts:
 
 - Next.js 16 App Router powers both apps.
 - `apps/core/app/providers.tsx` wires `ConvexBetterAuthProvider` with the shared Convex client and Better Auth client.
-- The family-side shell lives under `apps/core/app/circle/layout.tsx` with `CircleHeader` and `CircleBottomNav`.
+- The Workspace shell lives under `apps/core/app/circle/layout.tsx` with `CircleHeader` and `CircleBottomNav`.
 - The bottom nav currently exposes `Home`, `Routines`, `Memories`, and `Settings` only.
 
 ### Backend
@@ -127,20 +108,19 @@ Current route facts:
 - The Convex backend lives in `apps/backend-convex/convex/`.
 - Better Auth routes are registered into the Convex HTTP router in `apps/backend-convex/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
-- Convex functions implement family-side auth, member invites, assisted sessions, independent passkeys and recovery, routines, memories, notifications, and live voice.
-- HQ read models live in `apps/backend-convex/convex/hq.ts`. They are read-only, require `MEMVELLA_HQ_READ_TOKEN`, and return redacted DTOs.
+- Convex functions implement account auth, Supporter invites, companion tablet sessions, routines, memories, notifications, and live voice.
 
 ## Auth Architecture
 
-- Better Auth handles authenticated family-side account sessions for Circle participants.
-- Convex-managed `seniorAccessSessions` handle assisted tablet access and independent senior web access.
-- Independent auth is standalone and must not assume an existing Circle membership.
+- Better Auth handles authenticated account sessions for Workspace participants.
+- Account email verification and password-reset delivery use Resend from the Convex runtime.
+- Convex-managed `seniorAccessSessions` handle assisted tablet access.
 
 ## Data Architecture
 
-### Circle-Scoped Data
+### Workspace-Scoped Data
 
-Circle-scoped data coordinates human participants and Circle-level settings.
+Workspace-scoped data coordinates signed-in Supporters and Workspace-level settings. Internal tables retain `circle` names until a schema migration is justified.
 
 Current tables:
 
@@ -154,7 +134,7 @@ Current tables:
 
 ### Senior-Scoped Data
 
-Senior-scoped data represents the senior's world rather than the Circle's admin surface.
+Senior-scoped data represents the senior's world rather than the Workspace admin surface.
 
 Current tables:
 
@@ -179,9 +159,9 @@ Current omissions and deferred work:
 Rules:
 
 - Senior-facing content should anchor on `seniorProfileId`.
-- Circle-facing coordination data should anchor on `circleId`.
-- When a senior is linked to a Circle, family-side visibility derives from that Circle relationship.
-- Independent seniors remain valid without a Circle.
+- Workspace-facing coordination data should anchor on `circleId`.
+- When a senior is linked to a Workspace, visibility derives from that relationship.
+- Senior profiles are Workspace-linked for the family-led product.
 
 ## Documentation Rules
 

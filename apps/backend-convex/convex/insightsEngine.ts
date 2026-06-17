@@ -12,8 +12,8 @@ type PendingInteraction = {
   circleId: Id<"circles"> | null;
   seniorProfileId: Id<"seniorProfiles">;
   seniorName: string;
-  sessionType: "assisted_device" | "independent_web";
-  channel: "assisted_voice_loop" | "independent_voice_loop";
+  sessionType: "assisted_device";
+  channel: "assisted_voice_loop";
   transcript: string;
   assistantResponse: string | null;
   medicalRejected: boolean;

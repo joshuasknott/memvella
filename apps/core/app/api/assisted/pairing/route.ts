@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<AssistedPairingResponse>(
         {
           success: false,
-          error: "Enter the 6-digit code from your Organiser.",
+          error: "Enter the 6-digit tablet code from a Supporter.",
         },
         { status: 400 },
       );

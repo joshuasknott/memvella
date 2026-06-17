@@ -33,7 +33,7 @@ export default function OrganiserInsightsPage() {
       toast({
         tone: "success",
         title: status === "reviewed" ? "Insight reviewed" : "Insight dismissed",
-        description: "The Organiser queue was updated.",
+        description: "The review queue was updated.",
       });
     } catch (error) {
       toast({
@@ -74,7 +74,7 @@ export default function OrganiserInsightsPage() {
           No new insights to review right now.
         </p>
         <p className="mb-6 max-w-[260px] text-base leading-relaxed text-text-secondary">
-          New transcript signals and AI summaries will appear here for Organiser review.
+          New transcript signals and AI summaries will appear here for review.
         </p>
         <Link
           href="/circle"
@@ -95,7 +95,7 @@ export default function OrganiserInsightsPage() {
               Review Queue
             </p>
             <h1 className="font-family text-lg font-bold text-text-primary">
-              Organiser Insights
+              Insights
             </h1>
           </div>
           <div className="rounded-full bg-family-accent px-4 py-2 text-sm font-bold text-white">

@@ -1,11 +1,10 @@
 import type { SeniorSessionInvalidReason } from "./seniorAccessHelpers";
 
-export const ORGANISER_LABEL = "Organiser";
-export const CIRCLE_LABEL = "Circle";
-export const MEMBER_LABEL = "Member";
+export const ORGANISER_LABEL = "Workspace owner";
+export const CIRCLE_LABEL = "Workspace";
+export const MEMBER_LABEL = "Supporter";
 export const ORGANISER_DEVICE_LABEL = `${ORGANISER_LABEL} device`;
-export const TABLET_PROFILE_LABEL = "Tablet profile";
-export const INDEPENDENT_PROFILE_LABEL = "Independent profile";
+export const TABLET_PROFILE_LABEL = "Companion tablet profile";
 
 export function buildCircleName(displayName: string) {
   return `${displayName} ${CIRCLE_LABEL}`;
@@ -19,8 +18,7 @@ export function normalizeUserFacingText(value: string | null | undefined) {
 
   if (
     normalized === "Senior" ||
-    normalized === "Assisted Senior" ||
-    normalized === "Independent Senior"
+    normalized === "Assisted Senior"
   ) {
     return MEMBER_LABEL;
   }

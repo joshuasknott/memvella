@@ -5,20 +5,20 @@ const rows = [
   {
     imagePosition: "left" as const,
     visual: "senior" as const,
-    headline: "Voice stays the easiest way in.",
-    body: "Senior-facing screens keep the next action obvious: talk, listen, and respond. The experience avoids dense menus and keeps daily orientation visible.",
+    headline: "Voice stays the easiest way through the day.",
+    body: "The paired tablet keeps the next action obvious: talk, listen, and respond. It avoids dense menus and keeps daily orientation visible.",
   },
   {
     imagePosition: "right" as const,
     visual: "routine" as const,
     headline: "Routines create a dependable daily shape.",
-    body: "Organisers can add routines once, then Memvella presents them through a calm senior dashboard and a clear family-side timeline.",
+    body: "Supporters add routines in the Workspace, then Memvella presents them through a calm companion tablet and a clear support-side timeline.",
   },
   {
     imagePosition: "left" as const,
     visual: "memory" as const,
     headline: "Memories make the companion feel familiar.",
-    body: "Photos, stories, audio, and voice notes give Memvella context it can bring back naturally, so the product reflects the senior's own world.",
+    body: "Photos, stories, audio, and voice notes give Memvella context it can bring back naturally, so the tablet feels familiar without asking the senior to manage setup.",
   },
 ];
 
@@ -32,7 +32,7 @@ export function FeatureGlimpse() {
               What Memvella does
             </p>
             <h2 className="mt-4 font-headline text-4xl font-extrabold leading-[1.05] text-text-primary text-balance md:text-5xl">
-              Practical support for daily rhythm, memory, and connection.
+              Practical support for daily rhythm, memory, and shared coordination.
             </h2>
           </div>
         </FadeIn>
