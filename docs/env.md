@@ -12,6 +12,7 @@ Depends on: docs/auth-and-identity.md
 The local examples live at:
 
 - `apps/core/.env.example`
+- `apps/backend-convex/.env.example`
 - `apps/marketing/.env.example`
 - `apps/internal/.env.example`
 
@@ -23,7 +24,7 @@ The local examples live at:
 | `BETTER_AUTH_URL` | yes | server and Convex | Better Auth base URL | Usually the same value as `NEXT_PUBLIC_SITE_URL` |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | optional | server and Convex | Better Auth origin validation | Comma-separated list of extra trusted origins |
 | `SITE_URL` | optional | server and Convex | legacy Better Auth fallback | Keep only as fallback while it still exists in code |
-| `CONVEX_DEPLOYMENT` | required for normal Convex CLI setup | local dev and deployment tooling | Convex CLI and production detection helpers | Present in `apps/core/.env.example` |
+| `CONVEX_DEPLOYMENT` | required for normal Convex CLI setup | local dev and deployment tooling | Convex CLI and production detection helpers | Present in `apps/core/.env.example` and `apps/backend-convex/.env.example` |
 | `NEXT_PUBLIC_CONVEX_URL` | yes | client and server | Convex React client, HTTP client, Better Auth bridge | Convex deployment URL |
 | `NEXT_PUBLIC_CONVEX_SITE_URL` | yes | server | `convexBetterAuthNextJs` bridge | Convex site URL |
 | `BETTER_AUTH_SECRET` | yes | server and Convex | Better Auth signing and shared auth helpers | Secret value |
@@ -50,6 +51,8 @@ If you are testing auth on a phone, tablet, or another machine, set the site URL
 ## Convex Rule
 
 If a variable is read inside Convex functions, configure it for the Convex runtime as well. A value existing only in the Next.js environment is not enough for server-side Convex code.
+
+The Convex backend declares its runtime environment contract in `apps/backend-convex/convex/convex.config.ts`. The local `apps/backend-convex/.env.example` mirrors the variables that may need to be configured through the Convex CLI or dashboard for the active deployment.
 
 Email/password sign-up is fail-closed outside test mode: production sign-up requires email verification, and verification or password-recovery delivery fails clearly when `RESEND_API_KEY` or `MEMVELLA_AUTH_EMAIL_FROM` is missing. Test mode suppresses external email delivery and bypasses verification so deterministic browser tests remain local.
 

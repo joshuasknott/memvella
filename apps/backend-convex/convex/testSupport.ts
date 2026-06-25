@@ -64,6 +64,12 @@ function isLocalOrTestRuntime() {
   return !nodeEnv || nodeEnv === "development" || nodeEnv === "test";
 }
 
+function isProductionRuntime() {
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
+  const deployment = process.env.CONVEX_DEPLOYMENT?.trim().toLowerCase();
+  return nodeEnv === "production" || deployment?.startsWith("prod:");
+}
+
 function getExpectedTestAuthToken() {
   const configuredToken = process.env.MEMVELLA_TEST_AUTH_TOKEN?.trim();
   if (configuredToken && configuredToken.length > 0) {
@@ -80,6 +86,10 @@ function getExpectedTestAuthToken() {
 }
 
 export function ensureTestSupportAccess(authToken: string) {
+  if (isProductionRuntime()) {
+    throw new Error("Test support is not available in production.");
+  }
+
   if (process.env.MEMVELLA_TEST_MODE !== "1") {
     throw new Error("Test support is not available outside test mode.");
   }

@@ -9,21 +9,24 @@
   "scripts": {
     "type-check": "tsc --noEmit --project convex/tsconfig.json",
     "test": "vitest run",
-    "lint": "echo 'no lint configured'"
+    "lint": "eslint convex"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.11.3",
     "@convex-dev/migrations": "^0.3.3",
     "@google/genai": "^1.46.0",
     "@simplewebauthn/server": "^13.3.0",
+    "@memvella/domain-circle": "workspace:*",
     "better-auth": "1.5.3",
-    "convex": "^1.34.0",
+    "convex": "^1.41.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@memvella/config-eslint": "workspace:*",
     "@edge-runtime/vm": "^5",
     "@types/web-push": "^3.6.4",
     "convex-test": "^0.0.36",
+    "eslint": "^9",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@memvella/backend";
 import { createConvexHttpClient } from "@/lib/convex-http";
-import { getPairingFailureStatus } from "@/lib/pairing-rate-limit";
+import { getPairingFailureStatus } from "@memvella/domain-circle";
 import {
   appendDeviceBindingCookie,
   buildDeviceFingerprint,

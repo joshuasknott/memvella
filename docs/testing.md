@@ -69,6 +69,7 @@ Deterministic browser scaffolding now included:
 Local note:
 
 - `pnpm test:e2e` uses the Playwright dev-server helper to start Convex dev plus the `apps/core` Next dev server in test mode
+- local e2e requires `apps/backend-convex/.env.local` to contain a valid `CONVEX_DEPLOYMENT`; run `pnpm convex:dev` once after configuring the backend before running `pnpm test:e2e`
 - browser-origin-sensitive auth still depends on `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL` matching the Playwright origin
 
 ## Release Principle
@@ -83,7 +84,7 @@ Before any rollout, the core product is the priority verification surface.
 
 ### Root Entry And Workspace Setup
 
-- open `/` and confirm the four entry actions are present
+- open `/` and confirm sign-up, login, and the quiet companion tablet connection link are present
 - create a new account and Workspace from `/onboarding/organiser`
 - confirm the new account lands in `/circle`
 - sign out and sign back in through `/organiser/signin`
@@ -180,4 +181,4 @@ Coverage note:
 - The current Playwright suite is still a first smoke layer, not a full product matrix.
 - Media upload, audio upload, memory detail/edit, insights review, notification toggles, and tablet pairing success are not yet in deterministic browser coverage.
 - Real email delivery, cross-origin auth, real push-delivery integrations, and real Gemini live-voice behavior still require manual or nightly device coverage.
-- There is not yet a `convex-test` transaction-level suite that seeds auth identities and exercises public Convex functions end-to-end.
+- `convex-test` coverage now exists for selected backend auth, profile, invite, and People flows, but it is not yet a full public-function matrix.

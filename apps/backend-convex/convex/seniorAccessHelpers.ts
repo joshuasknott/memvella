@@ -9,9 +9,7 @@ import {
   hashSeniorSessionToken,
 } from "./security";
 import {
-  getNextRoutineEventForCircle,
   getNextRoutineEventForSenior,
-  listTodayTimelineForCircle,
   listTodayTimelineForSenior,
 } from "./routineHelpers";
 import { formatMemoryDateLabel, summarizeMemory } from "./memoryHelpers";

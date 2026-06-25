@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPairingRetryMessage, isPairingRateLimitError } from "./pairingRateLimit";
+import { buildPairingRetryMessage, isPairingRateLimitError } from "@memvella/domain-circle";
 import { formatInvalidSessionMessage } from "./terminology";
 
 describe("kiosk pairing throttle behavior", () => {

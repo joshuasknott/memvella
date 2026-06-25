@@ -13,6 +13,17 @@ export type HqEnvironment = "local" | "development" | "staging" | "production";
 
 const COOKIE_NAME = "memvella_hq_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+const LOGIN_LOCK_MS = 15 * 60 * 1000;
+const MAX_LOGIN_ATTEMPTS = 5;
+
+type LoginAttemptWindow = {
+  count: number;
+  windowStartedAt: number;
+  lockedUntil: number | null;
+};
+
+const loginAttempts = new Map<string, LoginAttemptWindow>();
 
 function base64UrlEncode(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
@@ -42,6 +53,47 @@ function getCookieSecret() {
 
 function getAccessKey() {
   return process.env.MEMVELLA_HQ_ACCESS_KEY?.trim() ?? "";
+}
+
+export function consumeHqLoginAttempt(throttleKey: string) {
+  const now = Date.now();
+  const existing = loginAttempts.get(throttleKey);
+  if (existing?.lockedUntil && existing.lockedUntil > now) {
+    return {
+      allowed: false as const,
+      retryAfterMs: existing.lockedUntil - now,
+    };
+  }
+
+  if (!existing || now - existing.windowStartedAt > LOGIN_WINDOW_MS) {
+    loginAttempts.set(throttleKey, {
+      count: 1,
+      windowStartedAt: now,
+      lockedUntil: null,
+    });
+    return { allowed: true as const };
+  }
+
+  const nextCount = existing.count + 1;
+  const lockedUntil = nextCount > MAX_LOGIN_ATTEMPTS ? now + LOGIN_LOCK_MS : null;
+  loginAttempts.set(throttleKey, {
+    count: nextCount,
+    windowStartedAt: existing.windowStartedAt,
+    lockedUntil,
+  });
+
+  if (lockedUntil) {
+    return {
+      allowed: false as const,
+      retryAfterMs: lockedUntil - now,
+    };
+  }
+
+  return { allowed: true as const };
+}
+
+export function clearHqLoginAttempts(throttleKey: string) {
+  loginAttempts.delete(throttleKey);
 }
 
 export function getHqEnvironment(): HqEnvironment {

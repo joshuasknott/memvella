@@ -1,0 +1,20 @@
+{
+  "name": "@memvella/domain-circle",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@memvella/config-eslint": "workspace:*",
+    "@memvella/config-typescript": "workspace:*",
+    "eslint": "^9",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  }
+}

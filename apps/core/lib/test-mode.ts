@@ -3,10 +3,25 @@ export const MEMVELLA_TEST_MODE_ENABLED =
 
 export const MEMVELLA_TEST_AUTH_TOKEN_HEADER = "x-memvella-test-auth-token";
 
+function isProductionRuntime() {
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production"
+  );
+}
+
 export function ensureMemvellaTestModeEnabled() {
+  if (isProductionRuntime()) {
+    throw new Error("Memvella test mode is not available in production.");
+  }
+
   if (!MEMVELLA_TEST_MODE_ENABLED) {
     throw new Error("Memvella test mode is disabled.");
   }
+}
+
+export function isMemvellaTestModeAvailable() {
+  return MEMVELLA_TEST_MODE_ENABLED && !isProductionRuntime();
 }
 
 export function isMemvellaClientTestMode() {

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { normalizeWaitlistEmail } from '@/lib/waitlist-submission';
 
 export default function WaitlistForm() {
     const [email, setEmail] = useState('');
@@ -11,7 +10,7 @@ export default function WaitlistForm() {
     const [message, setMessage] = useState<string | null>(null);
 
     function validateEmail(value: string): boolean {
-        if (!value || !EMAIL_RE.test(value)) {
+        if (!normalizeWaitlistEmail(value)) {
             setEmailError('Please enter a valid email address.');
             return false;
         }

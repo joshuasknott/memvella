@@ -8,8 +8,6 @@
  * @module
  */
 
-import type * as agent from "../agent.js";
-import type * as aiActions from "../aiActions.js";
 import type * as appEvents from "../appEvents.js";
 import type * as auth from "../auth.js";
 import type * as authEmail from "../authEmail.js";
@@ -29,7 +27,6 @@ import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as notificationsWorker from "../notificationsWorker.js";
 import type * as organiser from "../organiser.js";
-import type * as pairingRateLimit from "../pairingRateLimit.js";
 import type * as people from "../people.js";
 import type * as profile from "../profile.js";
 import type * as rateLimits from "../rateLimits.js";
@@ -43,7 +40,6 @@ import type * as sessions from "../sessions.js";
 import type * as terminology from "../terminology.js";
 import type * as testSupport from "../testSupport.js";
 import type * as uploadValidation from "../uploadValidation.js";
-import type * as voice from "../voice.js";
 import type * as voiceHelpers from "../voiceHelpers.js";
 import type * as voiceSafety from "../voiceSafety.js";
 import type * as voiceShared from "../voiceShared.js";

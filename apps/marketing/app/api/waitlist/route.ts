@@ -1,6 +1,7 @@
 import { ConvexHttpClient } from "convex/browser";
 import { NextResponse } from "next/server";
 import { api } from "@memvella/backend";
+import { parseWaitlistSubmission } from "@/lib/waitlist-submission";
 
 export const runtime = "nodejs";
 
@@ -15,21 +16,21 @@ function getConvexUrl() {
 
 export async function POST(request: Request) {
   try {
-    const { email, sourcePath } = (await request.json()) as {
-      email?: string;
-      sourcePath?: string;
-    };
-    if (!email?.trim()) {
+    const submission = parseWaitlistSubmission((await request.json()) as {
+      email?: unknown;
+      sourcePath?: unknown;
+    });
+    if (!submission.ok) {
       return NextResponse.json(
-        { error: "A valid email address is required." },
+        { error: submission.error },
         { status: 400 },
       );
     }
 
     const convex = new ConvexHttpClient(getConvexUrl());
     const result = await convex.mutation(api.waitlist.joinWaitlist, {
-      email,
-      sourcePath: sourcePath?.trim() || "/waitlist",
+      email: submission.email,
+      sourcePath: submission.sourcePath,
       referrer: request.headers.get("referer") ?? undefined,
       userAgent: request.headers.get("user-agent") ?? undefined,
     });

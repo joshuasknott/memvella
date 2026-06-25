@@ -111,23 +111,3 @@ export const keepSessionAlive = mutation({
   },
 });
 
-export const endSession = mutation({
-  args: {
-    sessionToken: v.string(),
-    deviceFingerprint: v.string(),
-    reason: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const validation = await validateSeniorSession(ctx, args);
-    if (validation.status === "invalid") {
-      return validation;
-    }
-
-    await ctx.db.patch(validation.session._id, {
-      revokedAt: Date.now(),
-      revokedReason: args.reason ?? "signed_out",
-    });
-
-    return { status: "ended" as const };
-  },
-});

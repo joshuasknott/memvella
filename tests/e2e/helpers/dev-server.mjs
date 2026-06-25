@@ -116,6 +116,34 @@ async function getConvexEnv(name) {
   };
 }
 
+async function assertConvexDeploymentConfigured() {
+  const result = await runCommand(
+    "pnpm",
+    ["--dir", "apps/backend-convex", "exec", "convex", "env", "get", "MEMVELLA_TEST_MODE"],
+    "convex env preflight",
+    {
+      allowFailure: true,
+    },
+  );
+
+  if (result.code === 0) {
+    return;
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  if (output.includes("No CONVEX_DEPLOYMENT")) {
+    throw new Error(
+      [
+        "Playwright e2e requires a configured Convex dev deployment.",
+        "Create apps/backend-convex/.env.local from apps/backend-convex/.env.example,",
+        "set CONVEX_DEPLOYMENT, then run pnpm convex:dev once before pnpm test:e2e.",
+      ].join(" "),
+    );
+  }
+
+  throw new Error(`Convex e2e preflight failed: ${output.trim()}`);
+}
+
 async function setConvexEnv(name, value) {
   await runCommand(
     "pnpm",
@@ -196,6 +224,7 @@ async function waitForHealth(url, timeoutMs) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
+await assertConvexDeploymentConfigured();
 await configureConvexTestEnv();
 
 const childProcesses = [
