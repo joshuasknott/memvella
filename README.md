@@ -1,19 +1,20 @@
 # Memvella
 
-Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex backend, marketing site, and internal tooling.
+Memvella is a PNPM/Turbo monorepo for the Memvella product, its Convex backend, marketing site, and disabled-by-default internal tooling scaffold.
 
 ## Workspace
 
 - `apps/core`: the product frontend. Contains the shared `/circle` Workspace shell, the companion tablet flow, and the Next.js frontend.
 - `apps/backend-convex`: the Convex backend. Owns all server-side functions, schema, auth config, and AI actions. Exports `@memvella/backend` for frontend consumers.
 - `apps/marketing`: the marketing and waitlist app.
-- `apps/internal`: a minimal founder-only internal placeholder with an access gate.
+- `apps/internal`: a disabled-by-default internal tools scaffold with an access gate.
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`).
+- `packages/domain-circle`: shared Workspace-domain helpers and policies.
 - `packages/config-typescript`: shared TypeScript base configs.
 - `packages/config-eslint`: shared ESLint configs.
 - `packages/testing`: shared test fixtures and seed helpers (scaffold).
 
-## Current Product Surface
+## Product Surface
 
 - `/`: role-selection entry screen
 - `/circle`: shared Workspace for Supporters
@@ -23,12 +24,6 @@ Memvella is a PNPM/Turbo monorepo for the shipped Memvella product, its Convex b
 - `/circle/insights`: combined review queue for alerts and insights
 - `/circle/settings`: account, Supporters, invite codes, notifications, and companion tablet access
 - `/assisted/login` and `/assisted`: companion tablet experience
-
-Current deferred gaps:
-
-- there is no dedicated Activity route yet; `/circle` shows current status and a routines-focused timeline instead
-- there is no separate Alerts page yet; alerts are reviewed inside `/circle/insights`
-- browser coverage currently focuses on the first deterministic Playwright smoke flows; see `docs/testing.md` for scope and remaining gaps
 
 ## Stack
 
@@ -50,7 +45,7 @@ Current deferred gaps:
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
 3. Create `apps/backend-convex/.env.local` from `apps/backend-convex/.env.example` with your `CONVEX_DEPLOYMENT` value.
 4. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
-5. If you are working on the minimal internal app, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
+5. If you are working on the internal app, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
 6. Start the Convex dev backend with `pnpm convex:dev`.
 7. Start the monorepo dev processes with `pnpm dev`.
 
@@ -84,9 +79,17 @@ Read these files in order when you need product or implementation context:
 
 The root `docs/` files are expected to describe the current shipped product and architecture. If implementation changes a contract, update the relevant canonical doc in the same change.
 
+## Security
+
+Report suspected vulnerabilities privately. See `SECURITY.md` for the reporting process.
+
+## License
+
+See `LICENSE`. Public repository access does not grant reuse rights unless the license is changed.
+
 ## Repo Rules
 
 - Root `docs/` files are the canonical written source of truth.
 - `apps/backend-convex/convex/_generated/ai/guidelines.md` must be read before editing Convex code.
-- Legacy build artifacts such as `.next/` and `.turbo/` are disposable and should not be treated as source material.
+- Build artifacts such as `.next/` and `.turbo/` are disposable and should not be treated as source material.
 - Historical or superseded notes belong under `docs/archive/`.

@@ -10,13 +10,13 @@ export default async function MissionControlPage() {
             <p className="text-sm font-bold uppercase text-text-tertiary">Internal</p>
             <h1 className="mt-2 text-3xl font-bold text-text-primary">Memvella HQ</h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-text-secondary">
-              HQ is intentionally small for now. The real product, marketing site,
-              and backend remain the places to test and build Memvella.
+              HQ is intentionally minimal. Product, marketing, and backend
+              workflows remain in their own applications.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusPill tone="good">HQ enabled</StatusPill>
-            <StatusPill tone="info">founder-only</StatusPill>
+            <StatusPill tone="info">restricted access</StatusPill>
           </div>
         </div>
       </section>
@@ -25,16 +25,15 @@ export default async function MissionControlPage() {
         <SectionHeader title="What remains here" />
         <div className="grid gap-4 md:grid-cols-3">
           <HealthCard title="Access gate" status="kept" tone="good">
-            Founder-only login stays here so the internal app has a protected
-            starting point when it becomes useful.
+            HQ login stays here so the internal app has a protected entry point.
           </HealthCard>
           <HealthCard title="No dashboards" status="removed" tone="neutral">
-            Product metrics, runbooks, department pages, and placeholder
-            read-model views have been removed from the active route tree.
+            Product metrics, runbooks, department pages, and read-model views
+            are outside the current scope.
           </HealthCard>
-          <HealthCard title="Build later" status="deliberate" tone="info">
-            Add one internal workflow at a time only when it has a real owner and
-            a clear operating need.
+          <HealthCard title="Controlled scope" status="deliberate" tone="info">
+            Add internal workflows only when the owner, access model, and
+            expected action are documented.
           </HealthCard>
         </div>
       </section>

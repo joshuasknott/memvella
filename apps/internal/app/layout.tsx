@@ -19,7 +19,7 @@ const figtree = Figtree({
 
 export const metadata: Metadata = {
   title: "Memvella HQ",
-  description: "Founder mission-control and internal operating system for Memvella.",
+  description: "Disabled-by-default internal tools for Memvella.",
 };
 
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ function AccessDisabled({
         <EmptyState title="Memvella HQ is not available">
           {enabled
             ? `HQ is enabled but missing required configuration: ${missing.join(", ")}.`
-            : "Set MEMVELLA_HQ_ENABLED=1 and configure founder access before using HQ."}
+            : "Set MEMVELLA_HQ_ENABLED=1 and configure HQ access before using HQ."}
         </EmptyState>
       </div>
     </main>
@@ -50,11 +50,10 @@ function LoginScreen() {
     <main className="flex min-h-screen items-center justify-center px-5 py-10">
       <div className="hq-panel w-full max-w-md rounded-lg p-6">
         <div className="mb-6">
-          <StatusPill tone="info">founder-only v1</StatusPill>
+          <StatusPill tone="info">restricted access</StatusPill>
           <h1 className="mt-4 text-3xl font-bold text-text-primary">Memvella HQ</h1>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
-            Internal company mission control. Product Organiser and Member access does
-            not grant HQ access.
+            Internal tools are separate from product Workspace access.
           </p>
         </div>
         <HqLoginForm />

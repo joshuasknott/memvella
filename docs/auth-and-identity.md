@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-07-04
 Owners: engineering
 Read when: touching auth, onboarding, senior sessions, recovery, or role permissions
 Depends on: docs/product.md, docs/architecture.md, docs/env.md
@@ -14,7 +14,7 @@ Memvella uses two auth families:
 - Better Auth for supporter account sessions
 - Convex-managed senior access sessions for paired tablet access
 
-Memvella HQ in `apps/internal` uses a separate founder-only access gate. Product Supporter sessions do not grant HQ access, and HQ does not impersonate product users.
+Memvella HQ in `apps/internal` uses a separate disabled-by-default access gate. Product Supporter sessions do not grant HQ access, and HQ does not impersonate product users.
 
 ## Current Flows
 

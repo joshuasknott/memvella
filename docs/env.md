@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-07-04
 Owners: engineering
 Read when: setting up local dev, auth, AI, push, or deployment
 Depends on: docs/auth-and-identity.md
@@ -33,7 +33,7 @@ The local examples live at:
 | `MEMVELLA_AUTH_EMAIL_FROM` | yes for production account auth | Convex | account verification and password-reset email delivery | Verified sender, for example `Memvella <accounts@example.com>` |
 | `MEMVELLA_TEST_MODE` | optional | server and Convex | guarded E2E-only test seams | Must be `1` to enable `/api/test/**` helpers and test-only Convex support. The Playwright dev-server helper sets this on the Convex dev deployment before E2E runs, and the Playwright teardown removes the temporary value after the run |
 | `NEXT_PUBLIC_MEMVELLA_TEST_MODE` | optional | client | browser-only E2E seams | Enables deterministic browser speech behavior in Playwright |
-| `MEMVELLA_TEST_AUTH_TOKEN` | optional | server and Convex | guarded E2E-only test routes and mutations | Shared secret for `/api/test/**` helpers. Defaults to a local-only fallback when unset |
+| `MEMVELLA_TEST_AUTH_TOKEN` | optional | server and Convex | guarded E2E-only test routes and mutations | Shared secret for `/api/test/**` helpers when test mode is enabled outside the local Playwright helper |
 | `GEMINI_API_KEY` | required for AI and live voice features | server and Convex | live voice token route, AI actions, insights pipeline | Needed for voice and AI paths |
 | `GEMINI_LIVE_MODEL` | optional | server | live voice token route | Falls back to the default live model when omitted |
 | `NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY` | optional | client and Convex | push subscription flow | If absent, organiser push setup is unavailable |
@@ -41,7 +41,7 @@ The local examples live at:
 | `MEMVELLA_WEB_PUSH_SUBJECT` | optional | Convex | push delivery worker | Usually a `mailto:` value |
 | `CONVEX_URL` | required only for the marketing waitlist server route | server | `apps/marketing` waitlist submission route | Marketing-only variable |
 | `MEMVELLA_HQ_ENABLED` | required to enable HQ | server | `apps/internal` | Set to `1` to enable Memvella HQ |
-| `MEMVELLA_HQ_ACCESS_KEY` | required when HQ enabled | server | `apps/internal` | Founder access key; secret value |
+| `MEMVELLA_HQ_ACCESS_KEY` | required when HQ enabled | server | `apps/internal` | HQ access key; secret value |
 | `MEMVELLA_HQ_COOKIE_SECRET` | required when HQ enabled | server | `apps/internal` | Signing secret for the HTTP-only HQ session cookie; secret value |
 
 ## Local Auth Rule

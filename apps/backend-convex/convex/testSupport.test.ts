@@ -104,7 +104,7 @@ describe("test support security gate", () => {
   });
 
   it("rejects test support on production Convex deployments", () => {
-    process.env.CONVEX_DEPLOYMENT = "prod:memvella";
+    process.env.CONVEX_DEPLOYMENT = "prod:test-deployment";
     process.env.MEMVELLA_TEST_MODE = "1";
     process.env.MEMVELLA_TEST_AUTH_TOKEN = "configured-secret";
 

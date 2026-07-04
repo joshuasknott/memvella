@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-07-04
 Owners: engineering
 Read when: changing onboarding, auth, permissions, senior sessions, voice flows, or notifications
 Depends on: docs/auth-and-identity.md, docs/env.md
@@ -30,7 +30,7 @@ Before testing auth-sensitive or backend-sensitive changes:
 For Memvella HQ changes, also manually verify:
 
 - HQ is inaccessible unless `MEMVELLA_HQ_ENABLED=1`
-- founder login requires `MEMVELLA_HQ_ACCESS_KEY`
+- HQ login requires `MEMVELLA_HQ_ACCESS_KEY`
 - the HQ session cookie is HTTP-only and same-site
 - the authenticated internal home page stays intentionally minimal
 - no product dashboards, QA/dev actions, runbooks, or sensitive product data are exposed
@@ -176,9 +176,9 @@ Coverage note:
 - request a password reset for both an existing and unknown email and confirm the UI does not reveal which exists
 - reset the password and confirm older sessions no longer work
 
-## Current Testing Gaps
+## Manual And Integration Coverage
 
-- The current Playwright suite is still a first smoke layer, not a full product matrix.
-- Media upload, audio upload, memory detail/edit, insights review, notification toggles, and tablet pairing success are not yet in deterministic browser coverage.
-- Real email delivery, cross-origin auth, real push-delivery integrations, and real Gemini live-voice behavior still require manual or nightly device coverage.
-- `convex-test` coverage now exists for selected backend auth, profile, invite, and People flows, but it is not yet a full public-function matrix.
+- The Playwright suite is a deterministic smoke layer and does not replace manual release verification.
+- Media upload, audio upload, memory detail/edit, insights review, notification toggles, and tablet pairing success should be covered by targeted manual or automated checks when those areas change.
+- Real email delivery, cross-origin auth, real push delivery, and real Gemini live-voice behavior require environment-backed manual or scheduled verification.
+- `convex-test` covers selected backend auth, profile, invite, and People flows. Add targeted backend tests when changing untested public functions.

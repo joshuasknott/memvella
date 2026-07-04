@@ -57,7 +57,7 @@ describe("convex security secret behavior", () => {
 
   it("fails closed when Convex deployment is production", async () => {
     env.NODE_ENV = "development";
-    process.env.CONVEX_DEPLOYMENT = "prod:memvella";
+    process.env.CONVEX_DEPLOYMENT = "prod:test-deployment";
     delete process.env.MEMVELLA_AUTH_PEPPER;
     delete process.env.BETTER_AUTH_SECRET;
 

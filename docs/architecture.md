@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-16
+Last reviewed: 2026-07-04
 Owners: engineering
 Read when: touching routing, backend integration, schema design, or repo structure
 Depends on: docs/product.md, docs/data-model.md
@@ -12,8 +12,9 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core`: Next.js product frontend
 - `apps/backend-convex`: Convex backend (exports `@memvella/backend` and `@memvella/backend/dataModel`)
 - `apps/marketing`: Next.js marketing app
-- `apps/internal`: minimal founder-only internal app placeholder
+- `apps/internal`: disabled-by-default internal tools scaffold
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`)
+- `packages/domain-circle`: shared Workspace-domain helpers and policies
 - `packages/config-typescript`: shared TypeScript base configs
 - `packages/config-eslint`: shared ESLint configs
 - `packages/testing`: shared test fixtures and seed helpers (scaffold)
@@ -35,11 +36,11 @@ Depends on: docs/product.md, docs/data-model.md
 
 ### Internal Routes
 
-`apps/internal` is a separate internal app. It is not wired to product Supporter auth.
+`apps/internal` is a separate disabled-by-default internal app. It is not wired to product Supporter auth.
 
-- `/`: founder-gated minimal HQ placeholder
+- `/`: HQ access gate and minimal home
 
-The internal app intentionally does not expose product dashboards, runbooks, QA tooling, or Convex read models yet. See `docs/internal-hq.md`.
+The internal app intentionally does not expose product dashboards, runbooks, QA tooling, or Convex read models. See `docs/internal-hq.md`.
 
 ### Workspace Routes
 
@@ -149,11 +150,11 @@ Current tables:
 - `insights`
 - `alerts`
 
-Current omissions and deferred work:
+Current scope notes:
 
-- there is no shipped `activityEvents` table yet
+- product activity history is not modeled as a separate `activityEvents` table
 - `appEvents` is a sanitized internal observability table, not a product activity feed
-- there is no dedicated activity route yet
+- there is no dedicated activity route
 - alerts exist as their own table, but the UI reviews alerts and insights together inside `/circle/insights`
 
 Rules:

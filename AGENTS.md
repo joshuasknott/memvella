@@ -5,7 +5,7 @@ Memvella is a PNPM/Turbo monorepo with four applications and several shared pack
 - `apps/core`: the product frontend (Next.js)
 - `apps/backend-convex`: the Convex backend (exports `@memvella/backend`)
 - `apps/marketing`: the marketing and waitlist app
-- `apps/internal`: internal ops/support/QA tools (scaffold)
+- `apps/internal`: disabled-by-default internal tools scaffold
 
 ## Read Order
 
@@ -27,7 +27,7 @@ Before making non-trivial changes, read the relevant canonical docs in this orde
 - Root `docs/` files are canonical.
 - `docs/archive/` is historical only.
 - Generated artifacts such as `.next/`, `.turbo/`, and `next-env.d.ts` are not authoritative.
-- Legacy compatibility tables in the Convex schema are transitional and should not become the foundation for new work.
+- Retired legacy terminology is documented in `docs/legacy-removal.md` and should not be reintroduced.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know

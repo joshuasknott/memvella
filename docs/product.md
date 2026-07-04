@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-07-04
 Owners: product, engineering
 Read when: touching onboarding, routing, UX, permissions, or documentation
 Depends on: docs/terminology.md, docs/architecture.md
@@ -118,11 +118,11 @@ The product is designed for home and family-led senior support: a Workspace hold
 - `/assisted/login` handles 6-digit pairing code entry.
 - `/assisted` is the paired tablet dashboard with time, greeting, next routine, memory gallery, and live voice.
 
-## Explicit Deferred Work
+## Current Scope Notes
 
-- There is no dedicated `Activity` route or activity feed surface yet.
-- There is no separate `Alerts` page yet.
-- End-to-end browser coverage now exists for the first deterministic organiser/member/routine/voice smoke flows; see `docs/testing.md` for scope and remaining gaps.
+- `/circle` is the current Workspace status surface.
+- Alerts and insights are reviewed together inside `/circle/insights`.
+- Browser verification scope is documented in `docs/testing.md`.
 
 ## Product Rules
 

@@ -26,9 +26,13 @@ dist/
 # turbo
 .turbo/
 
+# convex local state
+.convex/
+
 # misc
 .DS_Store
 *.pem
+STATE.md
 
 # debug
 npm-debug.log*
