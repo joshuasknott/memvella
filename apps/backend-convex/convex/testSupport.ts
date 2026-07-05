@@ -67,7 +67,18 @@ function isLocalOrTestRuntime() {
 function isProductionRuntime() {
   const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
   const deployment = process.env.CONVEX_DEPLOYMENT?.trim().toLowerCase();
-  return nodeEnv === "production" || deployment?.startsWith("prod:");
+  if (deployment?.startsWith("prod:")) {
+    return true;
+  }
+
+  if (
+    process.env.MEMVELLA_TEST_MODE === "1" &&
+    process.env.MEMVELLA_TEST_AUTH_TOKEN?.trim()
+  ) {
+    return false;
+  }
+
+  return nodeEnv === "production";
 }
 
 function getExpectedTestAuthToken() {

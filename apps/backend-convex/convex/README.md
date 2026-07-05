@@ -19,9 +19,9 @@ This directory contains the Convex backend, exported as `@memvella/backend`.
 
 ## Data Model Guidance
 
-- Prefer the target `circle`-based model for new work.
-- Follow `docs/legacy-removal.md` for the approved rename map and rollout order when removing compatibility surfaces.
-- Do not build new features on legacy compatibility tables unless the task is explicitly a migration.
+- Prefer the current `circle`-based model for new work.
+- Follow `docs/legacy-removal.md` for retired terminology and cleanup rules.
+- Do not reintroduce retired routes, table names, or compatibility surfaces.
 - When schema changes affect existing data, document the migration plan in `docs/data-model.md` and use a safe rollout pattern.
 
 ## Commands

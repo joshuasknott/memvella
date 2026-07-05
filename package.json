@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
-    "dev:convex": "pnpm -C apps/backend-convex exec convex dev",
-    "dev:core": "pnpm -C apps/core dev",
-    "dev:marketing": "pnpm -C apps/marketing dev",
-    "dev:internal": "pnpm -C apps/internal dev",
+    "dev:convex": "corepack pnpm -C apps/backend-convex exec convex dev",
+    "dev:core": "corepack pnpm -C apps/core dev",
+    "dev:marketing": "corepack pnpm -C apps/marketing dev",
+    "dev:internal": "corepack pnpm -C apps/internal dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
@@ -15,13 +15,18 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "verify": "pnpm lint && pnpm type-check && pnpm test && pnpm build",
+    "test:env-contract": "node --test scripts/env-contract.test.mjs",
+    "check:env": "node scripts/check-env-contract.mjs",
+    "check:public": "node scripts/check-public.mjs",
+    "check:copy": "node scripts/check-copy.mjs",
+    "verify": "corepack pnpm check:env && corepack pnpm check:public && corepack pnpm check:copy && corepack pnpm lint && corepack pnpm type-check && corepack pnpm test && corepack pnpm build",
     "clean": "turbo clean",
-    "convex:dev": "pnpm --dir apps/backend-convex exec convex dev",
-    "convex:deploy": "pnpm --dir apps/backend-convex exec convex deploy"
+    "convex:dev": "corepack pnpm --dir apps/backend-convex exec convex dev",
+    "convex:deploy": "corepack pnpm --dir apps/backend-convex exec convex deploy"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
+    "pnpm": "9.0.0",
     "turbo": "^2"
   },
   "engines": {

@@ -8,7 +8,9 @@ test("assisted experience falls back to reconnect when the session is invalid", 
   await page.goto("/assisted");
 
   await expect(page.getByTestId("assisted-recovery-state")).toBeVisible();
-  await expect(page.getByText("Tablet pairing expired.")).toBeVisible();
+  await expect(page.getByTestId("assisted-recovery-state")).toContainText(
+    "Tablet code expired.",
+  );
   await expect(page.getByTestId("assisted-recovery-cta")).toHaveAttribute(
     "href",
     "/assisted/login",

@@ -43,6 +43,7 @@ The local examples live at:
 | `MEMVELLA_HQ_ENABLED` | required to enable HQ | server | `apps/internal` | Set to `1` to enable Memvella HQ |
 | `MEMVELLA_HQ_ACCESS_KEY` | required when HQ enabled | server | `apps/internal` | HQ access key; secret value |
 | `MEMVELLA_HQ_COOKIE_SECRET` | required when HQ enabled | server | `apps/internal` | Signing secret for the HTTP-only HQ session cookie; secret value |
+| `MEMVELLA_ENV` | optional | server | `apps/internal` | Overrides HQ environment detection; valid values are `local`, `development`, `staging`, and `production` |
 
 ## Local Auth Rule
 
@@ -53,6 +54,8 @@ If you are testing auth on a phone, tablet, or another machine, set the site URL
 If a variable is read inside Convex functions, configure it for the Convex runtime as well. A value existing only in the Next.js environment is not enough for server-side Convex code.
 
 The Convex backend declares its runtime environment contract in `apps/backend-convex/convex/convex.config.ts`. The local `apps/backend-convex/.env.example` mirrors the variables that may need to be configured through the Convex CLI or dashboard for the active deployment.
+
+Run `pnpm check:env` from the repo root after changing this contract, any `.env.example` file, or `apps/backend-convex/convex/convex.config.ts`.
 
 Email/password sign-up is fail-closed outside test mode: production sign-up requires email verification, and verification or password-recovery delivery fails clearly when `RESEND_API_KEY` or `MEMVELLA_AUTH_EMAIL_FROM` is missing. Test mode suppresses external email delivery and bypasses verification so deterministic browser tests remain local.
 

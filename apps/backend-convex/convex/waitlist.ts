@@ -4,6 +4,19 @@ import { mutation } from "./_generated/server";
 import { insertSanitizedAppEvent } from "./appEvents";
 import { normalizeOptionalEmail, normalizeOptionalText } from "./security";
 
+function normalizeWaitlistEmail(value: string) {
+  const email = normalizeOptionalEmail(value);
+  if (!email) {
+    return null;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return null;
+  }
+
+  return email;
+}
+
 export const joinWaitlist = mutation({
   args: {
     email: v.string(),
@@ -27,7 +40,7 @@ export const joinWaitlist = mutation({
       return { status: "joined" } as const;
     }
 
-    const email = normalizeOptionalEmail(args.email);
+    const email = normalizeWaitlistEmail(args.email);
     if (!email) {
       return { status: "joined" } as const;
     }

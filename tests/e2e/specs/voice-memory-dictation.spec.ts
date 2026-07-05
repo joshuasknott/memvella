@@ -19,5 +19,7 @@ test("organiser can save a voice-dictated memory", async ({ page }) => {
   await page.getByTestId("voice-memory-save-button").click();
 
   await expect(page).toHaveURL(/\/circle\/memories$/);
-  await expect(page.getByText(memoryTitle)).toBeVisible();
+  await expect(
+    page.getByTestId("memory-list-item").filter({ hasText: memoryTitle }),
+  ).toBeVisible();
 });

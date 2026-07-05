@@ -13,16 +13,31 @@ export async function GET() {
   }
 
   try {
-    const result = await runMemvellaTestSupportQuery<{
-      ready: boolean;
-      timestamp: number;
-    }>("testSupport:healthcheck");
+    const [testSupportResult, awarenessResult] = await Promise.all([
+      runMemvellaTestSupportQuery<{
+        ready: boolean;
+        timestamp: number;
+      }>("testSupport:healthcheck"),
+      runMemvellaTestSupportQuery<{
+        ready: boolean;
+        timestamp: number;
+      }>("testAwareness:healthcheck"),
+    ]);
 
-    return NextResponse.json(result, {
-      headers: {
-        "Cache-Control": "no-store",
+    return NextResponse.json(
+      {
+        ready: testSupportResult.ready && awarenessResult.ready,
+        timestamp: Math.max(
+          testSupportResult.timestamp,
+          awarenessResult.timestamp,
+        ),
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   } catch (error) {
     console.error("Memvella test healthcheck failed:", error);
     return NextResponse.json(

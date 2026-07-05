@@ -140,6 +140,7 @@ export default function AssistedSetupPage() {
           <button
             onClick={handleConnect}
             disabled={isPairing}
+            data-testid="assisted-connect-button"
             className="mt-4 flex w-full max-w-lg items-center justify-center gap-3 rounded-3xl bg-senior-primary py-5 text-2xl font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 md:mt-8 md:py-6"
           >
             {isPairing ? (

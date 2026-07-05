@@ -215,6 +215,7 @@ export default function PairingSettingsPage() {
               void handleDeactivate();
             }}
             disabled={isDeactivating}
+            data-testid="revoke-all-pairing-access-button"
             className="flex min-h-[64px] flex-1 items-center justify-center gap-2 rounded-full border border-border bg-surface px-6 text-base font-semibold text-text-secondary shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isDeactivating ? (

@@ -6,7 +6,6 @@ test("account onboarding creates a Workspace", async ({ page }) => {
   const credentials = buildOrganiserCredentials("organiser-onboarding");
 
   await page.goto("/");
-  await page.locator("#btn-for-loved-one").click();
   await page.locator("#btn-start-circle").click();
 
   await page.getByTestId("organiser-name-input").fill(credentials.name);

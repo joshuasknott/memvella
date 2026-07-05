@@ -95,7 +95,7 @@ export default function OrganiserMemoriesPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="memory-list">
           {memoryRecords.map((record) => {
             const Icon = RECORD_ICON_MAP[record.recordType];
 
@@ -103,6 +103,7 @@ export default function OrganiserMemoriesPage() {
               <Link
                 key={record.id}
                 href={`/circle/memories/${record.id}`}
+                data-testid="memory-list-item"
                 className="block rounded-xl border border-border bg-surface p-5 shadow-sm transition-colors hover:border-family-primary/20"
               >
                 <div className="flex gap-4">

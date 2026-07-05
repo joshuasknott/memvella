@@ -16,5 +16,7 @@ test("organiser can create a routine", async ({ page }) => {
   await page.getByTestId("routine-save-button").click();
 
   await expect(page).toHaveURL(/\/circle\/routines$/);
-  await expect(page.getByText(routineTitle)).toBeVisible();
+  await expect(
+    page.locator('[data-testid^="routine-card-"]').filter({ hasText: routineTitle }),
+  ).toBeVisible();
 });

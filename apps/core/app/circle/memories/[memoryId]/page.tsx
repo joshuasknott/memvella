@@ -137,14 +137,17 @@ export default function OrganiserMemoryDetailPage() {
   const Icon = RECORD_ICON_MAP[memoryDetail.recordType];
 
   return (
-    <div className="flex w-full flex-col gap-6 px-4 pb-32">
+    <div className="flex w-full flex-col gap-6 px-4 pb-32" data-testid="memory-detail">
       <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-primary">
               {formatMemoryRecordTypeLabel(memoryDetail.recordType)}
             </p>
-            <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
+            <h1
+              className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary"
+              data-testid="memory-detail-title"
+            >
               {memoryDetail.title}
             </h1>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -232,6 +235,7 @@ export default function OrganiserMemoryDetailPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
+                data-testid="confirm-delete-memory-button"
                 className="flex h-[48px] items-center justify-center gap-2 rounded-full bg-[#B91C1C] px-5 text-sm font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-60"
               >
                 {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -251,6 +255,7 @@ export default function OrganiserMemoryDetailPage() {
           <button
             type="button"
             onClick={() => setShowDeleteConfirm(true)}
+            data-testid="delete-memory-button"
             className="flex h-[72px] w-full items-center justify-center gap-2 rounded-full bg-[#B91C1C] px-6 text-lg font-semibold text-white shadow-md transition-transform active:scale-95"
           >
             <Trash2 className="h-5 w-5" />

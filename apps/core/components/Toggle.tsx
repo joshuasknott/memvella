@@ -4,10 +4,12 @@ export default function Toggle({
   checked,
   onChange,
   disabled = false,
+  "data-testid": dataTestId,
 }: {
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
+  "data-testid"?: string;
 }) {
   return (
     <button
@@ -16,6 +18,7 @@ export default function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={onChange}
+      data-testid={dataTestId}
       className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
         checked ? "bg-family-primary" : "bg-gray-200"
       }`}

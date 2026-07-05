@@ -63,6 +63,17 @@ describe("test support security gate", () => {
     ).not.toThrow();
   });
 
+  it("rejects the default token when a Convex deployment is configured", () => {
+    process.env.CONVEX_DEPLOYMENT = "dev:test-deployment";
+    process.env.MEMVELLA_TEST_MODE = "1";
+
+    expect(() =>
+      ensureTestSupportAccess("memvella-local-test-token"),
+    ).toThrow(
+      "MEMVELLA_TEST_AUTH_TOKEN must be explicitly set when test mode is enabled outside local development.",
+    );
+  });
+
   it("rejects wrong token in test mode with default token", () => {
     process.env.MEMVELLA_TEST_MODE = "1";
     expect(() => ensureTestSupportAccess("wrong-token")).toThrow(
@@ -93,14 +104,12 @@ describe("test support security gate", () => {
     );
   });
 
-  it("rejects test support in production node runtime", () => {
+  it("allows explicit test support in Convex local production-like runtime", () => {
     process.env.NODE_ENV = "production";
     process.env.MEMVELLA_TEST_MODE = "1";
     process.env.MEMVELLA_TEST_AUTH_TOKEN = "configured-secret";
 
-    expect(() => ensureTestSupportAccess("configured-secret")).toThrow(
-      "Test support is not available in production.",
-    );
+    expect(() => ensureTestSupportAccess("configured-secret")).not.toThrow();
   });
 
   it("rejects test support on production Convex deployments", () => {

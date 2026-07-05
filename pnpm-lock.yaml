@@ -11,6 +11,9 @@ importers:
       '@playwright/test':
         specifier: ^1.53.0
         version: 1.59.1
+      pnpm:
+        specifier: 9.0.0
+        version: 9.0.0
       turbo:
         specifier: ^2
         version: 2.9.3
@@ -19,7 +22,7 @@ importers:
     dependencies:
       '@convex-dev/better-auth':
         specifier: ^0.11.3
-        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@convex-dev/migrations':
         specifier: ^0.3.3
         version: 0.3.3(convex@1.41.0(react@19.2.4))
@@ -34,7 +37,7 @@ importers:
         version: 13.3.0
       better-auth:
         specifier: 1.5.3
-        version: 1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
+        version: 1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
       convex:
         specifier: ^1.41.0
         version: 1.41.0(react@19.2.4)
@@ -68,7 +71,7 @@ importers:
     dependencies:
       '@convex-dev/better-auth':
         specifier: ^0.11.3
-        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@google/genai':
         specifier: ^1.46.0
         version: 1.48.0
@@ -92,7 +95,7 @@ importers:
         version: 13.3.0
       better-auth:
         specifier: 1.5.3
-        version: 1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
+        version: 1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -197,6 +200,9 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)
 
   apps/marketing:
     dependencies:
@@ -2794,6 +2800,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  pnpm@9.0.0:
+    resolution: {integrity: sha512-tBBnB8ciWxdIthWVlTzL6/+XtUrQXQAqo2NfYzucU81mb3zpuLxEcE8foEi5pJtVNxqy2enWZ9Hv4u8VFLzVEw==}
+    engines: {node: '>=18.12'}
+    hasBin: true
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -3450,10 +3461,10 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@convex-dev/better-auth@0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)))(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       '@better-fetch/fetch': 1.1.21
-      better-auth: 1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
+      better-auth: 1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0))
       common-tags: 1.8.2
       convex: 1.41.0(react@19.2.4)
       convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.41.0(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
@@ -4492,7 +4503,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.14: {}
 
-  better-auth@1.5.3(next@16.2.1(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)):
+  better-auth@1.5.3(next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@edge-runtime/vm@5.0.0)(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)):
     dependencies:
       '@better-auth/core': 1.5.3(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.2)(kysely@0.28.15)(nanostores@1.2.0)
       '@better-auth/kysely-adapter': 1.5.3(@better-auth/core@1.5.3(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.2)(kysely@0.28.15)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(kysely@0.28.15)
@@ -5718,6 +5729,8 @@ snapshots:
       playwright-core: 1.59.1
     optionalDependencies:
       fsevents: 2.3.2
+
+  pnpm@9.0.0: {}
 
   possible-typed-array-names@1.1.0: {}
 

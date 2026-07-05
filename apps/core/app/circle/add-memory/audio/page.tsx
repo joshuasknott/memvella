@@ -115,6 +115,7 @@ export default function AudioMemoryPage() {
             placeholder="Our Wedding Song"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
+            data-testid="audio-memory-title-input"
           />
         </div>
 
@@ -127,6 +128,7 @@ export default function AudioMemoryPage() {
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
+            data-testid="audio-memory-date-input"
           />
         </div>
 
@@ -140,6 +142,7 @@ export default function AudioMemoryPage() {
             placeholder="Spotify or Apple Music..."
             value={songLink}
             onChange={(event) => setSongLink(event.target.value)}
+            data-testid="audio-memory-link-input"
           />
         </div>
 
@@ -154,6 +157,7 @@ export default function AudioMemoryPage() {
             required
             value={story}
             onChange={(event) => setStory(event.target.value)}
+            data-testid="audio-memory-story-input"
             className="w-full resize-none rounded-xl bg-surface-muted p-6 text-lg font-medium transition-all placeholder:text-text-secondary/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-family-primary"
           />
         </div>
@@ -166,6 +170,7 @@ export default function AudioMemoryPage() {
         accept="audio/*"
         className="hidden"
         onChange={handleAudioSelect}
+        data-testid="audio-memory-file-input"
       />
 
       <section className="space-y-3 pt-2">
@@ -203,7 +208,12 @@ export default function AudioMemoryPage() {
         <p className="px-1 text-center text-sm font-medium text-status-alert">{error}</p>
       ) : null}
 
-      <PrimaryButton onClick={handleSave} disabled={isSaving || !isFormValid} className="mb-8">
+      <PrimaryButton
+        onClick={handleSave}
+        disabled={isSaving || !isFormValid}
+        className="mb-8"
+        data-testid="audio-memory-save-button"
+      >
         {isSaving ? (
           <>
             <Loader2 className="h-6 w-6 animate-spin" />

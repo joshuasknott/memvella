@@ -21,6 +21,7 @@ Before testing auth-sensitive or backend-sensitive changes:
 - `pnpm lint`
 - `pnpm type-check`
 - `pnpm test`
+- `pnpm check:copy` for launch-sensitive product copy guardrails
 - `pnpm test:e2e`
 - `pnpm test:e2e:ui`
 - `pnpm test:e2e:headed`

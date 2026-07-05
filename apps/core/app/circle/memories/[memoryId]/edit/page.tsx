@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Loader2, Upload, X } from "lucide-react";
 import type { Id } from "@memvella/backend/dataModel";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -52,7 +52,11 @@ export default function OrganiserMemoryEditPage() {
   const router = useRouter();
   const { toast } = useToast();
   const memoryRecordId = params.memoryId as Id<"memoryRecords">;
-  const memoryDetail = useQuery(api.memories.getMemoryRecordDetail, { memoryRecordId });
+  const { isAuthenticated } = useConvexAuth();
+  const memoryDetail = useQuery(
+    api.memories.getMemoryRecordDetail,
+    isAuthenticated ? { memoryRecordId } : "skip",
+  );
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
   const updateTextMemory = useMutation(api.memories.updateTextMemory);
   const updateAudioMemory = useMutation(api.memories.updateAudioMemory);
@@ -313,6 +317,7 @@ export default function OrganiserMemoryEditPage() {
               required
               value={title}
               onChange={(event) => setTitle(event.target.value)}
+              data-testid="memory-edit-title-input"
             />
           </div>
 
@@ -325,6 +330,7 @@ export default function OrganiserMemoryEditPage() {
               type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
+              data-testid="memory-edit-date-input"
             />
           </div>
 
@@ -339,6 +345,7 @@ export default function OrganiserMemoryEditPage() {
                 value={songLink}
                 onChange={(event) => setSongLink(event.target.value)}
                 placeholder="Spotify, Apple Music, or another audio link"
+                data-testid="memory-edit-link-input"
               />
             </div>
           ) : null}
@@ -354,6 +361,7 @@ export default function OrganiserMemoryEditPage() {
                 required
                 value={transcript}
                 onChange={(event) => setTranscript(event.target.value)}
+                data-testid="memory-edit-transcript-input"
                 className="min-h-[160px] w-full resize-none rounded-xl border-2 border-border bg-surface p-6 text-lg text-text-primary shadow-sm outline-none transition-all placeholder:text-text-secondary focus:border-family-primary focus:ring-2 focus:ring-family-primary/20"
               />
             </div>
@@ -368,6 +376,7 @@ export default function OrganiserMemoryEditPage() {
                 required={memoryDetail.recordType !== "media"}
                 value={story}
                 onChange={(event) => setStory(event.target.value)}
+                data-testid="memory-edit-story-input"
                 className="min-h-[160px] w-full resize-none rounded-xl border-2 border-border bg-surface p-6 text-lg text-text-primary shadow-sm outline-none transition-all placeholder:text-text-secondary focus:border-family-primary focus:ring-2 focus:ring-family-primary/20"
               />
             </div>
@@ -445,7 +454,11 @@ export default function OrganiserMemoryEditPage() {
       <div className="mt-8 space-y-3">
         {error ? <p className="px-1 text-sm font-medium text-status-alert">{error}</p> : null}
 
-        <PrimaryButton onClick={handleSave} disabled={isSaving || !isFormValid}>
+        <PrimaryButton
+          onClick={handleSave}
+          disabled={isSaving || !isFormValid}
+          data-testid="memory-edit-save-button"
+        >
           {isSaving ? (
             <>
               <Loader2 className="h-6 w-6 animate-spin" />

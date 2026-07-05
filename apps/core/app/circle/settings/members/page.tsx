@@ -17,8 +17,11 @@ function formatJoinedAt(timestamp: number) {
 }
 
 export default function CircleMembersPage() {
-  const { isOrganiser } = useCircleProfile();
-  const members = useQuery(api.circleInvites.listCircleMembers);
+  const { isAuthenticated, isOrganiser } = useCircleProfile();
+  const members = useQuery(
+    api.circleInvites.listCircleMembers,
+    isAuthenticated ? undefined : "skip",
+  );
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 pb-12">

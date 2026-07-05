@@ -114,6 +114,7 @@ export default function TextMemoryPage() {
             required
             value={title}
             onChange={(event) => setTitle(event.target.value)}
+            data-testid="text-memory-title-input"
             className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
@@ -127,6 +128,7 @@ export default function TextMemoryPage() {
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
+            data-testid="text-memory-date-input"
             className="h-12 w-full rounded-xl border border-border bg-surface px-6 text-lg transition-all focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
         </div>
@@ -145,6 +147,7 @@ export default function TextMemoryPage() {
             required
             value={story}
             onChange={(event) => setStory(event.target.value)}
+            data-testid="text-memory-story-input"
             className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-surface p-6 text-lg transition-all placeholder:text-text-secondary/50 focus:border-family-primary focus:outline-none focus:ring-2 focus:ring-family-primary/30"
           />
           <p className="px-1 text-sm text-text-secondary">
@@ -213,6 +216,7 @@ export default function TextMemoryPage() {
         type="button"
         onClick={handleSaveMemory}
         disabled={isSaving || !isFormValid}
+        data-testid="text-memory-save-button"
         className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSaving ? (

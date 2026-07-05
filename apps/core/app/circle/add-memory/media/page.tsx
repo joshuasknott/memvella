@@ -101,6 +101,7 @@ export default function MediaMemoryPage() {
           className="hidden"
           id="media-file-input"
           onChange={handleFileSelect}
+          data-testid="media-memory-file-input"
         />
         <label htmlFor="media-file-input" className="block cursor-pointer">
           <div className="relative flex aspect-4/3 w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-surface shadow-sm transition-colors hover:bg-surface-muted">
@@ -159,6 +160,7 @@ export default function MediaMemoryPage() {
             placeholder="Family reunion 2012"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
+            data-testid="media-memory-title-input"
             className="h-12 w-full rounded-xl border-2 border-border bg-surface px-6 text-lg shadow-sm outline-none transition-all placeholder:text-text-secondary/50 focus:border-family-primary/50 focus:ring-4 focus:ring-family-primary/10"
           />
         </div>
@@ -172,6 +174,7 @@ export default function MediaMemoryPage() {
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
+            data-testid="media-memory-date-input"
             className="h-12 w-full rounded-xl border-2 border-border bg-surface px-6 text-lg shadow-sm outline-none transition-all placeholder:text-text-secondary/50 focus:border-family-primary/50 focus:ring-4 focus:ring-family-primary/10"
           />
         </div>
@@ -186,6 +189,7 @@ export default function MediaMemoryPage() {
             rows={4}
             value={story}
             onChange={(event) => setStory(event.target.value)}
+            data-testid="media-memory-story-input"
             className="w-full resize-none rounded-xl border-none bg-surface-muted p-6 text-lg font-medium transition-all placeholder:text-text-secondary/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-family-primary"
           />
         </div>
@@ -199,6 +203,7 @@ export default function MediaMemoryPage() {
         type="button"
         onClick={handleSave}
         disabled={isSaving || !isFormValid}
+        data-testid="media-memory-save-button"
         className="mb-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-senior-primary text-lg font-semibold text-white shadow-md transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSaving ? (

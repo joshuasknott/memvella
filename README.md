@@ -60,6 +60,7 @@ Memvella is a PNPM/Turbo monorepo for the Memvella product, its Convex backend, 
 - `pnpm test:e2e:ui`: open the Playwright UI runner.
 - `pnpm test:e2e:headed`: run Playwright headed.
 - `pnpm verify`: run lint, type-check, test, and build in sequence.
+- `pnpm check:env`, `pnpm check:public`, and `pnpm check:copy`: run launch guardrail checks.
 - `pnpm convex:dev`: run Convex dev for `apps/backend-convex`.
 - `pnpm convex:deploy`: deploy the Convex backend.
 
@@ -75,7 +76,8 @@ Read these files in order when you need product or implementation context:
 6. `docs/legacy-removal.md`
 7. `docs/env.md`
 8. `docs/testing.md`
-9. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
+9. `docs/launch-runbook.md`
+10. `apps/core/design.md` or `apps/marketing/design.md`, depending on scope
 
 The root `docs/` files are expected to describe the current shipped product and architecture. If implementation changes a contract, update the relevant canonical doc in the same change.
 

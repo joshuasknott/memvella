@@ -1,3 +1,20 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+confirmModulesPurge: false
+managePackageManagerVersions: true
+packageManagerStrict: true
+packageManagerStrictVersion: true
+
+allowBuilds:
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - sharp
+  - unrs-resolver

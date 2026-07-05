@@ -4,8 +4,22 @@ import process from "node:process";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 const healthURL = `${baseURL}/api/test/health`;
 const nextOrigin = new URL(baseURL).origin;
+const convexUrl =
+  process.env.MEMVELLA_E2E_CONVEX_URL ?? "http://127.0.0.1:3210";
+const convexSiteUrl =
+  process.env.MEMVELLA_E2E_CONVEX_SITE_URL ?? "http://127.0.0.1:3211";
 const convexTestAuthToken =
   process.env.MEMVELLA_TEST_AUTH_TOKEN ?? "memvella-local-test-token";
+const betterAuthSecret =
+  process.env.BETTER_AUTH_SECRET ?? "memvella-local-test-secret";
+const authPepper =
+  process.env.MEMVELLA_AUTH_PEPPER ?? "memvella-local-test-pepper";
+const requiredConvexFunctions = [
+  "testSupport:healthcheck",
+  "testSupport:resetAppData",
+  "testSupport:createSeniorSessionFixture",
+  "testAwareness:seedAwarenessReviewFixture",
+];
 
 let originalConvexTestEnv = null;
 
@@ -21,11 +35,18 @@ function mergeTrustedOrigins(baseOrigin) {
 function createChildEnv() {
   return {
     ...process.env,
+    CONVEX_DEPLOYMENT: "anonymous:anonymous-backend-convex",
+    CONVEX_URL: convexUrl,
     MEMVELLA_TEST_MODE: "1",
+    NEXT_PUBLIC_CONVEX_SITE_URL: convexSiteUrl,
+    NEXT_PUBLIC_CONVEX_URL: convexUrl,
     NEXT_PUBLIC_MEMVELLA_TEST_MODE: "1",
     NEXT_PUBLIC_SITE_URL: nextOrigin,
     BETTER_AUTH_URL: nextOrigin,
     BETTER_AUTH_TRUSTED_ORIGINS: mergeTrustedOrigins(nextOrigin),
+    BETTER_AUTH_SECRET: betterAuthSecret,
+    MEMVELLA_AUTH_PEPPER: authPepper,
+    NODE_ENV: "test",
   };
 }
 
@@ -36,6 +57,10 @@ function spawnProcess(command, args) {
     shell: true,
     stdio: "inherit",
   });
+}
+
+function spawnPnpm(args) {
+  return spawnProcess("corepack", ["pnpm", ...args]);
 }
 
 function runCommand(command, args, label, options = {}) {
@@ -95,8 +120,8 @@ function runCommandSync(command, args, label, options = {}) {
 
 async function getConvexEnv(name) {
   const result = await runCommand(
-    "pnpm",
-    ["--dir", "apps/backend-convex", "exec", "convex", "env", "get", name],
+    "corepack",
+    ["pnpm", "--dir", "apps/backend-convex", "exec", "convex", "env", "get", name],
     `convex env get ${name}`,
     {
       allowFailure: true,
@@ -118,8 +143,17 @@ async function getConvexEnv(name) {
 
 async function assertConvexDeploymentConfigured() {
   const result = await runCommand(
-    "pnpm",
-    ["--dir", "apps/backend-convex", "exec", "convex", "env", "get", "MEMVELLA_TEST_MODE"],
+    "corepack",
+    [
+      "pnpm",
+      "--dir",
+      "apps/backend-convex",
+      "exec",
+      "convex",
+      "env",
+      "get",
+      "MEMVELLA_TEST_MODE",
+    ],
     "convex env preflight",
     {
       allowFailure: true,
@@ -146,24 +180,24 @@ async function assertConvexDeploymentConfigured() {
 
 async function setConvexEnv(name, value) {
   await runCommand(
-    "pnpm",
-    ["--dir", "apps/backend-convex", "exec", "convex", "env", "set", name, value],
+    "corepack",
+    ["pnpm", "--dir", "apps/backend-convex", "exec", "convex", "env", "set", name, value],
     `convex env set ${name}`,
   );
 }
 
 function setConvexEnvSync(name, value) {
   runCommandSync(
-    "pnpm",
-    ["--dir", "apps/backend-convex", "exec", "convex", "env", "set", name, value],
+    "corepack",
+    ["pnpm", "--dir", "apps/backend-convex", "exec", "convex", "env", "set", name, value],
     `convex env set ${name}`,
   );
 }
 
 function removeConvexEnvSync(name) {
   runCommandSync(
-    "pnpm",
-    ["--dir", "apps/backend-convex", "exec", "convex", "env", "remove", name],
+    "corepack",
+    ["pnpm", "--dir", "apps/backend-convex", "exec", "convex", "env", "remove", name],
     `convex env remove ${name}`,
     {
       allowFailure: true,
@@ -175,6 +209,12 @@ async function configureConvexTestEnv() {
   const desiredEnv = {
     MEMVELLA_TEST_MODE: "1",
     MEMVELLA_TEST_AUTH_TOKEN: convexTestAuthToken,
+    BETTER_AUTH_URL: nextOrigin,
+    NEXT_PUBLIC_SITE_URL: nextOrigin,
+    SITE_URL: nextOrigin,
+    BETTER_AUTH_TRUSTED_ORIGINS: mergeTrustedOrigins(nextOrigin),
+    BETTER_AUTH_SECRET: betterAuthSecret,
+    MEMVELLA_AUTH_PEPPER: authPepper,
   };
 
   originalConvexTestEnv = {};
@@ -224,12 +264,53 @@ async function waitForHealth(url, timeoutMs) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
+async function waitForConvexFunctions(timeoutMs) {
+  const startedAt = Date.now();
+  let lastOutput = "";
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const result = await runCommand(
+      "corepack",
+      [
+        "pnpm",
+        "--dir",
+        "apps/backend-convex",
+        "exec",
+        "convex",
+        "function-spec",
+        "--deployment",
+        "local",
+      ],
+      "convex function-spec",
+      {
+        allowFailure: true,
+      },
+    );
+    lastOutput = `${result.stdout}\n${result.stderr}`.trim();
+
+    if (
+      result.code === 0 &&
+      requiredConvexFunctions.every((functionName) =>
+        lastOutput.includes(functionName),
+      )
+    ) {
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+
+  throw new Error(
+    `Timed out waiting for Convex test functions. Last output: ${lastOutput}`,
+  );
+}
+
 await assertConvexDeploymentConfigured();
 await configureConvexTestEnv();
 
 const childProcesses = [
-  spawnProcess("pnpm", ["convex:dev"]),
-  spawnProcess("pnpm", [
+  spawnPnpm(["convex:dev"]),
+  spawnPnpm([
     "--dir",
     "apps/core",
     "exec",
@@ -275,6 +356,7 @@ process.on("SIGINT", () => cleanupAndExit(130));
 process.on("SIGTERM", () => cleanupAndExit(143));
 
 try {
+  await waitForConvexFunctions(180_000);
   await waitForHealth(healthURL, 180_000);
 } catch (error) {
   console.error(error);

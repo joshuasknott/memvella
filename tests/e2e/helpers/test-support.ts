@@ -69,6 +69,25 @@ export async function resetApp(request: APIRequestContext) {
   expect(response.ok()).toBeTruthy();
 }
 
+export async function seedAwarenessReviewFixture(
+  request: APIRequestContext,
+  args: { authEmail: string },
+) {
+  const response = await request.post(
+    `${PLAYWRIGHT_BASE_URL}/api/test/bootstrap/awareness-review`,
+    {
+      headers: buildMemvellaTestApiHeaders(),
+      data: args,
+    },
+  );
+
+  expect(response.ok()).toBeTruthy();
+  return (await response.json()) as {
+    alertId: string;
+    insightId: string;
+  };
+}
+
 export async function waitForCircleReady(page: Page) {
   await page.waitForURL(/\/circle(?:$|\?)/, {
     timeout: 30_000,

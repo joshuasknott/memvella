@@ -107,6 +107,7 @@ export default function OrganiserInsightsPage() {
           {insights.queued.map((insight) => (
             <article
               key={insight.id}
+              data-testid="queued-insight-card"
               className="rounded-[28px] bg-surface p-5 shadow-sm"
             >
               <div className="mb-3 flex items-start justify-between gap-3">
@@ -168,6 +169,7 @@ export default function OrganiserInsightsPage() {
                   onClick={() => {
                     void updateInsightStatus(insight.id, "reviewed");
                   }}
+                  data-testid="mark-insight-reviewed-button"
                   className="flex min-h-[60px] flex-1 items-center justify-center gap-2 rounded-full bg-family-accent px-6 text-lg font-bold text-white shadow-sm transition-transform active:scale-95"
                 >
                   <CheckCircle2 className="h-5 w-5" />
@@ -178,6 +180,7 @@ export default function OrganiserInsightsPage() {
                   onClick={() => {
                     void updateInsightStatus(insight.id, "dismissed");
                   }}
+                  data-testid="dismiss-insight-button"
                   className="flex min-h-[60px] flex-1 items-center justify-center gap-2 rounded-full bg-surface px-6 text-lg font-bold text-text-primary shadow-sm transition-transform active:scale-95"
                 >
                   <XCircle className="h-5 w-5" />
@@ -198,6 +201,7 @@ export default function OrganiserInsightsPage() {
             {insights.reviewed.map((insight) => (
               <div
                 key={insight.id}
+                data-testid="reviewed-insight-card"
                 className="rounded-xl border border-border bg-surface p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-3">

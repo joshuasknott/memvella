@@ -234,7 +234,10 @@ export default function NotificationsSettingsPage() {
               Turn browser push alerts on or off for the current device.
             </p>
             {!pushConfigured ? (
-              <p className="mt-3 rounded-xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900">
+              <p
+                className="mt-3 rounded-xl bg-yellow-50 px-4 py-3 text-sm font-medium text-yellow-900"
+                data-testid="push-not-configured-message"
+              >
                 Push alerts are not configured for this deployment yet.
               </p>
             ) : !pushSupported ? (
@@ -260,6 +263,7 @@ export default function NotificationsSettingsPage() {
             type="button"
             onClick={currentSubscriptionEndpoint ? handleDisablePush : handleEnablePush}
             disabled={isPushBusy || !pushConfigured || !pushSupported}
+            data-testid="push-alerts-toggle-button"
             className={`inline-flex min-h-[56px] items-center justify-center rounded-full px-5 text-base font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
               currentSubscriptionEndpoint ? "bg-surface-inverse" : "bg-senior-primary"
             }`}
@@ -297,6 +301,7 @@ export default function NotificationsSettingsPage() {
               void handleToggle("dailySummary");
             }}
             disabled={isSettingsBusy}
+            data-testid="daily-summary-toggle"
           />
         </div>
 
@@ -318,6 +323,7 @@ export default function NotificationsSettingsPage() {
               void handleToggle("urgentAlerts");
             }}
             disabled={isSettingsBusy}
+            data-testid="urgent-alerts-toggle"
           />
         </div>
 
@@ -339,6 +345,7 @@ export default function NotificationsSettingsPage() {
               void handleToggle("routineReminders");
             }}
             disabled={isSettingsBusy}
+            data-testid="routine-reminders-toggle"
           />
         </div>
       </section>
