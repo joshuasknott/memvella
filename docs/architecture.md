@@ -12,12 +12,10 @@ Depends on: docs/product.md, docs/data-model.md
 - `apps/core`: Next.js product frontend
 - `apps/backend-convex`: Convex backend (exports `@memvella/backend` and `@memvella/backend/dataModel`)
 - `apps/marketing`: Next.js marketing app
-- `apps/internal`: disabled-by-default internal tools scaffold
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`)
 - `packages/domain-circle`: shared Workspace-domain helpers and policies
 - `packages/config-typescript`: shared TypeScript base configs
 - `packages/config-eslint`: shared ESLint configs
-- `packages/testing`: shared test fixtures and seed helpers (scaffold)
 - `docs/`: canonical product and engineering documentation
 
 ## Core App Structure
@@ -34,17 +32,9 @@ Depends on: docs/product.md, docs/data-model.md
 
 ## Routing Model
 
-### Internal Routes
-
-`apps/internal` is a separate disabled-by-default internal app. It is not wired to product Supporter auth.
-
-- `/`: HQ access gate and minimal home
-
-The internal app intentionally does not expose product dashboards, runbooks, QA tooling, or Convex read models. See `docs/internal-hq.md`.
-
 ### Workspace Routes
 
-- `/`: role-selection entry point
+- `/`: welcome and sign-in entry
 - `/onboarding/organiser`: account and Workspace creation
 - `/organiser/signin`: account sign-in page
 - `/organiser/verify-email`: account verification status and resend flow
@@ -74,6 +64,8 @@ The internal app intentionally does not expose product dashboards, runbooks, QA 
 - `/circle/settings/notifications`
 - `/circle/settings/pairing`
 
+All four format-specific memory URLs are thin entry points to the shared `MemoryEditor`; `/circle/add-memory` opens that editor directly.
+
 Current route facts:
 
 - `/circle` is the canonical Workspace shell. The route name remains internal for now.
@@ -100,8 +92,8 @@ Current route facts:
 
 - Next.js 16 App Router powers both apps.
 - `apps/core/app/providers.tsx` wires `ConvexBetterAuthProvider` with the shared Convex client and Better Auth client.
-- The Workspace shell lives under `apps/core/app/circle/layout.tsx` with `CircleHeader` and `CircleBottomNav`.
-- The bottom nav currently exposes `Home`, `Routines`, `Memories`, and `Settings` only.
+- The shared family shell lives under `apps/core/app/circle/layout.tsx`; `CircleBottomNav` adapts between desktop sidebar and mobile bottom navigation.
+- Navigation exposes `Today`, `Memories`, `Routines`, and `Settings`; it is a sidebar on desktop and a bottom bar on mobile.
 
 ### Backend
 

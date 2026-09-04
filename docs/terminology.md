@@ -22,7 +22,7 @@ Use one name for each concept. Do not introduce parallel labels for the same rol
 | Senior-grounding person | `Person` | Someone the senior knows; used for memory and companion context, not a signed-in Supporter |
 | Senior-facing tablet experience | `Companion tablet` | The tablet connected by a Supporter for the senior-facing companion |
 | Urgent actionable item | `Alert` | Stored separately from insights, but currently reviewed inside `/circle/insights` |
-| Non-urgent summary or follow-up | `Insight` | Supporter-facing review queue item |
+| Non-urgent summary or follow-up | `Update` | Owner-facing conversation note; stored as an insight internally |
 | Shared event history | `Activity` | Reserved term; no dedicated shipped activity surface yet |
 | Memvella itself | `digital wellness companion` or `companion` | Avoid medical framing |
 
@@ -48,7 +48,7 @@ These terms should appear only when documenting legacy cleanup or historical imp
 ## Product Copy Rules
 
 - Prefer direct, concrete phrasing over sentimental phrasing.
-- Use `Workspace` consistently for the shared support area.
+- Use `Workspace` when a shared-area or permission distinction is needed. Ordinary screens can say Today, your memories, or the person’s name without repeating the underlying container.
 - Use `Supporter` for signed-in trusted people who help inside a Workspace.
 - Use `Companion tablet` for the senior-facing tablet flow.
 - Keep role names stable across onboarding, settings, auth, and error states.

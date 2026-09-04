@@ -1,132 +1,101 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
 import {
   Bell,
   ChevronRight,
-  KeyRound,
-  MonitorSmartphone,
+  Tablet,
   User,
   Users,
+  Heart,
+  MessageCircle,
 } from "lucide-react";
-import { api } from "@memvella/backend";
 import { useCircleProfile } from "@/lib/use-circle-profile";
 
-export default function OrganiserSettingsPage() {
+export default function SettingsPage() {
   const { isOrganiser, seniorDisplayName } = useCircleProfile();
-  const assistedSessions = useQuery(
-    api.sessions.listAssistedDeviceSessions,
-    isOrganiser ? undefined : "skip",
-  );
-  const activeSessionCount = assistedSessions?.length ?? 0;
-
+  const sections = [
+    {
+      title: `For ${seniorDisplayName}`,
+      items: [
+        ...(isOrganiser
+          ? [
+              {
+                href: "/circle/settings/pairing",
+                title: "Companion tablet",
+                description: "Connect or manage a tablet",
+                icon: Tablet,
+              },
+            ]
+          : []),
+        {
+          href: "/circle/people",
+          title: "Familiar people",
+          description: "The people they know and the stories they share",
+          icon: Heart,
+        },
+      ],
+    },
+    {
+      title: "Sharing & account",
+      items: [
+        {
+          href: "/circle/settings/members",
+          title: "Supporters",
+          description: "The trusted people helping here",
+          icon: Users,
+        },
+        {
+          href: "/circle/settings/account",
+          title: "Account details",
+          description: "Your name, sign-in, and personal details",
+          icon: User,
+        },
+        ...(isOrganiser
+          ? [
+              {
+                href: "/circle/settings/notifications",
+                title: "Notifications",
+                description: "Choose what you hear about",
+                icon: Bell,
+              },
+              {
+                href: "/circle/insights",
+                title: "Updates to review",
+                description: "Conversation notes and follow-ups",
+                icon: MessageCircle,
+              },
+            ]
+          : []),
+      ],
+    },
+  ];
   return (
-    <div className="flex w-full flex-col gap-6 px-4">
-      <div>
-        <h1 className="font-family text-3xl font-extrabold tracking-tight text-text-primary">
-          Settings
-        </h1>
-        <p className="mt-2 text-lg text-text-secondary">
-          {isOrganiser
-            ? "Manage your account, People, Supporters, and companion tablet access."
-            : "Manage your account and stay in sync with this Workspace."}
-        </p>
-      </div>
-
-      <section className="space-y-3">
-        <Link
-          href="/circle/settings/account"
-          className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 shadow-sm transition-colors active:bg-surface-muted"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center rounded-xl bg-surface-muted p-2.5">
-              <User className="h-5 w-5 text-text-secondary" />
-            </div>
-            <span className="text-lg font-semibold text-text-primary">
-              Account Details
-            </span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-text-secondary" />
-        </Link>
-        <Link
-          href="/circle/settings/members"
-          className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 shadow-sm transition-colors active:bg-surface-muted"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center rounded-xl bg-surface-muted p-2.5">
-              <Users className="h-5 w-5 text-text-secondary" />
-            </div>
-            <span className="text-lg font-semibold text-text-primary">
-              Supporters
-            </span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-text-secondary" />
-        </Link>
-        {isOrganiser ? (
-          <Link
-            href="/circle/settings/invite"
-            className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 shadow-sm transition-colors active:bg-surface-muted"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center rounded-xl bg-surface-muted p-2.5">
-                <KeyRound className="h-5 w-5 text-text-secondary" />
-              </div>
-              <span className="text-lg font-semibold text-text-primary">
-                Invite Codes
-              </span>
-            </div>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </Link>
-        ) : null}
-        {isOrganiser ? (
-          <Link
-            href="/circle/settings/notifications"
-            className="flex items-center justify-between rounded-xl border border-border bg-surface p-4 shadow-sm transition-colors active:bg-surface-muted"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center rounded-xl bg-surface-muted p-2.5">
-                <Bell className="h-5 w-5 text-text-secondary" />
-              </div>
-              <span className="text-lg font-semibold text-text-primary">
-                Notifications
-              </span>
-            </div>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </Link>
-        ) : null}
-      </section>
-
-      {isOrganiser ? (
-        <section>
-        <div className="mb-3 px-2">
-          <span className="text-sm font-bold uppercase tracking-[0.2em] text-text-secondary">
-            Connections
-          </span>
+    <div className="page-stack settings-page">
+      <section className="page-heading">
+        <div>
+          <p className="eyebrow">Make it yours</p>
+          <h1>Settings</h1>
+          <p>A few things to keep everyone connected.</p>
         </div>
-        <Link
-          href="/circle/settings/pairing"
-          className="mt-2 flex items-center justify-between rounded-xl border border-family-primary/20 bg-family-primary/5 p-5 shadow-sm transition-colors active:bg-family-primary/10"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center rounded-xl bg-family-primary/15 p-2.5">
-              <MonitorSmartphone className="h-5 w-5 text-family-primary/80" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-lg font-semibold text-text-primary">
-                Companion tablet
-              </span>
-              <span className="mt-1 text-sm font-medium text-family-primary/70">
-                {activeSessionCount > 0
-                  ? `${activeSessionCount} active tablet session${activeSessionCount === 1 ? "" : "s"} for ${seniorDisplayName}`
-                  : `Link a new tablet for ${seniorDisplayName}`}
-              </span>
-            </div>
+      </section>
+      {sections.map((section) => (
+        <section key={section.title}>
+          <h2 className="settings-section-title">{section.title}</h2>
+          <div className="settings-list">
+            {section.items.map(({ href, title, description, icon: Icon }) => (
+              <Link key={href} href={href}>
+                <Icon size={24} aria-hidden="true" />
+                <span>
+                  <strong>{title}</strong>
+                  <span>{description}</span>
+                </span>
+                <ChevronRight size={20} aria-hidden="true" />
+              </Link>
+            ))}
           </div>
-          <ChevronRight className="h-5 w-5 text-family-primary/50" />
-        </Link>
         </section>
-      ) : null}
+      ))}
     </div>
   );
 }

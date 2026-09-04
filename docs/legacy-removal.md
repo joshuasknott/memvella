@@ -43,6 +43,8 @@ These surfaces are retired from the active runtime:
 - `familyInvites.ts`
 - `role: "independent_senior"`
 
+The internal HQ app, HQ environment variables, unused testing scaffold, and old marketing mock components were removed in the September 2026 simplification. The existing memory-format URLs remain small compatibility entry points into one editor; they contain no independent form implementation.
+
 ## Canonical Rename Map
 
 | Retired | Current |

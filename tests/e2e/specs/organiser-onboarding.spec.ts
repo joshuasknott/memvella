@@ -20,7 +20,7 @@ test("account onboarding creates a Workspace", async ({ page }) => {
 
   await waitForCircleReady(page);
   await expect(page).toHaveURL(/\/circle$/);
-  await expect(page.getByTestId("circle-current-status")).toContainText(
+  await expect(page.locator(".companion-card")).toContainText(
     credentials.seniorName,
   );
 });

@@ -1,26 +1,22 @@
 # Memvella Agent Guide
 
-Memvella is a PNPM/Turbo monorepo with four applications and several shared packages:
+Memvella is a PNPM/Turbo monorepo with three applications and several shared packages:
 
 - `apps/core`: the product frontend (Next.js)
 - `apps/backend-convex`: the Convex backend (exports `@memvella/backend`)
 - `apps/marketing`: the marketing and waitlist app
-- `apps/internal`: disabled-by-default internal tools scaffold
 
-## Read Order
+## Context by task
 
-Before making non-trivial changes, read the relevant canonical docs in this order:
+Start with README.md, then read only the relevant canonical sources:
 
-1. `README.md`
-2. `docs/product.md`
-3. `docs/terminology.md`
-4. `docs/architecture.md`
-5. `docs/auth-and-identity.md`
-6. `docs/data-model.md`
-7. `docs/legacy-removal.md`
-8. `docs/env.md`
-9. `docs/testing.md`
-10. `apps/core/design.md` or `apps/marketing/design.md`
+- Product behavior and copy: docs/product.md, docs/terminology.md, docs/legacy-removal.md.
+- Shared architecture: docs/architecture.md.
+- Auth, sessions, onboarding, permissions, or schema: docs/auth-and-identity.md and docs/data-model.md.
+- Environment and verification: docs/env.md and docs/testing.md.
+- UI: apps/core/design.md or apps/marketing/design.md for the target app.
+
+Use the pinned pnpm version. Target apps with `pnpm dev:core` or `pnpm dev:marketing`; the backend uses `pnpm convex:dev`. Run affected lint, type-check, tests, and build tasks; `pnpm verify` is the broad integration/release gate. Documentation-only edits need link/command and diff validation.
 
 ## Canonical Sources
 
@@ -44,3 +40,6 @@ If you touch auth, sessions, onboarding, or the data model, also read `docs/auth
 
 Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
 <!-- convex-ai-end -->
+
+
+Installed Convex skills provide task-specific technical guidance. A complex fix already authorized by the user does not need a second approval just because a skill suggests presenting options. Prepare and verify local changes within scope; pause only the step that needs missing credentials, a material product decision, or ungranted production authority.

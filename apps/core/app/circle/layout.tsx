@@ -8,14 +8,17 @@ export default function CircleLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-canvas font-body text-text-primary">
+    <div className="circle-shell">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <CircleProfileBootstrap />
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col bg-surface shadow-ambient">
+      <CircleBottomNav />
+      <div className="circle-content">
         <CircleHeader />
-        <main className="flex flex-1 flex-col overflow-y-auto pb-32 pt-24 px-4 md:px-8">
+        <main id="main-content" tabIndex={-1}>
           {children}
         </main>
-        <CircleBottomNav />
       </div>
     </div>
   );

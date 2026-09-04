@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const TEXT_FILE_MAX_BYTES = 1024 * 1024;
 
@@ -8,7 +8,7 @@ const trackedFiles = execFileSync("git", ["ls-files", "-z"], {
   encoding: "utf8",
 })
   .split("\0")
-  .filter(Boolean)
+  .filter((path) => path && existsSync(path))
   .map((path) => path.replaceAll("\\", "/"));
 
 const blockedPathRules = [

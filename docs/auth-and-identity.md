@@ -14,7 +14,6 @@ Memvella uses two auth families:
 - Better Auth for supporter account sessions
 - Convex-managed senior access sessions for paired tablet access
 
-Memvella HQ in `apps/internal` uses a separate disabled-by-default access gate. Product Supporter sessions do not grant HQ access, and HQ does not impersonate product users.
 
 ## Current Flows
 
@@ -49,6 +48,8 @@ Rules:
 - Outside test mode, account sign-up does not create a usable session until the account email is verified.
 - Verification and password-reset emails are delivered through Resend using the Convex runtime configuration.
 - A successful password reset revokes the account's existing sessions.
+
+Owner account details are editable in `/circle/settings/account` using the existing owner-only profile mutation. Tablet access is managed in `/circle/settings/pairing`, with no duplicate device controls in Account. Auth pages share `FamilyAuthLayout`.
 
 ## Supporter Join Flow
 

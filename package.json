@@ -7,7 +7,6 @@
     "dev:convex": "corepack pnpm -C apps/backend-convex exec convex dev",
     "dev:core": "corepack pnpm -C apps/core dev",
     "dev:marketing": "corepack pnpm -C apps/marketing dev",
-    "dev:internal": "corepack pnpm -C apps/internal dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "type-check": "turbo type-check",

@@ -14,7 +14,6 @@ The local examples live at:
 - `apps/core/.env.example`
 - `apps/backend-convex/.env.example`
 - `apps/marketing/.env.example`
-- `apps/internal/.env.example`
 
 ## Variable Contract
 
@@ -40,10 +39,6 @@ The local examples live at:
 | `MEMVELLA_WEB_PUSH_PRIVATE_KEY` | optional | Convex | push delivery worker | Secret value |
 | `MEMVELLA_WEB_PUSH_SUBJECT` | optional | Convex | push delivery worker | Usually a `mailto:` value |
 | `CONVEX_URL` | required only for the marketing waitlist server route | server | `apps/marketing` waitlist submission route | Marketing-only variable |
-| `MEMVELLA_HQ_ENABLED` | required to enable HQ | server | `apps/internal` | Set to `1` to enable Memvella HQ |
-| `MEMVELLA_HQ_ACCESS_KEY` | required when HQ enabled | server | `apps/internal` | HQ access key; secret value |
-| `MEMVELLA_HQ_COOKIE_SECRET` | required when HQ enabled | server | `apps/internal` | Signing secret for the HTTP-only HQ session cookie; secret value |
-| `MEMVELLA_ENV` | optional | server | `apps/internal` | Overrides HQ environment detection; valid values are `local`, `development`, `staging`, and `production` |
 
 ## Local Auth Rule
 

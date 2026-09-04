@@ -1,216 +1,138 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { Loader2, Shield, Smartphone, User } from "lucide-react";
-import { useToast } from "@/components/ui/ToastProvider";
+import { useMutation } from "convex/react";
+import { Loader2, LogOut } from "lucide-react";
 import { api } from "@memvella/backend";
 import { authClient } from "@/lib/auth-client";
 import { useCircleProfile } from "@/lib/use-circle-profile";
-
-function formatDateTime(timestamp: number) {
-  return new Date(timestamp).toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AccountSettingsPage() {
   const { data: session } = authClient.useSession();
-  const { toast } = useToast();
-  const { organiserName, seniorDisplayName, profile, isOrganiser, role } =
+  const { organiserName, seniorDisplayName, profile, isOrganiser } =
     useCircleProfile();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const assistedSessions = useQuery(
-    api.sessions.listAssistedDeviceSessions,
-    isOrganiser ? undefined : "skip",
-  );
-  const revokeAllAssistedDeviceSessions = useMutation(
-    api.sessions.revokeAllAssistedDeviceSessions,
-  );
+  const { toast } = useToast();
+  const patchProfile = useMutation(api.profile.patchOrganiserProfile);
+  const [name, setName] = useState<string | null>(null);
+  const [seniorName, setSeniorName] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isLoadingSessions = isOrganiser && assistedSessions === undefined;
-  const resolvedAssistedSessions = assistedSessions ?? [];
-
-  const handleRevokeAll = async () => {
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError(null);
     try {
-      const result = await revokeAllAssistedDeviceSessions({});
+      await patchProfile({
+        organiserName: (name ?? organiserName).trim(),
+        seniorDisplayName: (seniorName ?? seniorDisplayName).trim(),
+      });
       toast({
         tone: "success",
-        title: "Companion tablet access updated",
-        description:
-          result.revokedCount > 0
-            ? `${result.revokedCount} companion tablet session${result.revokedCount === 1 ? "" : "s"} were revoked.`
-            : "No active companion tablet sessions were found.",
+        title: "Details saved",
+        description: "Your changes are ready.",
       });
-    } catch (error) {
-      toast({
-        tone: "error",
-        title: "Companion tablet access did not update",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Please try again in a moment.",
-      });
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Your details couldn’t save. Try again.",
+      );
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    localStorage.removeItem("memvella_pendingSeniorDisplayName");
-    const result = await authClient.signOut();
-    if (result.error) {
-      setIsSigningOut(false);
-      toast({
-        tone: "error",
-        title: "Sign out failed",
-        description: result.error.message ?? "Please try again.",
-      });
-      return;
+  }
+  async function signOut() {
+    setSigningOut(true);
+    setError(null);
+    try {
+      const result = await authClient.signOut();
+      if (result.error)
+        throw new Error(result.error.message ?? "Please try again.");
+      localStorage.removeItem("memvella_pendingSeniorDisplayName");
+      window.location.replace("/organiser/signin");
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Sign out failed. Try again.",
+      );
+      setSigningOut(false);
     }
-
-    window.location.replace("/organiser/signin");
-  };
-
+  }
   return (
-    <div className="flex w-full flex-col gap-6 px-4 pb-8">
-      <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
-        <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface-muted">
-            <User className="h-8 w-8 text-text-secondary" />
+    <div className="memory-editor">
+      <section className="page-heading">
+        <div>
+          <p className="eyebrow">Your details</p>
+          <h1>Account</h1>
+          <p>{session?.user?.email}</p>
+        </div>
+      </section>
+      {!profile ? (
+        <p role="status">Loading account…</p>
+      ) : isOrganiser ? (
+        <form onSubmit={save}>
+          <div>
+            <label htmlFor="account-name">Your name</label>
+            <input
+              id="account-name"
+              autoComplete="name"
+              value={name ?? organiserName}
+              onChange={(event) => setName(event.target.value)}
+              required
+              disabled={saving}
+            />
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-family-accent">
-              {isOrganiser ? "Workspace owner profile" : "Supporter profile"}
-            </p>
-            <h1 className="mt-2 font-family text-3xl font-extrabold tracking-tight text-text-primary">
-              My Account
-            </h1>
+            <label htmlFor="account-senior-name">Who are you supporting?</label>
+            <input
+              id="account-senior-name"
+              value={seniorName ?? seniorDisplayName}
+              onChange={(event) => setSeniorName(event.target.value)}
+              required
+              disabled={saving}
+            />
           </div>
+          <div>
+            <button type="submit" className="action-button" disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="panel">
+          <h2 className="text-xl font-semibold">{organiserName}</h2>
+          <p className="mt-2 text-text-secondary">
+            Supporter for {seniorDisplayName}
+          </p>
         </div>
-
-        <div className="space-y-4">
-          <div className="rounded-xl bg-surface-muted px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
-              Display name
-            </p>
-            <p className="mt-2 text-lg font-bold text-text-primary">{organiserName}</p>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
-              Email
-            </p>
-            <p className="mt-2 text-lg font-bold text-text-primary">
-              {session?.user?.email ?? "No email available"}
-            </p>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
-              Role
-            </p>
-            <p className="mt-2 text-lg font-bold text-text-primary">
-              {isOrganiser ? "Workspace owner" : role === "member" ? "Supporter" : "Account"}
-            </p>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-4 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-text-tertiary">
-              Workspace
-            </p>
-            <p className="mt-2 text-lg font-bold text-text-primary">
-              {seniorDisplayName}
-            </p>
-            {profile ? null : (
-              <p className="mt-1 text-sm text-text-secondary">
-                Senior profile is still being prepared.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {isOrganiser ? (
-        <section className="rounded-xl border border-family-primary/15 bg-surface p-6 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-family-primary/10 text-family-primary">
-            <Shield className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-family text-lg font-bold text-text-primary">
-              Tablet access
-            </h2>
-            <p className="mt-2 text-base leading-relaxed text-text-secondary">
-              Review the active companion tablet sessions tied to this Workspace and revoke them if a device should no longer stay connected.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {isLoadingSessions ? (
-            <div className="flex items-center justify-center rounded-xl bg-surface-muted px-4 py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-family-primary/50" />
-            </div>
-          ) : resolvedAssistedSessions.length === 0 ? (
-            <div className="rounded-xl bg-surface-muted px-4 py-4 text-sm font-medium text-text-secondary">
-              No active companion tablet sessions are connected right now.
-            </div>
-          ) : (
-            resolvedAssistedSessions.map(
-              (sessionItem: (typeof resolvedAssistedSessions)[number]) => (
-                <div
-                  key={sessionItem.id}
-                  className="rounded-xl border border-border bg-surface-muted px-4 py-4"
-                >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-family-primary shadow-sm">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                    <div>
-                      <p className="text-base font-bold text-text-primary">
-                        Companion tablet
-                      </p>
-                      <p className="mt-1 text-sm text-text-secondary">
-                        Last active {formatDateTime(sessionItem.lastValidatedAt)}
-                    </p>
-                  </div>
-                </div>
-                </div>
-              ),
-            )
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            void handleRevokeAll();
-          }}
-          disabled={isLoadingSessions || resolvedAssistedSessions.length === 0}
-          className="mt-5 inline-flex min-h-[56px] items-center justify-center rounded-full bg-surface-inverse px-5 text-base font-semibold text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Revoke all tablet sessions
-        </button>
-        </section>
-      ) : null}
-
-      <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
-        <h2 className="font-family text-lg font-bold text-text-primary">
-          Account session
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-text-secondary">
-          Sign out of this account on this device.
+      )}
+      {error ? (
+        <p role="alert" className="form-error">
+          {error}
         </p>
+      ) : null}
+      <div className="editor-footer">
+        <p className="text-text-secondary">Sign out on this device.</p>
         <button
           type="button"
-          onClick={() => void handleSignOut()}
-          disabled={isSigningOut}
-          className="mt-5 inline-flex min-h-[56px] items-center justify-center rounded-full bg-surface-inverse px-5 text-base font-semibold text-white disabled:opacity-60"
+          className="quiet-link"
           data-testid="family-account-signout-button"
+          disabled={signingOut}
+          onClick={() => void signOut()}
         >
-          {isSigningOut ? "Signing out..." : "Sign out"}
+          <LogOut size={20} aria-hidden="true" />
+          {signingOut ? "Signing out…" : "Sign out"}
         </button>
-      </section>
+      </div>
     </div>
   );
 }

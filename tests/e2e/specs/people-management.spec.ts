@@ -13,7 +13,8 @@ test("organiser can manage People records", async ({ page }) => {
 
   await bootstrapOrganiserSession(page, credentials);
 
-  await page.getByTestId("circle-people-summary-link").click();
+  await page.getByTestId("circle-nav-settings").click();
+  await page.getByRole("link", { name: /Familiar people/ }).click();
   await expect(page).toHaveURL(/\/circle\/people$/);
   await expect(page.getByTestId("people-empty-state")).toBeVisible();
 
@@ -56,7 +57,8 @@ test("member can view People but cannot mutate them", async ({ browser, page }) 
   const memberCredentials = buildMemberCredentials("people-member");
 
   await bootstrapOrganiserSession(page, organiserCredentials);
-  await page.getByTestId("circle-add-person-action").click();
+  await page.goto("/circle/people");
+  await page.getByTestId("people-add-person-link").click();
   await page.getByTestId("person-name-input").fill("Robert Hill");
   await page.getByTestId("person-context-input").fill(
     "Robert is a long-time neighbour.",

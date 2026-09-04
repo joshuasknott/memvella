@@ -17,11 +17,6 @@ export const TARGETS = {
     path: "apps/marketing/.env.example",
     kind: "envExample",
   },
-  internal: {
-    label: "apps/internal/.env.example",
-    path: "apps/internal/.env.example",
-    kind: "envExample",
-  },
   convexConfig: {
     label: "apps/backend-convex/convex/convex.config.ts",
     path: "apps/backend-convex/convex/convex.config.ts",
@@ -30,7 +25,6 @@ export const TARGETS = {
   },
 };
 
-const INTERNAL_ONLY_PREFIX = "MEMVELLA_HQ_";
 
 function stripBackticks(value) {
   return value.trim().replace(/^`|`$/g, "");
@@ -136,20 +130,9 @@ export function targetKeysForRecord(record) {
     return keys;
   }
 
-  if (haystack.includes("apps/internal") || variable.startsWith(INTERNAL_ONLY_PREFIX)) {
-    keys.add("internal");
-    return keys;
-  }
-
-  if (variable === "MEMVELLA_ENV") {
-    keys.add("internal");
-    return keys;
-  }
-
   if (variable === "MEMVELLA_TEST_MODE") {
     keys.add("core");
     keys.add("backendExample");
-    keys.add("internal");
     keys.add("convexConfig");
     return keys;
   }

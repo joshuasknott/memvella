@@ -1,68 +1,44 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { BrandLogo } from "@memvella/ui";
-
-const TAB_ROUTES = [
-  "/circle",
-  "/circle/routines",
-  "/circle/memories",
-  "/circle/settings",
-];
-
-/** Map sub-route path segments to human-readable titles. */
-const SUB_ROUTE_TITLES: Record<string, string> = {
-  "add-memory": "Add a Memory",
-  "add-memory/text": "Write a Story",
-  "add-memory/voice": "Record Voice Note",
-  "add-memory/audio": "Audio Memory",
-  "add-memory/media": "Photo or Video",
-  "add-person": "Add Person",
-  "add-routine": "Add a Routine",
-  insights: "Insights",
-  "settings/account": "Account",
-  "settings/invite": "Invite Code",
-  "settings/members": "Supporters",
-  "settings/notifications": "Notifications",
-  "settings/pairing": "Companion Tablet",
-};
-
-function getTitleFromPath(pathname: string): string {
-  // Strip the /circle/ prefix and match against known sub-routes.
-  const sub = pathname.replace("/circle/", "");
-  if (sub.startsWith("memories/") && sub.endsWith("/edit")) {
-    return "Edit Memory";
-  }
-  if (sub.startsWith("memories/")) {
-    return "Memory Detail";
-  }
-  return SUB_ROUTE_TITLES[sub] ?? "Back";
-}
 
 export default function CircleHeader() {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const isTabRoute = TAB_ROUTES.includes(pathname);
-
+  const path = usePathname();
+  const topLevel = [
+    "/circle",
+    "/circle/memories",
+    "/circle/routines",
+    "/circle/settings",
+  ].includes(path);
+  const parent =
+    path.includes("memory") || path.includes("memories")
+      ? "/circle/memories"
+      : path.includes("routine")
+        ? "/circle/routines"
+        : path.includes("people") || path.includes("person")
+          ? "/circle/people"
+          : "/circle/settings";
   return (
-    <header className="fixed top-0 w-full max-w-3xl bg-surface/90 backdrop-blur-md z-50 h-20 flex items-center px-4 md:px-8 border-b border-border">
-      {isTabRoute ? (
-        <BrandLogo />
-      ) : (
-        <div className="flex items-center gap-4 w-full">
-          <button
-            onClick={() => router.back()}
-            className="active:scale-95 duration-150 hover:opacity-80 transition-opacity text-text-primary"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-family-h2 text-text-primary tracking-tight">
-            {getTitleFromPath(pathname)}
-          </h1>
-        </div>
-      )}
+    <header
+      className={`circle-mobile-header ${topLevel ? "circle-top-level" : ""}`}
+    >
+      {!topLevel ? (
+        <Link
+          href={parent === path ? "/circle/settings" : parent}
+          className="quiet-link"
+        >
+          <ArrowLeft size={20} aria-hidden="true" /> Back
+        </Link>
+      ) : null}
+      <Link
+        href="/circle"
+        className="circle-wordmark"
+        aria-label="Memvella home"
+      >
+        Memvella
+      </Link>
     </header>
   );
 }

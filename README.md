@@ -1,27 +1,27 @@
 # Memvella
 
-Memvella is a PNPM/Turbo monorepo for the Memvella product, its Convex backend, marketing site, and disabled-by-default internal tooling scaffold.
+Memvella keeps familiar memories, gentle routines, and a friendly voice close to older people and their families.
+
+This PNPM/Turbo monorepo contains the family app, companion tablet experience, Convex backend, and marketing site.
 
 ## Workspace
 
 - `apps/core`: the product frontend. Contains the shared `/circle` Workspace shell, the companion tablet flow, and the Next.js frontend.
 - `apps/backend-convex`: the Convex backend. Owns all server-side functions, schema, auth config, and AI actions. Exports `@memvella/backend` for frontend consumers.
 - `apps/marketing`: the marketing and waitlist app.
-- `apps/internal`: a disabled-by-default internal tools scaffold with an access gate.
 - `packages/ui`: shared design system components and tokens (`@memvella/ui`).
 - `packages/domain-circle`: shared Workspace-domain helpers and policies.
 - `packages/config-typescript`: shared TypeScript base configs.
 - `packages/config-eslint`: shared ESLint configs.
-- `packages/testing`: shared test fixtures and seed helpers (scaffold).
 
 ## Product Surface
 
-- `/`: role-selection entry screen
-- `/circle`: shared Workspace for Supporters
-- `/circle/routines`: routine list and timeline
+- `/`: welcome and sign-in entry
+- `/circle`: Today: routines, memories, and companion access
+- `/circle/routines`: one clear routine schedule
 - `/circle/memories`: memory library, detail, edit, and add flows
-- `/circle/people`: senior-grounding People directory, detail, edit, and add flows
-- `/circle/insights`: combined review queue for alerts and insights
+- `/circle/people`: familiar people, reached through Settings
+- `/circle/insights`: owner review of conversation updates, reached through Settings
 - `/circle/settings`: account, Supporters, invite codes, notifications, and companion tablet access
 - `/assisted/login` and `/assisted`: companion tablet experience
 
@@ -45,9 +45,8 @@ Memvella is a PNPM/Turbo monorepo for the Memvella product, its Convex backend, 
 2. Create `apps/core/.env.local` from `apps/core/.env.example` and fill in the required values.
 3. Create `apps/backend-convex/.env.local` from `apps/backend-convex/.env.example` with your `CONVEX_DEPLOYMENT` value.
 4. If you are working on the marketing waitlist flow, create `apps/marketing/.env.local` from `apps/marketing/.env.example` too.
-5. If you are working on the internal app, create `apps/internal/.env.local` from `apps/internal/.env.example` and set the HQ access variables.
-6. Start the Convex dev backend with `pnpm convex:dev`.
-7. Start the monorepo dev processes with `pnpm dev`.
+5. Start the Convex dev backend with `pnpm convex:dev`.
+6. Start the monorepo dev processes with `pnpm dev`.
 
 ## Common Commands
 
@@ -66,7 +65,7 @@ Memvella is a PNPM/Turbo monorepo for the Memvella product, its Convex backend, 
 
 ## Documentation
 
-Read these files in order when you need product or implementation context:
+Use AGENTS.md to select the relevant context for your task. The maintained documentation is:
 
 1. `docs/product.md`
 2. `docs/terminology.md`

@@ -1,5 +1,0 @@
-{
-  "extends": "@memvella/config-typescript/library.json",
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
-}

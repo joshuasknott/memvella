@@ -1,16 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
 import { useMutation } from "convex/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { api } from "@memvella/backend";
 import { authClient } from "@/lib/auth-client";
 import { performMemvellaTestAuth } from "@/lib/test-auth-client";
 import { isMemvellaClientTestMode } from "@/lib/test-mode";
-import { buildVerifyEmailPath, isEmailNotVerifiedError } from "@/lib/family-auth";
-import { BrandLogo, PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
+import {
+  buildVerifyEmailPath,
+  isEmailNotVerifiedError,
+} from "@/lib/family-auth";
+import { PrimaryButton, SecondaryButton, TextInput } from "@memvella/ui";
+import { FamilyAuthLayout } from "@/components/FamilyAuthLayout";
 import { FormCard } from "@/components/ui/FormCard";
 
 type AuthMode = "signin" | "create";
@@ -47,7 +56,8 @@ function loadPendingInvitePreview() {
 
     return {
       code: parsed.code,
-      circleName: typeof parsed.circleName === "string" ? parsed.circleName : null,
+      circleName:
+        typeof parsed.circleName === "string" ? parsed.circleName : null,
     } satisfies InvitePreview;
   } catch {
     window.sessionStorage.removeItem(PENDING_MEMBER_INVITE_STORAGE_KEY);
@@ -73,29 +83,9 @@ function savePendingInvitePreview(invitePreview: InvitePreview | null) {
 
 function MemberLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface px-6 py-8 font-body text-text-primary md:py-12">
-      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-family-primary/5 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 -mb-20 -ml-20 h-96 w-96 rounded-full bg-[#7a2e9e]/5 blur-3xl" />
-
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
-        <header className="relative mb-8 flex h-14 items-center justify-between">
-          <Link
-            href="/"
-            className="z-10 flex w-fit items-center gap-2 font-semibold text-family-primary transition-opacity hover:opacity-80"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={2.5} /> Back
-          </Link>
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <BrandLogo standalone className="h-8 w-auto drop-shadow-sm md:h-10" />
-          </div>
-          <div className="w-[84px]" aria-hidden="true" />
-        </header>
-
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-12">
-          {children}
-        </div>
-      </div>
-    </div>
+    <FamilyAuthLayout backHref="/" backLabel="Back">
+      {children}
+    </FamilyAuthLayout>
   );
 }
 
@@ -156,7 +146,10 @@ function CircleCodeStep({
     }
   };
 
-  const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    event: KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (event.key === "Backspace") {
       if (digits[index]) {
         const nextDigits = [...digits];
@@ -178,7 +171,10 @@ function CircleCodeStep({
 
   const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
-    const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
+    const pasted = event.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, CODE_LENGTH);
     if (!pasted) {
       return;
     }
@@ -217,7 +213,11 @@ function CircleCodeStep({
       };
 
       if (!response.ok || payload.status !== "ready") {
-        setLocalError(payload.message ?? payload.error ?? "We could not check that invite code.");
+        setLocalError(
+          payload.message ??
+            payload.error ??
+            "We could not check that invite code.",
+        );
         clearInputs();
         return;
       }
@@ -247,41 +247,48 @@ function CircleCodeStep({
       </div>
 
       <form onSubmit={handleSubmit}>
-        <FormCard className="flex flex-col space-y-8" data-testid="member-invite-code-form">
-        <div className="flex justify-center gap-3" role="group" aria-label="6-digit invite code">
-          {digits.map((digit, index) => (
-            <input
-              key={index}
-              ref={(element) => {
-                inputRefs.current[index] = element;
-              }}
-              type="text"
-              data-testid={`member-code-digit-${index}`}
-              inputMode="numeric"
-              aria-label={`Digit ${index + 1}`}
-              maxLength={1}
-              value={digit}
-              onChange={(event) => handleChange(index, event.target.value)}
-              onKeyDown={(event) => handleKeyDown(index, event)}
-              onPaste={handlePaste}
-              onFocus={(event) => event.target.select()}
-              disabled={isSubmitting}
-              className={`h-12 w-12 rounded-xl border-2 bg-surface text-center text-lg font-bold text-text-primary shadow-sm outline-none transition-all focus:ring-2 focus:ring-family-primary/50 disabled:opacity-50 ${
-                message
-                  ? "border-red-400"
-                  : digit
-                    ? "border-senior-primary"
-                    : "border-border"
-              }`}
-            />
-          ))}
-        </div>
-
-        {message ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-status-alert">{message}</p>
+        <FormCard
+          className="flex flex-col space-y-8"
+          data-testid="member-invite-code-form"
+        >
+          <div
+            className="flex justify-center gap-3"
+            role="group"
+            aria-label="6-digit invite code"
+          >
+            {digits.map((digit, index) => (
+              <input
+                key={index}
+                ref={(element) => {
+                  inputRefs.current[index] = element;
+                }}
+                type="text"
+                data-testid={`member-code-digit-${index}`}
+                inputMode="numeric"
+                aria-label={`Digit ${index + 1}`}
+                maxLength={1}
+                value={digit}
+                onChange={(event) => handleChange(index, event.target.value)}
+                onKeyDown={(event) => handleKeyDown(index, event)}
+                onPaste={handlePaste}
+                onFocus={(event) => event.target.select()}
+                disabled={isSubmitting}
+                className={`h-12 w-12 rounded-xl border-2 bg-surface text-center text-lg font-bold text-text-primary shadow-sm outline-none transition-all focus:ring-2 focus:ring-family-primary/50 disabled:opacity-50 ${
+                  message
+                    ? "border-red-400"
+                    : digit
+                      ? "border-senior-primary"
+                      : "border-border"
+                }`}
+              />
+            ))}
           </div>
-        ) : null}
+
+          {message ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+              <p className="text-sm font-medium text-status-alert">{message}</p>
+            </div>
+          ) : null}
 
           <PrimaryButton
             type="submit"
@@ -326,7 +333,9 @@ function CircleConfirmationStep({
           You&apos;re almost in.
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
-          You&apos;re joining <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Supporter.
+          You&apos;re joining{" "}
+          <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a
+          Supporter.
         </p>
       </div>
 
@@ -340,7 +349,8 @@ function CircleConfirmationStep({
         {hasCurrentSession ? (
           <>
             <p className="text-center text-base leading-relaxed text-text-secondary">
-              This account can&apos;t join that Workspace. Sign out to use a different account.
+              This account can&apos;t join that Workspace. Sign out to use a
+              different account.
             </p>
             <SecondaryButton
               type="button"
@@ -427,12 +437,14 @@ function MemberAuthStep({
                     ? error.message
                     : "We could not create your account.",
               }))
-          : await authClient.signUp.email({
-              name: name.trim(),
-              email: email.trim(),
-              password,
-              callbackURL: "/onboarding/member?verified=1",
-            }).then(({ error }) => error);
+          : await authClient.signUp
+              .email({
+                name: name.trim(),
+                email: email.trim(),
+                password,
+                callbackURL: "/onboarding/member?verified=1",
+              })
+              .then(({ error }) => error);
         if (signUpError) {
           setError(signUpError.message ?? "We could not create your account.");
           return;
@@ -456,10 +468,12 @@ function MemberAuthStep({
                     ? error.message
                     : "Please check your email and password.",
               }))
-          : await authClient.signIn.email({
-              email: email.trim(),
-              password,
-            }).then(({ error }) => error);
+          : await authClient.signIn
+              .email({
+                email: email.trim(),
+                password,
+              })
+              .then(({ error }) => error);
         if (signInError) {
           if (isEmailNotVerifiedError(signInError)) {
             window.location.replace(
@@ -467,7 +481,9 @@ function MemberAuthStep({
             );
             return;
           }
-          setError(signInError.message ?? "Please check your email and password.");
+          setError(
+            signInError.message ?? "Please check your email and password.",
+          );
           return;
         }
       }
@@ -494,84 +510,95 @@ function MemberAuthStep({
         </p>
       </div>
 
-        <form onSubmit={handleSubmit} data-testid="member-auth-form">
+      <form onSubmit={handleSubmit} data-testid="member-auth-form">
         <FormCard className="flex flex-col space-y-6">
-        {isCreate ? (
+          {isCreate ? (
+            <div className="space-y-2">
+              <label
+                className="font-family text-lg font-bold"
+                htmlFor="member-name"
+              >
+                Your name
+              </label>
+              <TextInput
+                id="member-name"
+                data-testid="member-name-input"
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="e.g. Emma"
+                required
+              />
+            </div>
+          ) : null}
+
           <div className="space-y-2">
-            <label className="font-family text-lg font-bold" htmlFor="member-name">
-              Your name
+            <label
+              className="font-family text-lg font-bold"
+              htmlFor="member-email"
+            >
+              Email address
             </label>
-             <TextInput
-               id="member-name"
-               data-testid="member-name-input"
-               type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Emma"
+            <TextInput
+              id="member-email"
+              data-testid="member-email-input"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="hello@example.com"
               required
             />
           </div>
-        ) : null}
 
-        <div className="space-y-2">
-          <label className="font-family text-lg font-bold" htmlFor="member-email">
-            Email address
-          </label>
-           <TextInput
-             id="member-email"
-             data-testid="member-email-input"
-             type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="hello@example.com"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="font-family text-lg font-bold" htmlFor="member-password">
-            Password
-          </label>
-           <TextInput
-             id="member-password"
-             data-testid="member-password-input"
-             type="password"
-            autoComplete={isCreate ? "new-password" : "current-password"}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="........"
-            required
-            minLength={8}
-          />
-          {isCreate ? (
-            <p className="px-1 text-sm text-text-secondary">Minimum 8 characters.</p>
-          ) : null}
-        </div>
-
-        {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-status-alert">{error}</p>
+          <div className="space-y-2">
+            <label
+              className="font-family text-lg font-bold"
+              htmlFor="member-password"
+            >
+              Password
+            </label>
+            <TextInput
+              id="member-password"
+              data-testid="member-password-input"
+              type="password"
+              autoComplete={isCreate ? "new-password" : "current-password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="........"
+              required
+              minLength={8}
+            />
+            {isCreate ? (
+              <p className="px-1 text-sm text-text-secondary">
+                Minimum 8 characters.
+              </p>
+            ) : null}
           </div>
-        ) : null}
 
-        <PrimaryButton
-          type="submit"
-          disabled={isSubmitting}
-          data-testid="member-auth-submit-button"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {isCreate ? "Creating account..." : "Signing in..."}
-            </>
-          ) : isCreate ? (
-            "Create account"
-          ) : (
-            "Sign in"
-          )}
-        </PrimaryButton>
+          {error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+              <p className="text-sm font-medium text-status-alert">{error}</p>
+            </div>
+          ) : null}
+
+          <PrimaryButton
+            type="submit"
+            disabled={isSubmitting}
+            data-testid="member-auth-submit-button"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {isCreate ? "Creating account..." : "Signing in..."}
+              </>
+            ) : isCreate ? (
+              "Create account"
+            ) : (
+              "Sign in"
+            )}
+          </PrimaryButton>
 
           <button
             type="button"
@@ -597,7 +624,9 @@ function JoiningStep({ invitePreview }: { invitePreview: InvitePreview }) {
           Joining the Workspace
         </h1>
         <p className="text-lg leading-relaxed text-text-secondary">
-          Adding you to <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a Supporter.
+          Adding you to{" "}
+          <strong>{resolveCircleName(invitePreview.circleName)}</strong> as a
+          Supporter.
         </p>
       </div>
     </FormCard>
@@ -618,7 +647,10 @@ function SuccessStep() {
   return (
     <div className="flex flex-col items-center gap-8 text-center">
       <div className="flex h-24 w-24 items-center justify-center rounded-full bg-family-primary/10">
-        <CheckCircle2 className="h-12 w-12 text-family-primary" strokeWidth={1.5} />
+        <CheckCircle2
+          className="h-12 w-12 text-family-primary"
+          strokeWidth={1.5}
+        />
       </div>
 
       <div>
@@ -640,14 +672,19 @@ function SuccessStep() {
 
 export default function MemberJoinClient() {
   const { data: session } = authClient.useSession();
-  const redeemMemberInviteCode = useMutation(api.circleInvites.redeemMemberInviteCode);
+  const redeemMemberInviteCode = useMutation(
+    api.circleInvites.redeemMemberInviteCode,
+  );
 
-  const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(null);
+  const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(
+    null,
+  );
   const [hasLoadedPendingInvite, setHasLoadedPendingInvite] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [isAwaitingAccountSession, setIsAwaitingAccountSession] = useState(false);
+  const [isAwaitingAccountSession, setIsAwaitingAccountSession] =
+    useState(false);
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoinedSuccessfully, setHasJoinedSuccessfully] = useState(false);
@@ -754,7 +791,7 @@ export default function MemberJoinClient() {
   ]);
 
   const handleUseDifferentAccount = async () => {
-      setIsSwitchingAccount(true);
+    setIsSwitchingAccount(true);
     await authClient.signOut();
     setIsAwaitingAccountSession(false);
   };
@@ -790,7 +827,10 @@ export default function MemberJoinClient() {
         />
       ) : null}
 
-      {!hasJoinedSuccessfully && !showJoiningState && invitePreview !== null && authMode === null ? (
+      {!hasJoinedSuccessfully &&
+      !showJoiningState &&
+      invitePreview !== null &&
+      authMode === null ? (
         <CircleConfirmationStep
           invitePreview={invitePreview}
           error={joinError}
@@ -807,7 +847,10 @@ export default function MemberJoinClient() {
         />
       ) : null}
 
-      {!hasJoinedSuccessfully && !showJoiningState && invitePreview !== null && authMode !== null ? (
+      {!hasJoinedSuccessfully &&
+      !showJoiningState &&
+      invitePreview !== null &&
+      authMode !== null ? (
         <MemberAuthStep
           invitePreview={invitePreview}
           mode={authMode}

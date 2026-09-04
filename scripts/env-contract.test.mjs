@@ -16,8 +16,7 @@ const contractMarkdown = `
 | \`BETTER_AUTH_URL\` | yes | server and Convex | Better Auth base URL | Usually same value |
 | \`CONVEX_DEPLOYMENT\` | required | local dev and deployment tooling | Convex CLI | Present in core and backend examples |
 | \`CONVEX_URL\` | required only for marketing | server | apps/marketing waitlist | Marketing-only variable |
-| \`MEMVELLA_HQ_ENABLED\` | required to enable HQ | server | apps/internal | Internal-only variable |
-| \`MEMVELLA_TEST_MODE\` | optional | server and Convex | guarded E2E-only test seams | Internal also reads this |
+| \`MEMVELLA_TEST_MODE\` | optional | server and Convex | guarded E2E-only test seams | Local test helpers |
 `;
 
 test("parseMarkdownContract reads the variable contract table", () => {
@@ -30,7 +29,6 @@ test("parseMarkdownContract reads the variable contract table", () => {
       "BETTER_AUTH_URL",
       "CONVEX_DEPLOYMENT",
       "CONVEX_URL",
-      "MEMVELLA_HQ_ENABLED",
       "MEMVELLA_TEST_MODE",
     ],
   );
@@ -54,7 +52,7 @@ test("parseConvexConfigEnv reads the defineApp env block", () => {
   assert.deepEqual([...variables], ["FOO", "BAR"]);
 });
 
-test("expectedTargets classifies app, Convex, marketing, and internal variables", () => {
+test("expectedTargets classifies app, Convex, and marketing variables", () => {
   const expected = expectedTargets(parseMarkdownContract(contractMarkdown));
 
   assert.equal(expected.core.has("NEXT_PUBLIC_SITE_URL"), true);
@@ -62,7 +60,6 @@ test("expectedTargets classifies app, Convex, marketing, and internal variables"
   assert.equal(expected.backendExample.has("BETTER_AUTH_URL"), true);
   assert.equal(expected.convexConfig.has("CONVEX_DEPLOYMENT"), true);
   assert.deepEqual([...expected.marketing], ["CONVEX_URL"]);
-  assert.deepEqual([...expected.internal].sort(), ["MEMVELLA_HQ_ENABLED", "MEMVELLA_TEST_MODE"]);
 });
 
 test("validateContract reports missing and undocumented variables", () => {
@@ -73,7 +70,6 @@ test("validateContract reports missing and undocumented variables", () => {
       core: new Set(["NEXT_PUBLIC_SITE_URL", "UNLISTED"]),
       backendExample: new Set(["BETTER_AUTH_URL", "CONVEX_DEPLOYMENT", "MEMVELLA_TEST_MODE"]),
       marketing: new Set([]),
-      internal: new Set(["MEMVELLA_HQ_ENABLED", "MEMVELLA_TEST_MODE"]),
       convexConfig: new Set(["BETTER_AUTH_URL", "CONVEX_DEPLOYMENT", "MEMVELLA_TEST_MODE", "NODE_ENV"]),
     },
   });

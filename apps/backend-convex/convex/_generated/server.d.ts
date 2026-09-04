@@ -22,6 +22,28 @@ import {
 import type { DataModel } from "./dataModel.js";
 
 /**
+ * Typesafe environment variables declared in `convex.config.ts`.
+ */
+type Env = {
+  readonly BETTER_AUTH_SECRET: string | undefined;
+  readonly BETTER_AUTH_TRUSTED_ORIGINS: string | undefined;
+  readonly BETTER_AUTH_URL: string | undefined;
+  readonly CONVEX_DEPLOYMENT: string | undefined;
+  readonly GEMINI_API_KEY: string | undefined;
+  readonly MEMVELLA_AUTH_EMAIL_FROM: string | undefined;
+  readonly MEMVELLA_AUTH_PEPPER: string | undefined;
+  readonly MEMVELLA_TEST_AUTH_TOKEN: string | undefined;
+  readonly MEMVELLA_TEST_MODE: string | undefined;
+  readonly MEMVELLA_WEB_PUSH_PRIVATE_KEY: string | undefined;
+  readonly MEMVELLA_WEB_PUSH_SUBJECT: string | undefined;
+  readonly NEXT_PUBLIC_MEMVELLA_WEB_PUSH_PUBLIC_KEY: string | undefined;
+  readonly NEXT_PUBLIC_SITE_URL: string | undefined;
+  readonly NODE_ENV: string | undefined;
+  readonly RESEND_API_KEY: string | undefined;
+  readonly SITE_URL: string | undefined;
+};
+
+/**
  * Define a query in this Convex app's public API.
  *
  * This function will be allowed to read your Convex database and will be accessible from the client.
@@ -94,6 +116,11 @@ export declare const internalAction: ActionBuilder<DataModel, "internal">;
  * @returns The wrapped function. Import this function from `convex/http.js` and route it to hook it up.
  */
 export declare const httpAction: HttpActionBuilder;
+
+/**
+ * Typesafe environment variables declared in `convex.config.ts`.
+ */
+export declare const env: Env;
 
 /**
  * A set of services for use within Convex query functions.

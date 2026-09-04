@@ -18,7 +18,9 @@ function formatTimestamp(timestamp: number) {
 
 export default function OrganiserInsightsPage() {
   const insights = useQuery(api.insights.listOrganiserInsights);
-  const reviewOrganiserInsight = useMutation(api.insights.reviewOrganiserInsight);
+  const reviewOrganiserInsight = useMutation(
+    api.insights.reviewOrganiserInsight,
+  );
   const { toast } = useToast();
 
   const updateInsightStatus = async (
@@ -71,16 +73,17 @@ export default function OrganiserInsightsPage() {
           <Sparkles className="h-8 w-8 text-family-accent" />
         </div>
         <p className="mb-2 font-family text-lg font-bold text-text-primary">
-          No new insights to review right now.
+          You’re all caught up.
         </p>
         <p className="mb-6 max-w-[260px] text-base leading-relaxed text-text-secondary">
-          New transcript signals and AI summaries will appear here for review.
+          Conversation notes and follow-ups will appear here when there is
+          something to review.
         </p>
         <Link
           href="/circle"
           className="rounded-full bg-surface-muted px-6 py-4 text-base font-bold text-text-secondary shadow-sm transition-transform active:scale-95"
         >
-          Return to Dashboard
+          Back to today
         </Link>
       </div>
     );
@@ -92,10 +95,10 @@ export default function OrganiserInsightsPage() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-family-accent">
-              Review Queue
+              Conversation notes
             </p>
             <h1 className="font-family text-lg font-bold text-text-primary">
-              Insights
+              Updates to review
             </h1>
           </div>
           <div className="rounded-full bg-family-accent px-4 py-2 text-sm font-bold text-white">
@@ -123,7 +126,9 @@ export default function OrganiserInsightsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-text-tertiary">
-                      {insight.priority === "high" ? "High Priority" : "Actionable"}
+                      {insight.priority === "high"
+                        ? "High Priority"
+                        : "Actionable"}
                     </p>
                     <h2 className="font-family text-lg font-bold text-text-primary">
                       {insight.title}
@@ -141,7 +146,7 @@ export default function OrganiserInsightsPage() {
 
               <div className="mt-4 rounded-xl bg-surface-muted p-4">
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-text-tertiary">
-                  Suggested Action
+                  Suggested follow-up
                 </p>
                 <p className="mt-2 text-lg leading-relaxed text-text-primary">
                   {insight.suggestedAction}
@@ -151,7 +156,7 @@ export default function OrganiserInsightsPage() {
               {insight.evidenceTranscript ? (
                 <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-text-tertiary">
-                    Transcript Evidence
+                    What was said
                   </p>
                   <p className="mt-2 text-lg leading-relaxed text-text-primary">
                     “{insight.evidenceTranscript}”
@@ -160,7 +165,7 @@ export default function OrganiserInsightsPage() {
               ) : null}
 
               <p className="mt-4 text-base font-medium text-text-tertiary">
-                Linked senior: {insight.seniorName}
+                For: {insight.seniorName}
               </p>
 
               <div className="mt-5 flex flex-col gap-3 md:flex-row">
@@ -206,11 +211,17 @@ export default function OrganiserInsightsPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-bold text-text-primary">{insight.title}</p>
-                    <p className="mt-1 text-base text-text-secondary">{insight.summary}</p>
+                    <p className="font-bold text-text-primary">
+                      {insight.title}
+                    </p>
+                    <p className="mt-1 text-base text-text-secondary">
+                      {insight.summary}
+                    </p>
                   </div>
                   <span className="text-sm font-semibold text-text-tertiary">
-                    {insight.reviewedAt ? formatTimestamp(insight.reviewedAt) : ""}
+                    {insight.reviewedAt
+                      ? formatTimestamp(insight.reviewedAt)
+                      : ""}
                   </span>
                 </div>
               </div>

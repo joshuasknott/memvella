@@ -1,36 +1,75 @@
 "use client";
 
-import Link from 'next/link';
-import { Home, Calendar, BookOpen, Settings } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { CalendarDays, Images, Clock3, Settings } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useCircleProfile } from "@/lib/use-circle-profile";
+
+const destinations = [
+  { href: "/circle", label: "Today", icon: CalendarDays, testId: "home" },
+  {
+    href: "/circle/memories",
+    label: "Memories",
+    icon: Images,
+    testId: "memories",
+  },
+  {
+    href: "/circle/routines",
+    label: "Routines",
+    icon: Clock3,
+    testId: "routines",
+  },
+  {
+    href: "/circle/settings",
+    label: "Settings",
+    icon: Settings,
+    testId: "settings",
+  },
+];
 
 export default function CircleBottomNav() {
   const pathname = usePathname();
-  const isHomeRoute = pathname === '/circle';
-  const isRoutinesRoute = pathname.startsWith('/circle/routines') || pathname.startsWith('/circle/add-routine');
-  const isMemoriesRoute = pathname.startsWith('/circle/memories') || pathname.startsWith('/circle/add-memory');
-  const isSettingsRoute = pathname.startsWith('/circle/settings');
-
+  const { seniorDisplayName } = useCircleProfile();
   return (
-    <nav className="fixed bottom-0 w-full max-w-3xl bg-surface border-t border-border pb-safe z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-      <div className="flex justify-around items-center px-4 pb-8 pt-4">
-        <Link href="/circle" data-testid="circle-nav-home" className={`flex flex-col items-center justify-center rounded-full px-6 py-2 transition-transform active:scale-90 ${isHomeRoute ? 'bg-family-primary/10 text-family-primary' : 'text-text-secondary hover:bg-family-primary/5'}`}>
-          <Home className={`w-6 h-6 ${isHomeRoute ? 'fill-family-primary/20' : ''}`} />
-          <span className="mt-1 font-family text-sm font-bold">Home</span>
-        </Link>
-        <Link href="/circle/routines" data-testid="circle-nav-routines" className={`flex flex-col items-center justify-center rounded-full px-6 py-2 transition-transform active:scale-90 ${isRoutinesRoute ? 'bg-family-primary/10 text-family-primary' : 'text-text-secondary hover:bg-family-primary/5'}`}>
-          <Calendar className="w-6 h-6" />
-          <span className="mt-1 font-family text-sm font-semibold">Routines</span>
-        </Link>
-        <Link href="/circle/memories" data-testid="circle-nav-memories" className={`flex flex-col items-center justify-center rounded-full px-6 py-2 transition-transform active:scale-90 ${isMemoriesRoute ? 'bg-family-primary/10 text-family-primary' : 'text-text-secondary hover:bg-family-primary/5'}`}>
-          <BookOpen className="w-6 h-6" />
-          <span className="mt-1 font-family text-sm font-semibold">Memories</span>
-        </Link>
-        <Link href="/circle/settings" data-testid="circle-nav-settings" className={`flex flex-col items-center justify-center rounded-full px-6 py-2 transition-transform active:scale-90 ${isSettingsRoute ? 'bg-family-primary/10 text-family-primary' : 'text-text-secondary hover:bg-family-primary/5'}`}>
-          <Settings className="w-6 h-6" />
-          <span className="mt-1 font-family text-sm font-semibold">Settings</span>
-        </Link>
-      </div>
-    </nav>
+    <aside className="circle-navigation">
+      <Link
+        href="/circle"
+        className="circle-wordmark"
+        aria-label="Memvella home"
+      >
+        Memvella
+      </Link>
+      <p className="circle-for">For {seniorDisplayName}</p>
+      <nav aria-label="Main navigation">
+        {destinations.map(({ href, label, icon: Icon, testId }) => {
+          const active =
+            href === "/circle"
+              ? pathname === href
+              : pathname.startsWith(href) ||
+                (testId === "memories" &&
+                  pathname.startsWith("/circle/add-memory")) ||
+                (testId === "routines" &&
+                  pathname.startsWith("/circle/add-routine")) ||
+                (testId === "settings" &&
+                  (pathname.startsWith("/circle/people") ||
+                    pathname.startsWith("/circle/add-person") ||
+                    pathname.startsWith("/circle/insights")));
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              data-testid={`circle-nav-${testId}`}
+              className={
+                testId === "settings" ? "circle-settings-link" : undefined
+              }
+            >
+              <Icon size={23} strokeWidth={1.7} aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

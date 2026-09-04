@@ -14,13 +14,6 @@ const betterAuthSecret =
   process.env.BETTER_AUTH_SECRET ?? "memvella-local-test-secret";
 const authPepper =
   process.env.MEMVELLA_AUTH_PEPPER ?? "memvella-local-test-pepper";
-const requiredConvexFunctions = [
-  "testSupport:healthcheck",
-  "testSupport:resetAppData",
-  "testSupport:createSeniorSessionFixture",
-  "testAwareness:seedAwarenessReviewFixture",
-];
-
 let originalConvexTestEnv = null;
 
 function mergeTrustedOrigins(baseOrigin) {
@@ -264,47 +257,6 @@ async function waitForHealth(url, timeoutMs) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
-async function waitForConvexFunctions(timeoutMs) {
-  const startedAt = Date.now();
-  let lastOutput = "";
-
-  while (Date.now() - startedAt < timeoutMs) {
-    const result = await runCommand(
-      "corepack",
-      [
-        "pnpm",
-        "--dir",
-        "apps/backend-convex",
-        "exec",
-        "convex",
-        "function-spec",
-        "--deployment",
-        "local",
-      ],
-      "convex function-spec",
-      {
-        allowFailure: true,
-      },
-    );
-    lastOutput = `${result.stdout}\n${result.stderr}`.trim();
-
-    if (
-      result.code === 0 &&
-      requiredConvexFunctions.every((functionName) =>
-        lastOutput.includes(functionName),
-      )
-    ) {
-      return;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1_000));
-  }
-
-  throw new Error(
-    `Timed out waiting for Convex test functions. Last output: ${lastOutput}`,
-  );
-}
-
 await assertConvexDeploymentConfigured();
 await configureConvexTestEnv();
 
@@ -319,7 +271,7 @@ const childProcesses = [
     "--hostname",
     "127.0.0.1",
     "--port",
-    "3000",
+    new URL(baseURL).port || "3000",
   ]),
 ];
 
@@ -333,7 +285,11 @@ function cleanupAndExit(code) {
   isCleaningUp = true;
   for (const child of childProcesses) {
     if (!child.killed) {
-      child.kill();
+      if (process.platform === "win32") {
+        spawnSync("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
+      } else {
+        child.kill();
+      }
     }
   }
 
@@ -356,7 +312,6 @@ process.on("SIGINT", () => cleanupAndExit(130));
 process.on("SIGTERM", () => cleanupAndExit(143));
 
 try {
-  await waitForConvexFunctions(180_000);
   await waitForHealth(healthURL, 180_000);
 } catch (error) {
   console.error(error);

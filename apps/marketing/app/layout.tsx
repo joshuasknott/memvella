@@ -13,9 +13,9 @@ const figtree = Figtree({
   subsets: ["latin"],
 });
 
-const marketingTitle = "Memvella | Digital Wellness Companion";
+const marketingTitle = "Memvella | Their stories. Your connection.";
 const marketingDescription =
-  "Memvella is a voice-first digital wellness companion for family and trusted supporter routines, memories, and a calm companion tablet experience.";
+  "A friendly voice, familiar memories and gentle reminders for older people, with family close by. Join the Memvella early-access waitlist.";
 
 export const metadata: Metadata = {
   title: {

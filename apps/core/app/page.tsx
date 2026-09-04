@@ -1,48 +1,66 @@
+import Image from "next/image";
 import Link from "next/link";
-import { BrandLogo, Button } from "@memvella/ui";
-import { LogIn, ShieldCheck } from "lucide-react";
+import { ArrowRight, Tablet } from "lucide-react";
 
-export default function UniversalSplash() {
+export default function WelcomePage() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 py-12 text-center font-body selection:bg-family-primary selection:text-white">
-      {/* Wordmark + tagline */}
-      <div className="mb-10 flex flex-col items-center gap-4">
-        <BrandLogo className="w-auto h-10 md:h-12" />
-        <p className="text-base md:text-lg text-text-secondary font-medium tracking-wide">
-          Digital wellness support for someone you care about.
-        </p>
-      </div>
-
-      {/* Action area */}
-      <div className="w-full max-w-sm md:max-w-md mx-auto">
-        <div
-          className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
-          key="circle-options"
-        >
-          <Button variant="family" size="senior" asChild id="btn-start-circle">
-            <Link href="/onboarding/organiser">
-              <ShieldCheck className="w-5 h-5" />
-              Sign up
-            </Link>
-          </Button>
-
-          <Button variant="secondary" size="senior" asChild id="btn-join-circle">
-            <Link href="/organiser/signin">
-              <LogIn className="w-5 h-5" />
+    <main className="welcome-page">
+      <div className="welcome-copy">
+        <Link className="circle-wordmark" href="/" aria-label="Memvella home">
+          Memvella
+        </Link>
+        <div className="welcome-intro">
+          <p className="eyebrow">Familiar moments. Everyday connection.</p>
+          <h1>
+            A little closer,
+            <br />
+            every day.
+          </h1>
+          <p>
+            Share the memories they know. Bring a gentle rhythm to their day.
+            Stay connected through a simple companion tablet.
+          </p>
+          <Link
+            href="/onboarding/organiser"
+            className="action-button"
+            id="btn-start-circle"
+          >
+            Get started <ArrowRight size={20} aria-hidden="true" />
+          </Link>
+          <p className="welcome-signin">
+            Already here?{" "}
+            <Link href="/organiser/signin" id="btn-join-circle">
               Log in
             </Link>
-          </Button>
-        </div>
-
-        {/* Tertiary: tablet pairing — quiet, never a primary CTA */}
-        <div className="mt-10">
-          <Link
-            href="/assisted/login"
-            id="link-connect-tablet"
-            className="text-sm text-text-secondary hover:text-family-primary underline underline-offset-4 transition-colors"
-          >
-            Connect a companion tablet
+          </p>
+          <Link href="/onboarding/member" className="quiet-link">
+            I have an invite code <ArrowRight size={16} aria-hidden="true" />
           </Link>
+        </div>
+        <Link
+          href="/assisted/login"
+          id="link-connect-tablet"
+          className="welcome-tablet"
+        >
+          <Tablet size={20} aria-hidden="true" /> Connect a companion tablet
+        </Link>
+      </div>
+      <div className="welcome-photo">
+        <Image
+          src="/images/seaside-memory.png"
+          alt="Two generations enjoying a walk beside the sea"
+          fill
+          sizes="(min-width: 900px) 50vw, 100vw"
+          preload
+          className="object-cover"
+        />
+        <div className="welcome-caption">
+          <p>
+            The small moments.
+            <br />
+            The familiar feeling.
+          </p>
+          <span>More room for what matters.</span>
         </div>
       </div>
     </main>

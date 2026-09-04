@@ -23,7 +23,7 @@ test("account holder can sign back into an existing Workspace", async ({ page })
 
   await waitForCircleReady(page);
   await expect(page).toHaveURL(/\/circle$/);
-  await expect(page.getByTestId("circle-current-status")).toContainText(
+  await expect(page.locator(".companion-card")).toContainText(
     credentials.seniorName,
   );
 });

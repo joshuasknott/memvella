@@ -15,6 +15,9 @@ coverage/
 playwright-report/
 test-results/
 
+# local design captures, preview helpers, and verification logs
+/output/
+
 # next.js
 .next/
 out/

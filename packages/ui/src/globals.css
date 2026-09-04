@@ -8,32 +8,33 @@
 
 @theme {
   /* ─── Shared Foundation ─── */
-  --color-canvas: #FBFBF9;
-  --color-surface: #FFFFFF;
-  --color-surface-muted: #F5F5F7;
-  --color-surface-inverse: #0F172A;
-  --color-surface-inverse-muted: #1E293B;
-  --color-border: #D8DCE3;
+  --color-canvas: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eeeee6;
+  --color-surface-inverse: #0f172a;
+  --color-surface-inverse-muted: #1e293b;
+  --color-border: #ddded5;
+  --color-input-border: #858e83;
   --color-border-inverse: #334155;
-  --color-text-primary: #1A1D26;
-  --color-text-secondary: #4B5263;
-  --color-text-tertiary: #64748B;
-  --color-text-muted: #94A3B8;
-  --color-text-inverse-muted: #CBD5E1;
+  --color-text-primary: #202a25;
+  --color-text-secondary: #586058;
+  --color-text-tertiary: #646b63;
+  --color-text-muted: #646b63;
+  --color-text-inverse-muted: #cbd5e1;
 
   /* ─── Family & Marketing Pathway ─── */
-  --color-family-primary: #2D3250;
-  --color-family-accent: #FF8C42;
-  --color-family-muted: #676F9D;
+  --color-family-primary: #254b40;
+  --color-family-accent: #835331;
+  --color-family-muted: #586b60;
 
   /* ─── Senior Interface Pathway ─── */
-  --color-senior-primary: #185C60;
-  --color-senior-warmth: #A64638;
+  --color-senior-primary: #254b40;
+  --color-senior-warmth: #a64638;
 
   /* ─── Status & Semantic ─── */
-  --color-status-success: #2D8A4F;
-  --color-status-alert: #BC2B2B;
-  --color-status-insight: #676F9D;
+  --color-status-success: #2d8a4f;
+  --color-status-alert: #bc2b2b;
+  --color-status-insight: #676f9d;
 
   /* ─── Typography (values injected by next/font/google in layouts) ─── */
   --font-senior: var(--font-senior);
@@ -41,22 +42,37 @@
   --font-body: var(--font-family);
 
   /* ─── Border Radius ─── */
-  --radius-lg: 2rem;
-  --radius-xl: 3rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --font-editorial: Georgia, "Times New Roman", serif;
+  --font-headline: var(--font-senior);
 
   /* ─── Box Shadow ─── */
-  --shadow-ambient: 0 20px 50px -12px rgba(26, 29, 38, 0.08);
-  --shadow-card: 0 1px 3px 0 rgba(26, 29, 38, 0.06), 0 1px 2px -1px rgba(26, 29, 38, 0.06);
+  --shadow-ambient: 0 4px 20px rgba(26, 29, 38, 0.03);
+  --shadow-card:
+    0 1px 3px 0 rgba(26, 29, 38, 0.06), 0 1px 2px -1px rgba(26, 29, 38, 0.06);
 
   /* ─── Animations ─── */
   @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
   }
 
   @keyframes aura-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
   }
 
   --animate-breathe: breathe 4s ease-in-out infinite;
@@ -130,6 +146,55 @@
 
 /* ─── Aura glow utility (marketing) ─── */
 .aura-glow {
-  background: radial-gradient(circle, rgba(103, 111, 157, 0.15) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(103, 111, 157, 0.15) 0%,
+    transparent 70%
+  );
   animation: aura-pulse 8s ease-in-out infinite;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--color-family-primary);
+    outline-offset: 4px;
+  }
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-tertiary);
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Form boundaries remain visible against both white and ivory surfaces. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea,
+select {
+  border-color: var(--color-input-border);
 }

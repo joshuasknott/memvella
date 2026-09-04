@@ -119,7 +119,7 @@ These tables anchor on `circleId`:
 
 ### Internal Observability Data
 
-`appEvents` stores sanitized first-party operational signals for HQ observability.
+`appEvents` stores sanitized first-party operational signals for service observability.
 
 Allowed fields:
 

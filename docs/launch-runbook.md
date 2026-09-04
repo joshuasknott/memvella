@@ -35,7 +35,6 @@ corepack pnpm build
 - Confirm web push keys are configured or push is explicitly treated as unavailable.
 - Confirm `MEMVELLA_TEST_MODE`, `NEXT_PUBLIC_MEMVELLA_TEST_MODE`, and `MEMVELLA_TEST_AUTH_TOKEN` are absent from production unless running a controlled test deployment.
 - Confirm marketing has `CONVEX_URL` for waitlist submissions.
-- Confirm HQ remains disabled unless `MEMVELLA_HQ_ENABLED=1` with real HQ secrets.
 
 ## Browser And Device Smoke
 
@@ -66,7 +65,6 @@ Local e2e requires `apps/backend-convex/.env.local` with `CONVEX_DEPLOYMENT`. Th
 1. Deploy Convex backend changes.
 2. Deploy `apps/core`.
 3. Deploy `apps/marketing`.
-4. Keep `apps/internal` disabled unless HQ is intentionally enabled.
 5. Run the browser and device smoke checklist against production.
 
 ## Rollback

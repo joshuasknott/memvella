@@ -14,7 +14,9 @@ Before testing auth-sensitive or backend-sensitive changes:
 - confirm the browser origin matches `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL`
 - confirm Convex is running and the app is connected to the intended deployment
 - confirm any server-side secrets required for the path under test are configured
-- confirm `pnpm type-check`, `pnpm test`, and `pnpm build` are part of your verification pass for non-trivial changes
+- select type-check, tests, and build for the affected packages; use `pnpm verify` for cross-package changes and release readiness
+
+Documentation-only edits need link/command validation and diff review. The commands below are a menu of checks, not a requirement to run every mode after every edit. Preserve the full CI and release gates.
 
 ## Automated Verification
 
@@ -27,14 +29,6 @@ Before testing auth-sensitive or backend-sensitive changes:
 - `pnpm test:e2e:headed`
 - `pnpm build`
 - `pnpm verify` to run the full loop in sequence
-
-For Memvella HQ changes, also manually verify:
-
-- HQ is inaccessible unless `MEMVELLA_HQ_ENABLED=1`
-- HQ login requires `MEMVELLA_HQ_ACCESS_KEY`
-- the HQ session cookie is HTTP-only and same-site
-- the authenticated internal home page stays intentionally minimal
-- no product dashboards, QA/dev actions, runbooks, or sensitive product data are exposed
 
 Current gate:
 
@@ -85,7 +79,7 @@ Before any rollout, the core product is the priority verification surface.
 
 ### Root Entry And Workspace Setup
 
-- open `/` and confirm sign-up, login, and the quiet companion tablet connection link are present
+- open `/` and confirm Get started, Log in, invite-code entry, and the quiet companion tablet connection link are present
 - create a new account and Workspace from `/onboarding/organiser`
 - confirm the new account lands in `/circle`
 - sign out and sign back in through `/organiser/signin`
@@ -108,10 +102,10 @@ Coverage note:
 
 ### Workspace Home, Insights, And Settings
 
-- verify `/circle` loads `Current Status`, quick actions, and `Today's Updates`
+- verify `/circle` loads Today, scheduled routines, memories, and companion access
 - verify `/circle/insights` loads the combined review queue for alerts and insights
 - verify reviewing or dismissing an item updates the queue
-- verify `/circle/settings/account` loads the current profile and session information
+- verify `/circle/settings/account` loads account details, persists owner name changes, and signs out
 - verify `/circle/settings/members` lists current Supporters
 
 Current shipped scope note:
@@ -122,7 +116,7 @@ Current shipped scope note:
 ### Memories
 
 - verify `/circle/memories` loads the memory library
-- verify each add flow still works: text, media, audio, and voice
+- verify the unified memory editor saves text, media, audio, and dictated stories, including the existing direct URLs
 - verify memory detail and edit pages still load
 - verify owner and Supporter memory CRUD still works
 
@@ -183,3 +177,12 @@ Coverage note:
 - Media upload, audio upload, memory detail/edit, insights review, notification toggles, and tablet pairing success should be covered by targeted manual or automated checks when those areas change.
 - Real email delivery, cross-origin auth, real push delivery, and real Gemini live-voice behavior require environment-backed manual or scheduled verification.
 - `convex-test` covers selected backend auth, profile, invite, and People flows. Add targeted backend tests when changing untested public functions.
+
+## Simplified experience regression checks
+
+- `tests/e2e/specs/simple-experience.spec.ts` covers the unified memory editor, invalid upload feedback without losing a draft, saving and search at phone width, active navigation, and persisted owner account edits.
+- `tests/e2e/specs/companion-reminder.spec.ts` verifies that a due routine stays visible without automatically starting voice, and that a failed voice connection can be dismissed.
+- People navigation tests enter through Settings > Familiar people.
+- Use `PLAYWRIGHT_BASE_URL` for an available local port. The runner derives the Next port from that origin and verifies readiness through the guarded test-health route. Its Windows cleanup terminates only the child process trees it started.
+- Run the browser suite against disposable local Convex data. Snapshot existing local data first if the deployment is shared with manual development. Production services are outside this deterministic suite.
+- Visual reference and captures for the September overhaul are in `output/overhaul/`; the reviewed result is recorded in `design-qa.md`.

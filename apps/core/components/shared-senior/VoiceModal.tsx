@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, Mic, MicOff, Volume2 } from "lucide-react";
+import { LoaderCircle, Mic, Volume2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 interface VoiceModalProps {
@@ -43,7 +43,7 @@ function VoiceStateHeadline({
   }
 
   if (isProcessing) {
-    return "Processing";
+    return "Thinking";
   }
 
   if (isListening) {
@@ -141,7 +141,7 @@ export function VoiceModal({
     >
       <div
         ref={panelRef}
-        className="flex w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10"
+        className="flex max-h-[90dvh] overflow-y-auto w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10"
       >
         <h2 className="font-family text-4xl font-bold text-text-primary md:text-5xl">
           <VoiceStateHeadline
@@ -155,24 +155,17 @@ export function VoiceModal({
 
         <p className="mt-3 max-w-xl text-lg leading-relaxed text-text-secondary md:text-lg">
           {combinedError
-            ? combinedError
+            ? "We can’t connect right now. Try again in a moment, or close this to enjoy your memories."
             : isConnecting
-              ? "Memvella is opening the live voice loop."
-            : isSpeaking
-              ? "Memvella is speaking back now."
-              : isProcessing
-                ? "Memvella is preparing a reply for you."
-                : "Speak naturally and Memvella will reply aloud."}
+              ? "Just a moment. We’re getting ready to listen."
+              : isSpeaking
+                ? "Take your time. You can speak when you’re ready."
+                : isProcessing
+                  ? "Memvella is preparing a reply for you."
+                  : "Speak naturally and Memvella will reply aloud."}
         </p>
 
-        <div className="relative mt-10 flex h-48 w-48 items-center justify-center md:h-56 md:w-56">
-          {isListening ? (
-            <>
-              <div className="absolute inset-0 rounded-full bg-senior-primary/15 animate-ping" style={{ animationDuration: "1.8s" }} />
-              <div className="absolute inset-4 rounded-full bg-senior-primary/20 animate-pulse" />
-            </>
-          ) : null}
-
+        <div className="relative mt-6 flex h-32 w-32 items-center justify-center">
           <div
             className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full shadow-xl md:h-32 md:w-32 ${
               combinedError
@@ -185,11 +178,14 @@ export function VoiceModal({
             }`}
           >
             {isProcessing ? (
-              <LoaderCircle className="h-12 w-12 animate-spin" strokeWidth={2.5} />
+              <LoaderCircle
+                className="h-12 w-12 animate-spin"
+                strokeWidth={2.5}
+              />
             ) : isSpeaking ? (
               <Volume2 className="h-12 w-12" strokeWidth={2.5} />
             ) : isListening ? (
-              <MicOff className="h-12 w-12" strokeWidth={2.5} />
+              <Mic className="h-12 w-12" strokeWidth={2.5} />
             ) : (
               <Mic className="h-12 w-12" strokeWidth={2.5} />
             )}
@@ -198,7 +194,7 @@ export function VoiceModal({
 
         {(liveTranscript || lastTranscript || lastReply) && !combinedError ? (
           <div className="mt-8 w-full space-y-4 rounded-[32px] bg-surface p-6 text-left shadow-sm">
-            {(liveTranscript || lastTranscript) ? (
+            {liveTranscript || lastTranscript ? (
               <div>
                 <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                   You Said
@@ -231,7 +227,7 @@ export function VoiceModal({
               }}
               className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-family-accent px-8 text-lg font-bold text-white shadow-md transition-transform active:scale-95"
             >
-              Reconnect Voice
+              Try again
             </button>
             <button
               type="button"
