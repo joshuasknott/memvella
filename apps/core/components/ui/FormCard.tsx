@@ -10,7 +10,7 @@ export const FormCard = forwardRef<HTMLElement, FormCardProps>(
     return (
       <Component
         ref={ref}
-        className={`bg-surface rounded-xl p-4 md:p-6 shadow-card border border-border ${className}`}
+        className={`bg-surface rounded-xl p-4 md:p-6 shadow-none border border-border ${className}`}
         {...(props as Record<string, unknown>)}
       >
         {children}

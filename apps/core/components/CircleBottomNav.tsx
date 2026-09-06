@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandLogo } from "@memvella/ui";
 import { CalendarDays, Images, Clock3, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCircleProfile } from "@/lib/use-circle-profile";
@@ -37,7 +38,7 @@ export default function CircleBottomNav() {
         className="circle-wordmark"
         aria-label="Memvella home"
       >
-        Memvella
+        <BrandLogo />
       </Link>
       <p className="circle-for">For {seniorDisplayName}</p>
       <nav aria-label="Main navigation">

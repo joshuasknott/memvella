@@ -38,6 +38,9 @@ The shared area remains a Workspace in permission and account copy; ordinary scr
 - No duplicate tablet controls in Account.
 - No automatic carousel movement on the senior screen.
 - Due reminders stay visible on the tablet. Voice starts only when the person taps to talk, so an unavailable voice service cannot interrupt browsing.
+- The companion also offers Type a message. This path uses readable replies and does not request microphone access. Voice streams native audio with input and output transcripts; both paths require the configured live AI service.
+- Routine check-ins wait for a response or an explicit close rather than expiring after 30 seconds. The person can pause microphone input. Completed replies can be read aloud or more slowly using browser speech; reading a reply pauses the microphone until the person explicitly resumes it.
+- Conversation options includes a tap-controlled voice mode: Start speaking opens a turn and I’m finished requests a reply. Automatic speech-end detection is disabled in that mode so pauses do not end a turn. Routine responses are marked confirmed only for clear affirmative phrases; negative or ambiguous responses remain unconfirmed.
 - No new schema or data migration is required for this UI overhaul.
 
 ## Product limits

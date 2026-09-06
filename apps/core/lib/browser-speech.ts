@@ -47,6 +47,7 @@ declare global {
 
 type SpeakTextOptions = {
   lang?: string;
+  rate?: number;
   onStart?: () => void;
   onEnd?: () => void;
   onError?: () => void;
@@ -107,6 +108,7 @@ export async function speakText(
   await new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = options.lang ?? "en-GB";
+    utterance.rate = options.rate ?? 1;
     utterance.onstart = () => {
       options.onStart?.();
     };

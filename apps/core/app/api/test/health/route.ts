@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { runMemvellaTestSupportQuery } from "@/lib/test-support-server";
-import { isMemvellaTestModeAvailable } from "@/lib/test-mode";
+import { isMemvellaClientTestMode, isMemvellaTestModeAvailable } from "@/lib/test-mode";
 
 export const runtime = "nodejs";
 
@@ -9,6 +9,13 @@ export async function GET() {
     return NextResponse.json(
       { ready: false, error: "Memvella test mode is disabled." },
       { status: 404 },
+    );
+  }
+
+  if (!isMemvellaClientTestMode()) {
+    return NextResponse.json(
+      { ready: false, error: "The E2E server also requires NEXT_PUBLIC_MEMVELLA_TEST_MODE=1." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
     );
   }
 

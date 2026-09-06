@@ -15,6 +15,7 @@ Before testing auth-sensitive or backend-sensitive changes:
 - confirm Convex is running and the app is connected to the intended deployment
 - confirm any server-side secrets required for the path under test are configured
 - select type-check, tests, and build for the affected packages; use `pnpm verify` for cross-package changes and release readiness
+- The test health route requires both server test mode and `NEXT_PUBLIC_MEMVELLA_TEST_MODE=1`. A manual preview with only backend helpers enabled is not a valid deterministic E2E server: account creation would still follow the real email-verification screen.
 
 Documentation-only edits need link/command validation and diff review. The commands below are a menu of checks, not a requirement to run every mode after every edit. Preserve the full CI and release gates.
 
@@ -179,6 +180,9 @@ Coverage note:
 - `convex-test` covers selected backend auth, profile, invite, and People flows. Add targeted backend tests when changing untested public functions.
 
 ## Simplified experience regression checks
+
+- `apps/core/lib/live-audio.test.ts` loads the actual browser worklet, checks PCM encoding/decoding, and checks one second of capture at 16, 44.1, and 48 kHz. This catches public-script syntax failures outside the TypeScript build.
+- `tests/e2e/specs/companion-accessibility.spec.ts` covers keyboard-friendly tablet codes and the simulated text conversation, including narrow-screen overflow and focus restoration. It does not establish live AI delivery or real audio playback.
 
 - `tests/e2e/specs/simple-experience.spec.ts` covers the unified memory editor, invalid upload feedback without losing a draft, saving and search at phone width, active navigation, and persisted owner account edits.
 - `tests/e2e/specs/companion-reminder.spec.ts` verifies that a due routine stays visible without automatically starting voice, and that a failed voice connection can be dismissed.

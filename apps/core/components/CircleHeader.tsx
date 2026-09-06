@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandLogo } from "@memvella/ui";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
@@ -37,7 +38,7 @@ export default function CircleHeader() {
         className="circle-wordmark"
         aria-label="Memvella home"
       >
-        Memvella
+        <BrandLogo />
       </Link>
     </header>
   );

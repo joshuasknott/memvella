@@ -1,0 +1,13 @@
+**/.env
+**/.env.*
+**/.env*
+**/node_modules/**
+**/.next/**
+**/.turbo/**
+**/.convex/**
+**/.vercel/**
+output/**
+.playwright-cli/**
+playwright-report/**
+test-results/**
+.agents/**

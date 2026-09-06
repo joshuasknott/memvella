@@ -5,11 +5,11 @@ The family app centres on **Today, Memories, Routines, and Settings**. The compa
 ## Visual system
 
 - Shared tokens: `packages/ui/src/globals.css`. App layouts: `apps/core/app/globals.css`.
-- Warm ivory canvas (`#F7F6F2`), white surfaces, deep green actions (`#254B40`), quiet sage secondary surfaces.
-- Figtree body copy; Georgia for family editorial headings and the wordmark; Atkinson Hyperlegible on the companion tablet.
-- Default corners are 8–16px. Use borders and space instead of nested cards, large shadows, gradients, or decorative status indicators.
+- The marketing identity carries through every product route: pale lavender canvas (`#F5F1FA`), white surfaces, aubergine text and primary actions (`#30233D`), purple accents (`#71528C`), and lavender borders.
+- Figtree body copy, headings, and lowercase flower wordmark; Atkinson Hyperlegible on the companion tablet. Family headings use medium weight and tight tracking, without a separate serif style.
+- Panels use 20–28px corners, inputs 8–12px, and primary actions pill shapes. Use borders and space instead of nested cards, large shadows, gradients, or decorative status indicators.
 - Use existing Lucide line icons. Decorative icons are hidden from assistive technology.
-- Generated reference: `output/overhaul/visual-target.png`. Images in marketing are illustrative; never populate real personal libraries with sample content.
+- Generated design boards: `output/imagegen/marketing-alignment/`. These reference the current marketing page. Images in welcome and marketing are illustrative; never populate real personal libraries with sample content.
 
 ## Layout and hierarchy
 
@@ -30,6 +30,8 @@ The family app centres on **Today, Memories, Routines, and Settings**. The compa
 - Memory file previews are released on removal/unmount. Validation happens before upload.
 - Companion photos remain fully in frame. Memories change only through explicit Previous/Next controls; no automatic rotation.
 - Companion voice retains distinct connecting, listening, thinking, speaking, and error states. The dialog supports keyboard focus and scrolling on small screens.
+- The companion offers Type a message alongside Tap to talk. Text conversations never request the microphone. Use the browser's modal dialog behavior for background isolation, Escape, and focus restoration; announce completed replies without announcing every streamed fragment.
+- Tablet pairing uses a labelled, editable six-digit field supporting typing and formatted paste, alongside the large onscreen keypad.
 - Loading never masquerades as zero content or a connected tablet.
 
 ## Auth and account

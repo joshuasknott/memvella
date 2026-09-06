@@ -8,27 +8,27 @@
 
 @theme {
   /* ─── Shared Foundation ─── */
-  --color-canvas: #f7f6f2;
+  --color-canvas: #f5f1fa;
   --color-surface: #ffffff;
-  --color-surface-muted: #eeeee6;
-  --color-surface-inverse: #0f172a;
-  --color-surface-inverse-muted: #1e293b;
-  --color-border: #ddded5;
-  --color-input-border: #858e83;
-  --color-border-inverse: #334155;
-  --color-text-primary: #202a25;
-  --color-text-secondary: #586058;
-  --color-text-tertiary: #646b63;
-  --color-text-muted: #646b63;
+  --color-surface-muted: #eee8f5;
+  --color-surface-inverse: #30233d;
+  --color-surface-inverse-muted: #503863;
+  --color-border: #dcd3e5;
+  --color-input-border: #9986aa;
+  --color-border-inverse: #71528c;
+  --color-text-primary: #30233d;
+  --color-text-secondary: #655471;
+  --color-text-tertiary: #655471;
+  --color-text-muted: #655471;
   --color-text-inverse-muted: #cbd5e1;
 
   /* ─── Family & Marketing Pathway ─── */
-  --color-family-primary: #254b40;
-  --color-family-accent: #835331;
-  --color-family-muted: #586b60;
+  --color-family-primary: #30233d;
+  --color-family-accent: #71528c;
+  --color-family-muted: #655471;
 
   /* ─── Senior Interface Pathway ─── */
-  --color-senior-primary: #254b40;
+  --color-senior-primary: #30233d;
   --color-senior-warmth: #a64638;
 
   /* ─── Status & Semantic ─── */
@@ -43,8 +43,8 @@
 
   /* ─── Border Radius ─── */
   --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --font-editorial: Georgia, "Times New Roman", serif;
+  --radius-xl: 1.25rem;
+  --font-editorial: var(--font-family), sans-serif;
   --font-headline: var(--font-senior);
 
   /* ─── Box Shadow ─── */

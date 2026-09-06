@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@memvella/backend";
-import { fetchAuthMutation } from "@/lib/auth-server";
 import { ensureMemvellaTestRequest } from "@/lib/test-support-server";
 
 export const runtime = "nodejs";
@@ -8,6 +7,7 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     ensureMemvellaTestRequest(request);
+    const { fetchAuthMutation } = await import("@/lib/auth-server");
 
     const body = (await request.json()) as {
       inviteCode?: unknown;

@@ -1,14 +1,23 @@
 "use client";
 
 import { LoaderCircle, Mic, Volume2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface VoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRetry?: () => void;
   isConnecting?: boolean;
+  isConnected?: boolean;
+  textMode?: boolean;
+  manualTurns?: boolean;
+  onSendText?: (text: string) => boolean;
+  liveReply?: string;
   isListening?: boolean;
+  isMicrophonePaused?: boolean;
+  onPauseMicrophone?: (paused: boolean) => void;
+  onReadReply?: (slower: boolean) => void;
+  onStopReply?: () => void;
   isProcessing?: boolean;
   isSpeaking?: boolean;
   liveTranscript?: string | null;
@@ -58,7 +67,16 @@ export function VoiceModal({
   onClose,
   onRetry,
   isConnecting = false,
+  isConnected = false,
+  textMode = false,
+  manualTurns = false,
+  onSendText,
+  liveReply,
   isListening = false,
+  isMicrophonePaused = false,
+  onPauseMicrophone,
+  onReadReply,
+  onStopReply,
   isProcessing = false,
   isSpeaking = false,
   liveTranscript,
@@ -67,113 +85,73 @@ export function VoiceModal({
   errorMessage,
 }: VoiceModalProps) {
   const combinedError = errorMessage;
-  const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [draft, setDraft] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    previousFocusRef.current = document.activeElement as HTMLElement;
-
-    const panel = panelRef.current;
-    if (panel) {
-      const firstButton = panel.querySelector<HTMLElement>("button");
-      firstButton?.focus();
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (event.key !== "Tab" || !panel) {
-        return;
-      }
-
-      const focusable = panel.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable.length === 0) {
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (event.shiftKey) {
-        if (document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    dialog?.showModal();
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      if (previousFocusRef.current) {
-        previousFocusRef.current.focus();
-        previousFocusRef.current = null;
-      }
+      dialog?.close();
+      if (previousFocus?.isConnected) previousFocus.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div
-      role="dialog"
+    <dialog
+      ref={dialogRef}
       aria-modal="true"
-      aria-label="Voice conversation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      aria-label={textMode ? "Text conversation" : "Voice conversation"}
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none items-center justify-center bg-transparent p-4 backdrop:bg-surface-inverse/40 open:flex"
     >
       <div
-        ref={panelRef}
-        className="flex max-h-[90dvh] overflow-y-auto w-full max-w-2xl flex-col items-center rounded-[40px] bg-[#FCFCF9] px-6 py-8 text-center shadow-2xl md:px-10 md:py-10"
+        className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[40px] bg-surface text-center shadow-2xl"
       >
-        <h2 className="font-family text-4xl font-bold text-text-primary md:text-5xl">
-          <VoiceStateHeadline
+        <div className="min-h-0 w-full overflow-y-auto px-6 py-8 md:px-10 md:py-10">
+        <h2 role="status" aria-live="polite" aria-atomic="true" className="font-senior text-4xl font-bold text-text-primary md:text-5xl">
+          {isMicrophonePaused && !isSpeaking && !isProcessing && !combinedError ? "Microphone paused" : <VoiceStateHeadline
             isConnecting={isConnecting}
             isListening={isListening}
             isProcessing={isProcessing}
             isSpeaking={isSpeaking}
             hasError={Boolean(combinedError)}
-          />
+          />}
         </h2>
 
-        <p className="mt-3 max-w-xl text-lg leading-relaxed text-text-secondary md:text-lg">
+        <p role={combinedError ? "alert" : undefined} className="mt-3 max-w-xl font-senior text-2xl leading-relaxed text-text-secondary">
           {combinedError
-            ? "We can’t connect right now. Try again in a moment, or close this to enjoy your memories."
+            ? combinedError
             : isConnecting
-              ? "Just a moment. We’re getting ready to listen."
+              ? "Just a moment. We’re getting ready."
               : isSpeaking
                 ? "Take your time. You can speak when you’re ready."
                 : isProcessing
                   ? "Memvella is preparing a reply for you."
+                  : manualTurns ? (isMicrophonePaused ? "Tap Start speaking when you’re ready." : "Take your time. Tap I’m finished when you want a reply.")
+                  : isMicrophonePaused ? "Your microphone is off. Resume it when you’re ready to speak."
+                  : textMode ? "Write your message below. Take as much time as you need."
                   : "Speak naturally and Memvella will reply aloud."}
         </p>
 
-        <div className="relative mt-6 flex h-32 w-32 items-center justify-center">
+        {!textMode ? <div aria-hidden="true" className="relative mx-auto mt-6 flex h-32 w-32 shrink-0 items-center justify-center">
           <div
-            className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full shadow-xl md:h-32 md:w-32 ${
+            className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full md:h-32 md:w-32 ${
               combinedError
-                ? "bg-red-500 text-white"
+                ? "bg-status-alert text-white"
                 : isSpeaking
                   ? "bg-family-accent text-white"
                   : isProcessing
-                    ? "bg-surface-inverse text-white"
+                    ? "bg-family-accent text-white"
                     : "bg-senior-primary text-white"
             }`}
           >
@@ -190,32 +168,61 @@ export function VoiceModal({
               <Mic className="h-12 w-12" strokeWidth={2.5} />
             )}
           </div>
-        </div>
+        </div> : null}
 
-        {(liveTranscript || lastTranscript || lastReply) && !combinedError ? (
-          <div className="mt-8 w-full space-y-4 rounded-[32px] bg-surface p-6 text-left shadow-sm">
+        {(liveTranscript || lastTranscript || lastReply || liveReply) ? (
+          <div className="mt-6 w-full space-y-4 text-left">
             {liveTranscript || lastTranscript ? (
               <div>
                 <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                   You Said
                 </p>
-                <p className="text-lg leading-relaxed text-text-primary">
+                <p className="font-senior text-2xl leading-relaxed text-text-primary">
                   {liveTranscript || lastTranscript}
                 </p>
               </div>
             ) : null}
 
-            {lastReply ? (
+            {liveReply || lastReply ? (
               <div>
                 <p className="mb-2 text-lg font-bold uppercase tracking-[0.18em] text-text-tertiary">
                   Memvella
                 </p>
-                <p className="text-lg leading-relaxed text-text-primary">
-                  {lastReply}
+                <p className="font-senior text-2xl leading-relaxed text-text-primary">
+                  {liveReply || lastReply}
                 </p>
               </div>
             ) : null}
           </div>
+        ) : null}
+        <p className="sr-only" aria-live="polite" aria-atomic="true">{lastReply}</p>
+        {lastReply ? (
+          <details className="mt-6 w-full text-left font-senior text-xl text-text-primary">
+            <summary className="min-h-[72px] cursor-pointer rounded-2xl border border-input-border p-5 font-bold">Listen to this reply</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <button type="button" disabled={isProcessing} onClick={() => onReadReply?.(false)} className="min-h-[72px] rounded-2xl border border-input-border p-4 disabled:opacity-50">Read aloud</button>
+              <button type="button" disabled={isProcessing} onClick={() => onReadReply?.(true)} className="min-h-[72px] rounded-2xl border border-input-border p-4 disabled:opacity-50">Read more slowly</button>
+              <button type="button" onClick={onStopReply} className="min-h-[72px] rounded-2xl border border-input-border p-4">Stop reading</button>
+            </div>
+          </details>
+        ) : null}
+        {!textMode && isConnected && !combinedError ? (
+          <button type="button" aria-pressed={manualTurns ? !isMicrophonePaused : isMicrophonePaused} disabled={manualTurns && isProcessing} onClick={() => onPauseMicrophone?.(!isMicrophonePaused)}
+            className="mt-4 min-h-[72px] w-full rounded-full border-2 border-input-border px-6 py-4 font-senior text-2xl font-bold text-text-primary">
+            {manualTurns ? (isMicrophonePaused ? "Start speaking" : "I’m finished") : (isMicrophonePaused ? "Resume microphone" : "Pause microphone")}
+          </button>
+        ) : null}
+        {textMode && !combinedError ? (
+          <form className="mt-6 w-full text-left" onSubmit={(event) => {
+            event.preventDefault();
+            if (onSendText?.(draft)) setDraft("");
+          }}>
+            <label htmlFor="companion-message" className="mb-2 block font-senior text-2xl font-bold">Your message</label>
+            <textarea id="companion-message" value={draft} onChange={(event) => setDraft(event.target.value)} rows={3}
+              className="w-full rounded-2xl border-2 border-input-border bg-white p-4 font-senior text-2xl text-text-primary" />
+            <button type="submit" disabled={!isConnected || isProcessing || !draft.trim()}
+              className="mt-3 min-h-[72px] w-full rounded-full bg-senior-primary px-6 py-4 font-senior text-2xl font-bold text-white disabled:opacity-50">Send message</button>
+          </form>
         ) : null}
 
         {combinedError ? (
@@ -225,28 +232,23 @@ export function VoiceModal({
               onClick={() => {
                 onRetry?.();
               }}
-              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-family-accent px-8 text-lg font-bold text-white shadow-md transition-transform active:scale-95"
+              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-family-accent px-8 font-senior text-2xl font-bold text-white transition-transform active:scale-95"
             >
               Try again
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex min-h-[72px] flex-1 items-center justify-center rounded-full bg-surface px-8 text-lg font-bold text-text-primary shadow-md transition-transform active:scale-95"
-            >
-              Close
-            </button>
           </div>
-        ) : (
+        ) : null}
+        </div>
+        <div className="w-full shrink-0 border-t border-border bg-surface px-6 py-4 md:px-10">
           <button
             type="button"
             onClick={onClose}
-            className="mt-10 flex min-h-[72px] w-full items-center justify-center rounded-full bg-senior-primary px-8 text-lg font-bold text-white shadow-md transition-transform active:scale-95"
+            className="flex min-h-[72px] w-full items-center justify-center rounded-full bg-senior-primary px-6 font-senior text-2xl font-bold text-white transition-transform active:scale-95"
           >
-            Stop Voice Loop
+            {combinedError ? "Close" : "Close conversation"}
           </button>
-        )}
+        </div>
       </div>
-    </div>
+    </dialog>
   );
 }

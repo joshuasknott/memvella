@@ -8,7 +8,7 @@ interface NumpadProps {
 
 export function Numpad({ onInput, onDelete, disabled }: NumpadProps) {
   const buttonClassName =
-    "flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-3xl font-bold text-text-primary shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50 md:h-24 md:w-24";
+    "flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-3xl font-bold text-text-primary transition-colors hover:bg-surface-muted disabled:opacity-50 md:h-24 md:w-24";
 
   return (
     <div className="mx-auto mb-4 grid w-fit grid-cols-3 place-items-center gap-3 md:mb-10 md:gap-6">
@@ -33,9 +33,10 @@ export function Numpad({ onInput, onDelete, disabled }: NumpadProps) {
       </button>
 
       <button
+        aria-label="Delete last digit"
         onClick={onDelete}
         disabled={disabled}
-        className="flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-text-secondary shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50 md:h-24 md:w-24"
+        className="flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-colors hover:bg-surface-muted disabled:opacity-50 md:h-24 md:w-24"
       >
         <Delete size={32} strokeWidth={2.5} />
       </button>

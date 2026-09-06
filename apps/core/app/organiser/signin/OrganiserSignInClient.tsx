@@ -30,7 +30,7 @@ export function OrganiserSignInFallback() {
     <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
             Welcome back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">
@@ -114,7 +114,7 @@ export default function OrganiserSignInClient() {
     <OrganiserAuthLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+          <h1 className="mb-2 text-center font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
             Welcome back
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-center text-lg text-text-secondary">

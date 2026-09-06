@@ -1,6 +1,6 @@
 # Marketing design
 
-The marketing site has its own lavender and aubergine identity, grounded in the generated reference at `output/marketing-v2/design-reference.png`. The family application retains its existing design.
+The marketing site's lavender and aubergine identity, grounded in the generated reference at `output/marketing-v2/design-reference.png`, is shared by the family application and companion tablet. Shared colours and controls live in `packages/ui/src/globals.css`; product-specific layouts are documented in `apps/core/design.md`.
 
 - Use Figtree for a confident, legible sans serif hierarchy; reserve italic Georgia for the final invitation. Use pale lavender, white and warm ivory section backgrounds, aubergine text, rounded photography and pill actions.
 - Lead with the person and product: stories, routines and family connection. Follow with an illustrative companion preview, three setup steps, short FAQs and one waitlist form.

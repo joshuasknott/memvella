@@ -23,10 +23,12 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       sessionToken?: unknown;
       deviceFingerprint?: unknown;
+      manualTurns?: unknown;
     };
     if (
       typeof body.sessionToken !== "string" ||
-      typeof body.deviceFingerprint !== "string"
+      typeof body.deviceFingerprint !== "string" ||
+      (body.manualTurns !== undefined && typeof body.manualTurns !== "boolean")
     ) {
       return NextResponse.json(
         { error: "The assisted session token and device fingerprint are required." },
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
         ).toISOString(),
         liveConnectConstraints: {
           model,
-          config: buildAssistedLiveConnectConfig(bootstrap.systemInstruction),
+          config: buildAssistedLiveConnectConfig(bootstrap.systemInstruction, body.manualTurns === true),
         },
         httpOptions: {
           apiVersion: "v1alpha",

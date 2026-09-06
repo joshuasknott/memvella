@@ -238,7 +238,7 @@ function CircleCodeStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
           Join a Workspace
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
@@ -329,7 +329,7 @@ function CircleConfirmationStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
           You&apos;re almost in.
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
@@ -500,7 +500,7 @@ function MemberAuthStep({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-4 text-center font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
           {isCreate ? "Create your account" : "Sign in"}
         </h1>
         <p className="mx-auto max-w-sm text-center text-lg text-text-secondary">
@@ -620,7 +620,7 @@ function JoiningStep({ invitePreview }: { invitePreview: InvitePreview }) {
         <Loader2 className="h-10 w-10 animate-spin text-family-primary" />
       </div>
       <div>
-        <h1 className="mb-3 font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:text-4xl">
+        <h1 className="mb-3 font-family text-3xl font-extrabold tracking-tight text-text-primary md:text-4xl">
           Joining the Workspace
         </h1>
         <p className="text-lg leading-relaxed text-text-secondary">
@@ -654,7 +654,7 @@ function SuccessStep() {
       </div>
 
       <div>
-        <h1 className="mb-3 font-family text-4xl font-extrabold tracking-tight text-[#1a1a1a] md:text-5xl">
+        <h1 className="mb-3 font-family text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
           You&apos;ve joined the Workspace.
         </h1>
         <p className="mx-auto max-w-xs text-lg text-text-secondary">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@memvella/ui";
 import { useMutation, useQuery } from "convex/react";
 import type { Id } from "@memvella/backend/dataModel";
 import { Mic } from "lucide-react";
@@ -10,6 +11,7 @@ import { VoiceModal } from "@/components/shared-senior/VoiceModal";
 import { api } from "@memvella/backend";
 import { stopSpeaking } from "@/lib/browser-speech";
 import { useAssistedLiveVoice } from "@/lib/use-assisted-live-voice";
+import { routineResponseOutcome } from "@/lib/routine-response";
 import { useSeniorDashboardSession } from "@/lib/use-senior-dashboard-session";
 
 function useLiveClock() {
@@ -96,6 +98,8 @@ function buildSoftCheckInInstruction(
 export default function AssistedHomePage() {
   const now = useLiveClock();
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [conversationMode, setConversationMode] = useState<"voice" | "text">("voice");
+  const [manualTurns, setManualTurns] = useState(false);
   const [activeCheckInId, setActiveCheckInId] =
     useState<Id<"routineCheckIns"> | null>(null);
   const { dashboard, deviceFingerprint, sessionState, clearSession } =
@@ -118,10 +122,17 @@ export default function AssistedHomePage() {
     closeSession: closeLiveSession,
     error: voiceError,
     isConnecting,
+    isConnected,
     isListening,
+    isMicrophonePaused,
+    pauseMicrophone,
+    readReply,
+    stopReply,
     lastReply,
     lastTranscript,
     liveTranscript,
+    liveReply,
+    sendText,
     sendSoftCheckIn,
     setError: setVoiceError,
     voiceState,
@@ -129,6 +140,8 @@ export default function AssistedHomePage() {
     sessionToken: sessionState?.sessionToken,
     deviceFingerprint,
     isActive: isVoiceModalOpen,
+    microphoneEnabled: conversationMode === "voice",
+    manualTurns: conversationMode === "voice" && manualTurns,
     onTurnComplete: async (turn) => {
       if (!sessionState?.sessionToken || !deviceFingerprint) {
         return;
@@ -160,7 +173,7 @@ export default function AssistedHomePage() {
           sessionToken: sessionState.sessionToken,
           deviceFingerprint,
           checkInId: turn.checkInId,
-          outcome: "confirmed",
+          outcome: routineResponseOutcome(turn.transcript),
           responseTranscript: turn.transcript,
           ...(interactionId ? { voiceInteractionId: interactionId } : {}),
         });
@@ -275,7 +288,9 @@ export default function AssistedHomePage() {
   return (
     <main className="companion-page">
       <section className="companion-orientation">
-        <p className="circle-wordmark">Memvella</p>
+        <p className="circle-wordmark">
+          <BrandLogo />
+        </p>
         <div>
           <p className="companion-greeting">
             {getGreeting(now)}, {dashboard.seniorName}.
@@ -299,11 +314,30 @@ export default function AssistedHomePage() {
           className="companion-talk"
           onClick={() => {
             setVoiceError(null);
+            setConversationMode("voice");
             setIsVoiceModalOpen(true);
           }}
         >
           <Mic size={32} aria-hidden="true" /> Tap to talk
         </button>
+        <button
+          type="button"
+          className="min-h-[72px] rounded-full border-2 border-input-border bg-white px-6 py-4 font-senior text-2xl font-bold text-text-primary"
+          onClick={() => {
+            setVoiceError(null);
+            setConversationMode("text");
+            setIsVoiceModalOpen(true);
+          }}
+        >
+          Type a message
+        </button>
+        <details className="font-senior text-xl text-text-primary">
+          <summary className="min-h-[72px] cursor-pointer py-5">Conversation options</summary>
+          <label className="flex min-h-[72px] items-start gap-3 rounded-2xl border border-input-border bg-white p-4">
+            <input type="checkbox" checked={manualTurns} onChange={(event) => setManualTurns(event.target.checked)} className="mt-1 h-7 w-7 shrink-0" />
+            <span>Wait until I tap “I’m finished” before replying.</span>
+          </label>
+        </details>
       </section>
       <section className="companion-gallery" aria-label="Your memories">
         <MemoryGallery gallery={dashboard.gallery} />
@@ -320,10 +354,19 @@ export default function AssistedHomePage() {
           }, 100);
         }}
         isConnecting={isConnecting}
+        isConnected={isConnected}
+        textMode={conversationMode === "text"}
+        manualTurns={conversationMode === "voice" && manualTurns}
+        onSendText={sendText}
         isListening={isListening}
+        isMicrophonePaused={isMicrophonePaused}
+        onPauseMicrophone={pauseMicrophone}
+        onReadReply={readReply}
+        onStopReply={stopReply}
         isProcessing={voiceState === "processing"}
         isSpeaking={voiceState === "speaking"}
         liveTranscript={liveTranscript}
+        liveReply={liveReply}
         lastTranscript={lastTranscript}
         lastReply={lastReply}
         errorMessage={voiceError}

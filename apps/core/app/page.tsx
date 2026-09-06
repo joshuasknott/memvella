@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BrandLogo } from "@memvella/ui";
 import { ArrowRight, Tablet } from "lucide-react";
 
 export default function WelcomePage() {
@@ -7,7 +8,7 @@ export default function WelcomePage() {
     <main className="welcome-page">
       <div className="welcome-copy">
         <Link className="circle-wordmark" href="/" aria-label="Memvella home">
-          Memvella
+          <BrandLogo />
         </Link>
         <div className="welcome-intro">
           <p className="eyebrow">Familiar moments. Everyday connection.</p>
@@ -47,8 +48,8 @@ export default function WelcomePage() {
       </div>
       <div className="welcome-photo">
         <Image
-          src="/images/seaside-memory.png"
-          alt="Two generations enjoying a walk beside the sea"
+          src="/images/family-album.webp"
+          alt="A mother and daughter sharing a family photo album"
           fill
           sizes="(min-width: 900px) 50vw, 100vw"
           preload

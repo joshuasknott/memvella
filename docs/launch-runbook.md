@@ -62,6 +62,16 @@ Local e2e requires `apps/backend-convex/.env.local` with `CONVEX_DEPLOYMENT`. Th
 
 ## Rollout
 
+### Vercel staging for the current monorepo
+
+- `memvella-core`: root directory `apps/core`, Next.js, Node 22.
+- `memvella-marketing`: root directory `apps/marketing`, Next.js, Node 22.
+- Use `vercel deploy --target preview --project <project>` explicitly. Vercel can assign a new project's first deployment to production when the target is omitted.
+- `.vercelignore` excludes local environment files, test credentials, snapshots, generated build output and browser artifacts from source uploads.
+- Configure the product's Convex URLs, public app origin, auth secrets and Gemini key for the intended Vercel environment. Configure the marketing app's `CONVEX_URL` separately. Preview settings do not automatically configure production.
+- Before switching DNS, set the backend and frontend auth origins to the final product URL and verify the production backend target. The currently configured hosted Convex deployment is a development deployment.
+- The proposed public layout is marketing at `memvella.me` and the product at `app.memvella.me`. Inspect the existing Cloudflare tunnel record before replacing it. Do not repoint the old `memory-mvp` Vercel project; it targets a different repository.
+
 1. Deploy Convex backend changes.
 2. Deploy `apps/core`.
 3. Deploy `apps/marketing`.

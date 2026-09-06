@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@memvella/ui";
 import { ArrowLeft } from "lucide-react";
 
 export function FamilyAuthLayout({
@@ -18,7 +19,7 @@ export function FamilyAuthLayout({
           {backLabel}
         </Link>
         <Link href="/" className="circle-wordmark">
-          Memvella
+          <BrandLogo />
         </Link>
       </header>
       <main>{children}</main>

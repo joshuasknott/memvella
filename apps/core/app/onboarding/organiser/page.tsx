@@ -90,7 +90,7 @@ export default function OrganiserSetupPage() {
     <FamilyAuthLayout backHref="/" backLabel="Back">
       <div className="space-y-5 md:space-y-8">
         <div>
-          <h1 className="mb-2 text-center font-family text-3xl font-extrabold tracking-tight text-[#1a1a1a] md:mb-4 md:text-5xl">
+          <h1 className="mb-2 text-center font-family text-3xl font-extrabold tracking-tight text-text-primary md:mb-4 md:text-5xl">
             Create your account
           </h1>
           <p className="mx-auto mb-4 max-w-sm text-center text-base text-text-secondary md:mb-6 md:text-lg">
