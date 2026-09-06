@@ -69,8 +69,9 @@ Local e2e requires `apps/backend-convex/.env.local` with `CONVEX_DEPLOYMENT`. Th
 - Use `vercel deploy --target preview --project <project>` explicitly. Vercel can assign a new project's first deployment to production when the target is omitted.
 - `.vercelignore` excludes local environment files, test credentials, snapshots, generated build output and browser artifacts from source uploads.
 - Configure the product's Convex URLs, public app origin, auth secrets and Gemini key for the intended Vercel environment. Configure the marketing app's `CONVEX_URL` separately. Preview settings do not automatically configure production.
-- Before switching DNS, set the backend and frontend auth origins to the final product URL and verify the production backend target. The currently configured hosted Convex deployment is a development deployment.
-- The proposed public layout is marketing at `memvella.me` and the product at `app.memvella.me`. Inspect the existing Cloudflare tunnel record before replacing it. Do not repoint the old `memory-mvp` Vercel project; it targets a different repository.
+- Production uses Convex `animated-eel-659` (`https://animated-eel-659.convex.cloud`), with separate authentication secrets and test mode absent. The `flippant-fish-989` deployment remains development only. Do not copy development data into production as part of deployment.
+- Public marketing is at `memvella.me` and `www.memvella.me`; the product is at `app.memvella.me`. Backend and frontend auth origins use `https://app.memvella.me`. Cloudflare CNAME records point directly to Vercel with proxying disabled. Email DNS records remain separate.
+- The former root tunnel target was `9086cde5-909a-4092-8203-d5f5e92376b9.cfargotunnel.com` (proxied); it was unavailable before replacement. Do not repoint the old `memory-mvp` Vercel project; it targets a different repository.
 
 1. Deploy Convex backend changes.
 2. Deploy `apps/core`.

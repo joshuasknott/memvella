@@ -106,4 +106,14 @@ Vercel staging follow-up:
 - Vercel automatically classified the initial deployments of the new projects as production when no target was supplied. The initial core build failed because only preview variables were configured. The initial marketing deployment succeeded on its Vercel hostname; its production waitlist environment was not configured. Subsequent deployments explicitly used `--target preview`. No custom-domain records were changed.
 - Upload exclusions are recorded in `.vercelignore`. Deployment logs are under `output/accessibility-verification/vercel-*-preview*.log`. Preview environment settings are not a completed production configuration.
 
-Still required: final public-domain deployment and production backend/origin configuration; physical microphone/speaker testing; conversation completeness and reconnect/resumption review; assistive-technology, browser password-reset, and service-backed notification coverage. No commit or push was performed.
+### Production deployment follow-up — 6 September 2026
+
+- Committed and pushed the implementation to `main` as `6b18d3d` after the full verification gate passed.
+- Inspected production Convex `animated-eel-659`: no existing tables or configured environment variables. Configured independent authentication secrets and existing working email/AI services, then deployed the backend after a successful dry run. Development data was not migrated or changed.
+- Both Vercel production builds reached READY. The product uses the production Convex cloud/site endpoints and `https://app.memvella.me` as its auth origin. Marketing uses the production Convex waitlist endpoint.
+- Replaced the unavailable root Cloudflare tunnel record with Vercel DNS and added the `app` and `www` CNAME records. Preserved Resend's DNS records. Vercel verified the `www` DNS configuration.
+- Public HTTPS requests to `https://memvella.me` and `https://app.memvella.me` returned 200. The production test-health route returned 404. A production waitlist submission returned `status: joined`; a nonexistent-account sign-in returned the expected 401 invalid-credentials response. Real production account verification and paired-device checks still require an account.
+- A direct SDK test reproduced an incomplete final clause with Gemini reporting both generation completion and turn completion; two other direct turns completed normally. This rules out the page as the sole cause and leaves response completeness unresolved. Provider transcript ordering is documented at https://ai.google.dev/api/live.
+- Deployment evidence is under `output/accessibility-verification/*production*.log`; credentials and browser artifacts remain ignored.
+
+Still required: physical microphone/speaker testing; conversation completeness and reconnect/resumption review; assistive-technology, browser password-reset, and service-backed notification coverage. Deployment success is not complete production journey or accessibility certification.
