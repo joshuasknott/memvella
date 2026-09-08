@@ -51,9 +51,13 @@ function buildUploadError(rule: UploadRule) {
   return `Only ${rule.label}s up to ${maxMb} MB are allowed for this upload.`;
 }
 
+function normalizeMimeType(value: string) {
+  return value.split(";", 1)[0].trim().toLowerCase();
+}
+
 export function validateUploadFile(file: File, kind: UploadKind) {
   const rule = UPLOAD_RULES[kind];
-  const normalizedMimeType = file.type.trim().toLowerCase();
+  const normalizedMimeType = normalizeMimeType(file.type);
 
   if (!rule.allowedMimeTypes.includes(normalizedMimeType)) {
     throw new Error(buildUploadError(rule));
@@ -91,7 +95,9 @@ export async function uploadFileToConvex(
 
   const response = await fetch(postUrl, {
     method: "POST",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
+    // Browser recordings can carry codec parameters. Store the same canonical
+    // media type checked by the client and backend upload allowlists.
+    headers: { "Content-Type": normalizeMimeType(file.type) || "application/octet-stream" },
     body: file,
   });
 
@@ -99,16 +105,21 @@ export async function uploadFileToConvex(
     throw new Error("File upload failed.");
   }
 
-  const { storageId } = (await response.json()) as { storageId: Id<"_storage"> };
-  return { storageId, uploadIntentId };
+  const result: unknown = await response.json();
+  if (typeof result !== "object" || result === null ||
+      !("storageId" in result) || typeof result.storageId !== "string" || !result.storageId.trim()) {
+    throw new Error("File upload did not return a storage ID. Please try again.");
+  }
+  return { storageId: result.storageId as Id<"_storage">, uploadIntentId };
 }
 
 export function inferMemoryAssetType(file: File) {
-  if (file.type.startsWith("video/")) {
+  const mimeType = normalizeMimeType(file.type);
+  if (mimeType.startsWith("video/")) {
     return "video" as const;
   }
 
-  if (file.type.startsWith("audio/")) {
+  if (mimeType.startsWith("audio/")) {
     return "audio" as const;
   }
 
