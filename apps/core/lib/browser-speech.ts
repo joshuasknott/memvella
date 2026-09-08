@@ -79,8 +79,13 @@ function shouldUseInstantSpeechSynthesis() {
   );
 }
 
+let cancelActiveSpeech: (() => void) | null = null;
+
 export function stopSpeaking() {
-  window.speechSynthesis?.cancel();
+  // Some engines omit end/error for queued utterances cancelled before start.
+  // Detach callbacks before cancelling, then settle our own promise.
+  if (cancelActiveSpeech) cancelActiveSpeech();
+  else window.speechSynthesis?.cancel();
 }
 
 export async function speakText(
@@ -107,20 +112,43 @@ export async function speakText(
 
   await new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
+    let settled = false;
+    const finish = (failed: boolean) => {
+      if (settled) return;
+      settled = true;
+      utterance.onstart = null;
+      utterance.onend = null;
+      utterance.onerror = null;
+      if (cancelActiveSpeech === cancel) cancelActiveSpeech = null;
+      resolve();
+      if (failed) options.onError?.();
+      else options.onEnd?.();
+    };
+    const cancel = () => {
+      utterance.onstart = null;
+      utterance.onend = null;
+      utterance.onerror = null;
+      // Cancel before onEnd: that callback may start the next utterance.
+      try { window.speechSynthesis?.cancel(); }
+      finally { finish(false); }
+    };
+    cancelActiveSpeech = cancel;
     utterance.lang = options.lang ?? "en-GB";
     utterance.rate = options.rate ?? 1;
     utterance.onstart = () => {
       options.onStart?.();
     };
     utterance.onend = () => {
-      options.onEnd?.();
-      resolve();
+      finish(false);
     };
     utterance.onerror = () => {
-      options.onError?.();
-      resolve();
+      finish(true);
     };
 
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      finish(true);
+    }
   });
 }
