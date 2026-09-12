@@ -18,20 +18,24 @@ const marketingDescription =
   "A friendly voice, familiar memories and gentle reminders for older people, with family close by. Join the Memvella early-access waitlist.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://memvella.me"),
   title: {
     default: marketingTitle,
     template: "%s | Memvella",
   },
   description: marketingDescription,
   applicationName: "Memvella",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     title: marketingTitle,
     description: marketingDescription,
     siteName: "Memvella",
     type: "website",
+    images: [
+      {
+        url: "/images/family-album-v2.webp",
+        alt: "A mother and daughter sharing a family photo album",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",

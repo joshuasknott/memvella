@@ -7,24 +7,8 @@ import schema from "./schema";
 // @ts-expect-error Vitest provides import.meta.glob, but this repo's Convex tsc config does not include Vite types.
 const modules = import.meta.glob("./**/*.ts");
 
-describe("waitlist joinWaitlist response contract", () => {
-  it("returns uniform status for all code paths", () => {
-    const validResponses = ["joined"] as const;
-    expect(validResponses).toContain("joined");
-    expect(validResponses).not.toContain("already_joined");
-    expect(validResponses).not.toContain("rejoined");
-  });
-
-  it("rate limit scope key is server-controlled", () => {
-    const scopeKey = "waitlist-global";
-    const actionKey = "joinWaitlist";
-    expect(scopeKey).toBe("waitlist-global");
-    expect(actionKey).toBe("joinWaitlist");
-  });
-});
-
 describe("waitlist joinWaitlist persistence", () => {
-  it("returns the uniform response without storing malformed emails", async () => {
+  it("rejects malformed emails without storing them or consuming the signup allowance", async () => {
     const t = convexTest(schema, modules);
 
     await expect(
@@ -32,31 +16,39 @@ describe("waitlist joinWaitlist persistence", () => {
         email: "not-an-email",
         sourcePath: "/waitlist?email=person@example.com",
       }),
-    ).resolves.toEqual({ status: "joined" });
+    ).resolves.toEqual({ status: "invalid" });
 
     const stored = await t.run(async (ctx) => ({
       entries: await ctx.db.query("waitlistEntries").take(10),
       events: await ctx.db.query("appEvents").take(10),
+      limits: await ctx.db.query("rateLimitWindows").take(10),
     }));
     expect(stored.entries).toHaveLength(0);
     expect(stored.events).toHaveLength(0);
+    expect(stored.limits).toHaveLength(0);
   });
 
   it("normalizes duplicate emails and records only sanitized app events", async () => {
     const t = convexTest(schema, modules);
 
-    await t.mutation(api.waitlist.joinWaitlist, {
+    const first = await t.mutation(api.waitlist.joinWaitlist, {
       email: "  Casey@Example.COM ",
       sourcePath: "/waitlist",
       referrer: "https://example.com",
       userAgent: "Memvella test",
     });
-    await t.mutation(api.waitlist.joinWaitlist, {
+    await t.run(async (ctx) => {
+      const entry = await ctx.db.query("waitlistEntries").withIndex("by_email", (q) => q.eq("email", "casey@example.com")).unique();
+      await ctx.db.patch(entry!._id, { status: "unsubscribed" });
+    });
+    const repeat = await t.mutation(api.waitlist.joinWaitlist, {
       email: "casey@example.com",
       sourcePath: "/waitlist?token=secret&email=casey@example.com",
       referrer: "https://example.com/second",
       userAgent: "Memvella test second",
     });
+    expect(first).toEqual({ status: "joined" });
+    expect(repeat).toEqual(first);
 
     const stored = await t.run(async (ctx) => ({
       entries: await ctx.db.query("waitlistEntries").take(10),
@@ -88,12 +80,12 @@ describe("waitlist joinWaitlist persistence", () => {
     const t = convexTest(schema, modules);
 
     for (let index = 0; index < 11; index += 1) {
-      await expect(
-        t.mutation(api.waitlist.joinWaitlist, {
+      const result = await t.mutation(api.waitlist.joinWaitlist, {
           email: `person-${index}@example.com`,
           sourcePath: "/waitlist",
-        }),
-      ).resolves.toEqual({ status: "joined" });
+        });
+      if (index < 10) expect(result).toEqual({ status: "joined" });
+      else expect(result).toMatchObject({ status: "rate_limited", retryAfterMs: 300_000 });
     }
 
     const stored = await t.run(async (ctx) => ({

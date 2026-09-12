@@ -132,6 +132,7 @@ export default defineSchema({
     updatedByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
     lastEditedAt: v.number(),
   })
+    .index("by_status", ["status"])
     .index("by_seniorProfileId", ["seniorProfileId"])
     .index("by_seniorProfileId_and_status", ["seniorProfileId", "status"])
     .index("by_seniorProfileId_and_lastEditedAt", [
@@ -155,6 +156,15 @@ export default defineSchema({
     ),
   })
     .index("by_routineScheduleId", ["routineScheduleId"])
+    .index("by_routineScheduleId_and_occurrenceDateKey", [
+      "routineScheduleId",
+      "occurrenceDateKey",
+    ])
+    .index("by_routineScheduleId_and_status_and_occurrenceDateKey", [
+      "routineScheduleId",
+      "status",
+      "occurrenceDateKey",
+    ])
     .index("by_seniorProfileId_status_occurrenceDateKey_startTimeMinutes", [
       "seniorProfileId",
       "status",
@@ -208,6 +218,7 @@ export default defineSchema({
     title: v.string(),
     story: v.union(v.string(), v.null()),
     transcript: v.union(v.string(), v.null()),
+    searchText: v.optional(v.string()),
     memoryDate: v.union(v.string(), v.null()),
     externalUrl: v.union(v.string(), v.null()),
     createdByCircleMembershipId: v.union(v.id("circleMemberships"), v.null()),
@@ -222,7 +233,11 @@ export default defineSchema({
       "seniorProfileId",
       "recordType",
       "lastEditedAt",
-    ]),
+    ])
+    .searchIndex("search_text", {
+      searchField: "searchText",
+      filterFields: ["seniorProfileId"],
+    }),
 
   memoryAssets: defineTable({
     seniorProfileId: v.id("seniorProfiles"),

@@ -6,7 +6,7 @@ import { normalizeOptionalEmail, normalizeOptionalText } from "./security";
 
 function normalizeWaitlistEmail(value: string) {
   const email = normalizeOptionalEmail(value);
-  if (!email) {
+  if (!email || email.length > 254) {
     return null;
   }
 
@@ -24,8 +24,15 @@ export const joinWaitlist = mutation({
     referrer: v.optional(v.string()),
     userAgent: v.optional(v.string()),
   },
+  returns: v.union(
+    v.object({ status: v.literal("joined") }),
+    v.object({ status: v.literal("invalid") }),
+    v.object({ status: v.literal("rate_limited"), retryAfterMs: v.number() }),
+  ),
   handler: async (ctx, args) => {
-    const rateLimit = await ctx.runMutation(
+    const email = normalizeWaitlistEmail(args.email);
+    if (!email) return { status: "invalid" as const };
+    const rateLimit: { allowed: boolean; remainingHits: number; retryAfterMs: number } = await ctx.runMutation(
       internal.rateLimits.consumeRateLimit,
       {
         scopeKey: "waitlist-global",
@@ -37,12 +44,7 @@ export const joinWaitlist = mutation({
     );
 
     if (!rateLimit.allowed) {
-      return { status: "joined" } as const;
-    }
-
-    const email = normalizeWaitlistEmail(args.email);
-    if (!email) {
-      return { status: "joined" } as const;
+      return { status: "rate_limited" as const, retryAfterMs: rateLimit.retryAfterMs };
     }
 
     const now = Date.now();
@@ -53,6 +55,7 @@ export const joinWaitlist = mutation({
 
     if (existingEntry) {
       await ctx.db.patch(existingEntry._id, {
+        status: "active",
         updatedAt: now,
       });
       await insertSanitizedAppEvent(ctx, {
@@ -68,9 +71,9 @@ export const joinWaitlist = mutation({
 
     await ctx.db.insert("waitlistEntries", {
       email,
-      sourcePath: normalizeOptionalText(args.sourcePath) ?? "/waitlist",
-      referrer: normalizeOptionalText(args.referrer) ?? null,
-      userAgent: normalizeOptionalText(args.userAgent) ?? null,
+      sourcePath: normalizeOptionalText(args.sourcePath)?.split(/[?#]/, 1)[0].slice(0, 120) || "/waitlist",
+      referrer: normalizeOptionalText(args.referrer)?.split(/[?#]/, 1)[0].slice(0, 500) ?? null,
+      userAgent: normalizeOptionalText(args.userAgent)?.slice(0, 300) ?? null,
       status: "active",
       createdAt: now,
       updatedAt: now,

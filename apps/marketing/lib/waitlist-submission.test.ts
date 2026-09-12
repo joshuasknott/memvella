@@ -16,6 +16,7 @@ describe('waitlist submission validation', () => {
         expect(normalizeWaitlistEmail('not-an-email')).toBeNull();
         expect(normalizeWaitlistEmail('')).toBeNull();
         expect(normalizeWaitlistEmail(null)).toBeNull();
+        expect(normalizeWaitlistEmail(`${'a'.repeat(250)}@example.com`)).toBeNull();
     });
 
     it('keeps only local source paths', () => {
@@ -42,5 +43,8 @@ describe('waitlist submission validation', () => {
             ok: false,
             error: 'A valid email address is required.',
         });
+        for (const invalid of [null, undefined, [], 'email@example.com', 42]) {
+            expect(parseWaitlistSubmission(invalid).ok).toBe(false);
+        }
     });
 });

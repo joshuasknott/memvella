@@ -17,7 +17,7 @@ export default function TodayPage() {
   );
   const memories = useQuery(
     api.memories.listMemoryRecords,
-    isAuthenticated && profile ? {} : "skip",
+    isAuthenticated && profile ? { limit: 3 } : "skip",
   );
   const reviewCount = useQuery(
     api.insights.getQueuedOrganiserInsightCount,

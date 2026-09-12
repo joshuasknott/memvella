@@ -8,6 +8,7 @@ import { Mic } from "lucide-react";
 
 import { MemoryGallery } from "@/components/shared-senior/MemoryGallery";
 import { VoiceModal } from "@/components/shared-senior/VoiceModal";
+import ConnectionNotice from "@/components/ConnectionNotice";
 import { api } from "@memvella/backend";
 import { stopSpeaking } from "@/lib/browser-speech";
 import { useAssistedLiveVoice } from "@/lib/use-assisted-live-voice";
@@ -102,7 +103,7 @@ export default function AssistedHomePage() {
   const [manualTurns, setManualTurns] = useState(false);
   const [activeCheckInId, setActiveCheckInId] =
     useState<Id<"routineCheckIns"> | null>(null);
-  const { dashboard, deviceFingerprint, sessionState, clearSession } =
+  const { dashboard, deviceFingerprint, sessionState, clearSession, isPreparing, preparationError, reloadSession } =
     useSeniorDashboardSession("assisted");
   const logAssistedLiveTurn = useMutation(api.liveVoice.logAssistedLiveTurn);
   const markRoutineCheckInPrompted = useMutation(
@@ -262,10 +263,20 @@ export default function AssistedHomePage() {
     sendSoftCheckIn,
   ]);
 
-  if (!deviceFingerprint) {
+  if (preparationError) return (
+    <main className="flex min-h-screen items-center justify-center bg-canvas p-6">
+      <section className="w-full max-w-xl rounded-[32px] bg-white p-8 text-center">
+        <h1 className="font-senior text-3xl font-bold">Let’s try connecting again.</h1>
+        <p role="alert" className="my-6 font-senior text-xl leading-relaxed">{preparationError}</p>
+        <button type="button" onClick={reloadSession} className="action-button companion-retry-button">Try again</button>
+      </section>
+    </main>
+  );
+
+  if (isPreparing) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-canvas">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
+        <p role="status" className="font-senior text-2xl">Getting your companion ready…</p>
       </main>
     );
   }
@@ -277,7 +288,7 @@ export default function AssistedHomePage() {
   if (!dashboard || dashboard.status === "invalid") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-canvas">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-senior-primary/20 border-t-senior-primary" />
+        <div className="p-6 text-center"><p role="status" className="font-senior text-2xl">Loading your companion…</p><ConnectionNotice companion /></div>
       </main>
     );
   }
@@ -287,6 +298,7 @@ export default function AssistedHomePage() {
 
   return (
     <main className="companion-page">
+      <ConnectionNotice companion />
       <section className="companion-orientation">
         <p className="circle-wordmark">
           <BrandLogo />

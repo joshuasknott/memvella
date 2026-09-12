@@ -26,7 +26,15 @@ export function loadSeniorSession(experience: SeniorExperience) {
   }
 
   try {
-    return JSON.parse(raw) as SeniorSessionState;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null ||
+        !("sessionToken" in parsed) || typeof parsed.sessionToken !== "string" || !parsed.sessionToken.trim() ||
+        ("deviceFingerprint" in parsed && parsed.deviceFingerprint !== undefined &&
+          (typeof parsed.deviceFingerprint !== "string" || !parsed.deviceFingerprint.trim()))) {
+      localStorage.removeItem(getSeniorSessionStorageKey(experience));
+      return null;
+    }
+    return parsed as SeniorSessionState;
   } catch {
     localStorage.removeItem(getSeniorSessionStorageKey(experience));
     return null;

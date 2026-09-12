@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import {
   getSeniorProfileByMode,
   requireFamilySideCapability,
@@ -13,6 +14,8 @@ import {
   normalizeDaysOfWeek,
   parseTimeInputToMinutes,
   replaceRoutineOccurrences,
+  ensureRoutineOccurrences,
+  validateRoutineScheduleInput,
 } from "./routineHelpers";
 import { scheduleRoutineCheckIns } from "./routineCheckInScheduler";
 import { validateSeniorSession } from "./seniorAccessHelpers";
@@ -41,6 +44,7 @@ export const createRoutineSchedule = mutation({
       ctx,
       "manage_routines",
     );
+    validateRoutineScheduleInput(args);
     const title = normalizeOptionalText(args.title);
     const normalizedDaysOfWeek = normalizeDaysOfWeek(args.daysOfWeek);
     const seniorProfile = await getPrimarySeniorProfileForCircleContext(
@@ -173,6 +177,7 @@ export const updateRoutineSchedule = mutation({
     }
 
     const title = normalizeOptionalText(args.title);
+    validateRoutineScheduleInput(args);
     const normalizedDaysOfWeek = normalizeDaysOfWeek(args.daysOfWeek);
     if (!title) {
       throw new Error("A routine title is required.");
@@ -232,12 +237,24 @@ export const deleteRoutineSchedule = mutation({
       throw new Error("This routine schedule does not belong to your Workspace.");
     }
 
+    await ctx.db.delete(schedule._id);
+    await ctx.scheduler.runAfter(0, internal.routines.deleteRoutineOccurrences, {
+      routineScheduleId: schedule._id,
+    });
+    return { deleted: true as const };
+  },
+});
+
+export const deleteRoutineOccurrences = internalMutation({
+  args: { routineScheduleId: v.id("routineSchedules") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
     const occurrences = await ctx.db
       .query("routineOccurrences")
       .withIndex("by_routineScheduleId", (query) =>
-        query.eq("routineScheduleId", schedule._id),
+        query.eq("routineScheduleId", args.routineScheduleId),
       )
-      .take(200);
+      .take(100);
 
     const now = Date.now();
     for (const occurrence of occurrences) {
@@ -270,8 +287,43 @@ export const deleteRoutineSchedule = mutation({
       await ctx.db.delete(occurrence._id);
     }
 
-    await ctx.db.delete(schedule._id);
-    return { deleted: true as const };
+    if (occurrences.length === 100) {
+      await ctx.scheduler.runAfter(0, internal.routines.deleteRoutineOccurrences, args);
+    }
+    return null;
+  },
+});
+
+export const renewRoutineSchedules = internalMutation({
+  args: { cursor: v.optional(v.string()) },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const schedules = await ctx.db.query("routineSchedules")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .paginate({ cursor: args.cursor ?? null, numItems: 20 });
+    for (const schedule of schedules.page) {
+      await ctx.scheduler.runAfter(0, internal.routines.renewRoutineOccurrences, {
+        routineScheduleId: schedule._id,
+      });
+    }
+    if (!schedules.isDone) {
+      await ctx.scheduler.runAfter(0, internal.routines.renewRoutineSchedules, {
+        cursor: schedules.continueCursor,
+      });
+    }
+    return schedules.page.length;
+  },
+});
+
+export const renewRoutineOccurrences = internalMutation({
+  args: { routineScheduleId: v.id("routineSchedules") },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const schedule = await ctx.db.get(args.routineScheduleId);
+    if (!schedule || schedule.status !== "active") return 0;
+    const occurrences = await ensureRoutineOccurrences(ctx, schedule);
+    await scheduleRoutineCheckIns(ctx, occurrences);
+    return occurrences.length;
   },
 });
 
@@ -292,6 +344,7 @@ export const queueRoutineCheckIn = internalMutation({
 
     if (
       !schedule ||
+      schedule.status !== "active" ||
       !seniorProfile ||
       seniorProfile.seniorMode !== "assisted" ||
       schedule.seniorProfileId !== occurrence.seniorProfileId
@@ -367,6 +420,7 @@ export const listReadyRoutineCheckIns = query({
         query
           .eq("seniorProfileId", validation.seniorProfile._id)
           .eq("status", "live_prompt_ready")
+          .gte("softCheckInAt", Date.now() - 24 * 60 * 60 * 1000)
           .lte("softCheckInAt", Date.now()),
       )
       .take(3);
@@ -394,7 +448,7 @@ export const listReadyRoutineCheckIns = query({
       .map((checkIn) => {
         const occurrence = occurrenceById.get(checkIn.routineOccurrenceId);
         const schedule = scheduleById.get(checkIn.routineScheduleId);
-        if (!occurrence || !schedule || occurrence.status !== "scheduled") {
+        if (!occurrence || !schedule || schedule.status !== "active" || occurrence.status !== "scheduled") {
           return null;
         }
 
@@ -480,6 +534,13 @@ export const resolveRoutineCheckIn = mutation({
       return { updated: false as const };
     }
 
+    if (args.voiceInteractionId) {
+      const interaction = await ctx.db.get(args.voiceInteractionId);
+      if (!interaction || interaction.seniorProfileId !== checkIn.seniorProfileId) {
+        throw new Error("This conversation does not belong to this routine check-in.");
+      }
+    }
+
     const now = Date.now();
     await ctx.db.patch(checkIn._id, {
       status: args.outcome,
@@ -490,13 +551,11 @@ export const resolveRoutineCheckIn = mutation({
       updatedAt: now,
     });
 
-    if (args.outcome === "unconfirmed") {
-      const occurrence = await ctx.db.get(checkIn.routineOccurrenceId);
-      if (occurrence && occurrence.status === "scheduled") {
-        await ctx.db.patch(occurrence._id, {
-          status: "unconfirmed",
-        });
-      }
+    const occurrence = await ctx.db.get(checkIn.routineOccurrenceId);
+    if (occurrence && occurrence.status === "scheduled") {
+      await ctx.db.patch(occurrence._id, {
+        status: args.outcome === "confirmed" ? "completed" : "unconfirmed",
+      });
     }
 
     return { updated: true as const };

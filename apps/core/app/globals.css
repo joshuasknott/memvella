@@ -375,6 +375,29 @@
   color: var(--color-text-secondary);
   font-size: 14px;
 }
+.memory-load-more {
+  text-align: center;
+}
+.connection-notice {
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-muted);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+.connection-notice-companion {
+  grid-column: 1 / -1;
+  font-family: var(--font-senior);
+  font-size: 22px;
+}
+.companion-retry-button {
+  min-height: 72px;
+  padding-inline: 32px;
+  font-family: var(--font-senior);
+  font-size: 22px;
+}
 .routine-schedules article {
   display: flex;
   align-items: flex-start;
@@ -409,6 +432,64 @@
 .routine-note {
   max-width: 650px;
   line-height: 1.6;
+}
+.routine-description {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.routine-edit-link {
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.memory-editor .routine-pause-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.memory-editor .routine-pause-control input {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--color-family-primary);
+}
+.routine-pause-control .editor-help {
+  font-weight: 400;
+}
+.routine-delete-link {
+  align-self: flex-start;
+  color: var(--color-status-alert);
+}
+.confirm-dialog {
+  margin: auto;
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+.confirm-dialog::backdrop {
+  background: rgb(30 20 40 / 45%);
+}
+.confirm-dialog h2 {
+  font-size: 26px;
+  font-weight: 600;
+}
+.confirm-dialog p {
+  margin: 16px 0 24px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.danger-button {
+  background: var(--color-status-alert);
 }
 .settings-page {
   max-width: 800px;
@@ -577,7 +658,7 @@
   font-weight: 600;
   margin-bottom: 10px;
 }
-.memory-editor input:not([type="file"]),
+.memory-editor input:not([type="file"]):not([type="checkbox"]),
 .memory-editor textarea {
   display: block;
   width: 100%;

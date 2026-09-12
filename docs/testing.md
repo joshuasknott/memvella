@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-07-04
+Last reviewed: 2026-09-12
 Owners: engineering
 Read when: changing onboarding, auth, permissions, senior sessions, voice flows, or notifications
 Depends on: docs/auth-and-identity.md, docs/env.md
@@ -31,6 +31,8 @@ Documentation-only edits need link/command validation and diff review. The comma
 - `pnpm build`
 - `pnpm verify` to run the full loop in sequence
 
+Turbo production-build caching excludes Next.js development output and preserved `dev-*` caches. These directories are not production artifacts and can otherwise make local cache archives unnecessarily large.
+
 Current gate:
 
 - GitHub Actions runs `pnpm verify` on pushes to `main` and on pull requests.
@@ -48,10 +50,14 @@ Current deterministic coverage:
 - account password-recovery request without account enumeration
 - account sign-out and protected-route redirect
 - Workspace owner routine creation through `/circle/add-routine`
+- phone-width routine editing, pause/resume persistence, and delete confirmation with Escape and focus restoration
+- memory search matching story text beyond the card preview, no-match feedback, and clearing the search
 - Workspace owner People creation, edit, delete, and Supporter read-only People permissions
 - voice memory dictation through `/circle/add-memory/voice` with fake browser speech
+- revised and withdrawn speech results, dictation appended to edited paragraphs, cancellation during microphone startup, delayed callbacks after retries or navigation, final words after Stop, and recovery when speech startup or stopping fails
 - Supporter join plus owner-vs-Supporter authorization boundaries on owner-only settings routes
 - assisted recovery fallback when the stored tablet session is invalid
+- temporary offline feedback without losing tablet pairing, and recovery from a failed site-storage read
 
 Deterministic browser scaffolding now included:
 
@@ -119,17 +125,20 @@ Current shipped scope note:
 - verify `/circle/memories` loads the memory library
 - verify the unified memory editor saves text, media, audio, and dictated stories, including the existing direct URLs
 - verify memory detail and edit pages still load
+- search for a word beyond the story preview and in an older page, then clear the search and use Load more
 - verify owner and Supporter memory CRUD still works
 
 ### Routines
 
 - verify `/circle/routines` loads the current schedule list and today's timeline
 - verify `/circle/add-routine` can create a routine that appears in the list
+- edit the time and repeat days, pause and resume reminders, and cancel then confirm deletion
 - verify assisted routine check-ins still prompt and resolve through the live voice flow
 
 Coverage note:
 
-- deterministic Playwright coverage now covers organiser routine creation and list visibility
+- deterministic Playwright coverage covers owner routine creation, editing, pause/resume, deletion, and phone layout
+- clock-controlled backend tests cover renewal beyond the original horizon, idempotence, completed outcomes, end dates, and invalid schedule inputs
 
 ### People
 
@@ -145,6 +154,7 @@ Coverage note:
 - verify `/circle/settings/notifications` loads for a Workspace owner
 - if web push keys are configured, verify browser subscription can be enabled and disabled
 - verify notification toggles save correctly
+- toggle each labelled switch using Space and confirm visible keyboard focus
 - verify active device subscriptions appear in the settings page
 
 ### Companion Tablet
@@ -157,7 +167,7 @@ Coverage note:
 
 Coverage note:
 
-- deterministic Playwright coverage now covers the invalid-session recovery fallback only
+- deterministic Playwright coverage covers invalid sessions, temporary offline feedback, and preparation retry; session parsing tests reject malformed stored values
 
 ### Cross-Device And Origin
 

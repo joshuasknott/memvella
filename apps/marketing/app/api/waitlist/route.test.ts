@@ -22,6 +22,25 @@ describe('marketing waitlist API route', () => {
         delete process.env.CONVEX_URL;
     });
 
+    it.each(['null', '[]', '"hello"', '{broken'])('rejects malformed request bodies: %s', async (body) => {
+        const { POST } = await import('./route');
+        const response = await POST(new Request('https://marketing.test/api/waitlist', { method: 'POST', body }));
+        expect(response.status).toBe(400);
+        expect(mutationMock).not.toHaveBeenCalled();
+    });
+
+    it('returns an honest retry response when Convex has not saved a rate-limited submission', async () => {
+        process.env.CONVEX_URL = 'https://example.convex.cloud';
+        mutationMock.mockResolvedValueOnce({ status: 'rate_limited', retryAfterMs: 1501 });
+        const { POST } = await import('./route');
+        const response = await POST(new Request('https://marketing.test/api/waitlist', {
+            method: 'POST', body: JSON.stringify({ email: 'jane@example.com' }),
+        }));
+        expect(response.status).toBe(429);
+        expect(response.headers.get('retry-after')).toBe('2');
+        expect(await response.json()).toHaveProperty('error');
+    });
+
     it('rejects malformed email without calling Convex', async () => {
         const { POST } = await import('./route');
         const response = await POST(

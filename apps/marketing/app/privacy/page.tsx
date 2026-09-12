@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { StaticPageLayout } from "@/components/layout/StaticPageLayout";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/privacy" },
   title: "Privacy Policy",
   description:
     "How Memvella handles your data, written in plain language, not legalese.",

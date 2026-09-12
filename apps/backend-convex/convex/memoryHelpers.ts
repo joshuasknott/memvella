@@ -25,8 +25,23 @@ function uniqueAssets(
   assets: MemoryAssetInput[],
 ) {
   return assets.filter(
-    (asset) => asset.storageId !== null || asset.externalUrl !== null,
+    (asset) => Boolean(asset.storageId || asset.externalUrl),
   );
+}
+
+export function buildMemorySearchText(record: {
+  title: string;
+  story?: string | null;
+  transcript?: string | null;
+  externalUrl?: string | null;
+}) {
+  const { title, story, transcript, externalUrl } = record;
+  const encoder = new TextEncoder();
+  // Leave room for the original record, including unusually long legacy content.
+  const originalBytes = encoder.encode(JSON.stringify({ title, story, transcript, externalUrl })).length;
+  const budget = Math.min(128_000, Math.max(0, 900_000 - originalBytes));
+  const text = [title, story, transcript].filter(Boolean).join("\n");
+  return new TextDecoder().decode(encoder.encode(text).subarray(0, budget), { stream: true });
 }
 
 export function formatMemoryDateLabel(memoryDate: string | null) {
@@ -107,6 +122,7 @@ export async function createMemoryRecord(
     title: args.title,
     story: args.story ?? null,
     transcript: args.transcript ?? null,
+    searchText: buildMemorySearchText(args),
     memoryDate: args.memoryDate ?? null,
     externalUrl: args.externalUrl ?? null,
     createdByCircleMembershipId: args.circleMembershipId,
@@ -202,9 +218,16 @@ export async function listMemoryCardsForSenior(
     .order("desc")
     .take(limit);
 
-  return await Promise.all(
-    records.map(async (record) => {
-      const [primaryAsset] = await resolveAssets(ctx, record._id);
+  return await Promise.all(records.map((record) => resolveMemoryCard(ctx, record)));
+}
+
+export async function resolveMemoryCard(ctx: QueryCtx, record: Doc<"memoryRecords">) {
+      const primaryAsset = await ctx.db.query("memoryAssets")
+        .withIndex("by_memoryRecordId_and_sortOrder", (q) => q.eq("memoryRecordId", record._id))
+        .first();
+      const previewUrl = primaryAsset?.storageId
+        ? await ctx.storage.getUrl(primaryAsset.storageId)
+        : primaryAsset?.externalUrl ?? null;
 
       return {
         id: record._id,
@@ -216,12 +239,10 @@ export async function listMemoryCardsForSenior(
         dateLabel: formatMemoryDateLabel(record.memoryDate),
         externalUrl: record.externalUrl,
         summary: summarizeMemory(record),
-        previewUrl: primaryAsset?.resolvedUrl ?? null,
+        previewUrl,
         previewAssetType: primaryAsset?.assetType ?? null,
         lastEditedAt: record.lastEditedAt,
       };
-    }),
-  );
 }
 
 export async function getMemoryDetailForSenior(

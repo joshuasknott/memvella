@@ -107,6 +107,7 @@ export async function bootstrapSeniorSession(
     experience: SeniorExperience;
     seniorName?: string;
     circleName?: string;
+    dueRoutineTitle?: string;
   },
 ) {
   const response = await page.request.post(

@@ -1,3 +1,19 @@
+# Memory dictation reliability — 12 September 2026
+
+Current review: passed locally.
+
+The shared memory editor now reconciles complete speech-result snapshots, preserves existing paragraph breaks, and ignores callbacks from completed or cancelled dictation attempts. Microphone startup is cancellable. Stop waits briefly for final words, then releases the editor even when the speech service omits its end event. Errors preserve the story and allow editing or another attempt. Waiting, listening, and finishing states are announced.
+
+- All nine dictation browser tests passed, covering save/search, revised and withdrawn interim words, appending to edited text, startup cancellation, errors, retries, final results after Stop, stalled or throwing browser methods, and leaving the editor.
+- The existing phone memory-editor and account-edit checks also passed. The first cold run exceeded the existing editor test's 60-second limit during page compilation; that case passed on its own rerun with a 120-second local limit, completing in 14.8 seconds. The narrow-screen check was repeated to inspect the actual viewport and keyboard focus.
+- Inspected the editor at 1280px and 320px. The startup Cancel action remains reachable by keyboard, its focus ring is visible, status and error text are readable, and the narrow screen has no horizontal overflow. Captures: `output/dictation-improvement/dictation-starting-phone.png` and `output/dictation-improvement/dictation-error-desktop.png`. The initial full-page phone capture included an offscreen fixed skip link; the viewport capture confirms it does not obscure the controls.
+- The repository verification phases passed: environment/public/copy guardrails, lint, type checks, 163 unit tests, and both production builds. Phases ran sequentially with pinned pnpm 9.0.0; unchanged lint/type-check tasks reused Turbo caches. Log: `output/dictation-improvement/verify.log`.
+- Restored the existing local Convex data and temporary environment settings after browser testing. Before/after comparisons matched all 39 document exports and all remaining archive entries, including stored files. The Windows export CLI exited abnormally after downloading its snapshots; archive integrity and restored contents were checked independently.
+
+The browser checks used local Convex and simulated speech events. They do not verify a physical microphone, speech-recognition accuracy, or live provider behavior. Changes remain local. Optional removal of the saved development cache was blocked by automatic approval review; the cache remains ignored under `.next/`.
+
+---
+
 # Memvella shared marketing identity — 5 September 2026
 
 Current review: passed locally.
@@ -117,3 +133,22 @@ Vercel staging follow-up:
 - Deployment evidence is under `output/accessibility-verification/*production*.log`; credentials and browser artifacts remain ignored.
 
 Still required: physical microphone/speaker testing; conversation completeness and reconnect/resumption review; assistive-technology, browser password-reset, and service-backed notification coverage. Deployment success is not complete production journey or accessibility certification.
+
+## Product reliability and everyday usability — 12 September 2026
+
+Reviewed the routine editor, paginated memory library, notification switches, tablet recovery, waitlist states, and public-page metadata using the existing design system. Evidence and the coverage inventory are in `output/product-improvement/`.
+
+- Owner routine editing, pause/resume persistence, and deletion passed at 375px. The native delete dialog initially focuses Keep routine; Escape restores focus to Delete routine. Visual inspection caught a checkbox inheriting full-width text-input styling and overflowing the phone layout; the final selector excludes checkboxes.
+- Memory search found a word beyond the card preview in an older record. A separate local review created 26 memories, loaded the first 24, used Load more to reach all 26, searched the oldest story, and recovered from no results. Today displayed only its three requested cards. Phone search and empty states were checked at 320px; populated library and Today were inspected at 1440px.
+- Notification switches have accessible names, 44px targets, visible focus, and persisted keyboard changes. `notification-focus-phone.png` records the focused Daily summary switch.
+- Offline testing preserves tablet pairing and announces potentially stale information. Browser network events supplement the socket state because an offline browser can keep an existing socket marked connected. Preparation failure offers a retry; visual inspection caught a general button rule overriding its intended size, and the final retry target measures at least 72px. Tablet states were inspected at 1024 × 768.
+- Waitlist checks covered invalid input and focus, loading, HTTP 429, malformed success payloads, non-JSON failures, the 15-second timeout, retry, and a successful signup saved to the local backend. Errors preserved the email field; success received focus. Phone states were inspected at 320px and success at 1440px. No email was sent.
+- Home, Contact, Privacy, and Terms returned their own canonical URLs, the shared social image, and the configured response headers. Robots, sitemap, and image URLs returned successfully. The secondary-page skip link moved keyboard focus to the main landmark. Marketing review recorded no browser page errors.
+
+Functional evidence: all 35 repository Chromium scenarios passed across the initial run and focused reruns after fixes. The reminder test now seeds an already-due occurrence instead of relying on the old replay of a midnight reminder. The two additional visual-review scenarios passed; the core review was repeated after the final retry-button correction. The unavailable interactive browser kernel was replaced with the repository's Playwright runtime for this pass. These checks do not establish assistive-technology conformance.
+
+The updated schema and functions were pushed only to the local Convex backend. The search backfill completed for four existing memories, and the real local renewal function queued an active schedule successfully. Existing local data was backed up before testing, restored to the migrated baseline afterward, and compared: all 39 document tables and 50 other export entries matched. Original local environment values were restored, and the test servers were stopped.
+
+The disk filled while Next.js persisted development output. One generated Turbo cache archive from this session was removed, freeing about 2.2 GB. Production cache outputs now exclude `.next/dev*` directories so future archives do not include development data and preserved dev caches. The final core production cache archive measured 5,768,453 bytes (about 5.8 MB), compared with the removed 2,245,641,105-byte archive.
+
+Final repository verification passed: environment/public/copy guardrails, all lint and type-check tasks, 190 tests across 31 files, and both production builds. These were fresh runs, recorded in `output/product-improvement/verify.log`; final diff whitespace validation also passed. Changes remain local. Production release must deploy the backend and complete the memory search backfill before the updated frontend, as documented in `docs/launch-runbook.md`. Live Gemini, email delivery, web push, physical tablet hardware, and production journeys were not reverified in this pass.

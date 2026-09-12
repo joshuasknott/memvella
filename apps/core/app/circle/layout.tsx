@@ -1,6 +1,7 @@
 import CircleBottomNav from "@/components/CircleBottomNav";
 import CircleHeader from "@/components/CircleHeader";
 import CircleProfileBootstrap from "@/components/CircleProfileBootstrap";
+import ConnectionNotice from "@/components/ConnectionNotice";
 
 export default function CircleLayout({
   children,
@@ -17,6 +18,7 @@ export default function CircleLayout({
       <div className="circle-content">
         <CircleHeader />
         <main id="main-content" tabIndex={-1}>
+          <ConnectionNotice />
           {children}
         </main>
       </div>

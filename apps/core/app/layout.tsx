@@ -17,6 +17,7 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "Memvella",
   description: "Digital wellness companion",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

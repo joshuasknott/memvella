@@ -1,12 +1,15 @@
 import { v } from "convex/values";
+import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import { requireCircleMembership } from "./circleAuth";
 import {
   createMemoryRecord,
+  buildMemorySearchText,
   deleteMemoryRecordCascade,
   getMemoryDetailForSenior,
   listMemoryCardsForSenior,
+  resolveMemoryCard,
   type MemoryAssetInput,
   replaceMemoryAssets,
 } from "./memoryHelpers";
@@ -64,15 +67,56 @@ async function buildValidatedStorageAsset(
 }
 
 export const listMemoryRecords = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
     const { membership } = await requireCircleMembership(ctx, "family_side");
     const seniorProfileId = membership.seniorProfileId;
     if (!seniorProfileId) {
       return [];
     }
 
-    return await listMemoryCardsForSenior(ctx, seniorProfileId);
+    const limit = args.limit === undefined ? 100 : args.limit;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new Error("Choose between 1 and 100 memories.");
+    }
+    return await listMemoryCardsForSenior(ctx, seniorProfileId, limit);
+  },
+});
+
+export const browseMemoryRecords = query({
+  args: { paginationOpts: paginationOptsValidator, search: v.optional(v.string()) },
+  returns: paginationResultValidator(v.object({
+    id: v.id("memoryRecords"),
+    title: v.string(),
+    recordType: v.union(v.literal("text"), v.literal("media"), v.literal("audio"), v.literal("voice")),
+    dateLabel: v.string(),
+    summary: v.string(),
+    previewUrl: v.union(v.string(), v.null()),
+    previewAssetType: v.union(v.literal("image"), v.literal("video"), v.literal("audio"), v.null()),
+    lastEditedAt: v.number(),
+  })),
+  handler: async (ctx, args) => {
+    const { membership } = await requireCircleMembership(ctx, "family_side");
+    const seniorProfileId = membership.seniorProfileId;
+    if (!seniorProfileId) return { page: [], isDone: true, continueCursor: "" };
+    // Convex accepts up to sixteen search terms; keep a pasted paragraph bounded.
+    const search = args.search?.trim().match(/[\p{L}\p{N}]+/gu)?.slice(0, 16).join(" ") ?? "";
+    const paginationOpts = {
+      ...args.paginationOpts,
+      numItems: Number.isFinite(args.paginationOpts.numItems)
+        ? Math.max(1, Math.min(48, Math.floor(args.paginationOpts.numItems))) : 24,
+    };
+    const records = search
+      ? await ctx.db.query("memoryRecords").withSearchIndex("search_text", (q) =>
+          q.search("searchText", search).eq("seniorProfileId", seniorProfileId),
+        ).paginate(paginationOpts)
+      : await ctx.db.query("memoryRecords")
+          .withIndex("by_seniorProfileId_and_lastEditedAt", (q) => q.eq("seniorProfileId", seniorProfileId))
+          .order("desc").paginate(paginationOpts);
+    const cards = await Promise.all(records.page.map((record) => resolveMemoryCard(ctx, record)));
+    return { ...records, page: cards.map(({ id, title, recordType, dateLabel, summary, previewUrl, previewAssetType, lastEditedAt }) =>
+      ({ id, title, recordType, dateLabel, summary, previewUrl, previewAssetType, lastEditedAt })),
+    };
   },
 });
 
@@ -297,6 +341,7 @@ export const updateTextMemory = mutation({
     await ctx.db.patch(record._id, {
       title: args.title.trim(),
       story: args.story.trim(),
+      searchText: buildMemorySearchText({ ...record, title: args.title.trim(), story: args.story.trim() }),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
@@ -364,6 +409,7 @@ export const updateAudioMemory = mutation({
     await ctx.db.patch(record._id, {
       title: args.title.trim(),
       story: args.story.trim(),
+      searchText: buildMemorySearchText({ ...record, title: args.title.trim(), story: args.story.trim(), externalUrl: sanitizeExternalUrl(args.songLink) }),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       externalUrl: sanitizeExternalUrl(args.songLink),
       updatedByCircleMembershipId: circleMembership?._id ?? null,
@@ -426,6 +472,7 @@ export const updateVoiceMemory = mutation({
     await ctx.db.patch(record._id, {
       title: args.title.trim(),
       transcript: args.transcript.trim(),
+      searchText: buildMemorySearchText({ ...record, title: args.title.trim(), transcript: args.transcript.trim() }),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),
@@ -465,6 +512,7 @@ export const updateMediaMemory = mutation({
     await ctx.db.patch(record._id, {
       title: args.title.trim(),
       story: normalizeOptionalText(args.story) ?? null,
+      searchText: buildMemorySearchText({ ...record, title: args.title.trim(), story: normalizeOptionalText(args.story) ?? null }),
       memoryDate: normalizeOptionalDate(args.date ?? undefined),
       updatedByCircleMembershipId: circleMembership?._id ?? null,
       lastEditedAt: Date.now(),

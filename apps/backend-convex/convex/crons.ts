@@ -4,6 +4,13 @@ import { internal } from "./_generated/api";
 const crons = cronJobs();
 
 crons.interval(
+  "renew recurring routine reminders",
+  { hours: 6 },
+  internal.routines.renewRoutineSchedules,
+  {},
+);
+
+crons.interval(
   "process circle insights",
   { hours: 1 },
   internal.insightsEngine.processPendingInsights,

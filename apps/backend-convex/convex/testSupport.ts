@@ -1,8 +1,10 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import { issueSeniorAccessSession } from "./seniorAccessHelpers";
 import { generateOpaqueToken, normalizeOptionalText } from "./security";
 import { buildCircleName, MEMBER_LABEL } from "./terminology";
+import { formatTimeLabel } from "./routineHelpers";
 
 const testSupportAuthValidator = {
   authToken: v.string(),
@@ -165,6 +167,7 @@ export const createSeniorSessionFixture = mutation({
     experience: seniorExperienceValidator,
     seniorName: v.optional(v.string()),
     circleName: v.optional(v.string()),
+    dueRoutineTitle: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     ensureTestSupportAccess(args.authToken);
@@ -187,6 +190,39 @@ export const createSeniorSessionFixture = mutation({
       locale: null,
       lastSessionAt: undefined,
     });
+
+    if (args.dueRoutineTitle) {
+      const reminderTime = new Date(Date.now() - 15 * 60 * 1000);
+      const startTimeMinutes =
+        reminderTime.getUTCHours() * 60 + reminderTime.getUTCMinutes();
+      const timeLabel = formatTimeLabel(startTimeMinutes);
+      const routineScheduleId = await ctx.db.insert("routineSchedules", {
+        seniorProfileId,
+        title: args.dueRoutineTitle,
+        aiInstructions: null,
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        startTimeMinutes,
+        timeLabel,
+        durationMinutes: null,
+        timezone: "UTC",
+        status: "active",
+        createdByCircleMembershipId: null,
+        updatedByCircleMembershipId: null,
+        lastEditedAt: Date.now(),
+      });
+      const routineOccurrenceId = await ctx.db.insert("routineOccurrences", {
+        seniorProfileId,
+        routineScheduleId,
+        occurrenceDateKey: reminderTime.toISOString().slice(0, 10),
+        startTimeMinutes,
+        timeLabel,
+        timezone: "UTC",
+        status: "scheduled",
+      });
+      await ctx.runMutation(internal.routines.queueRoutineCheckIn, {
+        routineOccurrenceId,
+      });
+    }
 
     const deviceFingerprint = `memvella-test-${experience}-${generateOpaqueToken(12)}`;
     const session = await issueSeniorAccessSession(ctx, {

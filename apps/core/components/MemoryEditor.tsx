@@ -74,8 +74,7 @@ export default function MemoryEditor({
       isSaving ||
       !isAuthenticated ||
       !profile ||
-      dictation.isRecording ||
-      dictation.isStarting
+      dictation.isBusy
     )
       return;
     if (!title.trim() || (!story.trim() && !file)) {
@@ -189,7 +188,7 @@ export default function MemoryEditor({
               }
               value={story}
               onChange={(event) => setStory(event.target.value)}
-              readOnly={dictation.isRecording || dictation.isStarting}
+              readOnly={dictation.isBusy}
               placeholder="Who was there? What made it special?"
               rows={5}
               aria-describedby="story-help"
@@ -206,10 +205,10 @@ export default function MemoryEditor({
             <button
               type="button"
               data-testid="voice-memory-record-button"
-              aria-pressed={dictation.isRecording || dictation.isStarting}
-              disabled={dictation.isStarting}
+              aria-pressed={dictation.isBusy}
+              disabled={dictation.isStopping}
               onClick={() => {
-                if (dictation.isRecording) dictation.stop();
+                if (dictation.isBusy) dictation.stop();
                 else {
                   setError(null);
                   setDictated(true);
@@ -217,16 +216,18 @@ export default function MemoryEditor({
                 }
               }}
             >
-              {dictation.isRecording ? (
+              {dictation.isBusy ? (
                 <Square size={18} aria-hidden="true" />
               ) : (
                 <Mic size={20} aria-hidden="true" />
               )}
-              {dictation.isStarting
-                ? "Starting…"
-                : dictation.isRecording
-                  ? "Stop dictation"
-                  : "Speak instead"}
+              {dictation.isStopping
+                ? "Finishing…"
+                : dictation.isStarting
+                  ? "Cancel dictation"
+                  : dictation.isRecording
+                    ? "Stop dictation"
+                    : "Speak instead"}
             </button>
             <button
               type="button"
@@ -236,6 +237,15 @@ export default function MemoryEditor({
               <Music size={20} aria-hidden="true" /> Song link
             </button>
           </div>
+          <p role="status" className={dictation.isBusy ? "editor-help" : "sr-only"}>
+            {dictation.isStarting
+              ? "Waiting for microphone access…"
+              : dictation.isStopping
+                ? "Finishing your words…"
+                : dictation.isRecording
+                  ? "Listening. Speak at your own pace."
+                  : ""}
+          </p>
           <input
             ref={fileInput}
             type="file"
@@ -334,8 +344,7 @@ export default function MemoryEditor({
               isSaving ||
               !isAuthenticated ||
               !profile ||
-              dictation.isRecording ||
-              dictation.isStarting
+              dictation.isBusy
             }
           >
             {isSaving ? (

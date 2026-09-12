@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       experience?: unknown;
       seniorName?: unknown;
       circleName?: unknown;
+      dueRoutineTitle?: unknown;
     };
 
     if (!isSeniorExperience(body.experience)) {
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
         : {}),
       ...(typeof body.circleName === "string"
         ? { circleName: body.circleName }
+        : {}),
+      ...(typeof body.dueRoutineTitle === "string"
+        ? { dueRoutineTitle: body.dueRoutineTitle }
         : {}),
     });
 

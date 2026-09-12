@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { StaticPageLayout } from "@/components/layout/StaticPageLayout";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/terms" },
   title: "Terms of Service",
   description:
     "The ground rules for using the Memvella website and waitlist - simple, fair, and human.",

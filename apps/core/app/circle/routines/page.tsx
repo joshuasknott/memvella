@@ -63,7 +63,7 @@ export default function RoutinesPage() {
                 <Clock3 size={22} aria-hidden="true" />
                 <time>{schedule.time}</time>
               </div>
-              <div>
+              <div className="routine-description">
                 <h2>{schedule.title}</h2>
                 <p>
                   {schedule.frequency.join(", ")}
@@ -73,6 +73,15 @@ export default function RoutinesPage() {
                   <p className="routine-note">{schedule.aiInstructions}</p>
                 ) : null}
               </div>
+              {isOrganiser ? (
+                <Link
+                  href={`/circle/routines/${schedule.id}/edit`}
+                  className="quiet-link routine-edit-link"
+                  aria-label={`Edit ${schedule.title}`}
+                >
+                  Edit
+                </Link>
+              ) : null}
             </article>
           ))}
         </section>

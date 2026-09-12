@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import {
   ArrowRight,
   CalendarClock,
@@ -15,6 +16,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import WaitlistForm from "@/components/ui/WaitlistForm";
 import { CompanionPreview } from "@/components/CompanionPreview";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const features = [
   {

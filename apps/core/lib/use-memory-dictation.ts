@@ -6,53 +6,31 @@ import {
   type BrowserSpeechRecognitionInstance,
 } from "./browser-speech";
 
+type DictationSession = { stop: () => void; dispose: () => void };
+type DictationState = "idle" | "starting" | "recording" | "stopping";
+
 export function useMemoryDictation(
   onText: (text: string) => void,
   onError: (message: string) => void,
 ) {
-  const recognition = useRef<BrowserSpeechRecognitionInstance | null>(null);
+  const session = useRef<DictationSession | null>(null);
   const callbacks = useRef({ onText, onError });
   useEffect(() => {
     callbacks.current = { onText, onError };
   }, [onText, onError]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
+  const [state, setState] = useState<DictationState>("idle");
 
   useEffect(
-    () => () => {
-      const current = recognition.current;
-      recognition.current = null;
-      if (current) {
-        current.onstart =
-          current.onresult =
-          current.onerror =
-          current.onend =
-            null;
-        try {
-          current.abort();
-        } catch {
-          /* Already stopped. */
-        }
-      }
-    },
+    () => () => session.current?.dispose(),
     [],
   );
 
   function stop() {
-    const current = recognition.current;
-    if (!current) return;
-    try {
-      if (current.stop) current.stop();
-      else current.abort();
-    } catch {
-      callbacks.current.onError(
-        "The microphone could not stop. Please try again.",
-      );
-    }
+    session.current?.stop();
   }
 
   function start(existingText: string) {
-    if (recognition.current) return;
+    if (session.current) return;
     const Recognition = resolveSpeechRecognitionCtor();
     if (!Recognition) {
       callbacks.current.onError(
@@ -60,53 +38,108 @@ export function useMemoryDictation(
       );
       return;
     }
-    let finalText = existingText.trim() ? existingText.trim() + " " : "";
-    let interimText = "";
-    const current = new Recognition();
-    recognition.current = current;
+    let current: BrowserSpeechRecognitionInstance;
+    try {
+      current = new Recognition();
+    } catch {
+      callbacks.current.onError(
+        "The microphone couldn’t start. Please try again, or type your memory.",
+      );
+      return;
+    }
+    let started = false;
+    let stopping = false;
+    let stopTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function finish(abort = false, updateState = true) {
+      if (session.current !== activeSession) return;
+      session.current = null;
+      clearTimeout(stopTimeout);
+      // Detach before aborting: some browsers deliver cancellation events late.
+      current.onstart = current.onresult = current.onerror = current.onend = null;
+      if (abort) {
+        try {
+          current.abort();
+        } catch {
+          /* Already stopped. */
+        }
+      }
+      if (updateState) setState("idle");
+    }
+
+    const activeSession: DictationSession = {
+      dispose: () => finish(true, false),
+      stop: () => {
+        if (session.current !== activeSession || stopping) return;
+        if (!started || !current.stop) {
+          finish(true);
+          return;
+        }
+        stopping = true;
+        setState("stopping");
+        // Allow a final result, but never leave the editor locked waiting for end.
+        stopTimeout = setTimeout(() => finish(true), 2_000);
+        try {
+          current.stop();
+        } catch {
+          finish(true);
+          callbacks.current.onError(
+            "Dictation was interrupted. You can edit your words or try again.",
+          );
+        }
+      },
+    };
+    session.current = activeSession;
     current.lang = "en-GB";
     current.continuous = true;
     current.interimResults = true;
-    setIsStarting(true);
+    setState("starting");
     current.onstart = () => {
-      setIsStarting(false);
-      setIsRecording(true);
+      if (session.current !== activeSession || stopping) return;
+      started = true;
+      setState("recording");
     };
     current.onresult = (event) => {
-      interimText = "";
-      for (let i = event.resultIndex ?? 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        const chunk = result?.[0]?.transcript ?? "";
-        if (result?.isFinal) finalText += chunk + " ";
-        else interimText += chunk;
-      }
-      callbacks.current.onText((finalText + interimText).trim());
+      if (session.current !== activeSession) return;
+      // Results is the full session snapshot. Unchanged interim words before
+      // resultIndex still belong to the story; withdrawn results must disappear.
+      const dictatedText = Array.from(
+        event.results,
+        (result) => result[0]?.transcript ?? "",
+      ).join("").trim();
+      const separator = existingText && !/\s$/.test(existingText) ? " " : "";
+      callbacks.current.onText(
+        dictatedText ? existingText + separator + dictatedText : existingText,
+      );
     };
     current.onerror = (event) => {
-      setIsStarting(false);
+      if (session.current !== activeSession) return;
+      finish(true);
       if (event.error !== "no-speech" && event.error !== "aborted") {
         callbacks.current.onError(
-          event.error === "not-allowed"
+          event.error === "not-allowed" || event.error === "service-not-allowed"
             ? "Allow microphone access to dictate, or type your memory below."
             : "We couldn’t hear you. Try again, or type your memory below.",
         );
       }
     };
-    current.onend = () => {
-      callbacks.current.onText((finalText + interimText).trim());
-      recognition.current = null;
-      setIsRecording(false);
-      setIsStarting(false);
-    };
+    current.onend = () => finish();
     try {
       current.start();
     } catch {
-      recognition.current = null;
-      setIsStarting(false);
+      if (session.current !== activeSession) return;
+      finish(true);
       callbacks.current.onError(
         "The microphone couldn’t start. Please try again, or type your memory.",
       );
     }
   }
-  return { isRecording, isStarting, start, stop };
+  return {
+    isRecording: state === "recording",
+    isStarting: state === "starting",
+    isStopping: state === "stopping",
+    isBusy: state !== "idle",
+    start,
+    stop,
+  };
 }

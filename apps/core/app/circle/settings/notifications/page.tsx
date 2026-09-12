@@ -296,6 +296,7 @@ export default function NotificationsSettingsPage() {
             </p>
           </div>
           <Toggle
+            id="daily_summary"
             checked={dailySummary}
             onChange={() => {
               void handleToggle("dailySummary");
@@ -318,6 +319,7 @@ export default function NotificationsSettingsPage() {
             </p>
           </div>
           <Toggle
+            id="urgent_alerts"
             checked={urgentAlerts}
             onChange={() => {
               void handleToggle("urgentAlerts");
@@ -340,6 +342,7 @@ export default function NotificationsSettingsPage() {
             </p>
           </div>
           <Toggle
+            id="routine_reminders"
             checked={routineReminders}
             onChange={() => {
               void handleToggle("routineReminders");

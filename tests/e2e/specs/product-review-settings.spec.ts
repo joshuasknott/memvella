@@ -42,15 +42,16 @@ test("owner sees deterministic push unavailable state and saved notification tog
   await expect(page.getByTestId("push-not-configured-message")).toBeVisible();
   await expect(page.getByTestId("push-alerts-toggle-button")).toBeDisabled();
 
-  const dailySummary = page.getByTestId("daily-summary-toggle");
-  const urgentAlerts = page.getByTestId("urgent-alerts-toggle");
-  const routineReminders = page.getByTestId("routine-reminders-toggle");
+  const dailySummary = page.getByRole("switch", { name: "Daily summary", exact: true });
+  const urgentAlerts = page.getByRole("switch", { name: "Urgent alerts", exact: true });
+  const routineReminders = page.getByRole("switch", { name: "Routine reminders", exact: true });
 
   await expect(dailySummary).toHaveAttribute("aria-checked", "true");
   await expect(urgentAlerts).toHaveAttribute("aria-checked", "true");
   await expect(routineReminders).toHaveAttribute("aria-checked", "false");
 
-  await dailySummary.click();
+  await dailySummary.focus();
+  await page.keyboard.press("Space");
   await expect(dailySummary).toHaveAttribute("aria-checked", "false");
   await routineReminders.click();
   await expect(routineReminders).toHaveAttribute("aria-checked", "true");

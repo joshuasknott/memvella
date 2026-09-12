@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { Plus, Search, ArrowRight } from "lucide-react";
 import { api } from "@memvella/backend";
 import { MemoryCard } from "@/components/MemoryCard";
@@ -10,16 +10,23 @@ import { useCircleProfile } from "@/lib/use-circle-profile";
 
 export default function MemoriesPage() {
   const { profile, isAuthenticated, seniorDisplayName } = useCircleProfile();
-  const memories = useQuery(
-    api.memories.listMemoryRecords,
-    isAuthenticated && profile ? {} : "skip",
-  );
   const [search, setSearch] = useState("");
-  const filtered = memories?.filter((record) =>
-    `${record.title} ${record.summary}`
-      .toLocaleLowerCase()
-      .includes(search.trim().toLocaleLowerCase()),
+  const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setSearchQuery(search.trim()), 250);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+  const {
+    results: memories,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.memories.browseMemoryRecords,
+    isAuthenticated && profile ? { search: searchQuery } : "skip",
+    { initialNumItems: 24 },
   );
+  const isLoading =
+    status === "LoadingFirstPage" || search.trim() !== searchQuery;
   return (
     <div className="page-stack">
       <section className="page-heading">
@@ -32,7 +39,7 @@ export default function MemoriesPage() {
           <Plus size={20} aria-hidden="true" /> Add a memory
         </Link>
       </section>
-      {memories && memories.length > 0 ? (
+      {memories.length > 0 || search || searchQuery ? (
         <div className="search-field">
           <Search size={20} aria-hidden="true" />
           <input
@@ -41,15 +48,21 @@ export default function MemoriesPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             type="search"
+            maxLength={200}
+            aria-controls="memory-list"
           />
-          <span aria-live="polite">{filtered?.length} memories</span>
+          <span role="status">
+            {isLoading
+              ? "Searching…"
+              : `${memories.length} ${memories.length === 1 ? "memory" : "memories"}${status !== "Exhausted" ? " shown" : ""}`}
+          </span>
         </div>
       ) : null}
-      {memories === undefined ? (
+      {isLoading ? (
         <p role="status" className="loading-message">
-          Loading memories…
+          {searchQuery || search ? "Searching memories…" : "Loading memories…"}
         </p>
-      ) : memories.length === 0 ? (
+      ) : memories.length === 0 && !searchQuery ? (
         <div className="empty-state">
           <h2>Every memory starts somewhere.</h2>
           <p>A favourite photo or a few words is all it takes.</p>
@@ -57,7 +70,7 @@ export default function MemoriesPage() {
             Add the first memory <ArrowRight size={18} aria-hidden="true" />
           </Link>
         </div>
-      ) : filtered?.length === 0 ? (
+      ) : memories.length === 0 ? (
         <div className="empty-state">
           <h2>No matching memories</h2>
           <p>Try another word, or clear your search.</p>
@@ -70,12 +83,32 @@ export default function MemoriesPage() {
           </button>
         </div>
       ) : (
-        <div className="memory-grid" data-testid="memory-list">
-          {filtered?.map((record) => (
+        <div id="memory-list" className="memory-grid" data-testid="memory-list">
+          {memories.map((record) => (
             <MemoryCard key={record.id} record={record} />
           ))}
         </div>
       )}
+      {!isLoading && status !== "Exhausted" ? (
+        <div className="memory-load-more">
+          <button
+            type="button"
+            className="action-button"
+            disabled={status === "LoadingMore"}
+            onClick={() => loadMore(24)}
+            aria-controls="memory-list"
+          >
+            {status === "LoadingMore"
+              ? "Loading memories…"
+              : "Load more memories"}
+          </button>
+          <p role="status" className="editor-help">
+            {status === "LoadingMore"
+              ? "Loading more memories…"
+              : `${memories.length} memories shown`}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-04-14
+Last reviewed: 2026-09-12
 Owners: engineering
 Read when: touching schema, queries, mutations, migrations, onboarding, or role boundaries
 Depends on: docs/architecture.md, docs/auth-and-identity.md
@@ -83,12 +83,16 @@ Current omission:
 - `memoryRecords.recordType` is `text`, `media`, `audio`, or `voice`.
 - `memoryAssets.assetType` is `image`, `video`, or `audio`.
 - Memory content belongs to the senior profile first and records the creating or updating Workspace membership when relevant.
+- `memoryRecords.searchText` is an optional derived field containing title, story, and transcript text. The `search_text` index filters by `seniorProfileId`; the query resolves membership before searching. New and edited records maintain the field, and `migrations:runMemorySearchBackfill` indexes existing records. Indexed text is bounded to 128,000 UTF-8 bytes and reduced for unusually large legacy records to keep the document within Convex limits; original content is preserved.
+- Library queries return paginated card summaries rather than full stories and transcripts. Today requests only three cards.
 
 ### Routine Records
 
 - `routineSchedules` hold the durable schedule definition.
 - `routineOccurrences` hold dated scheduled instances.
 - `routineCheckIns` hold assisted live routine prompt state and outcomes.
+- Active schedules renew their 45-day lookahead every six hours in bounded batches. Renewal is idempotent per schedule and date, ignores past reminder times, and preserves completed occurrences. Pausing or editing replaces pending occurrences from today onward; resuming replenishes the window.
+- A confirmed check-in marks its occurrence `completed`; an unconfirmed response marks it `unconfirmed`. Deleting a schedule removes its occurrences in background batches and cancels outstanding prompts.
 
 ### Awareness And Notifications
 

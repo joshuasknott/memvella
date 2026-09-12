@@ -69,7 +69,7 @@ function getFormatter(timeZone: string) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hourCycle: "h23",
   });
 }
 
@@ -111,21 +111,15 @@ function getTimeZoneOffsetMs(date: Date, timeZone: string) {
 }
 
 export function parseTimeInputToMinutes(timeValue: string) {
-  if (timeValue.includes(" ")) {
-    const [timePart, meridiem] = timeValue.split(" ");
-    const [rawHour, rawMinute] = timePart.split(":").map(Number);
-    const normalizedHour =
-      meridiem === "PM" && rawHour !== 12
-        ? rawHour + 12
-        : meridiem === "AM" && rawHour === 12
-          ? 0
-          : rawHour;
-
-    return normalizedHour * 60 + (rawMinute ?? 0);
+  const match = /^(\d{1,2}):(\d{2})(?:\s+(AM|PM))?$/i.exec(timeValue.trim());
+  if (!match) throw new Error("Choose a valid time for this routine.");
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridiem = match[3]?.toUpperCase();
+  if (minute > 59 || (meridiem ? hour < 1 || hour > 12 : hour > 23)) {
+    throw new Error("Choose a valid time for this routine.");
   }
-
-  const [hour, minute] = timeValue.split(":").map(Number);
-  return hour * 60 + (minute ?? 0);
+  return (meridiem ? (hour % 12) + (meridiem === "PM" ? 12 : 0) : hour) * 60 + minute;
 }
 
 export function formatTimeLabel(startTimeMinutes: number) {
@@ -139,9 +133,10 @@ export function formatTimeLabel(startTimeMinutes: number) {
 }
 
 export function normalizeDaysOfWeek(daysOfWeek: number[]) {
+  if (daysOfWeek.some((day) => !Number.isInteger(day) || day < 0 || day > 6)) {
+    throw new Error("Choose valid repeat days for this routine.");
+  }
   return [...new Set(daysOfWeek)]
-    .map((day) => Math.trunc(day))
-    .filter((day) => day >= 0 && day <= 6)
     .sort((left, right) => left - right);
 }
 
@@ -151,12 +146,51 @@ export function normalizeDateKey(value: string | null | undefined) {
     return undefined;
   }
 
-  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : undefined;
+  const parsed = new Date(`${trimmed}T00:00:00.000Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed) ||
+      !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== trimmed) {
+    throw new Error("Choose a valid date for this routine.");
+  }
+  return trimmed;
+}
+
+export function validateRoutineScheduleInput(args: {
+  title: string;
+  timezone: string;
+  startDate?: string;
+  endDate?: string;
+  durationMinutes?: number;
+  aiInstructions?: string;
+}) {
+  if (!args.title.trim() || args.title.trim().length > 200) {
+    throw new Error("Use a routine name between 1 and 200 characters.");
+  }
+  if ((args.aiInstructions?.trim().length ?? 0) > 2000) {
+    throw new Error("Keep the helpful detail within 2,000 characters.");
+  }
+  try {
+    getFormatter(args.timezone).format(new Date());
+  } catch {
+    throw new Error("Choose a valid time zone for this routine.");
+  }
+  const startDate = normalizeDateKey(args.startDate);
+  const endDate = normalizeDateKey(args.endDate);
+  if (startDate && endDate && endDate < startDate) {
+    throw new Error("The end date must be on or after the start date.");
+  }
+  if (args.durationMinutes !== undefined &&
+      (!Number.isInteger(args.durationMinutes) || args.durationMinutes < 1 || args.durationMinutes > 1440)) {
+    throw new Error("Use a duration between 1 and 1,440 minutes.");
+  }
 }
 
 export function describeRoutineDays(daysOfWeek: number[]) {
   if (daysOfWeek.length === 7) {
     return ["Daily"];
+  }
+
+  if (daysOfWeek.length === 5 && daysOfWeek.every((day, index) => day === index + 1)) {
+    return ["Weekdays"];
   }
 
   if (daysOfWeek.length === 2 && daysOfWeek[0] === 0 && daysOfWeek[1] === 6) {
@@ -288,10 +322,12 @@ export async function replaceRoutineOccurrences(
   ctx: MutationCtx,
   schedule: Doc<"routineSchedules">,
 ) {
+  const { dateKey } = getTimeZoneClock(new Date(), schedule.timezone);
   const existingOccurrences = await ctx.db
     .query("routineOccurrences")
-    .withIndex("by_routineScheduleId", (query) =>
-      query.eq("routineScheduleId", schedule._id),
+    .withIndex("by_routineScheduleId_and_status_and_occurrenceDateKey", (query) =>
+      query.eq("routineScheduleId", schedule._id)
+        .eq("status", "scheduled").gte("occurrenceDateKey", dateKey),
     )
     .take(200);
 
@@ -326,16 +362,33 @@ export async function replaceRoutineOccurrences(
     await ctx.db.delete(occurrence._id);
   }
 
+  return await ensureRoutineOccurrences(ctx, schedule);
+}
+
+// Fill the rolling window without replacing existing reminders or their outcomes.
+export async function ensureRoutineOccurrences(
+  ctx: MutationCtx,
+  schedule: Doc<"routineSchedules">,
+) {
+
   if (schedule.status !== "active") {
     return [] as ScheduledRoutineOccurrence[];
   }
 
   const { dateKey } = getTimeZoneClock(new Date(), schedule.timezone);
+  const throughDateKey = addDaysToDateKey(dateKey, LOOKAHEAD_DAYS);
+  const existing = await ctx.db.query("routineOccurrences")
+    .withIndex("by_routineScheduleId_and_occurrenceDateKey", (q) =>
+      q.eq("routineScheduleId", schedule._id)
+        .gte("occurrenceDateKey", dateKey).lte("occurrenceDateKey", throughDateKey),
+    ).take(LOOKAHEAD_DAYS + 1);
+  const existingDates = new Set(existing.map((item) => item.occurrenceDateKey));
   const startDate = normalizeDateKey(schedule.startDate);
   const endDate = normalizeDateKey(schedule.endDate);
   const createdOccurrences: ScheduledRoutineOccurrence[] = [];
   for (let dayOffset = 0; dayOffset <= LOOKAHEAD_DAYS; dayOffset += 1) {
     const occurrenceDateKey = addDaysToDateKey(dateKey, dayOffset);
+    if (existingDates.has(occurrenceDateKey)) continue;
     if (startDate && occurrenceDateKey < startDate) {
       continue;
     }
@@ -349,6 +402,12 @@ export async function replaceRoutineOccurrences(
     if (!routineMatchesDay(schedule.daysOfWeek, dayOfWeek)) {
       continue;
     }
+
+    const softCheckInAt = getOccurrenceStartTimestampMs(
+      occurrenceDateKey, schedule.startTimeMinutes, schedule.timezone,
+    ) + 15 * 60 * 1000;
+    // Creating or renewing a schedule must not replay reminders from earlier today.
+    if (softCheckInAt < Date.now()) continue;
 
     const occurrenceId = await ctx.db.insert("routineOccurrences", {
       seniorProfileId: schedule.seniorProfileId,
@@ -367,13 +426,7 @@ export async function replaceRoutineOccurrences(
       occurrenceDateKey,
       startTimeMinutes: schedule.startTimeMinutes,
       timezone: schedule.timezone,
-      softCheckInAt:
-        getOccurrenceStartTimestampMs(
-          occurrenceDateKey,
-          schedule.startTimeMinutes,
-          schedule.timezone,
-        ) +
-        15 * 60 * 1000,
+      softCheckInAt,
     });
   }
 
@@ -587,7 +640,10 @@ export async function listRoutineSchedulesForSenior(
     .order("desc")
     .take(limit);
 
-  return schedules.map((schedule) => ({
+  return schedules.sort((left, right) =>
+    Number(left.status === "paused") - Number(right.status === "paused") ||
+    left.startTimeMinutes - right.startTimeMinutes || left.title.localeCompare(right.title),
+  ).map((schedule) => ({
     id: schedule._id,
     title: schedule.title,
     time: schedule.timeLabel,

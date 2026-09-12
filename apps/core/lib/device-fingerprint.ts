@@ -24,6 +24,7 @@ export async function getDeviceFingerprint(experience: DeviceExperience) {
   }
 
   const response = await fetch("/api/device/fingerprint", {
+    signal: AbortSignal.timeout(15_000),
     method: "POST",
     headers: {
       "Content-Type": "application/json",

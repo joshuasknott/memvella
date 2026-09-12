@@ -22,7 +22,7 @@ export function normalizeWaitlistEmail(value: unknown) {
     }
 
     const email = value.trim().toLowerCase();
-    return EMAIL_RE.test(email) ? email : null;
+    return email.length <= 254 && EMAIL_RE.test(email) ? email : null;
 }
 
 export function normalizeWaitlistSourcePath(value: unknown) {
@@ -39,9 +39,13 @@ export function normalizeWaitlistSourcePath(value: unknown) {
 }
 
 export function parseWaitlistSubmission(
-    input: WaitlistSubmissionInput,
+    input: unknown,
 ): WaitlistSubmissionResult {
-    const email = normalizeWaitlistEmail(input.email);
+    if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+        return { ok: false, error: 'A valid email address is required.' };
+    }
+    const submission = input as WaitlistSubmissionInput;
+    const email = normalizeWaitlistEmail(submission.email);
     if (!email) {
         return { ok: false, error: 'A valid email address is required.' };
     }
@@ -49,6 +53,6 @@ export function parseWaitlistSubmission(
     return {
         ok: true,
         email,
-        sourcePath: normalizeWaitlistSourcePath(input.sourcePath),
+        sourcePath: normalizeWaitlistSourcePath(submission.sourcePath),
     };
 }

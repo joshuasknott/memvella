@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { normalizeWaitlistEmail } from "@/lib/waitlist-submission";
 
 export default function WaitlistForm() {
@@ -10,6 +10,14 @@ export default function WaitlistForm() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const successMessage = useRef<HTMLDivElement>(null);
+  const requestController = useRef<AbortController | null>(null);
+
+  useEffect(() => () => requestController.current?.abort(), []);
+  useEffect(() => {
+    if (status === "success") successMessage.current?.focus();
+  }, [status]);
 
   function validateEmail(value: string): boolean {
     if (!normalizeWaitlistEmail(value)) {
@@ -27,25 +35,45 @@ export default function WaitlistForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) return;
+    if (requestController.current) return;
+    if (!validateEmail(email)) {
+      emailInput.current?.focus();
+      return;
+    }
 
     setStatus("loading");
     setMessage(null);
+    const controller = new AbortController();
+    requestController.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 15_000);
 
     try {
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, sourcePath: window.location.pathname }),
+        signal: controller.signal,
       });
-      const payload = (await response.json()) as {
-        status?: "joined" | "already_joined" | "rejoined";
-        error?: string;
-      };
+      const payload: unknown = await response.json();
 
-      if (!response.ok) {
+      if (response.status === 429) {
+        setStatus("error");
+        setMessage(
+          "The waitlist is busy right now. Please try again in a few minutes.",
+        );
+        return;
+      }
+      if (
+        !response.ok ||
+        typeof payload !== "object" ||
+        payload === null ||
+        !("status" in payload) ||
+        !["joined", "already_joined", "rejoined"].includes(
+          String(payload.status),
+        )
+      ) {
         throw new Error(
-          payload.error ?? "Memvella could not save your request.",
+          "Memvella could not save your request. Please try again.",
         );
       }
 
@@ -55,19 +83,27 @@ export default function WaitlistForm() {
           ? "This email is already on the waitlist. We will be in touch when access opens."
           : "You are on the waitlist. We will reach out when new access opens.",
       );
-    } catch (error) {
+    } catch {
       setStatus("error");
       setMessage(
-        error instanceof Error
-          ? error.message
-          : "Memvella could not save your request.",
+        controller.signal.aborted
+          ? "This is taking longer than expected. Please check your connection and try again."
+          : "Memvella could not save your request. Please try again.",
       );
+    } finally {
+      window.clearTimeout(timeout);
+      requestController.current = null;
     }
   };
 
   if (status === "success") {
     return (
-      <div role="status" className="waitlist-success">
+      <div
+        ref={successMessage}
+        tabIndex={-1}
+        role="status"
+        className="waitlist-success"
+      >
         {message}
       </div>
     );
@@ -84,10 +120,14 @@ export default function WaitlistForm() {
       >
         <label htmlFor="waitlist-email">Email address</label>
         <input
+          ref={emailInput}
           id="waitlist-email"
           name="email"
           type="email"
           autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={254}
           placeholder="Your email address"
           value={email}
           onChange={handleChange}

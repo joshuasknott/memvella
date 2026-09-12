@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: release
-Last reviewed: 2026-07-05
+Last reviewed: 2026-09-12
 Owners: engineering, product
 Read when: preparing, verifying, deploying, or rolling back a launch
 Depends on: docs/env.md, docs/testing.md
@@ -74,9 +74,11 @@ Local e2e requires `apps/backend-convex/.env.local` with `CONVEX_DEPLOYMENT`. Th
 - The former root tunnel target was `9086cde5-909a-4092-8203-d5f5e92376b9.cfargotunnel.com` (proxied); it was unavailable before replacement. Do not repoint the old `memory-mvp` Vercel project; it targets a different repository.
 
 1. Deploy Convex backend changes.
-2. Deploy `apps/core`.
-3. Deploy `apps/marketing`.
-5. Run the browser and device smoke checklist against production.
+2. Before releasing the paginated memory library to an existing deployment, run `corepack pnpm --dir apps/backend-convex exec convex run migrations:runMemorySearchBackfill --prod` against the intended production project. The migration is resumable and preserves original memory content. Rerun the command to confirm it reports `Migration already done` and check any errors before proceeding. For a local development check, omit `--prod`.
+3. Deploy `apps/core`.
+4. Deploy `apps/marketing`.
+5. Verify an existing memory can be found by a word in its story, and inspect the routine renewal cron. Check each public page's canonical URL, `/robots.txt`, `/sitemap.xml`, and a retryable waitlist failure.
+6. Run the browser and device smoke checklist against production.
 
 ## Rollback
 

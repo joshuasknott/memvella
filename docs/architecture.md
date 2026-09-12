@@ -2,7 +2,7 @@
 
 Status: canonical
 Scope: root
-Last reviewed: 2026-07-04
+Last reviewed: 2026-09-12
 Owners: engineering
 Read when: touching routing, backend integration, schema design, or repo structure
 Depends on: docs/product.md, docs/data-model.md
@@ -44,6 +44,7 @@ Depends on: docs/product.md, docs/data-model.md
 - `/circle`: shared Workspace home
 - `/circle/routines`
 - `/circle/add-routine`
+- `/circle/routines/[routineId]/edit`
 - `/circle/memories`
 - `/circle/memories/[memoryId]`
 - `/circle/memories/[memoryId]/edit`
@@ -65,6 +66,8 @@ Depends on: docs/product.md, docs/data-model.md
 - `/circle/settings/pairing`
 
 All four format-specific memory URLs are thin entry points to the shared `MemoryEditor`; `/circle/add-memory` opens that editor directly.
+
+Routine creation and editing share `RoutineEditor`. The edit route resolves the current schedule and owner permissions before showing the form. Backend mutations independently enforce ownership.
 
 Current route facts:
 
@@ -102,6 +105,7 @@ Current route facts:
 - Better Auth routes are registered into the Convex HTTP router in `apps/backend-convex/convex/http.ts`.
 - Next.js exposes those auth routes through `apps/core/app/api/auth/[...all]/route.ts`.
 - Convex functions implement account auth, Supporter invites, companion tablet sessions, routines, memories, notifications, and live voice.
+- The memory library uses a Workspace-authorized, paginated search query; card queries avoid returning full story and transcript bodies. A scheduled maintenance job renews routine occurrences in bounded batches.
 
 ## Auth Architecture
 

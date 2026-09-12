@@ -1,9 +1,10 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { issueSeniorAccessSession } from "./seniorAccessHelpers";
+import { getOccurrenceStartTimestampMs, parseTimeInputToMinutes } from "./routineHelpers";
 
 process.env.MEMVELLA_AUTH_PEPPER = "memvella-test-pepper";
 
@@ -61,6 +62,8 @@ async function seedRoutineWorkspace() {
 }
 
 describe("routine authorization", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
   it("allows owners and denies Supporters for routine mutations", async () => {
     const { owner, supporter, t, ids } = await seedRoutineWorkspace();
 
@@ -87,6 +90,7 @@ describe("routine authorization", () => {
     await expect(
       owner.mutation(api.routines.deleteRoutineSchedule, { routineScheduleId }),
     ).resolves.toEqual({ deleted: true });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
 
     const blockedScheduleId = await t.run(async (ctx) => {
       return await ctx.db.insert("routineSchedules", {
@@ -125,7 +129,7 @@ describe("routine authorization", () => {
 });
 
 describe("routine check-in transitions", () => {
-  it("keeps prompt and resolve transitions scoped to the paired senior session", async () => {
+  it.each(["confirmed", "unconfirmed"] as const)("keeps %s transitions scoped to the paired senior session", async (outcome) => {
     const { t, ids } = await seedRoutineWorkspace();
 
     const seeded = await t.run(async (ctx) => {
@@ -227,7 +231,7 @@ describe("routine check-in transitions", () => {
         sessionToken: seeded.session.sessionToken,
         deviceFingerprint: "routine-device",
         checkInId,
-        outcome: "unconfirmed",
+        outcome,
         responseTranscript: "Not yet",
       }),
     ).resolves.toEqual({ updated: true });
@@ -237,10 +241,88 @@ describe("routine check-in transitions", () => {
       occurrence: await ctx.db.get(seeded.occurrenceId),
     }));
     expect(stored.checkIn).toMatchObject({
-      status: "unconfirmed",
+      status: outcome,
       promptText: "Time for water.",
       responseTranscript: "Not yet",
     });
-    expect(stored.occurrence).toMatchObject({ status: "unconfirmed" });
+    expect(stored.occurrence).toMatchObject({ status: outcome === "confirmed" ? "completed" : "unconfirmed" });
+  });
+});
+
+describe("recurring routine lifecycle", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T08:00:00Z"));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const dailyRoutine = {
+    title: "Morning tea", startTime: "09:00", daysOfWeek: [0, 1, 2, 3, 4, 5, 6], timezone: "Europe/London",
+  };
+
+  it("renews beyond the original 45 days without duplicates or changing completed reminders", async () => {
+    const { t, owner } = await seedRoutineWorkspace();
+    const routineScheduleId = await owner.mutation(api.routines.createRoutineSchedule, dailyRoutine);
+    const original = await t.run((ctx) => ctx.db.query("routineOccurrences").withIndex("by_routineScheduleId", (q) => q.eq("routineScheduleId", routineScheduleId)).take(100));
+    expect(original).toHaveLength(46);
+    await t.run((ctx) => ctx.db.patch(original[0]._id, { status: "completed" }));
+    expect(await t.mutation(internal.routines.renewRoutineOccurrences, { routineScheduleId })).toBe(0);
+    expect(await t.run((ctx) => ctx.db.get(original[0]._id))).toMatchObject({ status: "completed" });
+
+    vi.setSystemTime(new Date("2026-03-01T08:00:00Z"));
+    expect(await t.mutation(internal.routines.renewRoutineOccurrences, { routineScheduleId })).toBe(46);
+    expect(await t.mutation(internal.routines.renewRoutineOccurrences, { routineScheduleId })).toBe(0);
+    const renewed = await t.run((ctx) => ctx.db.query("routineOccurrences").withIndex("by_routineScheduleId", (q) => q.eq("routineScheduleId", routineScheduleId)).take(150));
+    expect(renewed).toHaveLength(92);
+    expect(new Set(renewed.map((item) => item.occurrenceDateKey)).size).toBe(92);
+    expect(renewed.some((item) => item.occurrenceDateKey === "2026-04-15")).toBe(true);
+  });
+
+  it("pauses pending reminders, preserves completed history and resumes without duplicating it", async () => {
+    const { t, owner } = await seedRoutineWorkspace();
+    const routineScheduleId = await owner.mutation(api.routines.createRoutineSchedule, dailyRoutine);
+    const original = await t.run((ctx) => ctx.db.query("routineOccurrences").withIndex("by_routineScheduleId", (q) => q.eq("routineScheduleId", routineScheduleId)).take(100));
+    await t.run((ctx) => ctx.db.patch(original[0]._id, { status: "completed" }));
+    await owner.mutation(api.routines.updateRoutineSchedule, { ...dailyRoutine, routineScheduleId, status: "paused" });
+    expect(await t.mutation(internal.routines.renewRoutineOccurrences, { routineScheduleId })).toBe(0);
+    expect(await t.mutation(internal.routines.queueRoutineCheckIn, { routineOccurrenceId: original[1]._id })).toMatchObject({ queued: false });
+    await owner.mutation(api.routines.updateRoutineSchedule, { ...dailyRoutine, routineScheduleId, status: "active" });
+    const resumed = await t.run((ctx) => ctx.db.query("routineOccurrences").withIndex("by_routineScheduleId", (q) => q.eq("routineScheduleId", routineScheduleId)).take(100));
+    expect(resumed).toHaveLength(46);
+    expect(resumed.find((item) => item._id === original[0]._id)?.status).toBe("completed");
+  });
+
+  it("honours an end date and does not replay reminders from earlier today", async () => {
+    const { t, owner } = await seedRoutineWorkspace();
+    vi.setSystemTime(new Date("2026-01-01T16:00:00Z"));
+    const routineScheduleId = await owner.mutation(api.routines.createRoutineSchedule, { ...dailyRoutine, endDate: "2026-01-03" });
+    const occurrences = await t.run((ctx) => ctx.db.query("routineOccurrences").withIndex("by_routineScheduleId", (q) => q.eq("routineScheduleId", routineScheduleId)).take(100));
+    expect(occurrences.map((item) => item.occurrenceDateKey)).toEqual(["2026-01-02", "2026-01-03"]);
+    vi.setSystemTime(new Date("2026-01-04T08:00:00Z"));
+    expect(await t.mutation(internal.routines.renewRoutineOccurrences, { routineScheduleId })).toBe(0);
+  });
+
+  it.each([
+    { startTime: "25:90" }, { startTime: "noon" }, { timezone: "not/a-timezone" },
+    { daysOfWeek: [1.5] }, { startDate: "2026-02-30" },
+    { startDate: "2026-02-01", endDate: "2026-01-01" }, { durationMinutes: -1 },
+  ])("rejects invalid schedule input before storing it: %j", async (invalid) => {
+    const { t, owner } = await seedRoutineWorkspace();
+    await expect(owner.mutation(api.routines.createRoutineSchedule, { ...dailyRoutine, ...invalid })).rejects.toThrow();
+    expect(await t.run((ctx) => ctx.db.query("routineSchedules").take(1))).toEqual([]);
+  });
+});
+
+describe("routine clock conversion", () => {
+  it("handles midnight, noon and valid 12-hour input", () => {
+    expect(parseTimeInputToMinutes("00:00")).toBe(0);
+    expect(parseTimeInputToMinutes("12:00 AM")).toBe(0);
+    expect(parseTimeInputToMinutes("12:00 PM")).toBe(720);
+    expect(parseTimeInputToMinutes("9:30 pm")).toBe(1290);
+  });
+  it("keeps local midnight and ordinary reminders on the correct side of a clock change", () => {
+    expect(new Date(getOccurrenceStartTimestampMs("2026-01-01", 0, "America/New_York")).toISOString()).toBe("2026-01-01T05:00:00.000Z");
+    expect(new Date(getOccurrenceStartTimestampMs("2026-03-28", 540, "Europe/London")).toISOString()).toBe("2026-03-28T09:00:00.000Z");
+    expect(new Date(getOccurrenceStartTimestampMs("2026-03-29", 540, "Europe/London")).toISOString()).toBe("2026-03-29T08:00:00.000Z");
   });
 });

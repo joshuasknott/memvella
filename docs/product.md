@@ -1,15 +1,15 @@
 # Product
 
 Status: canonical
-Last reviewed: 2026-09-04
+Last reviewed: 2026-09-12
 
 Memvella is a simple family app and voice-first companion tablet. Family and trusted Supporters share familiar memories and gentle routines for one older person.
 
 ## Everyday experience
 
 - **Today** (`/circle`): today's routines, recent memories, and companion tablet access. Show an owner review notice only when there are queued updates.
-- **Memories** (`/circle/memories`): a visual, searchable library. Add a story, photo, video, recording, or dictated memory through one editor at `/circle/add-memory`. Existing format-specific URLs use that same editor. Details, editing, and deletion remain available.
-- **Routines** (`/circle/routines`): one clear schedule list. Owners add a name, time, repeat days, and optional helpful detail. Supporters can read routines.
+- **Memories** (`/circle/memories`): a visual library with search across titles, stories, and transcripts. Results load in pages, so older memories remain reachable. Add a story, photo, video, recording, or dictated memory through one editor at `/circle/add-memory`. Existing format-specific URLs use that same editor. Details, editing, and deletion remain available.
+- **Routines** (`/circle/routines`): one clear schedule list. Owners add or edit a name, time, repeat days, and optional helpful detail. They can pause reminders, resume them, or delete a routine through a confirmation dialog. Supporters can read routines.
 - **Settings** (`/circle/settings`): companion tablet, familiar people, Supporters, account details, notifications, and review history. Invitations belong under Supporters.
 - **Companion tablet** (`/assisted`): time and date, the next routine, one memory at a time, and a large Tap to talk control. No family navigation or account management. Photo/video memories stay fully in frame.
 
@@ -33,6 +33,7 @@ The shared area remains a Workspace in permission and account copy; ordinary scr
 
 - No internal HQ app or unused testing scaffold.
 - No format-selection screen before adding a memory.
+- Memory dictation appends to the existing story, keeps partial words visible, and allows microphone startup to be cancelled. Stopping waits briefly for the final words; speech errors or a stalled service release the editor so the story can still be edited and saved.
 - No duplicate routine statistics or timeline on the routine list.
 - No always-visible empty insights queue or technical transcript labels on Today.
 - No duplicate tablet controls in Account.
@@ -40,8 +41,11 @@ The shared area remains a Workspace in permission and account copy; ordinary scr
 - Due reminders stay visible on the tablet. Voice starts only when the person taps to talk, so an unavailable voice service cannot interrupt browsing.
 - The companion also offers Type a message. This path uses readable replies and does not request microphone access. Voice streams native audio with input and output transcripts; both paths require the configured live AI service.
 - Routine check-ins wait for a response or an explicit close rather than expiring after 30 seconds. The person can pause microphone input. Completed replies can be read aloud or more slowly using browser speech; reading a reply pauses the microphone until the person explicitly resumes it.
+- Active routines maintain a rolling reminder window. Renewal and edits preserve completed outcomes; renewal does not replay reminders from earlier in the day. Confirmed check-ins complete their dated occurrence.
+- A temporary connection failure preserves tablet pairing. A quiet reconnecting notice identifies potentially stale information, and a preparation failure offers a retry.
+- Notification switches are labelled and keyboard operable. Waitlist errors preserve the email address for retry; success is shown only after the server confirms a saved signup.
 - Conversation options includes a tap-controlled voice mode: Start speaking opens a turn and I’m finished requests a reply. Automatic speech-end detection is disabled in that mode so pauses do not end a turn. Routine responses are marked confirmed only for clear affirmative phrases; negative or ambiguous responses remain unconfirmed.
-- No new schema or data migration is required for this UI overhaul.
+- The memory search index requires the backfill documented in `docs/launch-runbook.md` before releasing the updated library to an existing deployment.
 
 ## Product limits
 
