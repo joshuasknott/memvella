@@ -9,7 +9,7 @@ describe("marketing public routes", () => {
   it("renders the home page key content and waitlist form affordances", () => {
     const markup = renderToStaticMarkup(<MarketingHomePage />);
 
-    expect(markup).toContain("Their stories.");
+    expect(markup).toContain("A little company.");
     expect(markup).toContain("Join the waitlist");
     expect(markup).toContain("Email address");
     expect(markup).toContain("Workspace");

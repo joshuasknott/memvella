@@ -1,3 +1,42 @@
+# Memvella marketing v3 — 21 October 2026
+
+final result: passed locally and deployed to production
+
+## Scope and visual comparison
+
+Implemented the user-selected “A little company. A familiar world.” mockup in the marketing app. The reference is preserved at `output/marketing-v3/reference.png` (1086 × 1448). The homepage uses large Figtree typography, warm paper, plum and lavender, the existing flower wordmark, a working companion tablet, three setup steps, FAQs and the existing waitlist form. No product or backend behavior changed.
+
+The source and rendered page were reviewed together in `output/marketing-v3/comparison.png`. The implementation was captured at a matching 1086 × 1448 CSS viewport; the comparison uses the top of the full-page capture without stretching either image. Scrollbar space is filled with the page background. Final evidence includes `desktop-full.png`, `preview.png`, `desktop-wide.png` (1440 × 1000 viewport), `tablet-768.png` (768 × 1024), `mobile-390.png` (390 × 844) and `mobile-320.png` (320 × 740).
+
+The main hierarchy, line breaks, palette, tablet proportions and large controls follow the reference. Intentional differences are the tour controls and fiction label below the tablet, an accessible Read story action, honest browser-narration labelling instead of an invented recording duration, and corrected tablet-pairing copy. The extra controls move the setup section further down. The reference ends at the setup steps; FAQs, signup and legal links continue its visual language below.
+
+## Findings resolved
+
+- Increased the companion greeting, memory text and talk control to match the reference's readable scale. Rebalanced the fixed composition's vertical spacing so the memory card and talk action retain a clear gap without overflowing their grid.
+- Replaced scaled-down tablet/phone controls with a native responsive rendering of the same screen below 850px. Desktop and 320/390/768px checks show no horizontal overflow. The final 320px pass caught and fixed waveform content pushing Read story outside its card.
+- Added meaningful focus when entering or leaving an example scene, visible focus indicators, semantic controls, native FAQ disclosures, and explicit play/pause/reset controls. Darkened the duration label for contrast.
+- Bundled the licensed Figtree font locally after an external font-fetch build failure. Updated metadata and the 1200 × 630 social image to the new identity.
+
+## Interaction verification
+
+Browser checks passed for reading and returning from a memory, reminder confirmation and reset, both scripted conversation prompts, all chapter controls, play/pause, completion/replay, reset, and pausing when scrolled out of view. The 24-second Remotion tour starts only on request and does not loop. Browser narration entered, completed and stopped its reading state successfully. The preview requests no microphone and uses fictional content.
+
+FAQ expansion worked with Enter. Contact navigation and its rooted return-to-companion link worked. Invalid signup input displayed an error and returned focus to the email field. No real waitlist signup or external email was sent. Existing waitlist API tests use a mocked backend. Captures include `desktop-conversation.png`, `mobile-320-conversation.png` and `waitlist-validation.png`.
+
+Reduced-motion behavior was inspected in source: the preference disables scene movement and CSS transitions; manual exploration remains available. OS-level preference switching and physical-device audio quality were not tested. Browser logs contain no application errors; Remotion emits its standard license-information notice. Independent source review found no remaining P1/P2 issues.
+
+## Checks and delivery
+
+Marketing lint, type-check, 18 tests across four files, and the final production build passed for the initial preview. After the user approved publication, the full repository release gate passed: environment, public-repository and copy guardrails, lint, type checks, 193 unit tests across 32 files, and both production builds. The phases ran serially with pinned pnpm 9.0.0 and Turbo concurrency 1. Log: `output/marketing-v3/release-verify.log`. Final diff whitespace validation passed.
+
+The approved local source was deployed to the existing `memvella-marketing` Vercel project as `dpl_BJZx7VxsZw8zAsNDqw3ofr5y65nr`. Vercel's production build passed and the READY deployment is aliased to `https://memvella.me`, `https://www.memvella.me` and the existing marketing Vercel domains. The root checkout's core-project link was preserved. No core or Convex deployment, commit or push was performed.
+
+Live checks passed at 1440px and 390px: the new headline, local font and canonical URL, story open/back, Remotion play/pause/reset, the mobile conversation response, and invalid-email validation with focus returned to the field. Neither viewport has horizontal overflow. Homepage, contact, privacy, terms, robots, sitemap and the new social image returned HTTP 200; an invalid waitlist API submission returned HTTP 400. No real signup or external email was sent. Live browser logs contain no application errors. Evidence: `output/marketing-v3/live-desktop-full.png`, `live-mobile-390.png`, `live-waitlist-validation.png` and `live-preview.png`; deployment log: `deploy-production.log`.
+
+The remote build reported Turbo's environment warning for runtime-only `CONVEX_URL`. The unchanged waitlist route reads it during function execution, and the existing production variable was confirmed present without reading its value. A successful production signup was not exercised in this release. The previous reviews below are retained unchanged.
+
+---
+
 # Memory dictation reliability — 12 September 2026
 
 Current review: passed locally.

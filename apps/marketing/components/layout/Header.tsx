@@ -11,7 +11,6 @@ export function Header() {
       <nav aria-label="Main navigation">
         <Link href="/#companion">The companion</Link>
         <Link href="/#how-it-works">How it works</Link>
-        <Link href="/#questions">Questions</Link>
         <Link href="/#waitlist" className="marketing-button">
           Join the waitlist
         </Link>

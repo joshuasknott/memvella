@@ -14,6 +14,7 @@
     "@memvella/backend": "workspace:*",
     "@memvella/ui": "workspace:*",
     "@radix-ui/react-slot": "^1.1.1",
+    "@remotion/player": "4.0.537",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.41.0",
@@ -21,6 +22,7 @@
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "remotion": "4.0.537",
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
